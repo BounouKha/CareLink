@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'CareLink',  
 ]
 
 MIDDLEWARE = [
@@ -68,6 +69,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'CareLink.wsgi.application'
 
+AUTH_USER_MODEL = 'CareLink.User'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -80,6 +82,9 @@ DATABASES = {
         'PASSWORD': '',  # Replace with your MySQL password
         'HOST': '127.0.0.1',
         'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8',  # Use utf8 for Unicode support
+        },
     }
 }
 
