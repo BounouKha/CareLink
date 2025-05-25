@@ -1,18 +1,29 @@
 from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import BaseUserManager
+
+##Attention la base de données doit être en UTF-8 pour éviter les problèmes d'encodage
+
 
 class Administrative(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     is_internal = models.BooleanField(default=True)
 
 class ContestInvoice(models.Model):
     invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     reason = models.TextField()
     status = models.CharField(max_length=20, choices=[('In Progress', 'In Progress'), ('Cancelled', 'Cancelled'), ('Accepted', 'Accepted')])
 
+class Service(models.Model):
+    name = models.CharField(max_length=50)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.CharField(max_length=250)
+
 class Contract(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     salary = models.BigIntegerField()
@@ -20,22 +31,21 @@ class Contract(models.Model):
     type_contract = models.CharField(max_length=20, choices=[('CDD', 'CDD'), ('CDR', 'CDR'), ('Intérim', 'Intérim'), ('CDI', 'CDI'), ('Bénévole', 'Bénévole'), ('Autre', 'Autre')])
 
 class Coordinator(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     is_internal = models.BooleanField(default=True)
 
 class FamilyPatient(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     link = models.CharField(max_length=50)
-    phone = models.CharField(max_length=20, null=True, blank=True)
 
 class HelpdeskTicket(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='created_tickets')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_tickets')
     subject = models.CharField(max_length=255)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=[('Open', 'Open'), ('In Progress', 'In Progress'), ('Closed', 'Closed')])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    handled_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_tickets')
+    handled_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_tickets')
     priority = models.CharField(max_length=10, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')], default='Medium')
 
 class InformationProviding(models.Model):
@@ -59,7 +69,7 @@ class MedicalFolder(models.Model):
     note = models.CharField(max_length=1000, null=True, blank=True)
 
 class Patient(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female')])
     blood_type = models.CharField(max_length=3, null=True, blank=True)
     emergency_contact = models.CharField(max_length=15)
@@ -113,10 +123,10 @@ class Schedule(models.Model):
 
 class ServiceDemand(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
-    sent_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='sent_demands')
+    sent_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='sent_demands')
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=[('Open', 'Open'), ('In Progress', 'In Progress'), ('Closed', 'Closed')])
-    manage_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_demands')
+    manage_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_demands')
     frequency = models.IntegerField()
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
     contact = models.CharField(max_length=20, choices=[('Mail', 'Mail'), ('Appel', 'Appel'), ('Appel visio', 'Appel visio')])
@@ -146,19 +156,49 @@ class TimeSlot(models.Model):
     end_time = models.TimeField()
     description = models.CharField(max_length=255, null=True, blank=True)
 
-class User(models.Model):
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_admin', True)
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(email, password, **extra_fields)
+
+class User(AbstractBaseUser, PermissionsMixin):
     firstname = models.CharField(max_length=50)
     lastname = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=40)
+    email = models.EmailField(unique=True, max_length=191)  # Reduced max_length to avoid key length issues
+    password = models.CharField(max_length=128)  # Updated to match Django's default
     birthdate = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_admin = models.BooleanField(default=False)
-    phone = models.CharField(max_length=20, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     address = models.CharField(max_length=255, null=True, blank=True)
-    national_number = models.CharField(max_length=11, unique=True, null=True, blank=True)
+    national_number = models.CharField(max_length=11, unique=True, null=True, blank=True)  # Reduced max_length
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['firstname', 'lastname']
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.email
 
 class UserActionLog(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
@@ -175,3 +215,12 @@ class UserToken(models.Model):
     refresh_token_expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     revoked = models.BooleanField(default=False)
+
+class PhoneUser(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='phone_numbers')
+    phone_number = models.CharField(max_length=20)
+    name = models.CharField(max_length=50, null=True, blank=True)  # e.g., 'mobile phone', 'home phone'
+    is_primary = models.BooleanField(default=False)
+
+
+
