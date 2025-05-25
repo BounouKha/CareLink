@@ -1,0 +1,57 @@
+[
+    {
+        "model": "CareLink.informationproviding",
+        "pk": 1,
+        "fields": {
+            "patient": 1,
+            "provider": 1,
+            "service": 1,
+            "coordinator": 1,
+            "price": 100.00
+        }
+    },
+    {
+        "model": "CareLink.informationproviding",
+        "pk": 2,
+        "fields": {
+            "patient": 2,
+            "provider": 2,
+            "service": 2,
+            "coordinator": 2,
+            "price": 200.00
+        }
+    },
+    {
+        "model": "CareLink.informationproviding",
+        "pk": 3,
+        "fields": {
+            "patient": 3,
+            "provider": 3,
+            "service": 3,
+            "coordinator": 3,
+            "price": 300.00
+        }
+    },
+    {
+        "model": "CareLink.informationproviding",
+        "pk": 4,
+        "fields": {
+            "patient": 4,
+            "provider": 4,
+            "service": 4,
+            "coordinator": 4,
+            "price": 400.00
+        }
+    },
+    {
+        "model": "CareLink.informationproviding",
+        "pk": 5,
+        "fields": {
+            "patient": 5,
+            "provider": 5,
+            "service": 5,
+            "coordinator": 5,
+            "price": 500.00
+        }
+    }
+]

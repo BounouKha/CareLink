@@ -1,0 +1,38 @@
+[
+    {
+        "model": "CareLink.providingcare",
+        "pk": 1,
+        "fields": {
+            "patient": 1,
+            "created_at": "2025-05-25T10:00:00Z",
+            "service": 1,
+            "provider": 1,
+            "coordinator": 1,
+            "prescription": 1
+        }
+    },
+    {
+        "model": "CareLink.providingcare",
+        "pk": 2,
+        "fields": {
+            "patient": 2,
+            "created_at": "2025-05-25T11:00:00Z",
+            "service": 2,
+            "provider": 2,
+            "coordinator": 2,
+            "prescription": 2
+        }
+    },
+    {
+        "model": "CareLink.providingcare",
+        "pk": 3,
+        "fields": {
+            "patient": 3,
+            "created_at": "2025-05-25T12:00:00Z",
+            "service": 3,
+            "provider": 3,
+            "coordinator": 3,
+            "prescription": 3
+        }
+    }
+]

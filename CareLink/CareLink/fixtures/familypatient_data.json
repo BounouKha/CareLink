@@ -1,0 +1,34 @@
+[
+    {
+        "model": "CareLink.familypatient",
+        "pk": 1,
+        "fields": {
+            "patient": 1,
+            "link": "Parent"
+        }
+    },
+    {
+        "model": "CareLink.familypatient",
+        "pk": 2,
+        "fields": {
+            "patient": 2,
+            "link": "Sibling"
+        }
+    },
+    {
+        "model": "CareLink.familypatient",
+        "pk": 3,
+        "fields": {
+            "patient": 3,
+            "link": "Child"
+        }
+    },
+    {
+        "model": "CareLink.familypatient",
+        "pk": 4,
+        "fields": {
+            "patient": 4,
+            "link": "Parent"
+        }
+    }
+]

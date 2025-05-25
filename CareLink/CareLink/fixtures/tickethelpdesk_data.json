@@ -1,0 +1,421 @@
+[ {
+        "model": "CareLink.helpdeskticket",
+        "pk": 1,
+        "fields": {
+            "user": 1,
+            "subject": "Login Issue",
+            "description": "Unable to login to the portal",
+            "status": "Open",
+            "created_at": "2025-05-25T12:00:00Z",
+            "updated_at": "2025-05-25T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 2,
+        "fields": {
+            "user": 2,
+            "subject": "Payment Issue",
+            "description": "Payment not processed",
+            "status": "In Progress",
+            "created_at": "2025-05-26T12:00:00Z",
+            "updated_at": "2025-05-26T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 3,
+        "fields": {
+            "user": 3,
+            "subject": "Service Feedback",
+            "description": "Feedback on the recent service",
+            "status": "Closed",
+            "created_at": "2025-05-27T12:00:00Z",
+            "updated_at": "2025-05-27T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 4,
+        "fields": {
+            "user": 4,
+            "subject": "Technical Issue",
+            "description": "Error on the website",
+            "status": "Open",
+            "created_at": "2025-05-28T12:00:00Z",
+            "updated_at": "2025-05-28T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 5,
+        "fields": {
+            "user": 5,
+            "subject": "Appointment Change",
+            "description": "Request to change appointment date",
+            "status": "In Progress",
+            "created_at": "2025-05-29T12:00:00Z",
+            "updated_at": "2025-05-29T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 6,
+        "fields": {
+            "user": 6,
+            "subject": "Billing Question",
+            "description": "Question regarding the bill",
+            "status": "Closed",
+            "created_at": "2025-05-30T12:00:00Z",
+            "updated_at": "2025-05-30T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 7,
+        "fields": {
+            "user": 7,
+            "subject": "Referral Request",
+            "description": "Request for a specialist referral",
+            "status": "Open",
+            "created_at": "2025-05-31T12:00:00Z",
+            "updated_at": "2025-05-31T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 8,
+        "fields": {
+            "user": 8,
+            "subject": "Prescription Refill",
+            "description": "Request to refill prescription",
+            "status": "In Progress",
+            "created_at": "2025-06-01T12:00:00Z",
+            "updated_at": "2025-06-01T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 9,
+        "fields": {
+            "user": 9,
+            "subject": "Lab Results",
+            "description": "Inquiry about lab results",
+            "status": "Closed",
+            "created_at": "2025-06-02T12:00:00Z",
+            "updated_at": "2025-06-02T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 10,
+        "fields": {
+            "user": 10,
+            "subject": "General Inquiry",
+            "description": "General question about services",
+            "status": "Open",
+            "created_at": "2025-06-03T12:00:00Z",
+            "updated_at": "2025-06-03T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 11,
+        "fields": {
+            "user": 1,
+            "subject": "Login Issue",
+            "description": "Unable to login to the portal",
+            "status": "Open",
+            "created_at": "2025-05-25T12:00:00Z",
+            "updated_at": "2025-05-25T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 12,
+        "fields": {
+            "user": 2,
+            "subject": "Payment Issue",
+            "description": "Payment not processed",
+            "status": "In Progress",
+            "created_at": "2025-05-26T12:00:00Z",
+            "updated_at": "2025-05-26T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 13,
+        "fields": {
+            "user": 3,
+            "subject": "Service Feedback",
+            "description": "Feedback on the recent service",
+            "status": "Closed",
+            "created_at": "2025-05-27T12:00:00Z",
+            "updated_at": "2025-05-27T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 14,
+        "fields": {
+            "user": 4,
+            "subject": "Technical Issue",
+            "description": "Error on the website",
+            "status": "Open",
+            "created_at": "2025-05-28T12:00:00Z",
+            "updated_at": "2025-05-28T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 15,
+        "fields": {
+            "user": 5,
+            "subject": "Appointment Change",
+            "description": "Request to change appointment date",
+            "status": "In Progress",
+            "created_at": "2025-05-29T12:00:00Z",
+            "updated_at": "2025-05-29T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 16,
+        "fields": {
+            "user": 6,
+            "subject": "Billing Question",
+            "description": "Question regarding the bill",
+            "status": "Closed",
+            "created_at": "2025-05-30T12:00:00Z",
+            "updated_at": "2025-05-30T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 17,
+        "fields": {
+            "user": 7,
+            "subject": "Referral Request",
+            "description": "Request for a specialist referral",
+            "status": "Open",
+            "created_at": "2025-05-31T12:00:00Z",
+            "updated_at": "2025-05-31T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 18,
+        "fields": {
+            "user": 8,
+            "subject": "Prescription Refill",
+            "description": "Request to refill prescription",
+            "status": "In Progress",
+            "created_at": "2025-06-01T12:00:00Z",
+            "updated_at": "2025-06-01T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 19,
+        "fields": {
+            "user": 9,
+            "subject": "Lab Results",
+            "description": "Inquiry about lab results",
+            "status": "Closed",
+            "created_at": "2025-06-02T12:00:00Z",
+            "updated_at": "2025-06-02T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 20,
+        "fields": {
+            "user": 10,
+            "subject": "General Inquiry",
+            "description": "General question about services",
+            "status": "Open",
+            "created_at": "2025-06-03T12:00:00Z",
+            "updated_at": "2025-06-03T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 21,
+        "fields": {
+            "user": 1,
+            "subject": "Login Issue",
+            "description": "Unable to login to the portal",
+            "status": "Open",
+            "created_at": "2025-05-25T12:00:00Z",
+            "updated_at": "2025-05-25T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 22,
+        "fields": {
+            "user": 2,
+            "subject": "Payment Issue",
+            "description": "Payment not processed",
+            "status": "In Progress",
+            "created_at": "2025-05-26T12:00:00Z",
+            "updated_at": "2025-05-26T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 23,
+        "fields": {
+            "user": 3,
+            "subject": "Service Feedback",
+            "description": "Feedback on the recent service",
+            "status": "Closed",
+            "created_at": "2025-05-27T12:00:00Z",
+            "updated_at": "2025-05-27T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 24,
+        "fields": {
+            "user": 4,
+            "subject": "Technical Issue",
+            "description": "Error on the website",
+            "status": "Open",
+            "created_at": "2025-05-28T12:00:00Z",
+            "updated_at": "2025-05-28T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 25,
+        "fields": {
+            "user": 5,
+            "subject": "Appointment Change",
+            "description": "Request to change appointment date",
+            "status": "In Progress",
+            "created_at": "2025-05-29T12:00:00Z",
+            "updated_at": "2025-05-29T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 26,
+        "fields": {
+            "user": 6,
+            "subject": "Billing Question",
+            "description": "Question regarding the bill",
+            "status": "Closed",
+            "created_at": "2025-05-30T12:00:00Z",
+            "updated_at": "2025-05-30T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 27,
+        "fields": {
+            "user": 7,
+            "subject": "Referral Request",
+            "description": "Request for a specialist referral",
+            "status": "Open",
+            "created_at": "2025-05-31T12:00:00Z",
+            "updated_at": "2025-05-31T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 28,
+        "fields": {
+            "user": 8,
+            "subject": "Prescription Refill",
+            "description": "Request to refill prescription",
+            "status": "In Progress",
+            "created_at": "2025-06-01T12:00:00Z",
+            "updated_at": "2025-06-01T12:00:00Z",
+            "handled_by": null,
+            "priority": "Medium"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 29,
+        "fields": {
+            "user": 9,
+            "subject": "Lab Results",
+            "description": "Inquiry about lab results",
+            "status": "Closed",
+            "created_at": "2025-06-02T12:00:00Z",
+            "updated_at": "2025-06-02T12:00:00Z",
+            "handled_by": null,
+            "priority": "Low"
+        }
+    },
+    {
+        "model": "CareLink.helpdeskticket",
+        "pk": 30,
+        "fields": {
+            "user": 10,
+            "subject": "General Inquiry",
+            "description": "General question about services",
+            "status": "Open",
+            "created_at": "2025-06-03T12:00:00Z",
+            "updated_at": "2025-06-03T12:00:00Z",
+            "handled_by": null,
+            "priority": "High"
+        }
+    }
+]

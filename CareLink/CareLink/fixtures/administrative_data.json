@@ -1,0 +1,26 @@
+[
+    {
+        "model": "CareLink.administrative",
+        "pk": 1,
+        "fields": {
+            "user": 1,
+            "is_internal": true
+        }
+    },
+    {
+        "model": "CareLink.administrative",
+        "pk": 2,
+        "fields": {
+            "user": 2,
+            "is_internal": false
+        }
+    },
+    {
+        "model": "CareLink.administrative",
+        "pk": 3,
+        "fields": {
+            "user": 3,
+            "is_internal": true
+        }
+    }
+]
