@@ -1,0 +1,47 @@
+[
+    {
+        "model": "CareLink.provider",
+        "pk": 1,
+        "fields": {
+            "user": 20,
+            "service": 1,
+            "is_internal": true
+        }
+    },
+    {
+        "model": "CareLink.provider",
+        "pk": 2,
+        "fields": {
+            "user": 21,
+            "service": 2,
+            "is_internal": false
+        }
+    },
+    {
+        "model": "CareLink.provider",
+        "pk": 3,
+        "fields": {
+            "user": 22,
+            "service": 1,
+            "is_internal": true
+        }
+    },
+    {
+        "model": "CareLink.provider",
+        "pk": 4,
+        "fields": {
+            "user": 23,
+            "service": 2,
+            "is_internal": false
+        }
+    },
+    {
+        "model": "CareLink.provider",
+        "pk": 5,
+        "fields": {
+            "user": 24,
+            "service": 3,
+            "is_internal": true
+        }
+    }
+]

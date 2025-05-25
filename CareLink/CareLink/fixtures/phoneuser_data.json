@@ -1,0 +1,102 @@
+[
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 1,
+        "fields": {
+            "user": 1,
+            "phone_number": "+32 470 123 456",
+            "name": "Mobile",
+            "is_primary": true
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 2,
+        "fields": {
+            "user": 2,
+            "phone_number": "+32 471 234 567",
+            "name": "Home",
+            "is_primary": false
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 3,
+        "fields": {
+            "user": 3,
+            "phone_number": "+32 472 345 678",
+            "name": "Work",
+            "is_primary": true
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 4,
+        "fields": {
+            "user": 4,
+            "phone_number": "+32 473 456 789",
+            "name": "Mobile",
+            "is_primary": false
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 5,
+        "fields": {
+            "user": 5,
+            "phone_number": "+32 474 567 890",
+            "name": "Home",
+            "is_primary": true
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 6,
+        "fields": {
+            "user": 6,
+            "phone_number": "+32 475 678 901",
+            "name": "Work",
+            "is_primary": false
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 7,
+        "fields": {
+            "user": 7,
+            "phone_number": "+32 476 789 012",
+            "name": "Mobile",
+            "is_primary": true
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 8,
+        "fields": {
+            "user": 8,
+            "phone_number": "+32 477 890 123",
+            "name": "Home",
+            "is_primary": false
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 9,
+        "fields": {
+            "user": 9,
+            "phone_number": "+32 478 901 234",
+            "name": "Work",
+            "is_primary": true
+        }
+    },
+    {
+        "model": "CareLink.phoneuser",
+        "pk": 10,
+        "fields": {
+            "user": 10,
+            "phone_number": "+32 479 012 345",
+            "name": "Mobile",
+            "is_primary": false
+        }
+    }
+]

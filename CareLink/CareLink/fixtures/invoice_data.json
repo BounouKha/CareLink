@@ -1,0 +1,41 @@
+[
+    {
+        "model": "CareLink.invoice",
+        "pk": 1,
+        "fields": {
+            "patient": 1,
+            "created_at": "2025-05-25T10:00:00Z",
+            "status": "Paid",
+            "recall_at": null,
+            "amount": 20.00,
+            "service": 1,
+            "timeslots": [1, 2]
+        }
+    },
+    {
+        "model": "CareLink.invoice",
+        "pk": 2,
+        "fields": {
+            "patient": 2,
+            "created_at": "2025-05-25T11:00:00Z",
+            "status": "In Progress",
+            "recall_at": null,
+            "amount": 30.00,
+            "service": 2,
+            "timeslots": [3, 4, 5]
+        }
+    },
+    {
+        "model": "CareLink.invoice",
+        "pk": 3,
+        "fields": {
+            "patient": 3,
+            "created_at": "2025-05-25T12:00:00Z",
+            "status": "Cancelled",
+            "recall_at": null,
+            "amount": 10.00,
+            "service": 3,
+            "timeslots": [6]
+        }
+    }
+]

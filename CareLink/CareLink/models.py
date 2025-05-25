@@ -2,9 +2,16 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.models import BaseUserManager
+import datetime
+from django.core.exceptions import ValidationError
 
 ##Attention la base de données doit être en UTF-8 pour éviter les problèmes d'encodage
 
+
+# Add a validator for non-negative prices
+def validate_non_negative(value):
+    if value < 0:
+        raise ValidationError('Price cannot be negative.')
 
 class Administrative(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
@@ -16,10 +23,11 @@ class ContestInvoice(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     reason = models.TextField()
     status = models.CharField(max_length=20, choices=[('In Progress', 'In Progress'), ('Cancelled', 'Cancelled'), ('Accepted', 'Accepted')])
+    
 
 class Service(models.Model):
     name = models.CharField(max_length=50)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[validate_non_negative])
     description = models.CharField(max_length=250)
 
 class Contract(models.Model):
@@ -44,7 +52,7 @@ class HelpdeskTicket(models.Model):
     description = models.TextField()
     status = models.CharField(max_length=20, choices=[('Open', 'Open'), ('In Progress', 'In Progress'), ('Closed', 'Closed')])
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)  # Allow null values
     handled_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_tickets')
     priority = models.CharField(max_length=10, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')], default='Medium')
 
@@ -53,7 +61,7 @@ class InformationProviding(models.Model):
     provider = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True)
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
     coordinator = models.ForeignKey('Coordinator', on_delete=models.SET_NULL, null=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[validate_non_negative])
 
 class Invoice(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
@@ -61,15 +69,30 @@ class Invoice(models.Model):
     status = models.CharField(max_length=20, choices=[('Paid', 'Paid'), ('In Progress', 'In Progress'), ('Cancelled', 'Cancelled'), ('Contested', 'Contested')])
     recall_at = models.DateTimeField(null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    timeslots = models.ManyToManyField('TimeSlot', blank=True)
+    service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
+
+    def calculate_total_amount(self):
+        """Calculate the total amount for all timeslots in this invoice."""
+        if self.service:
+            return sum(timeslot.calculate_price() for timeslot in self.timeslots.filter(service=self.service))
+        return 0.0
+
+    def generate_invoice(self, date, service):
+        """Generate an invoice for all timeslots on a specific date and service."""
+        self.service = service
+        self.timeslots.set(TimeSlot.objects.filter(start_time__date=date, service=service))
+        self.amount = self.calculate_total_amount()
+        self.save()
 
 class MedicalFolder(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True) 
     note = models.CharField(max_length=1000, null=True, blank=True)
 
 class Patient(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
     gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female')])
     blood_type = models.CharField(max_length=3, null=True, blank=True)
     emergency_contact = models.CharField(max_length=15)
@@ -99,6 +122,7 @@ class Prescription(models.Model):
     end_date = models.DateField(null=True, blank=True)
     medication = models.TextField()
     instructions = models.TextField(null=True, blank=True)
+    rejection_comment = models.TextField(null=True, blank=True, help_text="Commentary or reason for rejection by the coordinator.")
 
 class Provider(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
@@ -114,12 +138,34 @@ class ProvidingCare(models.Model):
     prescription = models.ForeignKey('Prescription', on_delete=models.SET_NULL, null=True, blank=True)
 
 class Schedule(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     provider = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True)
-    time_slot = models.ForeignKey('TimeSlot', on_delete=models.SET_NULL, null=True)
     date = models.DateField()
-    prescription = models.ForeignKey('Prescription', on_delete=models.SET_NULL, null=True)
+    time_slots = models.ManyToManyField('TimeSlot', blank=True)
+
+    def generate_daily_schedule(self, date, provider):
+        """Generate timeslots for a specific day and provider."""
+        working_hours = [(9, 0), (17, 0)]  # Example: 9:00 AM to 5:00 PM
+        duration_minutes = 30  # Each timeslot is 30 minutes
+
+        start_time = datetime.datetime.combine(date, datetime.time(*working_hours[0]))
+        end_time = datetime.datetime.combine(date, datetime.time(*working_hours[1]))
+
+        current_time = start_time
+        while current_time < end_time:
+            next_time = current_time + datetime.timedelta(minutes=duration_minutes)
+            timeslot = TimeSlot.objects.create(
+                start_time=current_time.time(),
+                end_time=next_time.time(),
+                description=f"Timeslot for {provider}",
+                user=self.user  # Assign the user managing the schedule
+            )
+            self.time_slots.add(timeslot)
+            current_time = next_time
+
+        self.date = date
+        self.provider = provider
+        self.save()
 
 class ServiceDemand(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
@@ -155,6 +201,9 @@ class TimeSlot(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     description = models.CharField(max_length=255, null=True, blank=True)
+    prescription = models.ForeignKey('Prescription', on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
+    service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True, blank=True)
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -181,11 +230,11 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     firstname = models.CharField(max_length=50)
     lastname = models.CharField(max_length=50)
-    email = models.EmailField(unique=True, max_length=191)  # Reduced max_length to avoid key length issues
+    email = models.EmailField(unique=True, max_length=191)  
     password = models.CharField(max_length=128)  # Updated to match Django's default
     birthdate = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True) 
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
