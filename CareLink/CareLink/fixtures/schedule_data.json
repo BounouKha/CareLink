@@ -1,0 +1,32 @@
+[
+    {
+        "model": "CareLink.schedule",
+        "pk": 1,
+        "fields": {
+            "patient": 1,
+            "provider": 1,
+            "time_slots": [1, 2],
+            "date": "2025-05-27"
+        }
+    },
+    {
+        "model": "CareLink.schedule",
+        "pk": 2,
+        "fields": {
+            "patient": 2,
+            "provider": 2,
+            "time_slots": [3, 4],
+            "date": "2025-05-28"
+        }
+    },
+    {
+        "model": "CareLink.schedule",
+        "pk": 3,
+        "fields": {
+            "patient": 3,
+            "provider": 3,
+            "time_slots": [5, 6],
+            "date": "2025-05-29"
+        }
+    }
+]

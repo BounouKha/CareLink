@@ -1,0 +1,29 @@
+[
+{
+        "model": "CareLink.service",
+        "pk": 1,
+        "fields": {
+            "name": "Aide menager",
+            "price": "12.00",
+            "description": "Service aide menager"
+        }
+    },
+    {
+        "model": "CareLink.service",
+        "pk": 2,
+        "fields": {
+            "name": "Aide familial",
+            "price": "12.00",
+            "description": "Service aide familial"
+        }
+    },
+    {
+        "model": "CareLink.service",
+        "pk": 3,
+        "fields": {
+            "name": "Aide infirmier",
+            "price": "25.00",
+            "description": "Service infirmier"
+        }
+    }
+]

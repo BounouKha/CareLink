@@ -1,0 +1,456 @@
+
+
+
+[
+    {
+        "model": "CareLink.user",
+        "pk": 1,
+        "fields": {
+            "firstname": "John",
+            "lastname": "Doe",
+            "email": "john.doe@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": true,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Emile Bockstael 136, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 2,
+        "fields": {
+            "firstname": "Jane",
+            "lastname": "Smith",
+            "email": "jane.smith@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Emile Bockstael 13, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 3,
+        "fields": {
+            "firstname": "Alice",
+            "lastname": "Johnson",
+            "email": "alice.johnson@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Emile Bockstael 123, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 4,
+        "fields": {
+            "firstname": "Bob",
+            "lastname": "Brown",
+            "email": "bob.brown@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Emile Bockstael 126, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 5,
+        "fields": {
+            "firstname": "Charlie",
+            "lastname": "Davis",
+            "email": "charlie.davis@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Emile Bockstael 101, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 6,
+        "fields": {
+            "firstname": "Diana",
+            "lastname": "Evans",
+            "email": "diana.evans@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de Rogier 6, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 7,
+        "fields": {
+            "firstname": "Eve",
+            "lastname": "Foster",
+            "email": "eve.foster@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue Léopold I 146, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 8,
+        "fields": {
+            "firstname": "Frank",
+            "lastname": "Green",
+            "email": "frank.green@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue Léopold I 126, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 9,
+        "fields": {
+            "firstname": "Grace",
+            "lastname": "Harris",
+            "email": "grace.harris@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue Léopold I 10, Brussels"
+
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 10,
+        "fields": {
+            "firstname": "Henry",
+            "lastname": "Irwin",
+            "email": "henry.irwin@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue Marie-Christine 1, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 11,
+        "fields": {
+            "firstname": "Sophia",
+            "lastname": "Taylor",
+            "email": "sophia.taylor@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Anspach 112, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 12,
+        "fields": {
+            "firstname": "Liam",
+            "lastname": "Wilson",
+            "email": "liam.wilson@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Anspach 11, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 13,
+        "fields": {
+            "firstname": "Olivia",
+            "lastname": "Brown",
+            "email": "olivia.brown@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue du midi 10, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 14,
+        "fields": {
+            "firstname": "Emma",
+            "lastname": "Clark",
+            "email": "emma.clark@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de la Loi 16, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 15,
+        "fields": {
+            "firstname": "Noah",
+            "lastname": "Adams",
+            "email": "noah.adams@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Avenue Louise 54, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 16,
+        "fields": {
+            "firstname": "Lucas",
+            "lastname": "Miller",
+            "email": "lucas.miller@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard du Jardin Botanique 32, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 17,
+        "fields": {
+            "firstname": "Mia",
+            "lastname": "Davis",
+            "email": "mia.davis@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Place Sainte-Catherine 50, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 18,
+        "fields": {
+            "firstname": "Liam",
+            "lastname": "Anderson",
+            "email": "liam.anderson@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue Neuve 100, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 19,
+        "fields": {
+            "firstname": "Emma",
+            "lastname": "White",
+            "email": "emma.white@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Avenue de la Toison d'Or 40, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 20,
+        "fields": {
+            "firstname": "Noah",
+            "lastname": "Taylor",
+            "email": "noah.taylor@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Boulevard Anspach 1, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 21,
+        "fields": {
+            "firstname": "James",
+            "lastname": "Lopez",
+            "email": "james.lopez@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Chaussée de Waterloo 200, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 22,
+        "fields": {
+            "firstname": "Charlotte",
+            "lastname": "Wilson",
+            "email": "charlotte.wilson@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue des Bouchers 38, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 23,
+        "fields": {
+            "firstname": "Amelia",
+            "lastname": "Anderson",
+            "email": "amelia.anderson@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Place du Grand Sablon 5, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 24,
+        "fields": {
+            "firstname": "Alexander",
+            "lastname": "Thomas",
+            "email": "alexander.thomas@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de l'Ecuyer 50, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 25,
+        "fields": {
+            "firstname": "Sophia",
+            "lastname": "Moore",
+            "email": "sophia.moore@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de la Montagne 20, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 26,
+        "fields": {
+            "firstname": "Benjamin",
+            "lastname": "Martin",
+            "email": "benjamin.martin@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue des Fripiers 15, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 27,
+        "fields": {
+            "firstname": "Ella",
+            "lastname": "White",
+            "email": "ella.white@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de la Madeleine 10, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 28,
+        "fields": {
+            "firstname": "Lucas",
+            "lastname": "Harris",
+            "email": "lucas.harris@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de la Régence 30, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 29,
+        "fields": {
+            "firstname": "Mia",
+            "lastname": "Clark",
+            "email": "mia.clark@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de Namur 25, Brussels"
+        }
+    },
+    {
+        "model": "CareLink.user",
+        "pk": 30,
+        "fields": {
+            "firstname": "Oliver",
+            "lastname": "King",
+            "email": "oliver.king@example.com",
+            "password": "pbkdf2_sha256$260000$examplehash",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "created_at": "2025-05-25T12:00:00Z",
+            "address": "Rue de la Loi 100, Brussels"
+        }
+    }
+]

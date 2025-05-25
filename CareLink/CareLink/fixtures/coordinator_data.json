@@ -1,0 +1,26 @@
+[
+    {
+        "model": "CareLink.coordinator",
+        "pk": 1,
+        "fields": {
+            "user": 17,
+            "is_internal": true
+        }
+    },
+    {
+        "model": "CareLink.coordinator",
+        "pk": 2,
+        "fields": {
+            "user": 18,
+            "is_internal": true
+        }
+    },
+    {
+        "model": "CareLink.coordinator",
+        "pk": 3,
+        "fields": {
+            "user": 19,
+            "is_internal": true
+        }
+    }
+]

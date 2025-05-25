@@ -1,0 +1,192 @@
+[
+     {
+        "model": "CareLink.patient",
+        "pk": 1,
+        "fields": {
+            "user": 7,
+            "gender": "M",
+            "blood_type": "O+",
+            "emergency_contact": "1234567890",
+            "katz_score": 5,
+            "it_score": 3,
+            "illness": "Diabetes",
+            "critical_information": "Allergic to penicillin",
+            "medication": "Metformin",
+            "social_price": false,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 2,
+        "fields": {
+            "user": 8,
+            "gender": "F",
+            "blood_type": "A-",
+            "emergency_contact": "0987654321",
+            "katz_score": 4,
+            "it_score": 2,
+            "illness": "Hypertension",
+            "critical_information": "None",
+            "medication": "Amlodipine",
+            "social_price": true,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 3,
+        "fields": {
+            "user": 9,
+            "gender": "M",
+            "blood_type": "B+",
+            "emergency_contact": "1122334455",
+            "katz_score": 3,
+            "it_score": 2,
+            "illness": "Asthma",
+            "critical_information": "None",
+            "medication": "Salbutamol",
+            "social_price": false,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 4,
+        "fields": {
+            "user": 10,
+            "gender": "F",
+            "blood_type": "AB-",
+            "emergency_contact": "2233445566",
+            "katz_score": 2,
+            "it_score": 1,
+            "illness": "None",
+            "critical_information": "Vegetarian",
+            "medication": "",
+            "social_price": true,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 5,
+        "fields": {
+            "user": 11,
+            "gender": "M",
+            "blood_type": "O-",
+            "emergency_contact": "3344556677",
+            "katz_score": 5,
+            "it_score": 3,
+            "illness": "Diabetes",
+            "critical_information": "Allergic to nuts",
+            "medication": "Insulin",
+            "social_price": false,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 6,
+        "fields": {
+            "user": 12,
+            "gender": "F",
+            "blood_type": "A+",
+            "emergency_contact": "4455667788",
+            "katz_score": 4,
+            "it_score": 2,
+            "illness": "Hypertension",
+            "critical_information": "None",
+            "medication": "Lisinopril",
+            "social_price": true,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 7,
+        "fields": {
+            "user": 13,
+            "gender": "M",
+            "blood_type": "B-",
+            "emergency_contact": "5566778899",
+            "katz_score": 3,
+            "it_score": 2,
+            "illness": "Asthma",
+            "critical_information": "None",
+            "medication": "Budesonide",
+            "social_price": false,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 8,
+        "fields": {
+            "user": 14,
+            "gender": "F",
+            "blood_type": "AB+",
+            "emergency_contact": "6677889900",
+            "katz_score": 2,
+            "it_score": 1,
+            "illness": "None",
+            "critical_information": "Vegan",
+            "medication": "",
+            "social_price": true,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 9,
+        "fields": {
+            "user": 15,
+            "gender": "M",
+            "blood_type": "O+",
+            "emergency_contact": "7788990011",
+            "katz_score": 5,
+            "it_score": 3,
+            "illness": "Diabetes",
+            "critical_information": "Allergic to penicillin",
+            "medication": "Metformin",
+            "social_price": false,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    },
+    {
+        "model": "CareLink.patient",
+        "pk": 10,
+        "fields": {
+            "user": 16,
+            "gender": "F",
+            "blood_type": "A-",
+            "emergency_contact": "8899001122",
+            "katz_score": 4,
+            "it_score": 2,
+            "illness": "Hypertension",
+            "critical_information": "None",
+            "medication": "Amlodipine",
+            "social_price": true,
+            "is_alive": true,
+            "spouse": null,
+            "deletion_requested_at": null
+        }
+    }
+]

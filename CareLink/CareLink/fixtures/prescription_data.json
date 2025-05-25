@@ -1,0 +1,72 @@
+[
+    {
+        "model": "CareLink.prescription",
+        "pk": 1,
+        "fields": {
+            "service": 1,
+            "note": "Take medication after meals.",
+            "frequency": 2,
+            "status": "pending",
+            "start_date": "2025-05-20",
+            "end_date": "2025-05-30",
+            "medication": "Paracetamol 500mg",
+            "instructions": "Take one tablet twice a day."
+        }
+    },
+    {
+        "model": "CareLink.prescription",
+        "pk": 2,
+        "fields": {
+            "service": 2,
+            "note": "Apply ointment to affected area.",
+            "frequency": 1,
+            "status": "accepted",
+            "start_date": "2025-05-15",
+            "end_date": "2025-05-25",
+            "medication": "Antibiotic Cream",
+            "instructions": "Apply twice daily."
+        }
+    },
+    {
+        "model": "CareLink.prescription",
+        "pk": 3,
+        "fields": {
+            "service": 3,
+            "note": "Monitor blood sugar levels.",
+            "frequency": 3,
+            "status": "completed",
+            "start_date": "2025-05-01",
+            "end_date": "2025-05-31",
+            "medication": "Insulin",
+            "instructions": "Inject as prescribed by the doctor."
+        }
+    },
+    {
+        "model": "CareLink.prescription",
+        "pk": 4,
+        "fields": {
+            "service": 4,
+            "note": "Take before bedtime.",
+            "frequency": 1,
+            "status": "canceled",
+            "start_date": "2025-05-10",
+            "end_date": "2025-05-20",
+            "medication": "Sleeping Pills",
+            "instructions": "Take one pill before sleeping."
+        }
+    },
+    {
+        "model": "CareLink.prescription",
+        "pk": 5,
+        "fields": {
+            "service": 5,
+            "note": "Use as needed for pain.",
+            "frequency": 1,
+            "status": "rejected",
+            "start_date": "2025-05-05",
+            "end_date": "2025-05-15",
+            "medication": "Ibuprofen",
+            "instructions": "Take one tablet every 6 hours if needed."
+        }
+    }
+]
