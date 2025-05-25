@@ -74,8 +74,12 @@ WSGI_APPLICATION = 'CareLink.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'carelink',  # Replace with your database name
+        'USER': 'root',  # Replace with your MySQL username
+        'PASSWORD': '',  # Replace with your MySQL password
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
     }
 }
 
