@@ -12,11 +12,35 @@ const RegisterPage = () => {
     const [lastname, setLastname] = useState('');
     const [birthdate, setBirthdate] = useState('');
     const [address, setAddress] = useState('');
+    const [isGDPRChecked, setIsGDPRChecked] = useState(false);
     const navigate = useNavigate();
 
     const handleRegister = (e) => {
         e.preventDefault();
+        if (!isGDPRChecked) {
+            alert('You must accept the GDPR terms to register.');
+            return;
+        }
         // Registration logic here
+    };
+
+    const handleBirthdateChange = (e) => {
+        const selectedDate = new Date(e.target.value);
+        const today = new Date();
+        const minDate = new Date();
+        minDate.setFullYear(today.getFullYear() - 18); // 18 years ago
+
+        if (selectedDate > today) {
+            alert('Birthdate cannot be in the future.');
+            return;
+        }
+
+        if (selectedDate > minDate) {
+            alert('You must be at least 18 years old.');
+            return;
+        }
+
+        setBirthdate(e.target.value);
     };
 
     return (
@@ -47,7 +71,7 @@ const RegisterPage = () => {
                         <input
                             type="date"
                             value={birthdate}
-                            onChange={(e) => setBirthdate(e.target.value)}
+                            onChange={handleBirthdateChange}
                         />
                     </div>
                     <div className="form-group">
@@ -85,6 +109,17 @@ const RegisterPage = () => {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="checkbox"
+                            id="gdprConsent"
+                            checked={isGDPRChecked}
+                            onChange={(e) => setIsGDPRChecked(e.target.checked)}
+                        />
+                        <label htmlFor="gdprConsent">
+                            I accept the GDPR terms and conditions.
+                        </label>
                     </div>
                     <button type="submit" className="btn">Register</button>
                 </form>
