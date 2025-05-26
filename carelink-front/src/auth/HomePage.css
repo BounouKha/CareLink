@@ -13,6 +13,7 @@ body {
     height: 100vh;
     padding: 20px;
     box-sizing: border-box;
+    position: relative;
 }
 
 .homepage-header {
@@ -124,6 +125,39 @@ body {
     }
 }
 
+/* Hamburger menu styles */
+.hamburger-menu {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Responsive styles for screens under 800px */
+@media (max-width: 800px) {
+    .hamburger-menu {
+        display: block;
+    }
+
+    .homepage-buttons {
+        display: none;
+        flex-direction: column;
+        align-items: flex-start;
+        background-color: #fff;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .homepage-buttons.open {
+        display: flex;
+    }
+}
+
 .login-box {
     background-color: #fff;
     padding: 20px;
@@ -195,4 +229,19 @@ body {
 
 .forgot-password:hover {
     text-decoration: underline;
+}
+
+.hamburger-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.hamburger-overlay.open {
+    display: block;
 }
