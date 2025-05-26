@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Global button styles for .btn class */
+button.btn {
+    background-color: #28a745; /* Green color */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 10px 20px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+button.btn:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+button.btn:active {
+    transform: scale(0.95);
+}
