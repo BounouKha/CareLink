@@ -39,7 +39,7 @@ body {
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     width: 350px;
     text-align: center;
-    margin: margin-top
+    margin: 500px; /* Adjusted for better centering */
 }
 
 .login-box h2 {
@@ -119,6 +119,20 @@ body {
     width: 100%;
     z-index: 1000;
     background-color: #fff; /* Optional: Ensure header background is visible */
+}
+
+.registerpage-buttons .btn {
+    background-color: #0074D9 !important; /* Blue background */
+    color: #ffffff !important; /* White text */
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.registerpage-buttons .btn:hover {
+    background-color: #005bb5 !important; /* Darker blue on hover */
 }
 
 @media (max-width: 768px) {
