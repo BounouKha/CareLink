@@ -1,0 +1,143 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    overflow-y: scroll; /* Ensure the scrollbar is always present */
+}
+
+.homepage-container {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px;
+}
+
+.register-layout-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    
+}
+
+.homepage-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.login-box {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    width: 350px;
+    text-align: center;
+    margin: margin-top
+}
+
+.login-box h2 {
+    margin-bottom: 25px;
+    font-size: 24px;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #22C7EE;
+    outline: none;
+    box-shadow: 0 0 8px rgba(34, 199, 238, 0.5);
+}
+
+.btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #22C7EE;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn:hover {
+    background-color: #1AA6D1;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.forgot-password {
+    display: block;
+    margin-top: 15px;
+    color: #00bcd4;
+    text-decoration: none;
+    font-size: 14px;
+    text-align: center;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* Ensure consistent header placement and full width */
+.registerpage-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #fff; /* Optional: Ensure header background is visible */
+}
+
+@media (max-width: 768px) {
+    .homepage-container {
+        padding: 10px;
+    }
+
+    .login-box {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .form-group input {
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
