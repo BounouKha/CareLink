@@ -1,0 +1,198 @@
+body {
+    overflow-y: scroll; /* Ensure the scrollbar is always present */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.homepage-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.homepage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+/* Ensure consistent header placement and full width */
+.homepage-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #fff; /* Optional: Ensure header background is visible */
+}
+
+.homepage-logo {
+    height: 50px;
+}
+
+.homepage-buttons {
+    display: flex;
+    gap: 10px; /* Add spacing between buttons */
+}
+
+.homepage-buttons .btn {
+    margin-left: 10px;
+    margin-right: 10px; /* Add spacing between buttons */
+    padding: 10px 20px;
+    background-color: #00bcd4;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.homepage-buttons .btn:hover {
+    background-color: #0199a8;
+}
+
+.homepage-buttons .btn:active {
+    transform: scale(0.95);
+}
+
+.homepage-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Ensure the header spans 100% width */
+.homepage-header {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure responsive layout for HomePage */
+.homepage-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.homepage-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Add media query for smaller screens */
+@media (max-width: 768px) {
+    .homepage-header {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .homepage-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .homepage-main {
+        padding: 10px;
+    }
+}
+
+.login-box {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+    padding: 15px;
+    margin-top: 300px;
+}
+
+.login-box h2 {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #00bcd4;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 188, 212, 0.5);
+}
+
+.btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #00bcd4;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #0199a8;
+}
+
+.forgot-password {
+    display: block;
+    margin-top: 15px;
+    color: #00bcd4;
+    text-decoration: none;
+    font-size: 14px;
+    text-align: center;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}

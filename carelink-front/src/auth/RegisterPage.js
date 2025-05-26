@@ -1,0 +1,96 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './HomePage.css';
+import BaseLayout from './BaseLayout';
+
+const RegisterPage = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [firstname, setFirstname] = useState('');
+    const [lastname, setLastname] = useState('');
+    const [birthdate, setBirthdate] = useState('');
+    const [address, setAddress] = useState('');
+    const navigate = useNavigate();
+
+    const handleRegister = (e) => {
+        e.preventDefault();
+        // Registration logic here
+    };
+
+    return (
+        <BaseLayout>
+            <div className="login-box">
+                <h2>Create an Account</h2>
+                <form onSubmit={handleRegister}>
+                    <div className="form-group">
+                        <label>First Name</label>
+                        <input
+                            type="text"
+                            placeholder="Enter your first name"
+                            value={firstname}
+                            onChange={(e) => setFirstname(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Last Name</label>
+                        <input
+                            type="text"
+                            placeholder="Enter your last name"
+                            value={lastname}
+                            onChange={(e) => setLastname(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Birthdate</label>
+                        <input
+                            type="date"
+                            value={birthdate}
+                            onChange={(e) => setBirthdate(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Address</label>
+                        <input
+                            type="text"
+                            placeholder="Enter your address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Password</label>
+                        <input
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Confirm Password</label>
+                        <input
+                            type="password"
+                            placeholder="Confirm your password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+                    </div>
+                    <button type="submit" className="btn">Register</button>
+                </form>
+            </div>
+        </BaseLayout>
+    );
+};
+
+export default RegisterPage;
