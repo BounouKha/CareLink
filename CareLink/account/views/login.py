@@ -12,16 +12,29 @@ class LoginAPIView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
 
+        # Debugging: Log email and password
+        print("[DEBUG] Email:", email)
+        print("[DEBUG] Password:", password)
+
         if not email or not password:
+            print("[DEBUG] Missing email or password.")
             return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(request, email=email, password=password)
 
         if user is not None:
+            # Debugging: Log successful authentication
+            print("[DEBUG] User authenticated:", user)
+
             refresh = RefreshToken.for_user(user)
+            print("[DEBUG] Access Token:", str(refresh.access_token))
+            print("[DEBUG] Refresh Token:", str(refresh))
+
             return Response({
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
             }, status=status.HTTP_200_OK)
         else:
+            # Debugging: Log failed authentication
+            print("[DEBUG] Invalid credentials.")
             return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
