@@ -14,6 +14,35 @@ const BaseLayout = ({ children }) => {
         document.body.style.zoom = savedZoom.toString();
     }, []);
 
+    useEffect(() => {
+        const refreshToken = async () => {
+            const refresh = localStorage.getItem('refreshToken');
+            if (!refresh) return;
+
+            try {
+                const response = await fetch('http://localhost:8000/account/token/refresh/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refresh }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('accessToken', data.access);
+                } else {
+                    console.error('Failed to refresh token');
+                }
+            } catch (error) {
+                console.error('Error refreshing token:', error);
+            }
+        };
+
+        const interval = setInterval(refreshToken, 4 * 60 * 1000); // Refresh every 4 minutes
+        return () => clearInterval(interval);
+    }, []);
+
     const toggleMenu = () => {
         const newMenuState = !isMenuOpen;
         setIsMenuOpen(newMenuState);
