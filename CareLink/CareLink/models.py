@@ -45,6 +45,7 @@ class Coordinator(models.Model):
 class FamilyPatient(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     link = models.CharField(max_length=50)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='family_patients')
 
 class HelpdeskTicket(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_tickets')
