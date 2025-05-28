@@ -82,13 +82,20 @@ const ProfilePage = () => {
         return <BaseLayout><div>Loading...</div></BaseLayout>;
     }
 
+    console.log(userData);
+
     return (
         <BaseLayout>
+            <div className="profile-title">Profile</div>
             <div className="profile-container" ref={profileRef}>
-                <h1>Profile</h1>
+                {/* <h1>Profile</h1> */}
+                <div className="role-display">
+                    <p><strong>{userData.user.role}</strong> </p>
+                </div>
             </div>
             <div className="profile-page">
                 <div className="profile-info">
+                    {/* User Information */}
                     <div className="user-info">
                         <h2>User Information</h2>
                         <p><strong>Email:</strong> {userData.user.email}</p>
@@ -100,28 +107,35 @@ const ProfilePage = () => {
                         )}
                         <p><strong>Birthdate:</strong> {userData.user.birthdate}</p>
                     </div>
-                    <div className="phone-info">
-                        <h2>Phone Numbers</h2>
-                        {userData.phone_numbers && userData.phone_numbers.length > 0 ? (
-                            <ul>
-                                {userData.phone_numbers.map((phone, index) => (
-                                    <li key={index}>{phone.name || 'Phone'}: {phone.phone_number}</li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No phone numbers available.</p>
-                        )}
-                    </div>
+
+                    {/* Patient Information */}
+                    {userData.patient && (
+                        <div className="profile-info patient-profile-info">
+                            <h2>Patient Information</h2>
+                            <p><strong>Gender:</strong> {userData.patient.gender}</p>
+                            <p><strong>Blood Type:</strong> {userData.patient.blood_type}</p>
+                            <p><strong>Emergency Contact:</strong> {userData.patient.emergency_contact}</p>
+                            <p><strong>Illness:</strong> {userData.patient.illness}</p>
+                            <p><strong>Medication:</strong> {userData.patient.medication}</p>
+                            <p><strong>Social Price:</strong> {userData.patient.social_price ? 'Yes' : 'No'}</p>
+                        </div>
+                    )}
+
+                    {/* Family Relationships */}
                     <div className="family-info">
-                        <h2>Family Information</h2>
+                        <h2>Family Relationships</h2>
                         {userData.family && userData.family.length > 0 ? (
                             <ul>
-                                {userData.family.map((family, index) => (
-                                    <li key={index}>{family.link}: Patient ID {family.patient_id}</li>
+                                {userData.family.map((relation, index) => (
+                                    <li key={index}>
+                                        <p><strong>Relation:</strong> {relation.link}</p>
+                                        <p><strong>Family Member (User ID):</strong> {relation.user_id}</p>
+                                        <p><strong>Patient (Patient ID):</strong> {relation.patient_id}</p>
+                                    </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p>No family information available.</p>
+                            <p>No family relationships available.</p>
                         )}
                     </div>
                 </div>
