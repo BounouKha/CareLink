@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './HomePage.css';
 import BaseLayout from './BaseLayout';
+import './RegisterPage.css';
 
 const RegisterPage = () => {
     const [email, setEmail] = useState('');
@@ -13,15 +12,33 @@ const RegisterPage = () => {
     const [birthdate, setBirthdate] = useState('');
     const [address, setAddress] = useState('');
     const [isGDPRChecked, setIsGDPRChecked] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
         if (!isGDPRChecked) {
             alert('You must accept the GDPR terms to register.');
             return;
         }
-        // Registration logic here
+        try {
+            const response = await fetch('http://localhost:8000/account/register/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Registration failed.');
+            }
+
+            alert('Registration successful! Please log in.');
+            navigate('/login');
+        } catch (err) {
+            setError(err.message);
+        }
     };
 
     const handleBirthdateChange = (e) => {
@@ -45,7 +62,7 @@ const RegisterPage = () => {
 
     return (
         <BaseLayout>
-            <div className="login-box">
+            <div className="register-container">
                 <h2>Create an Account</h2>
                 <form onSubmit={handleRegister}>
                     <div className="form-group">
@@ -121,6 +138,7 @@ const RegisterPage = () => {
                             I accept the GDPR terms and conditions.
                         </label>
                     </div>
+                    {error && <p className="error-message">{error}</p>}
                     <button type="submit" className="btn">Register</button>
                 </form>
             </div>
