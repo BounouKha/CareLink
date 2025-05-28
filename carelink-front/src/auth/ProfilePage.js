@@ -5,6 +5,7 @@ import BaseLayout from './BaseLayout';
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);
+    const [selectedTab, setSelectedTab] = useState('user');
     const profileRef = useRef(null);
 
     useEffect(() => {
@@ -24,6 +25,7 @@ const ProfilePage = () => {
                 }
 
                 const data = await response.json();
+                console.log('[DEBUG] Fetched Profile Data:', data); // Debugging fetched data
                 setUserData(data);
             } catch (err) {
                 setError('Failed to fetch profile data. Please try again.');
@@ -74,28 +76,10 @@ const ProfilePage = () => {
         };
     }, [profileRef]);
 
-    if (error) {
-        return <BaseLayout><div className="error">{error}</div></BaseLayout>;
-    }
-
-    if (!userData) {
-        return <BaseLayout><div>Loading...</div></BaseLayout>;
-    }
-
-    console.log(userData);
-
-    return (
-        <BaseLayout>
-            <div className="profile-title">Profile</div>
-            <div className="profile-container" ref={profileRef}>
-                {/* <h1>Profile</h1> */}
-                <div className="role-display">
-                    <p><strong>{userData.user.role}</strong> </p>
-                </div>
-            </div>
-            <div className="profile-page">
-                <div className="profile-info">
-                    {/* User Information */}
+    const renderContent = () => {
+        switch (selectedTab) {
+            case 'user':
+                return (
                     <div className="user-info">
                         <h2>User Information</h2>
                         <p><strong>Email:</strong> {userData.user.email}</p>
@@ -107,21 +91,25 @@ const ProfilePage = () => {
                         )}
                         <p><strong>Birthdate:</strong> {userData.user.birthdate}</p>
                     </div>
-
-                    {/* Patient Information */}
-                    {userData.patient && (
-                        <div className="profile-info patient-profile-info">
-                            <h2>Patient Information</h2>
-                            <p><strong>Gender:</strong> {userData.patient.gender}</p>
-                            <p><strong>Blood Type:</strong> {userData.patient.blood_type}</p>
-                            <p><strong>Emergency Contact:</strong> {userData.patient.emergency_contact}</p>
-                            <p><strong>Illness:</strong> {userData.patient.illness}</p>
-                            <p><strong>Medication:</strong> {userData.patient.medication}</p>
-                            <p><strong>Social Price:</strong> {userData.patient.social_price ? 'Yes' : 'No'}</p>
-                        </div>
-                    )}
-
-                    {/* Family Relationships */}
+                );
+            case 'patient':
+                return (
+                    <div className="patient-info">
+                        <h2>Patient Information</h2>
+                        {userData.patient ? (
+                            <div>
+                                <p><strong>Gender:</strong> {userData.patient.gender}</p>
+                                <p><strong>Blood Type:</strong> {userData.patient.blood_type}</p>
+                                <p><strong>Emergency Contact:</strong> {userData.patient.emergency_contact}</p>
+                                <p><strong>Illness:</strong> {userData.patient.illness}</p>
+                            </div>
+                        ) : (
+                            <p>No patient information available.</p>
+                        )}
+                    </div>
+                );
+            case 'family':
+                return (
                     <div className="family-info">
                         <h2>Family Relationships</h2>
                         {userData.family && userData.family.length > 0 ? (
@@ -138,6 +126,71 @@ const ProfilePage = () => {
                             <p>No family relationships available.</p>
                         )}
                     </div>
+                );
+            case 'medical':
+                return (
+                    <div className="medical-folder">
+                        <h2>Medical Folder</h2>
+                        {userData.medical_folder && userData.medical_folder.length > 0 ? (
+                            <ul>
+                                {userData.medical_folder.map((record, index) => (
+                                    <li key={index}>
+                                        <p><strong>Date:</strong> {record.created_at}</p>
+                                        <p><strong>Notes:</strong> {record.note || 'N/A'}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>No medical folder data available.</p>
+                        )}
+                    </div>
+                );
+            case 'contact':
+                return (
+                    <div className="contact-info">
+                        <h2>Contact Information</h2>
+                        {userData.phone_numbers && userData.phone_numbers.length > 0 ? (
+                            <ul>
+                                {userData.phone_numbers.map((phone, index) => (
+                                    <li key={index}>
+                                        <p><strong>{phone.name}</strong> {phone.phone_number}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>No contact information available.</p>
+                        )}
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
+    if (error) {
+        return <BaseLayout><div className="error">{error}</div></BaseLayout>;
+    }
+
+    if (!userData) {
+        return <BaseLayout><div>Loading...</div></BaseLayout>;
+    }
+
+    return (
+        <BaseLayout>
+            <div className="profile-title">Profile</div>
+            <div className="profile-container" ref={profileRef}>
+                <div className="role-display">
+                    <p><strong>Role:</strong> {userData.user.role}</p>
+                </div>
+                <div className="toolbar">
+                    <button onClick={() => setSelectedTab('user')} className={selectedTab === 'user' ? 'active' : ''}>User Info</button>
+                    <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Patient Info</button>
+                    <button onClick={() => setSelectedTab('family')} className={selectedTab === 'family' ? 'active' : ''}>Family</button>
+                    <button onClick={() => setSelectedTab('medical')} className={selectedTab === 'medical' ? 'active' : ''}>Medical Folder</button>
+                    <button onClick={() => setSelectedTab('contact')} className={selectedTab === 'contact' ? 'active' : ''}>Contact</button>
+                </div>
+                <div className="profile-content">
+                    {renderContent()}
                 </div>
             </div>
         </BaseLayout>
