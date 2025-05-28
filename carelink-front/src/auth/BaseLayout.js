@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './HomePage.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,9 +45,11 @@ const BaseLayout = ({ children }) => {
     }, []);
 
     const toggleMenu = () => {
-        const newMenuState = !isMenuOpen;
-        setIsMenuOpen(newMenuState);
-        localStorage.setItem('isMenuOpen', newMenuState); // Save to localStorage
+        setIsMenuOpen(!isMenuOpen);
+    };
+
+    const closeMenu = () => {
+        setIsMenuOpen(false);
     };
 
     const increaseZoom = () => {
@@ -87,7 +90,11 @@ const BaseLayout = ({ children }) => {
                 <button className="hamburger-menu" onClick={toggleMenu}>
                     ☰
                 </button>
+                {isMenuOpen && <div className="hamburger-overlay" onClick={closeMenu}></div>}
                 <div className={`homepage-buttons ${isMenuOpen ? 'open' : 'closed'}`}>
+                    <button className="btn btn-secondary close-menu" onClick={closeMenu}>
+                        <i className="bi bi-x"></i>
+                    </button>
                     <button className="btn btn-primary" onClick={() => window.location.href = '/'}>Home</button>
                     {!isConnected && (
                         <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>Register</button>
