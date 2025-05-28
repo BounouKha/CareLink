@@ -242,6 +242,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     address = models.CharField(max_length=255, null=True, blank=True)
     national_number = models.CharField(max_length=11, unique=True, null=True, blank=True)  # Reduced max_length
 
+    ROLE_CHOICES = [
+        ('Administrative', 'Administrative'),
+        ('Patient', 'Patient'),
+        ('Coordinator', 'Coordinator'),
+        ('Family Patient', 'Family Patient'),
+        ('Social Assistant', 'Social Assistant'),
+        ('Provider', 'Provider'),
+        ('Administrator', 'Administrator'),
+    ]
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True, blank=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['firstname', 'lastname']
 
