@@ -72,7 +72,7 @@ const BaseLayout = ({ children }) => {
                 </button>
                 <div className={`homepage-buttons ${isMenuOpen ? 'open' : 'closed'}`}>
                     <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>S'inscrire</button>
-                    <button className="btn btn-primary" onClick={() => window.location.href = '/'}>Espace membre</button>
+                    <button className="btn btn-primary" onClick={() => window.location.href = '/login'}>Espace membre</button>
                     <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
                 </div>
