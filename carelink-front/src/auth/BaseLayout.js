@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './HomePage.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import LeftToolbar from './LeftToolbar';
+import './LeftToolbar.css';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -82,6 +84,7 @@ const BaseLayout = ({ children }) => {
     };
 
     const isConnected = !!localStorage.getItem('accessToken');
+    const isMemberArea = window.location.pathname.startsWith('/profile'); // Adjust for other member area routes
 
     return (
         <div className="homepage-container">
@@ -107,6 +110,7 @@ const BaseLayout = ({ children }) => {
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
                 </div>
             </header>
+            {isMemberArea && <LeftToolbar />}
             <main className="homepage-main">
                 {children}
             </main>
