@@ -6,6 +6,7 @@ from .views.logout import LogoutAPIView
 from account.views.profile import ProfileView
 from .views.phoneuser import PhoneUserViewSet
 from .views.familypatient import FamilyPatientViewSet
+from account.views.medicalfolder import MedicalFolderViewSet
 from rest_framework.routers import DefaultRouter
 
 
@@ -14,6 +15,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'phoneuser', PhoneUserViewSet, basename='phoneuser')
 router.register(r'familypatient', FamilyPatientViewSet, basename='familypatient')
+router.register(r'medicalFolder', MedicalFolderViewSet, basename='medicalfolder')
 
 
 
