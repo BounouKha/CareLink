@@ -8,6 +8,8 @@ from .views.phoneuser import PhoneUserViewSet
 from .views.familypatient import FamilyPatientViewSet
 from account.views.medicalfolder import MedicalFolderViewSet
 from rest_framework.routers import DefaultRouter
+from .views.admin import AdminUserListView
+from .views.edit_user import EditUserView
 
 
 
@@ -28,3 +30,8 @@ urlpatterns = [
 
     
 ] + router.urls
+
+urlpatterns += [
+    path('users/', AdminUserListView.as_view(), name='admin_users'),
+    path('edit-user/<int:user_id>/', EditUserView.as_view(), name='edit_user'),
+]

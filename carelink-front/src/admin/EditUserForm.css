@@ -1,0 +1,49 @@
+.edit-user-form {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.edit-user-form h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.edit-user-form label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.edit-user-form input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.edit-user-form button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.edit-user-form button:hover {
+    background-color: #0056b3;
+}
+
+.edit-user-form button[type="button"] {
+    background-color: #ccc;
+}
+
+.edit-user-form button[type="button"]:hover {
+    background-color: #999;
+}
