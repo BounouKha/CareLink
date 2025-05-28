@@ -63,6 +63,15 @@ const BaseLayout = ({ children }) => {
         localStorage.setItem('zoomLevel', newZoom);
     };
 
+    const handleMemberAreaClick = () => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            window.location.href = '/profile';
+        } else {
+            window.location.href = '/login';
+        }
+    };
+
     return (
         <div className="homepage-container">
             <header className="homepage-header fixed-header">
@@ -71,8 +80,8 @@ const BaseLayout = ({ children }) => {
                     ☰
                 </button>
                 <div className={`homepage-buttons ${isMenuOpen ? 'open' : 'closed'}`}>
-                    <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>S'inscrire</button>
-                    <button className="btn btn-primary" onClick={() => window.location.href = '/login'}>Espace membre</button>
+                    <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>Register</button>
+                    <button className="btn btn-primary" onClick={handleMemberAreaClick}>Member Area</button>
                     <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
                 </div>
