@@ -72,15 +72,29 @@ const BaseLayout = ({ children }) => {
         }
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+    };
+
+    const isConnected = !!localStorage.getItem('accessToken');
+
     return (
         <div className="homepage-container">
             <header className="homepage-header fixed-header">
-                <img src="/logo192.png" alt="Logo" className="homepage-logo" />
+                <img src="/Logo.png" alt="Logo" className="homepage-logo" style={{ width: '100px', height: 'auto' }} />
                 <button className="hamburger-menu" onClick={toggleMenu}>
                     ☰
                 </button>
                 <div className={`homepage-buttons ${isMenuOpen ? 'open' : 'closed'}`}>
-                    <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>Register</button>
+                    <button className="btn btn-primary" onClick={() => window.location.href = '/'}>Home</button>
+                    {!isConnected && (
+                        <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>Register</button>
+                    )}
+                    {isConnected && (
+                        <button className="btn btn-primary" onClick={handleLogout}>Logout</button>
+                    )}
                     <button className="btn btn-primary" onClick={handleMemberAreaClick}>Member Area</button>
                     <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
