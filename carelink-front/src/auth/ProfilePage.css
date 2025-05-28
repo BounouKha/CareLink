@@ -10,21 +10,7 @@
     color: #333;
 }
 
-.profile-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #000000;
-    margin-bottom: 20px;
-    position: fixed;
-    top : 20%;
-    left: 10px;
-    z-index: 999;
-    border: 2px solid #000000; /* Add border */
-    border-radius: 8px; /* Rounded corners */
-    padding: 10px 20px; /* Add padding */
-    background: #ffffff; /* Background color */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-}
+
 
 .profile-container {
     background: #fff;

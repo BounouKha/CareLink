@@ -190,7 +190,7 @@ const ProfilePage = () => {
 
     return (
         <BaseLayout>
-            <div className="profile-title">Profile</div>
+            
             <div className="profile-container" ref={profileRef}>
                 <div className="role-display">
                     <p><strong>Role:</strong> {userData.user.role}</p>
