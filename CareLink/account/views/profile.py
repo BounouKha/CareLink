@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from account.views.familypatient import FamilyPatientViewSet
 from CareLink.models import MedicalFolder
 from account.serializers.phoneuser import PhoneUserSerializer
 from account.serializers.user import UserSerializer
-from account.serializers.familypatient import FamilyPatientSerializer
 from account.serializers.patient import PatientSerializer
-from account.serializers.medicalfolder import MedicalFolderSerializer   
 from django.http import JsonResponse
+from account.serializers.familypatient import FamilyPatientSerializer  # Import the correct serializer
 
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -27,8 +27,16 @@ class ProfileView(APIView):
         phone_numbers = user.phone_numbers.all()
         family_list = user.family_patients.all()
         phone_serializer = PhoneUserSerializer(phone_numbers, many=True)
+
+        # Debugging: Log family list before serialization
+        print("[DEBUG] Family List (Raw):", family_list)
+
+        # Serialize family relationships
         family_serializer = FamilyPatientSerializer(family_list, many=True)
-        
+
+        # Debugging: Log serialized family data
+        print("[DEBUG] Family Data (Serialized):", family_serializer.data)
+
         # Add patient info if user is a patient
         patient_data = None
         if user.role == 'Patient':
@@ -51,10 +59,22 @@ class ProfileView(APIView):
         except MedicalFolder.DoesNotExist:
             medical_folder_data = []
 
+        # Add family relationships
+        family_relationships = []
+        if user.role == 'Patient':
+            from CareLink.models import FamilyPatient
+            try:
+                patient = Patient.objects.get(user=user)
+                family_relationships = FamilyPatient.objects.filter(patient=patient)
+            except Patient.DoesNotExist:
+                family_relationships = []
+
+        family_relationships_serializer = FamilyPatientSerializer(family_relationships, many=True)
+
         response_data = {
             "user": serializer.data,
             "phone_numbers": phone_serializer.data,
-            "family": family_serializer.data,
+            "family_relationships": family_relationships_serializer.data,
             "patient": patient_data,
             "medical_folder": medical_folder_data
         }
