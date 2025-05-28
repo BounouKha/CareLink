@@ -116,17 +116,15 @@ body {
     }
 }
 
-/* Hamburger menu styles */
+/* Adjust the size of the hamburger menu icon */
 .hamburger-menu {
     display: none;
-    background: none;
-    border: none;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
 }
 
-/* Responsive styles for screens under 800px */
-@media (max-width: 800px) {
+/* Ensure the hamburger menu is only visible under 1000px */
+@media (max-width: 1000px) {
     .hamburger-menu {
         display: block;
     }
@@ -147,6 +145,50 @@ body {
     .homepage-buttons.open {
         display: flex;
     }
+
+    .close-menu {
+        align-self: flex-end;
+        margin-bottom: 10px;
+    }
+}
+
+/* Ensure the close button is only visible in the hamburger menu */
+.close-menu {
+    display: none;
+}
+
+@media (max-width: 1000px) {
+    .close-menu {
+        display: block;
+        align-self: flex-end;
+        margin-bottom: 10px;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+}
+
+/* Style the close button icon with a distinct color */
+.close-menu i {
+    color: red; /* Set the color to red for better visibility */
+    font-size: 24px;
+}
+
+/* Add styles for the hamburger overlay */
+.hamburger-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.hamburger-overlay.open {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .login-box {
@@ -222,19 +264,16 @@ body {
     text-decoration: underline;
 }
 
-.hamburger-overlay {
-    display: none;
+/* Ensure the profile section is aligned to the left */
+.profile-section {
     position: fixed;
-    top: 0;
+    top: 50px;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-}
-
-.hamburger-overlay.open {
-    display: block;
+    width: 200px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    z-index: 1000;
 }
 
 .homepage-image {
@@ -258,4 +297,13 @@ body {
     text-align: center;
     margin-top: 20px;
     
+}
+
+/* Ensure the hamburger menu is under everything */
+.hamburger-menu {
+    z-index: -1; /* Place the hamburger menu under other elements */
+}
+
+.hamburger-overlay {
+    z-index: 1003; /* Ensure the overlay is above the hamburger menu */
 }
