@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './HomePage.css';
+import './LoginPage.css';
 import BaseLayout from './BaseLayout';
 
-const HomePage = () => {
+const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -28,8 +28,7 @@ const HomePage = () => {
             const { access, refresh } = data;
             localStorage.setItem('accessToken', access);
             localStorage.setItem('refreshToken', refresh);
-            alert('Login successful!');
-            navigate('/profile'); // Redirect to profile page
+            navigate('/profile');
         } catch (err) {
             setError(err.message);
         }
@@ -37,15 +36,33 @@ const HomePage = () => {
 
     return (
         <BaseLayout>
-            <div className="homepage-container">
-                <img src="/homepage.png" alt="Homepage" className="homepage-image" />
-                <div className="homepage-text">
-                    <h1>Welcome to CareLink</h1>
-                    <p>SLOGAN</p>
-                </div>
+            <div className="login-container">
+                <h2>Login</h2>
+                <form onSubmit={handleLogin}>
+                    <div className="form-group">
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    {error && <p className="error-message">{error}</p>}
+                    <button type="submit">Login</button>
+                </form>
             </div>
         </BaseLayout>
     );
 };
 
-export default HomePage;
+export default LoginPage;
