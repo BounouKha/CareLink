@@ -1,0 +1,91 @@
+.admin-panel {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-panel h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.admin-panel-navigation ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    display: flex;
+    gap: 15px;
+}
+
+.admin-panel-navigation li {
+    display: inline;
+}
+
+.admin-panel-navigation a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.admin-panel-navigation a:hover {
+    text-decoration: underline;
+}
+
+.admin-panel-content {
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.toolbar button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.toolbar button.active {
+    background-color: #0056b3;
+}
+
+.toolbar button:hover {
+    background-color: #0056b3;
+}
+
+.content {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow-x: auto; /* Add horizontal scrolling for wide tables */
+}
+
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.content th, .content td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.content th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.content td {
+    white-space: nowrap; /* Prevent text wrapping */
+}
