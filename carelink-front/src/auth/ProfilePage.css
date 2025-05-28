@@ -1,91 +1,129 @@
 /* ProfilePage.css */
 
 .profile-page {
-    position: fixed;
-    max-width: 600px;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 20px;
+    background-color: #f4f8fb;
     font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    top: 250px;
-    left: 30px;
-}
-
-.profile-page h1 {
-    text-align: center;
     color: #333;
 }
 
-.profile-info {
-    margin-top: 20px;
-}
-
-.profile-info p {
-    font-size: 16px;
-    color: #555;
-    margin: 8px 0;
-}
-
-.profile-info strong {
-    color: #000;
-}
-
-.error {
-    color: red;
-    text-align: center;
-    margin-top: 20px;
-}
-
-.role-display {
-    position: fixed;
-    top: 150px;
-    right: 20px;
-    background-color: #ffffff;
-    color: #000000;
-    padding: 10px 15px;
-    border-radius: 20px;
-    box-shadow: 3px 4px 5px rgba(0, 0, 0, 0.1);
-    font-size: 16px;
-    font-weight: bold;
-    z-index: 1000;
-    text-align: center;
-}
-
 .profile-title {
-    position: fixed;
-    top: 150px;
-    left: 30px;
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     font-weight: bold;
     color: #000000;
-    background: white;
-    padding: 8px 24px;
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    z-index: 1001;
-    letter-spacing: 2px;
-}
-
-.patient-profile-info {
+    margin-bottom: 20px;
     position: fixed;
-    top: 250px;
-    left: 450px;
-    margin-top: 0;
-    padding: 18px 20px;
-    background: #eaf6ff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    color: #003366;
+    top : 20%;
+    left: 10px;
+    z-index: 1000;
+    border: 2px solid #000000; /* Add border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 10px 20px; /* Add padding */
+    background: #ffffff; /* Background color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
-.patient-profile-info h2 {
-    color: #007bff;
+.profile-container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 800px;
+    width: 100%;
+    min-height: 600px; /* Fixed minimum height */
+    height: 600px; /* Fixed height */
+}
+
+/* Ensure consistent size for profile content */
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 500px; /* Fixed minimum height */
+    height: 500px; /* Fixed height */
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    background: #eaf2fb;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.toolbar button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: #00bcd4;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+
+.toolbar button.active,
+.toolbar button:hover {
+    background: #00bcd4;
+    color: #fff;
+}
+
+.user-info, .patient-info, .family-info, .medical-folder, .contact-info {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-info h2, .patient-info h2, .family-info h2, .medical-folder h2, .contact-info h2 {
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.user-info p, .patient-info p, .family-info p, .medical-folder p {
+    margin: 8px 0;
+    font-size: 1rem;
+    color: #555;
+}
+
+.family-info ul, .medical-folder ul, .contact-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.family-info li, .medical-folder li, .contact-info, .user-info p, .patient-info p, li {
     margin-bottom: 12px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.patient-profile-info p {
-    margin: 6px 0;
-    font-size: 15px;
+.contact-info {
+    background: #f9f9f9; /* Ensure pure white background */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.contact-info h2 {
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.contact-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.contact-info li {
+    margin-bottom: 12px;
+    padding: 10px;
+    background: #ffffff; /* Ensure pure white background */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
