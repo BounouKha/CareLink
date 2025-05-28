@@ -12,6 +12,13 @@ const ProfilePage = () => {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
+
+                if (!token) {
+                    // Redirect to login if token is missing
+                    window.location.href = '/login';
+                    return;
+                }
+
                 console.log('[DEBUG] Token:', token);
                 const response = await fetch('http://localhost:8000/account/profile/', {
                     method: 'GET',
@@ -19,6 +26,12 @@ const ProfilePage = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
+
+                if (response.status === 401) {
+                    // Redirect to login page on 401 Unauthorized
+                    window.location.href = '/login';
+                    return;
+                }
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch profile data.');
