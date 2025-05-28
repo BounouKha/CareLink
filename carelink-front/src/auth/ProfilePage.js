@@ -39,6 +39,7 @@ const ProfilePage = () => {
 
                 const data = await response.json();
                 console.log('[DEBUG] Fetched Profile Data:', data); // Debugging fetched data
+                console.log('[DEBUG] Family Data:', data.family_relationships); // Corrected key for family data
                 setUserData(data);
             } catch (err) {
                 setError('Failed to fetch profile data. Please try again.');
@@ -125,13 +126,16 @@ const ProfilePage = () => {
                 return (
                     <div className="family-info">
                         <h2>Family Relationships</h2>
-                        {userData.family && userData.family.length > 0 ? (
+                        {userData.family_relationships && userData.family_relationships.length > 0 ? (
                             <ul>
-                                {userData.family.map((relation, index) => (
+                                {userData.family_relationships.map((relation, index) => (
                                     <li key={index}>
                                         <p><strong>Relation:</strong> {relation.link}</p>
-                                        <p><strong>Family Member (User ID):</strong> {relation.user_id}</p>
-                                        <p><strong>Patient (Patient ID):</strong> {relation.patient_id}</p>
+                                        {relation.user ? (
+                                            <p><strong>Family Member:</strong> {relation.user.full_name} ({relation.user.email})</p>
+                                        ) : (
+                                            <p><strong>Family Member:</strong> Not Available</p>
+                                        )}
                                     </li>
                                 ))}
                             </ul>
