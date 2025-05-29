@@ -6,6 +6,7 @@ import './LeftToolbar.css';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isSuperuser, setIsSuperuser] = useState(false);
 
     useEffect(() => {
         // Restore menu state from localStorage on page load
@@ -44,6 +45,35 @@ const BaseLayout = ({ children }) => {
 
         const interval = setInterval(refreshToken, 4 * 60 * 1000); // Refresh every 4 minutes
         return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const fetchSuperUserStatus = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    throw new Error('No access token found. Please log in.');
+                }
+
+                const response = await fetch('http://localhost:8000/account/profile/', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch profile data.');
+                }
+
+                const data = await response.json();
+                setIsSuperuser(data.is_superuser);
+            } catch (err) {
+                console.error(err.message);
+            }
+        };
+
+        fetchSuperUserStatus();
     }, []);
 
     const toggleMenu = () => {
@@ -86,6 +116,8 @@ const BaseLayout = ({ children }) => {
     const isConnected = !!localStorage.getItem('accessToken');
     const isMemberArea = window.location.pathname.startsWith('/profile'); // Adjust for other member area routes
 
+    console.log('[DEBUG] isSuperUser State:', isSuperuser); // Debug log for isSuperuser state
+
     return (
         <div className="homepage-container">
             <header className="homepage-header fixed-header">
@@ -106,6 +138,11 @@ const BaseLayout = ({ children }) => {
                         <button className="btn btn-primary" onClick={handleLogout}>Logout</button>
                     )}
                     <button className="btn btn-primary" onClick={handleMemberAreaClick}>Member Area</button>
+                    {isSuperuser && (
+                        <>
+                            <button className="btn btn-secondary" onClick={() => window.location.href = '/admin'}>Admin</button>
+                        </>
+                    )}
                     <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
                 </div>

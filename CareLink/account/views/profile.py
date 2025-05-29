@@ -79,4 +79,6 @@ class ProfileView(APIView):
             "medical_folder": medical_folder_data
         }
         
+        response_data['is_superuser'] = user.is_superuser  # Add this line to include is_superuser in the response
+        
         return Response(response_data)

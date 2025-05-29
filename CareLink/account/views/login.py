@@ -27,12 +27,14 @@ class LoginAPIView(APIView):
             print("[DEBUG] User authenticated:", user)
 
             refresh = RefreshToken.for_user(user)
+            refresh['is_superuser'] = user.is_superuser  # Embed superuser status in the token
             print("[DEBUG] Access Token:", str(refresh.access_token))
             print("[DEBUG] Refresh Token:", str(refresh))
 
             return Response({
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
+                "is_superuser": user.is_superuser,  # Include superuser status
             }, status=status.HTTP_200_OK)
         else:
             # Debugging: Log failed authentication
