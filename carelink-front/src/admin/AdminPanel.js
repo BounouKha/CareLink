@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './AdminPanel.css';
 import BaseLayout from '../auth/BaseLayout';
 import ManageUsers from './ManageUsers'; // Import the ManageUsers component
@@ -6,13 +6,17 @@ import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
     const [selectedTab, setSelectedTab] = useState('users');
+    const [refreshKey, setRefreshKey] = useState(0);
     const navigate = useNavigate();
-
 
     const renderContent = () => {
         switch (selectedTab) {
             case 'users':
-                return <ManageUsers />; // Render the ManageUsers component
+                return (
+                    <div>
+                        <ManageUsers key={refreshKey} />
+                    </div>
+                );
             case 'logs':
                 return <p>View Logs Section</p>;
             case 'settings':

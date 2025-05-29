@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './ManageUsers.css';
 import BaseLayout from '../auth/BaseLayout';
-import EditUserForm from './EditUserForm';
-import CreateUserForm from './CreateUserForm';
+import EditUserModal from './EditUserModal';
+import CreateUserModal from './CreateUserModal';
 
 const ManageUsers = () => {
     const [users, setUsers] = useState([]);
@@ -11,8 +11,8 @@ const ManageUsers = () => {
     const [editingUser, setEditingUser] = useState(null);
     const [message, setMessage] = useState(null);
     const [messageType, setMessageType] = useState(null); // 'success' or 'error'
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newUser, setNewUser] = useState({ firstname: '', lastname: '', email: '', role: '' });
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -45,17 +45,11 @@ const ManageUsers = () => {
 
     const handleEdit = (user) => {
         setEditingUser(user);
+        setIsEditModalOpen(true);
     };
 
     const handleUpdate = async (updatedUser) => {
         try {
-            setUsers((prevUsers) =>
-                prevUsers.map((user) => (user.id === updatedUser.id ? updatedUser : user))
-            );
-            setMessage('User updated successfully!');
-            setMessageType('success');
-            setTimeout(() => setMessage(null), 3000); // Clear message after 3 seconds
-
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
@@ -74,10 +68,14 @@ const ManageUsers = () => {
 
             const data = await response.json();
             setUsers(data.results);
+            setMessage('User updated successfully!');
+            setMessageType('success');
+            setTimeout(() => setMessage(null), 3000);
+            setIsEditModalOpen(false);
         } catch (err) {
             setMessage(err.message);
             setMessageType('error');
-            setTimeout(() => setMessage(null), 3000); // Clear message after 3 seconds
+            setTimeout(() => setMessage(null), 3000);
         }
     };
 
@@ -87,40 +85,30 @@ const ManageUsers = () => {
         setTimeout(() => setMessage(null), 3000); // Clear message after 3 seconds
     };
 
-    const handleCreateUser = async (userData) => {
+    const handleCreateUser = async (newUser) => {
         try {
-            console.log('Creating user with data:', userData);
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
 
-            // Remove national_number field if it's empty
-            if (!userData.national_number) {
-                delete userData.national_number;
-            }
-
-            const response = await fetch('http://localhost:8000/account/create-user/', {
-                method: 'POST',
+            const response = await fetch('http://localhost:8000/account/users/', {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(userData),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to create user.');
+                throw new Error('Failed to fetch updated users.');
             }
 
-            const newUser = await response.json();
-            setUsers((prevUsers) => [...prevUsers, newUser]);
+            const data = await response.json();
+            setUsers(data.results);
             setMessage('User created successfully!');
             setMessageType('success');
             setTimeout(() => setMessage(null), 3000);
-            setShowCreateModal(false);
-            setNewUser({ firstname: '', lastname: '', email: '', role: '' });
-            window.location.reload();
+            setIsCreateModalOpen(false);
         } catch (err) {
             setMessage(err.message);
             setMessageType('error');
@@ -135,14 +123,13 @@ const ManageUsers = () => {
                 <div className="manage-users">
                     <h1>Manage Users</h1>
                     {error && <p className="error">{error}</p>}
-                    {/* Display success or error messages */}
                     {message && (
                         <p className={`message ${messageType}`}>{message}</p>
                     )}
                     <div className="create-user-container">
                         <button
                             className="create-user-button"
-                            onClick={() => setShowCreateModal(true)}
+                            onClick={() => setIsCreateModalOpen(true)}
                         >
                             Create User
                         </button>
@@ -183,17 +170,17 @@ const ManageUsers = () => {
                         <button onClick={() => setPage(page - 1)} disabled={page === 1}>Previous</button>
                         <button onClick={() => setPage(page + 1)} disabled={users.length < 50}>Next</button>
                     </div>
-                    {editingUser && (
-                        <EditUserForm
+                    {isEditModalOpen && (
+                        <EditUserModal
                             user={editingUser}
-                            onClose={() => setEditingUser(null)}
-                            onUpdate={handleUpdate}
+                            onClose={() => setIsEditModalOpen(false)}
+                            onSave={handleUpdate}
                         />
                     )}
-                    {showCreateModal && (
-                        <CreateUserForm
-                            onCreate={handleCreateUser}
-                            onClose={() => setShowCreateModal(false)}
+                    {isCreateModalOpen && (
+                        <CreateUserModal
+                            onClose={() => setIsCreateModalOpen(false)}
+                            onSave={handleCreateUser}
                         />
                     )}
                 </div>
