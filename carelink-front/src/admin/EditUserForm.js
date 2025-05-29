@@ -36,26 +36,35 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
                 throw new Error('No access token found. Please log in.');
             }
 
-            const payload = { [selectedField]: fieldValue };
+            // Only include the field in the payload if its value has been modified
+            if (fieldValue !== user[selectedField]) {
+                const payload = { [selectedField]: fieldValue };
 
-            const response = await fetch(`http://localhost:8000/account/edit-user/${user?.id}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(payload),
-            });
+                const response = await fetch(`http://localhost:8000/account/edit-user/${user?.id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(payload),
+                });
 
-            if (!response.ok) {
-                throw new Error('Failed to update user.');
+                if (!response.ok) {
+                    throw new Error('Failed to update user.');
+                }
+
+                const data = await response.json();
+                onUpdate({ ...user, ...data }); // Update parent component state dynamically
+                setSelectedField(''); // Clear the selected field
+                setFieldValue(''); // Clear the field value
+                alert('Changes saved successfully!');
+
+                // Clear the field value and close the form after saving changes
+                onClose(); // Close the form
+            } else {
+                alert('No changes were made.');
+                onClose();
             }
-
-            const data = await response.json();
-            onUpdate({ ...user, ...data }); // Update parent component state dynamically
-            setSelectedField(''); // Clear the selected field
-            setFieldValue(''); // Clear the field value
-            alert('Changes saved successfully!');
         } catch (err) {
             console.error(err);
         }

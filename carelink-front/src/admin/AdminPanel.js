@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './AdminPanel.css';
 import BaseLayout from '../auth/BaseLayout';
+import ManageUsers from './ManageUsers'; // Import the ManageUsers component
 
 const AdminPanel = () => {
     const [selectedTab, setSelectedTab] = useState('users');
@@ -8,7 +9,7 @@ const AdminPanel = () => {
     const renderContent = () => {
         switch (selectedTab) {
             case 'users':
-                return <p>Manage Users Section</p>;
+                return <ManageUsers />; // Render the ManageUsers component
             case 'logs':
                 return <p>View Logs Section</p>;
             case 'settings':
@@ -22,10 +23,10 @@ const AdminPanel = () => {
         <BaseLayout>
             <div className="admin-panel">
                 <h1>Admin Panel</h1>
-                <div className="toolbar">
-                    <button onClick={() => setSelectedTab('users')} className={selectedTab === 'users' ? 'active' : ''}>Users</button>
-                    <button onClick={() => setSelectedTab('logs')} className={selectedTab === 'logs' ? 'active' : ''}>Logs</button>
-                    <button onClick={() => setSelectedTab('settings')} className={selectedTab === 'settings' ? 'active' : ''}>Settings</button>
+                <div className="admin-toolbar">
+                    <button onClick={() => setSelectedTab('users')} className={`tab-button ${selectedTab === 'users' ? 'active' : ''}`}>Users</button>
+                    <button onClick={() => setSelectedTab('logs')} className={`tab-button ${selectedTab === 'logs' ? 'active' : ''}`}>Logs</button>
+                    <button onClick={() => setSelectedTab('settings')} className={`tab-button ${selectedTab === 'settings' ? 'active' : ''}`}>Settings</button>
                 </div>
                 <div className="content">
                     {renderContent()}
