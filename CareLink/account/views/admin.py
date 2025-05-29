@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from CareLink.models import User
+from rest_framework import status
+from django.contrib.auth.hashers import make_password
 
 class AdminUserListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -43,3 +45,34 @@ class AdminUserListView(APIView):
 
         # Return the paginated user data as a response
         return paginator.get_paginated_response(user_data)
+
+class AdminCreateUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Check if the user is a superuser
+        if not request.user.is_superuser:
+            return Response(
+                {"error": "Access denied. Superuser privileges required."},
+                status=403
+            )
+
+        # Extract user data from the request
+        data = request.data
+        try:
+            user = User.objects.create(
+                firstname=data.get("firstname"),
+                lastname=data.get("lastname"),
+                email=data.get("email"),
+                password=make_password(data.get("password")),
+                is_active=data.get("is_active", True),
+                is_superuser=data.get("is_superuser", False),
+                is_staff=data.get("is_staff", False),
+                national_number=data.get("national_number"),
+                address=data.get("address"),
+                role=data.get("role"),
+                birthdate=data.get("birthdate"),
+            )
+            return Response({"message": "User created successfully.", "user_id": user.id}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

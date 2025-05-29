@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './ManageUsers.css';
 import BaseLayout from '../auth/BaseLayout';
 import EditUserForm from './EditUserForm';
+import CreateUserForm from './CreateUserForm';
 
 const ManageUsers = () => {
     const [users, setUsers] = useState([]);
@@ -10,6 +11,8 @@ const ManageUsers = () => {
     const [editingUser, setEditingUser] = useState(null);
     const [message, setMessage] = useState(null);
     const [messageType, setMessageType] = useState(null); // 'success' or 'error'
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newUser, setNewUser] = useState({ firstname: '', lastname: '', email: '', role: '' });
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -44,7 +47,6 @@ const ManageUsers = () => {
         setEditingUser(user);
     };
 
-    // Re-fetch users after updating to ensure the table is refreshed
     const handleUpdate = async (updatedUser) => {
         try {
             setUsers((prevUsers) =>
@@ -54,7 +56,6 @@ const ManageUsers = () => {
             setMessageType('success');
             setTimeout(() => setMessage(null), 3000); // Clear message after 3 seconds
 
-            // Fetch updated user list
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
@@ -86,7 +87,46 @@ const ManageUsers = () => {
         setTimeout(() => setMessage(null), 3000); // Clear message after 3 seconds
     };
 
-    console.log('[DEBUG] Users State:', users); // Debugging users state
+    const handleCreateUser = async (userData) => {
+        try {
+            console.log('Creating user with data:', userData);
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                throw new Error('No access token found. Please log in.');
+            }
+
+            // Remove national_number field if it's empty
+            if (!userData.national_number) {
+                delete userData.national_number;
+            }
+
+            const response = await fetch('http://localhost:8000/account/create-user/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(userData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create user.');
+            }
+
+            const newUser = await response.json();
+            setUsers((prevUsers) => [...prevUsers, newUser]);
+            setMessage('User created successfully!');
+            setMessageType('success');
+            setTimeout(() => setMessage(null), 3000);
+            setShowCreateModal(false);
+            setNewUser({ firstname: '', lastname: '', email: '', role: '' });
+            window.location.reload();
+        } catch (err) {
+            setMessage(err.message);
+            setMessageType('error');
+            setTimeout(() => setMessage(null), 3000);
+        }
+    };
 
     return (
         <BaseLayout>
@@ -99,6 +139,14 @@ const ManageUsers = () => {
                     {message && (
                         <p className={`message ${messageType}`}>{message}</p>
                     )}
+                    <div className="create-user-container">
+                        <button
+                            className="create-user-button"
+                            onClick={() => setShowCreateModal(true)}
+                        >
+                            Create User
+                        </button>
+                    </div>
                     <div className="table-container">
                         <table>
                             <thead>
@@ -138,12 +186,14 @@ const ManageUsers = () => {
                     {editingUser && (
                         <EditUserForm
                             user={editingUser}
-                            onClose={() => {
-                                // Ensure state update triggers re-render
-                                console.log('Closing form, setting editingUser to null');
-                                setEditingUser(null);
-                            }}
+                            onClose={() => setEditingUser(null)}
                             onUpdate={handleUpdate}
+                        />
+                    )}
+                    {showCreateModal && (
+                        <CreateUserForm
+                            onCreate={handleCreateUser}
+                            onClose={() => setShowCreateModal(false)}
                         />
                     )}
                 </div>
