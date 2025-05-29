@@ -5,8 +5,8 @@ import RegisterPage from './auth/RegisterPage';
 import ProfilePage from './auth/ProfilePage';
 import LoginPage from './auth/LoginPage';
 import AdminPanel from './admin/AdminPanel';
-import ManageUsers from './admin/ManageUsers';
 import './auth/HomePage.css';
+import ProtectedRoute from './auth/ProtectedRoute';
 
 function App() {
     return (
@@ -17,8 +17,7 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/admin" element={<AdminPanel />} />
-                    <Route path="/admin/users" element={<ManageUsers />} />
+                    <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                 </Routes>
             </div>
         </Router>

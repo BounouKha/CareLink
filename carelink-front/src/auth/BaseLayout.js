@@ -7,6 +7,7 @@ import './LeftToolbar.css';
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSuperuser, setIsSuperuser] = useState(false);
+    const [loading, setLoading] = useState(true); // Add loading state
 
     useEffect(() => {
         // Restore menu state from localStorage on page load
@@ -55,7 +56,7 @@ const BaseLayout = ({ children }) => {
                     throw new Error('No access token found. Please log in.');
                 }
 
-                const response = await fetch('http://localhost:8000/account/profile/', {
+                const response = await fetch('http://localhost:8000/account/check-admin/', {
                     method: 'GET',
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -63,17 +64,37 @@ const BaseLayout = ({ children }) => {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch profile data.');
+                    throw new Error('Failed to fetch admin status.');
                 }
 
                 const data = await response.json();
                 setIsSuperuser(data.is_superuser);
             } catch (err) {
                 console.error(err.message);
+            } finally {
+                setLoading(false); // Set loading to false after fetching
             }
         };
 
+        // Initial fetch on component mount
         fetchSuperUserStatus();
+
+        let interval;
+        const resetInterval = () => {
+            if (interval) clearInterval(interval);
+            interval = setInterval(fetchSuperUserStatus, 30 * 60 * 1000);
+        };
+
+        // Set interval to fetch every 30 minutes, reset on user activity
+        resetInterval();
+        window.addEventListener('mousemove', resetInterval);
+        window.addEventListener('keydown', resetInterval);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('mousemove', resetInterval);
+            window.removeEventListener('keydown', resetInterval);
+        };
     }, []);
 
     const toggleMenu = () => {
@@ -116,7 +137,9 @@ const BaseLayout = ({ children }) => {
     const isConnected = !!localStorage.getItem('accessToken');
     const isMemberArea = window.location.pathname.startsWith('/profile'); // Adjust for other member area routes
 
-    console.log('[DEBUG] isSuperUser State:', isSuperuser); // Debug log for isSuperuser state
+    if (loading) {
+        return <div className="loading-spinner">Loading...</div>; // Show loading spinner
+    }
 
     return (
         <div className="homepage-container">
