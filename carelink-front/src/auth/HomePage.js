@@ -25,9 +25,11 @@ const HomePage = () => {
             }
 
             const data = await response.json();
-            const { access, refresh } = data;
+            console.log('[DEBUG] Login Response:', data); // Debug log
+            const { access, refresh, is_superuser } = data;
             localStorage.setItem('accessToken', access);
             localStorage.setItem('refreshToken', refresh);
+            localStorage.setItem('isSuperuser', is_superuser); // Store superuser status
             alert('Login successful!');
             navigate('/profile'); // Redirect to profile page
         } catch (err) {
