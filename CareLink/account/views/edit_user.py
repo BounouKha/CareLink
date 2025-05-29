@@ -43,6 +43,10 @@ class EditUserView(APIView):
             user.national_number = data["national_number"]
         if "role" in data:
             user.role = data["role"]
+        if "birthdate" in data:
+            from datetime import datetime
+            user.birthdate = datetime.strptime(data["birthdate"], '%Y-%m-%d') if data["birthdate"] else None
+
         user.save()
         return Response({
             "message": "User updated successfully.",

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './EditUserForm.css';
+import './EditUserModal.css';
 
 const ROLE_CHOICES = [
     { value: 'Administrative', label: 'Administrative' },
@@ -11,7 +11,7 @@ const ROLE_CHOICES = [
     { value: 'Administrator', label: 'Administrator' },
 ];
 
-const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
+const EditUserModal = ({ user, onClose, onSave }) => {
     const [selectedField, setSelectedField] = useState('');
     const [fieldValue, setFieldValue] = useState('');
 
@@ -21,24 +21,30 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
             if (validateBirthdate(value)) {
                 setFieldValue(value);
             }
-        } else if (selectedField === 'is_active' || selectedField === 'is_superuser' || selectedField === 'is_admin') {
-            setFieldValue(value === '1'); // Convert "1" to true and "0" to false
+        } else if (['is_active', 'is_superuser', 'is_admin'].includes(selectedField)) {
+            setFieldValue(value === '1');
         } else {
             setFieldValue(value);
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSave = async () => {
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
 
-            // Only include the field in the payload if its value has been modified
+            if (selectedField === 'birthdate' && !validateBirthdate(fieldValue)) {
+                const confirmProceed = window.confirm('Birthdate validation failed. Do you want to proceed anyway?');
+                if (!confirmProceed) {
+                    return;
+                }
+            }
+
             if (fieldValue !== user[selectedField]) {
                 const payload = { [selectedField]: fieldValue };
+                console.log('Payload:', payload); // Debugging payload
 
                 const response = await fetch(`http://localhost:8000/account/edit-user/${user?.id}/`, {
                     method: 'POST',
@@ -54,13 +60,11 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
                 }
 
                 const data = await response.json();
-                onUpdate({ ...user, ...data }); // Update parent component state dynamically
-                setSelectedField(''); // Clear the selected field
-                setFieldValue(''); // Clear the field value
+                onSave({ ...user, ...data });
+                setSelectedField('');
+                setFieldValue('');
                 alert('Changes saved successfully!');
-
-                // Clear the field value and close the form after saving changes
-                onClose(); // Close the form
+                onClose();
             } else {
                 alert('No changes were made.');
                 onClose();
@@ -95,10 +99,10 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
     };
 
     return (
-        <div className="edit-user-form-modal">
-            <div className="edit-user-form">
-                <form onSubmit={handleSubmit}>
-                    <h2>Edit User: {user?.lastname || 'Unknown'} {user?.firstname || ''}</h2>
+        <div className="modal-overlay">
+            <div className="modal-content">
+                <h2>Edit User: {user?.lastname || 'Unknown'} {user?.firstname || ''}</h2>
+                <form>
                     <label>
                         Select Field to Edit:
                         <select
@@ -106,7 +110,7 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
                             onChange={(e) => {
                                 const selected = e.target.value;
                                 setSelectedField(selected);
-                                setFieldValue(user[selected] || ''); // Ensure the current value is displayed
+                                setFieldValue(user[selected] || '');
                             }}
                         >
                             <option value="">Select Field</option>
@@ -150,7 +154,7 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
                                         </option>
                                     ))}
                                 </select>
-                            ) : selectedField === 'is_superuser' || selectedField === 'is_active' || selectedField === 'is_admin' ? (
+                            ) : ['is_superuser', 'is_active', 'is_admin'].includes(selectedField) ? (
                                 <select
                                     value={fieldValue ? '1' : '0'}
                                     onChange={handleFieldChange}
@@ -168,7 +172,7 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
                         </label>
                     )}
 
-                    <button type="submit" disabled={!selectedField}>Save Changes</button>
+                    <button type="button" onClick={handleSave} disabled={!selectedField}>Save Changes</button>
                     <button type="button" onClick={onClose}>Cancel</button>
                 </form>
             </div>
@@ -176,4 +180,4 @@ const EditUserForm = ({ user, onClose, onUpdate, currentUser }) => {
     );
 };
 
-export default EditUserForm;
+export default EditUserModal;
