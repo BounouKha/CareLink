@@ -10,6 +10,7 @@ from account.views.medicalfolder import MedicalFolderViewSet
 from rest_framework.routers import DefaultRouter
 from .views.admin import AdminUserListView
 from .views.edit_user import EditUserView
+from .views.admin import AdminCreateUserView
 
 
 
@@ -34,4 +35,5 @@ urlpatterns = [
 urlpatterns += [
     path('users/', AdminUserListView.as_view(), name='admin_users'),
     path('edit-user/<int:user_id>/', EditUserView.as_view(), name='edit_user'),
+    path('create-user/', AdminCreateUserView.as_view(), name='create_user'),
 ]
