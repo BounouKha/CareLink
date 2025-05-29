@@ -25,7 +25,7 @@ const LoginPage = () => {
             }
 
             const data = await response.json();
-            const { access, refresh } = data;
+            const { access, refresh,  } = data;
             localStorage.setItem('accessToken', access);
             localStorage.setItem('refreshToken', refresh);
             navigate('/profile');

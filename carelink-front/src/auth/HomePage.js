@@ -24,12 +24,10 @@ const HomePage = () => {
                 throw new Error('Invalid email or password.');
             }
 
-            const data = await response.json();
-            console.log('[DEBUG] Login Response:', data); // Debug log
+            const data = await response.json();// Debug log
             const { access, refresh, is_superuser } = data;
             localStorage.setItem('accessToken', access);
             localStorage.setItem('refreshToken', refresh);
-            localStorage.setItem('isSuperuser', is_superuser); // Store superuser status
             alert('Login successful!');
             navigate('/profile'); // Redirect to profile page
         } catch (err) {

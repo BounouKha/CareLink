@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AdminPanel.css';
 import BaseLayout from '../auth/BaseLayout';
 import ManageUsers from './ManageUsers'; // Import the ManageUsers component
+import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
     const [selectedTab, setSelectedTab] = useState('users');
+    const navigate = useNavigate();
+
 
     const renderContent = () => {
         switch (selectedTab) {
