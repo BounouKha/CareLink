@@ -17,6 +17,7 @@ from .views.create_profile import CreateProfileView
 from .views.service import ServiceListView
 from .views.delete_user import DeleteUserView
 from account.views.check_unpaid_invoices import CheckUnpaidInvoicesView
+from account.views.profile_list import ProfileListView
 
 
 
@@ -48,4 +49,5 @@ urlpatterns += [
     path('services/', ServiceListView.as_view(), name='service_list'),
     path('delete-user/<int:user_id>/', DeleteUserView.as_view(), name='delete_user'),
     path('check-unpaid-invoices/<int:user_id>/', CheckUnpaidInvoicesView.as_view(), name='check_unpaid_invoices'),
+    path('profiles/', ProfileListView.as_view(), name='profile_list'),
 ]
