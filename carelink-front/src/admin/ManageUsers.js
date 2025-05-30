@@ -3,6 +3,7 @@ import './ManageUsers.css';
 import BaseLayout from '../auth/BaseLayout';
 import EditUserModal from './EditUserModal';
 import CreateUserModal from './CreateUserModal';
+import CreateProfileModal from './CreateProfileModal';
 
 const ManageUsers = () => {
     const [users, setUsers] = useState([]);
@@ -13,6 +14,9 @@ const ManageUsers = () => {
     const [messageType, setMessageType] = useState(null); // 'success' or 'error'
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState(null);
+    const [selectedRole, setSelectedRole] = useState(null);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -116,6 +120,23 @@ const ManageUsers = () => {
         }
     };
 
+    const handleCreateProfileClick = (userId, role) => {
+        if (!role) {
+            alert('Select a Role Before Creating a Profile');
+            return;
+        }
+        setSelectedUserId(userId);
+        setShowCreateProfileModal(true);
+        setSelectedRole(role);
+    };
+
+    const handleProfileCreated = (data) => {
+        console.log('Profile created:', data);
+        setShowCreateProfileModal(false);
+        setSelectedUserId(null);
+        // Refresh user list or perform other actions
+    };
+
     return (
         <BaseLayout>
             <div className="admin-section">
@@ -155,6 +176,7 @@ const ManageUsers = () => {
                                             <td>{user.role}</td>
                                             <td>
                                                 <button onClick={() => handleEdit(user)}>Edit</button>
+                                                <button onClick={() => handleCreateProfileClick(user.id, user.role)}>Create Profile</button>
                                             </td>
                                         </tr>
                                     ))
@@ -181,6 +203,14 @@ const ManageUsers = () => {
                         <CreateUserModal
                             onClose={() => setIsCreateModalOpen(false)}
                             onSave={handleCreateUser}
+                        />
+                    )}
+                    {showCreateProfileModal && (
+                        <CreateProfileModal
+                            userId={selectedUserId}
+                            role={selectedRole}
+                            onClose={() => setShowCreateProfileModal(false)}
+                            onProfileCreated={handleProfileCreated}
                         />
                     )}
                 </div>
