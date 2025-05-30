@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './AdminPanel.css';
 import BaseLayout from '../auth/BaseLayout';
 import ManageUsers from './ManageUsers'; // Import the ManageUsers component
+import ProfileList from './ProfileList';
 import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
@@ -21,6 +22,8 @@ const AdminPanel = () => {
                 return <p>View Logs Section</p>;
             case 'settings':
                 return <p>Settings Section</p>;
+            case 'profile':
+                return <ProfileList />;
             default:
                 return <p>Select a tab to view content.</p>;
         }
@@ -34,6 +37,7 @@ const AdminPanel = () => {
                     <button onClick={() => setSelectedTab('users')} className={`tab-button ${selectedTab === 'users' ? 'active' : ''}`}>Users</button>
                     <button onClick={() => setSelectedTab('logs')} className={`tab-button ${selectedTab === 'logs' ? 'active' : ''}`}>Logs</button>
                     <button onClick={() => setSelectedTab('settings')} className={`tab-button ${selectedTab === 'settings' ? 'active' : ''}`}>Settings</button>
+                    <button onClick={() => setSelectedTab('profile')} className={`tab-button ${selectedTab === 'profile' ? 'active' : ''}`}>Profile</button>
                 </div>
                 <div className="content">
                     {renderContent()}
