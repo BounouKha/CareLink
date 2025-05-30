@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './CreateProviderModal.css';
 
 const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
@@ -6,6 +6,37 @@ const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
         service: '',
         is_internal: true,
     });
+    const [services, setServices] = useState([]);
+
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    throw new Error('No access token found. Please log in.');
+                }
+
+                const response = await fetch('http://localhost:8000/account/services/', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch services.');
+                }
+
+                const data = await response.json();
+                setServices(data);
+            } catch (err) {
+                console.error(err);
+                alert(err.message);
+            }
+        };
+
+        fetchServices();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -23,13 +54,13 @@ const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
                 throw new Error('No access token found. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/provider/create/${userId}/`, {
+            const response = await fetch(`http://localhost:8000/account/users/${userId}/create/provider/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ user_id: userId, role_specific_data: formData }),
             });
 
             if (!response.ok) {
@@ -53,13 +84,19 @@ const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
                 <form onSubmit={handleSubmit}>
                     <label>
                         Service:
-                        <input
-                            type="text"
+                        <select
                             name="service"
                             value={formData.service}
                             onChange={handleChange}
                             required
-                        />
+                        >
+                            <option value="">Select a Service</option>
+                            {services.map((service) => (
+                                <option key={service.id} value={service.id}>
+                                    {service.name}
+                                </option>
+                            ))}
+                        </select>
                     </label>
                     <label>
                         Is Internal:
