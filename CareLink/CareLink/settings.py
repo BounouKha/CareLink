@@ -147,7 +147,13 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '25/minute',  # 5 requests per minute for anonymous users
         'user': '60/minute',  # 10 requests per minute for authenticated users
+        
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,  # Set the page size to 50
     }
+
+   
+    
 }
 
 

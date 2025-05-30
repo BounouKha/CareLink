@@ -12,6 +12,11 @@ from .views.admin import AdminUserListView
 from .views.edit_user import EditUserView
 from .views.admin import AdminCreateUserView
 from .views.check_admin import CheckAdminView
+from .views.check_user import CheckUserRoleView
+from .views.create_profile import CreateProfileView
+from .views.service import ServiceListView
+from .views.delete_user import DeleteUserView
+from account.views.check_unpaid_invoices import CheckUnpaidInvoicesView
 
 
 
@@ -38,4 +43,9 @@ urlpatterns += [
     path('edit-user/<int:user_id>/', EditUserView.as_view(), name='edit_user'),
     path('create-user/', AdminCreateUserView.as_view(), name='create_user'),
     path('check-admin/', CheckAdminView.as_view(), name='check_admin'),
+    path('users/<int:user_id>/check/<str:role>/', CheckUserRoleView.as_view(), name='check_user_role'),
+    path('users/<int:user_id>/create/<str:role>/', CreateProfileView.as_view(), name='create_profile'),
+    path('services/', ServiceListView.as_view(), name='service_list'),
+    path('delete-user/<int:user_id>/', DeleteUserView.as_view(), name='delete_user'),
+    path('check-unpaid-invoices/<int:user_id>/', CheckUnpaidInvoicesView.as_view(), name='check_unpaid_invoices'),
 ]
