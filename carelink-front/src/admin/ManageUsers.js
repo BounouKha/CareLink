@@ -17,35 +17,39 @@ const ManageUsers = () => {
     const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [selectedRole, setSelectedRole] = useState(null);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPreviousPage, setHasPreviousPage] = useState(false);
+
+    const fetchUsers = async (page) => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                throw new Error('No access token found. Please log in.');
+            }
+
+            const response = await fetch(`http://localhost:8000/account/users/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch users.');
+            }
+
+            const data = await response.json();
+            setUsers(data.results);
+            setHasNextPage(!!data.next); // Check if there is a next page
+            setHasPreviousPage(!!data.previous); // Check if there is a previous page
+        } catch (err) {
+            setError(err.message);
+        }
+    };
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    throw new Error('No access token found. Please log in.');
-                }
-
-                const response = await fetch('http://localhost:8000/account/users/', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch users.');
-                }
-
-                const data = await response.json();
-                setUsers(data.results);
-            } catch (err) {
-                setError(err.message);
-            }
-        };
-
-        fetchUsers();
-    }, []);
+        fetchUsers(page);
+    }, [page]);
 
     const handleEdit = (user) => {
         setEditingUser(user);
@@ -76,6 +80,9 @@ const ManageUsers = () => {
             setMessageType('success');
             setTimeout(() => setMessage(null), 3000);
             setIsEditModalOpen(false);
+
+            // Refresh user list and reset to the first page
+            setPage(1);
         } catch (err) {
             setMessage(err.message);
             setMessageType('error');
@@ -113,6 +120,9 @@ const ManageUsers = () => {
             setMessageType('success');
             setTimeout(() => setMessage(null), 3000);
             setIsCreateModalOpen(false);
+
+            // Refresh user list and reset to the first page
+            setPage(1);
         } catch (err) {
             setMessage(err.message);
             setMessageType('error');
@@ -174,6 +184,60 @@ const ManageUsers = () => {
         // Refresh user list or perform other actions
     };
 
+    const handleDelete = async (userId) => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                throw new Error('No access token found. Please log in.');
+            }
+
+            // Check for unpaid invoices
+            const invoiceResponse = await fetch(`http://localhost:8000/account/check-unpaid-invoices/${userId}/`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!invoiceResponse.ok) {
+                throw new Error('Failed to check unpaid invoices.');
+            }
+
+            const invoiceData = await invoiceResponse.json();
+            if (invoiceData.hasUnpaidInvoices) {
+                const confirmProceed = window.confirm('This user has unpaid invoices. Are you sure you want to proceed with deletion?');
+                if (!confirmProceed) return;
+            }
+
+            // Proceed with deletion
+            const confirmDelete = window.confirm('Are you sure you want to delete this user?');
+            if (!confirmDelete) return;
+
+            const deleteResponse = await fetch(`http://localhost:8000/account/delete-user/${userId}/`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!deleteResponse.ok) {
+                throw new Error('Failed to delete user.');
+            }
+
+            const deleteData = await deleteResponse.json();
+            setMessage(deleteData.message);
+            setMessageType('success');
+            setTimeout(() => setMessage(null), 3000);
+
+            // Refresh user list and reset to the first page
+            fetchUsers(1);
+        } catch (err) {
+            setMessage(err.message);
+            setMessageType('error');
+            setTimeout(() => setMessage(null), 3000);
+        }
+    };
+
     return (
         <BaseLayout>
             <div className="admin-section">
@@ -214,6 +278,7 @@ const ManageUsers = () => {
                                             <td>
                                                 <button onClick={() => handleEdit(user)}>Edit</button>
                                                 <button onClick={() => handleCreateProfileClick(user.id, user.role)}>Create Profile</button>
+                                                <button onClick={() => handleDelete(user.id)}>Delete</button>
                                             </td>
                                         </tr>
                                     ))
@@ -226,8 +291,8 @@ const ManageUsers = () => {
                         </table>
                     </div>
                     <div className="pagination">
-                        <button onClick={() => setPage(page - 1)} disabled={page === 1}>Previous</button>
-                        <button onClick={() => setPage(page + 1)} disabled={users.length < 50}>Next</button>
+                        <button onClick={() => setPage(page - 1)} disabled={!hasPreviousPage}>Previous</button>
+                        <button onClick={() => setPage(page + 1)} disabled={!hasNextPage}>Next</button>
                     </div>
                     {isEditModalOpen && (
                         <EditUserModal
