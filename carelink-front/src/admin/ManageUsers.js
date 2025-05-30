@@ -120,11 +120,48 @@ const ManageUsers = () => {
         }
     };
 
-    const handleCreateProfileClick = (userId, role) => {
+    const checkProfileExistence = async (userId, role) => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                throw new Error('No access token found. Please log in.');
+            }
+
+            const response = await fetch(`http://localhost:8000/account/users/${userId}/check/${role}/`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to check profile existence.');
+            }
+
+            return data;
+        } catch (err) {
+            handleError(err.message);
+            return null;
+        }
+    };
+
+    const handleCreateProfileClick = async (userId, role) => {
         if (!role) {
             alert('Select a Role Before Creating a Profile');
             return;
         }
+
+        const result = await checkProfileExistence(userId, role);
+
+        if (result && result.message === 'Profile for this role already exists.') {
+            alert(result.message);
+            return;
+        } else if (result && result.message === 'No profile found for this role. User can complete a form.') {
+            alert(result.message);
+        }
+
         setSelectedUserId(userId);
         setShowCreateProfileModal(true);
         setSelectedRole(role);

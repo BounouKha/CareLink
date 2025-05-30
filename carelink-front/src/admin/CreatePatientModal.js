@@ -31,13 +31,13 @@ const CreatePatientModal = ({ userId, onClose, onProfileCreated }) => {
                 throw new Error('No access token found. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/patient/create/${userId}/`, {
+            const response = await fetch(`http://localhost:8000/account/users/${userId}/create/patient/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ user_id: userId, role_specific_data: formData }),
             });
 
             if (!response.ok) {

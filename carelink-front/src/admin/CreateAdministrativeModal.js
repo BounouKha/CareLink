@@ -16,19 +16,20 @@ const CreateAdministrativeModal = ({ userId, onClose, onProfileCreated }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Sending data to backend:', { userId, role_specific_data: formData });
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/administrative/create/${userId}/`, {
+            const response = await fetch(`http://localhost:8000/account/users/${userId}/create/administrative/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ user_id: userId, role_specific_data: formData }),
             });
 
             if (!response.ok) {
