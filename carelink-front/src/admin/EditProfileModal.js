@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './EditProfileModal.css';
 
 const EditProfileModal = ({ profile, onClose, onSave }) => {
     const [fields, setFields] = useState({ firstname: profile.firstname, lastname: profile.lastname });
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // Dynamically load fields based on role
+        const additionalFields = profile.additional_fields || {};
+        setFields((prevFields) => ({ ...prevFields, ...additionalFields }));
+    }, [profile]);
 
     const handleFieldChange = (field, value) => {
         setFields((prevFields) => ({ ...prevFields, [field]: value }));
@@ -29,7 +35,8 @@ const EditProfileModal = ({ profile, onClose, onSave }) => {
                 throw new Error('Failed to update profile.');
             }
 
-            onSave();
+            const updatedProfile = await response.json();
+            onSave(updatedProfile);
             onClose();
         } catch (err) {
             setError(err.message);
