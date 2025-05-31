@@ -51,22 +51,33 @@ const ShowProfileModal = ({ profile, onClose }) => {
                     <div>
                         <p><strong>First Name:</strong> {details.firstname}</p>
                         <p><strong>Last Name:</strong> {details.lastname}</p>
-                        {Object.entries(details.additional_fields).filter(([key]) => key !== 'is_internal' && key !== 'service').map(([key, value]) => (
-                            <p key={key}><strong>{key}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}</p>
-                        ))}
-                        {details.additional_fields.is_internal !== undefined && (
-                            <p><strong>Is Internal:</strong> {details.additional_fields.is_internal ? 'Yes' : 'No'}</p>
-                        )}
-                        {details.additional_fields.service && (
-                            <p><strong>Service:</strong> ID: {details.additional_fields.service.id}, Name: {details.additional_fields.service.name}</p>
-                        )}
                         {details.patient && (
                             <div>
-                                <p><strong>Linked Patient First Name:</strong> {details.patient.firstname || 'N/A'}</p>
-                                <p><strong>Linked Patient Last Name:</strong> {details.patient.lastname || 'N/A'}</p>
-                                <p><strong>Linked Patient Birthdate:</strong> {details.patient.birthdate || 'N/A'}</p>
+                                <p><strong>Linked Patient First Name:</strong> {details.patient.firstname}</p>
+                                <p><strong>Linked Patient Last Name:</strong> {details.patient.lastname}</p>
                             </div>
                         )}
+                        {Object.entries(details.additional_fields).map(([key, value]) => (
+                            <p key={key}>
+                                <strong>{key}:</strong> {
+                                    key === 'is_internal' ? (value ? 'Yes' : 'No') :
+                                    key === 'service' ? `ID: ${value.id}, Name: ${value.name}` :
+                                    key === 'familypatient' ? (
+                                        <>
+                                            ID: {value.id}, Last Name: {value.lastname}, First Name: {value.firstname}
+                                            {value.patient_id && value.patient_user && (
+                                                <>
+                                                    <br />Linked Patient ID: {value.patient_id}
+                                                    <br />Linked User First Name: {value.patient_user.firstname}
+                                                    <br />Linked User Last Name: {value.patient_user.lastname}
+                                                </>
+                                            )}
+                                        </>
+                                    ) :
+                                    typeof value === 'object' ? JSON.stringify(value) : value
+                                }
+                            </p>
+                        ))}
                     </div>
                 ) : (
                     <p>Loading...</p>
