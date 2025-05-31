@@ -49,7 +49,6 @@ const ShowProfileModal = ({ profile, onClose }) => {
                 {error && <p className="error">{error}</p>}
                 {details ? (
                     <div>
-                        <p><strong>ID:</strong> {details.id}</p>
                         <p><strong>First Name:</strong> {details.firstname}</p>
                         <p><strong>Last Name:</strong> {details.lastname}</p>
                         {Object.entries(details.additional_fields).filter(([key]) => key !== 'is_internal' && key !== 'service').map(([key, value]) => (
@@ -60,6 +59,13 @@ const ShowProfileModal = ({ profile, onClose }) => {
                         )}
                         {details.additional_fields.service && (
                             <p><strong>Service:</strong> ID: {details.additional_fields.service.id}, Name: {details.additional_fields.service.name}</p>
+                        )}
+                        {details.patient && (
+                            <div>
+                                <p><strong>Linked Patient First Name:</strong> {details.patient.firstname || 'N/A'}</p>
+                                <p><strong>Linked Patient Last Name:</strong> {details.patient.lastname || 'N/A'}</p>
+                                <p><strong>Linked Patient Birthdate:</strong> {details.patient.birthdate || 'N/A'}</p>
+                            </div>
                         )}
                     </div>
                 ) : (

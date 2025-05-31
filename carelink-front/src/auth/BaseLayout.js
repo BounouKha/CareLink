@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './HomePage.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import LeftToolbar from './LeftToolbar';
 import './LeftToolbar.css';
+import { AdminContext } from './AdminContext';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSuperuser, setIsSuperuser] = useState(false);
     const [loading, setLoading] = useState(true); // Add loading state
+
+    const { isSuperUser } = useContext(AdminContext);
 
     useEffect(() => {
         // Restore menu state from localStorage on page load
@@ -49,53 +52,9 @@ const BaseLayout = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        const fetchSuperUserStatus = async () => {
-            try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    throw new Error('No access token found. Please log in.');
-                }
-
-                const response = await fetch('http://localhost:8000/account/check-admin/', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch admin status.');
-                }
-
-                const data = await response.json();
-                setIsSuperuser(data.is_superuser);
-            } catch (err) {
-                console.error(err.message);
-            } finally {
-                setLoading(false); // Set loading to false after fetching
-            }
-        };
-
-        // Initial fetch on component mount
-        fetchSuperUserStatus();
-
-        let interval;
-        const resetInterval = () => {
-            if (interval) clearInterval(interval);
-            interval = setInterval(fetchSuperUserStatus, 30 * 60 * 1000);
-        };
-
-        // Set interval to fetch every 30 minutes, reset on user activity
-        resetInterval();
-        window.addEventListener('mousemove', resetInterval);
-        window.addEventListener('keydown', resetInterval);
-
-        return () => {
-            clearInterval(interval);
-            window.removeEventListener('mousemove', resetInterval);
-            window.removeEventListener('keydown', resetInterval);
-        };
-    }, []);
+        setIsSuperuser(isSuperUser);
+        setLoading(false); // Set loading to false after fetching
+    }, [isSuperUser]); // Re-run effect if isSuperUser changes
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);

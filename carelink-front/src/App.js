@@ -7,20 +7,23 @@ import LoginPage from './auth/LoginPage';
 import AdminPanel from './admin/AdminPanel';
 import './auth/HomePage.css';
 import ProtectedRoute from './auth/ProtectedRoute';
+import { AdminProvider } from './auth/AdminContext';
 
 function App() {
     return (
-        <Router>
-            <div className="App">
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-                </Routes>
-            </div>
-        </Router>
+        <AdminProvider>
+            <Router>
+                <div className="App">
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                    </Routes>
+                </div>
+            </Router>
+        </AdminProvider>
     );
 }
 
