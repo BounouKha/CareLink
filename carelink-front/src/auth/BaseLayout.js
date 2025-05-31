@@ -47,14 +47,38 @@ const BaseLayout = ({ children }) => {
             }
         };
 
-        const interval = setInterval(refreshToken, 4 * 60 * 1000); // Refresh every 4 minutes
+        const interval = setInterval(refreshToken, 59 * 60 * 1000); // Refresh every 59 minutes
         return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
-        setIsSuperuser(isSuperUser);
-        setLoading(false); // Set loading to false after fetching
-    }, [isSuperUser]); // Re-run effect if isSuperUser changes
+        const preloadAdminStatus = async () => {
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                try {
+                    const response = await fetch('http://localhost:8000/account/check-admin/', {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        setIsSuperuser(data.is_superuser);
+                        console.log('Admin status preloaded:', data.is_superuser);
+                    } else {
+                        console.error('Failed to preload admin status');
+                    }
+                } catch (error) {
+                    console.error('Error preloading admin status:', error);
+                }
+            }
+            setLoading(false);
+        };
+
+        preloadAdminStatus();
+    }, []);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -121,9 +145,7 @@ const BaseLayout = ({ children }) => {
                     )}
                     <button className="btn btn-primary" onClick={handleMemberAreaClick}>Member Area</button>
                     {isSuperuser && (
-                        <>
-                            <button className="btn btn-secondary" onClick={() => window.location.href = '/admin'}>Admin</button>
-                        </>
+                        <button className="btn btn-secondary" onClick={() => window.location.href = '/admin'}>Admin</button>
                     )}
                     <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
