@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './ProfileList.css';
 import BaseLayout from '../auth/BaseLayout'; // Adjust the import path as necessary
+import ShowProfileModal from './ShowProfileModal';
+import EditProfileModal from './EditProfileModal';
 
 const ProfileList = () => {
     const [profiles, setProfiles] = useState([]); // Ensure profiles is initialized as an empty array
@@ -8,6 +10,9 @@ const ProfileList = () => {
     const [page, setPage] = useState(1);
     const [hasNextPage, setHasNextPage] = useState(false);
     const [hasPreviousPage, setHasPreviousPage] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState(null);
+    const [isShowModalOpen, setIsShowModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const fetchProfiles = async (page) => {
         try {
@@ -28,7 +33,9 @@ const ProfileList = () => {
             }
 
             const data = await response.json();
-            setProfiles(data.results || []); // Ensure profiles is set to an empty array if data.results is undefined
+            console.log('Fetched profiles:', data.results); // Log fetched profiles
+            const filteredProfiles = (data.results || []).filter(profile => profile.id !== null && profile.user_id !== null);
+            setProfiles(filteredProfiles); // Only include profiles with non-null id and user_id
             setHasNextPage(!!data.next);
             setHasPreviousPage(!!data.previous);
         } catch (err) {
@@ -40,6 +47,16 @@ const ProfileList = () => {
     useEffect(() => {
         fetchProfiles(page);
     }, [page]);
+
+    const handleShowProfile = (profile) => {
+        setSelectedProfile(profile);
+        setIsShowModalOpen(true);
+    };
+
+    const handleEditProfile = (profile) => {
+        setSelectedProfile(profile);
+        setIsEditModalOpen(true);
+    };
 
     return (
         <BaseLayout>
@@ -56,6 +73,7 @@ const ProfileList = () => {
                                     <th>First Name</th>
                                     <th>Last Name</th>
                                     <th>Role</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -66,11 +84,15 @@ const ProfileList = () => {
                                             <td>{profile.firstname}</td>
                                             <td>{profile.lastname}</td>
                                             <td>{profile.role}</td>
+                                            <td>
+                                                <button onClick={() => handleShowProfile(profile)}>Show</button>
+                                                <button onClick={() => handleEditProfile(profile)}>Edit</button>
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4">No profiles available.</td>
+                                        <td colSpan="5">No profiles available.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -90,6 +112,19 @@ const ProfileList = () => {
                             Next
                         </button>
                     </div>
+                    {isShowModalOpen && (
+                        <ShowProfileModal
+                            profile={selectedProfile}
+                            onClose={() => setIsShowModalOpen(false)}
+                        />
+                    )}
+                    {isEditModalOpen && (
+                        <EditProfileModal
+                            profile={selectedProfile}
+                            onClose={() => setIsEditModalOpen(false)}
+                            onSave={() => fetchProfiles(page)}
+                        />
+                    )}
                 </div>
             </div>
         </BaseLayout>

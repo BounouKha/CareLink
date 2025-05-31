@@ -1,5 +1,4 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
 from .views.register import RegisterAPIView
 from .views.login import LoginAPIView 
 from .views.logout import LogoutAPIView
@@ -18,6 +17,8 @@ from .views.service import ServiceListView
 from .views.delete_user import DeleteUserView
 from account.views.check_unpaid_invoices import CheckUnpaidInvoicesView
 from account.views.profile_list import ProfileListView
+from account.views.fetch_logic import FetchProfileView, EditProfileView
+from account.views.refresh import CustomTokenRefreshView
 
 
 
@@ -32,7 +33,7 @@ router.register(r'medicalFolder', MedicalFolderViewSet, basename='medicalfolder'
 urlpatterns = [
     path('register/', RegisterAPIView.as_view(), name='register'),
     path('login/', LoginAPIView.as_view(), name='login'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutAPIView.as_view(), name='logout'),
     path('profile/', ProfileView.as_view(), name='profile'),
 
@@ -50,4 +51,6 @@ urlpatterns += [
     path('delete-user/<int:user_id>/', DeleteUserView.as_view(), name='delete_user'),
     path('check-unpaid-invoices/<int:user_id>/', CheckUnpaidInvoicesView.as_view(), name='check_unpaid_invoices'),
     path('profiles/', ProfileListView.as_view(), name='profile_list'),
+    path('profiles/<int:profile_id>/fetch/<str:role>/', FetchProfileView.as_view(), name='fetch_profile'),
+    path('profiles/<int:profile_id>/edit/<str:role>/', EditProfileView.as_view(), name='edit_profile'),
 ]
