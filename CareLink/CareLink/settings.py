@@ -146,7 +146,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '25/minute',  # 5 requests per minute for anonymous users
-        'user': '60/minute',  # 10 requests per minute for authenticated users
+        'user': '100/minute',  # 10 requests per minute for authenticated users
         
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,  # Set the page size to 50
@@ -158,7 +158,7 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),  # Set token expiration to 60 minutes
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Set token expiration to 60 minutes
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Refresh token valid for 1 day
 }
 
