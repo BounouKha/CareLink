@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BaseLayout from './BaseLayout';
+import BaseLayout from '../layout/BaseLayout';
 import './RegisterPage.css';
 
 const RegisterPage = () => {

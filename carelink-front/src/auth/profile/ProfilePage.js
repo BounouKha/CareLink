@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './ProfilePage.css';
-import BaseLayout from './BaseLayout';
-import LeftToolbar from './LeftToolbar';
+import BaseLayout from '../layout/BaseLayout';
+import LeftToolbar from '../layout/LeftToolbar';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
@@ -204,10 +204,14 @@ const ProfilePage = () => {
                 </div>
                 <div className="toolbar">
                     <button onClick={() => setSelectedTab('user')} className={selectedTab === 'user' ? 'active' : ''}>User Info</button>
-                    <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Patient Info</button>
-                    <button onClick={() => setSelectedTab('family')} className={selectedTab === 'family' ? 'active' : ''}>Family</button>
-                    <button onClick={() => setSelectedTab('medical')} className={selectedTab === 'medical' ? 'active' : ''}>Medical Folder</button>
-                    <button onClick={() => setSelectedTab('contact')} className={selectedTab === 'contact' ? 'active' : ''}>Contact</button>
+                    {userData.user.role !== 'Coordinator' && (
+                        <>
+                            <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Patient Info</button>
+                            <button onClick={() => setSelectedTab('family')} className={selectedTab === 'family' ? 'active' : ''}>Family</button>
+                            <button onClick={() => setSelectedTab('medical')} className={selectedTab === 'medical' ? 'active' : ''}>Medical Folder</button>
+                            <button onClick={() => setSelectedTab('contact')} className={selectedTab === 'contact' ? 'active' : ''}>Contact</button>
+                        </>
+                    )}
                 </div>
                 <div className="profile-content">
                     {renderContent()}

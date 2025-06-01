@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './PatientsPage.css';
-import BaseLayout from '../../auth/layout/BaseLayout';
-import LeftToolbar from '../../auth/layout/LeftToolbar';
+import BaseLayout from '../auth/BaseLayout';
+import LeftToolbar from '../auth/layout/LeftToolbar';
 
 const PatientsPage = () => {
     const [patients, setPatients] = useState([]);

@@ -1,14 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './auth/HomePage';
-import RegisterPage from './auth/RegisterPage';
-import ProfilePage from './auth/ProfilePage';
-import LoginPage from './auth/LoginPage';
+import HomePage from './auth/layout/HomePage';
+import RegisterPage from './auth/register/RegisterPage';
+import ProfilePage from './auth/profile/ProfilePage';
+import LoginPage from './auth/login/LoginPage';
 import AdminPanel from './admin/AdminPanel';
 import PatientsPage from './pages/patient/PatientsPage';
-import './auth/HomePage.css';
-import ProtectedRoute from './auth/ProtectedRoute';
-import { AdminProvider } from './auth/AdminContext';
+import './auth/layout/HomePage.css';
+import ProtectedRoute from './auth/login/ProtectedRoute';
+import { AdminProvider } from './auth/login/AdminContext';
 
 function App() {
     return (
