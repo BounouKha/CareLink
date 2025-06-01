@@ -173,3 +173,26 @@
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Additional Styles for Family Link and Linked Patient Information */
+.patient-info .family-link {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bbf;
+}
+
+.patient-info .family-link p {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.patient-info .family-link p strong {
+    color: #007bbf;
+}
+
+.medical-folder {
+    /* Existing styles for medical-folder if any */
+}
