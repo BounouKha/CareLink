@@ -6,6 +6,7 @@ import LeftToolbar from '../../auth/layout/LeftToolbar';
 const ServiceDemandPage = () => {
     const [demands, setDemands] = useState([]);
     const [services, setServices] = useState([]);
+    const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [userData, setUserData] = useState(null);
@@ -28,15 +29,44 @@ const ServiceDemandPage = () => {
         preferred_time: '',
         contact_method: 'Email',
         emergency_contact: '',
-        special_instructions: ''
+        special_instructions: '',
+        selected_patient: '' // Add selected patient for coordinators
     });
 
-    useEffect(() => {
+    const [patientSearch, setPatientSearch] = useState('');    useEffect(() => {
         fetchUserData();
         fetchDemands();
         fetchServices();
         fetchStats();
     }, [filterStatus, filterPriority]);
+
+    // Separate useEffect to fetch patients when userData is loaded
+    useEffect(() => {
+        if (userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') {
+            fetchPatients();
+        }
+    }, [userData?.user?.role]);
+
+    const resetCreateForm = () => {
+        setShowCreateForm(false);
+        setNewDemand({
+            service: '',
+            title: '',
+            description: '',
+            reason: '',
+            priority: 'Normal',
+            preferred_start_date: '',
+            frequency: 'Once',
+            duration_weeks: '',
+            preferred_time: '',
+            contact_method: 'Email',
+            emergency_contact: '',
+            special_instructions: '',
+            selected_patient: ''
+        });
+        setPatientSearch('');
+        setError('');
+    };
 
     const fetchUserData = async () => {
         try {
@@ -94,6 +124,31 @@ const ServiceDemandPage = () => {
         } catch (error) {
             console.error('Error fetching services:', error);
         }
+    };    const fetchPatients = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch('http://localhost:8000/account/views_patient/', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // Ensure we always set an array, even if API returns an object with results
+                if (Array.isArray(data)) {
+                    setPatients(data);
+                } else if (data && Array.isArray(data.results)) {
+                    setPatients(data.results);
+                } else {
+                    console.warn('Unexpected patients data format:', data);
+                    setPatients([]);
+                }
+            } else {
+                console.error('Failed to fetch patients:', response.status);
+                setPatients([]);
+            }
+        } catch (error) {
+            console.error('Error fetching patients:', error);
+            setPatients([]);
+        }
     };
 
     const fetchStats = async () => {
@@ -111,21 +166,27 @@ const ServiceDemandPage = () => {
             // Stats might not be available for all user types
             console.log('Stats not available');
         }
-    };
-
-    const handleCreateDemand = async (e) => {
+    };    const handleCreateDemand = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('accessToken');
             
-            // Get patient ID for current user
+            // Get patient ID - use selected patient for coordinators, current user for patients
             let patientId = null;
-            if (userData?.patient?.id) {
-                patientId = userData.patient.id;
-            } else if (userData?.user?.role === 'Patient') {
-                // Try to find patient by user ID
-                // This might need adjustment based on your data structure
-                patientId = userData.user.id;
+            if (userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') {
+                // For coordinators, use the selected patient
+                patientId = newDemand.selected_patient;
+                if (!patientId) {
+                    setError('Please select a patient for this service request');
+                    return;
+                }
+            } else {
+                // For patients, use their own patient ID
+                if (userData?.patient?.id) {
+                    patientId = userData.patient.id;
+                } else if (userData?.user?.role === 'Patient') {
+                    patientId = userData.user.id;
+                }
             }
 
             const demandData = {
@@ -142,26 +203,9 @@ const ServiceDemandPage = () => {
                     Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify(demandData)
-            });
-
-            if (response.ok) {
-                setShowCreateForm(false);
-                setNewDemand({
-                    service: '',
-                    title: '',
-                    description: '',
-                    reason: '',
-                    priority: 'Normal',
-                    preferred_start_date: '',
-                    frequency: 'Once',
-                    duration_weeks: '',
-                    preferred_time: '',
-                    contact_method: 'Email',
-                    emergency_contact: '',
-                    special_instructions: ''
-                });
+            });            if (response.ok) {
+                resetCreateForm();
                 fetchDemands();
-                setError('');
             } else {
                 const errorData = await response.json();
                 setError(errorData.error || 'Failed to create service demand');
@@ -275,9 +319,7 @@ const ServiceDemandPage = () => {
                 </div>
             </BaseLayout>
         );
-    }
-
-    return (
+    }    return (
         <BaseLayout>
             <LeftToolbar userData={userData} />
             <div className="service-demand-page">
@@ -378,9 +420,11 @@ const ServiceDemandPage = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    
-                                    <div className="demand-content">
+                                      <div className="demand-content">
                                         <p><strong>Service:</strong> {demand.service_info?.name || 'N/A'}</p>
+                                        {demand.patient_info && (
+                                            <p><strong>Patient:</strong> {demand.patient_info.firstname} {demand.patient_info.lastname} - {demand.patient_info.birthdate || 'DOB not available'}</p>
+                                        )}
                                         <p><strong>Description:</strong> {demand.description}</p>
                                         <p><strong>Reason:</strong> {demand.reason}</p>
                                         {demand.preferred_start_date && (
@@ -394,21 +438,18 @@ const ServiceDemandPage = () => {
                                             <small>Created: {new Date(demand.created_at).toLocaleDateString()}</small>
                                             {demand.days_since_created > 0 && (
                                                 <small>{demand.days_since_created} days ago</small>
+                                            )}                                            {demand.managed_by_info && (
+                                                <small>Managed by: {demand.managed_by_info.firstname} {demand.managed_by_info.lastname}</small>
                                             )}
-                                            {demand.managed_by && (
-                                                <small>Managed by: {demand.managed_by.firstname} {demand.managed_by.lastname}</small>
-                                            )}
+                                        </div>                                        {/* Show More Info button for all users to see coordinator notes */}
+                                        <div className="demand-actions">
+                                            <button 
+                                                className="details-btn"
+                                                onClick={() => handleShowDetails(demand)}
+                                            >
+                                                More Info
+                                            </button>
                                         </div>
-                                        {(userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') && (
-                                            <div className="demand-actions">
-                                                <button 
-                                                    className="details-btn"
-                                                    onClick={() => handleShowDetails(demand)}
-                                                >
-                                                    More Info
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             ))
@@ -420,17 +461,15 @@ const ServiceDemandPage = () => {
                         <div className="modal-overlay">
                             <div className="create-demand-modal">
                                 <div className="modal-header">
-                                    <h2>Request New Service</h2>
-                                    <button 
+                                    <h2>Request New Service</h2>                                    <button 
                                         className="close-modal"
-                                        onClick={() => setShowCreateForm(false)}
+                                        onClick={resetCreateForm}
                                     >
                                         ×
                                     </button>
                                 </div>
                                 
-                                <form onSubmit={handleCreateDemand} className="demand-form">
-                                    <div className="form-row">
+                                <form onSubmit={handleCreateDemand} className="demand-form">                                    <div className="form-row">
                                         <div className="form-group">
                                             <label>Service *</label>
                                             <select
@@ -459,7 +498,52 @@ const ServiceDemandPage = () => {
                                                 <option value="Urgent">Urgent</option>
                                             </select>
                                         </div>
-                                    </div>
+                                    </div>                                    {/* Patient Selection for Coordinators */}
+                                    {(userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') && (
+                                        <div className="form-group">
+                                            <label>Patient *</label>
+                                            <div className="patient-selection-container">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search patients by name or birthdate..."
+                                                    value={patientSearch}
+                                                    onChange={(e) => setPatientSearch(e.target.value)}
+                                                    className="patient-search"
+                                                />
+                                                <select
+                                                    value={newDemand.selected_patient}
+                                                    onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
+                                                    required
+                                                    className="patient-select"
+                                                >                                                    <option value="">Select a patient</option>
+                                                    {Array.isArray(patients) && patients                                                        .filter(patient => {
+                                                            if (!patientSearch) return true;
+                                                            const searchLower = patientSearch.toLowerCase();
+                                                            return (
+                                                                patient.lastname?.toLowerCase().includes(searchLower) ||
+                                                                patient.firstname?.toLowerCase().includes(searchLower) ||
+                                                                patient.birth_date?.includes(searchLower)
+                                                            );
+                                                        })                                                        .map(patient => (
+                                                            <option key={patient.id} value={patient.id}>
+                                                                {patient.lastname}, {patient.firstname} - {patient.birth_date}
+                                                            </option>
+                                                        ))
+                                                    }
+                                                </select>                                                {patientSearch && (
+                                                    <small className="search-info">                                                        {Array.isArray(patients) ? patients.filter(patient => {
+                                                            const searchLower = patientSearch.toLowerCase();
+                                                            return (
+                                                                patient.lastname?.toLowerCase().includes(searchLower) ||
+                                                                patient.firstname?.toLowerCase().includes(searchLower) ||
+                                                                patient.birth_date?.includes(searchLower)
+                                                            );
+                                                        }).length : 0} patients found
+                                                    </small>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="form-group">
                                         <label>Title *</label>
@@ -575,10 +659,8 @@ const ServiceDemandPage = () => {
                                             onChange={(e) => setNewDemand({...newDemand, special_instructions: e.target.value})}
                                             placeholder="Any special instructions or requirements"
                                         />
-                                    </div>
-
-                                    <div className="form-actions">
-                                        <button type="button" onClick={() => setShowCreateForm(false)}>
+                                    </div>                                    <div className="form-actions">
+                                        <button type="button" onClick={resetCreateForm}>
                                             Cancel
                                         </button>
                                         <button type="submit">
@@ -627,17 +709,21 @@ const ServiceDemandPage = () => {
                                                 {selectedDemand.status}
                                             </span>
                                         </h4>
-                                    </div>
-
-                                    {/* Coordinator notes and comments */}
+                                    </div>                                    {/* Coordinator notes and comments - Visible to all users */}
                                     {selectedDemand.coordinator_notes && (
                                         <div className="coordinator-notes">
-                                            <h4>Coordinator Notes:</h4>
-                                            <p>{selectedDemand.coordinator_notes}</p>
+                                            <h4>
+                                                {userData?.user?.role === 'Patient' ? 'Updates from Care Team:' : 'Coordinator Notes:'}
+                                            </h4>
+                                            <div className="notes-content">
+                                                {selectedDemand.coordinator_notes.split('\n\n').map((note, index) => (
+                                                    <div key={index} className="note-entry">
+                                                        {note}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
-
-                                    <div className="comment-section">
+                                    )}<div className="comment-section">
                                         <h4>Comments:</h4>
                                         <div className="comments-list">
                                             {selectedDemand.comments && selectedDemand.comments.length > 0 ? (
@@ -651,19 +737,22 @@ const ServiceDemandPage = () => {
                                             )}
                                         </div>
 
-                                        <div className="add-comment">
-                                            <textarea
-                                                value={newComment}
-                                                onChange={(e) => setNewComment(e.target.value)}
-                                                placeholder="Add a comment..."
-                                            />
-                                            <button 
-                                                onClick={() => handleAddComment(selectedDemand.id, newComment)}
-                                                disabled={!newComment}
-                                            >
-                                                Add Comment
-                                            </button>
-                                        </div>
+                                        {/* Add Comment - Only for Coordinators/Admin */}
+                                        {(userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') && (
+                                            <div className="add-comment">
+                                                <textarea
+                                                    value={newComment}
+                                                    onChange={(e) => setNewComment(e.target.value)}
+                                                    placeholder="Add a comment..."
+                                                />
+                                                <button 
+                                                    onClick={() => handleAddComment(selectedDemand.id, newComment)}
+                                                    disabled={!newComment}
+                                                >
+                                                    Add Comment
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Status update section (for coordinators/admin) */}
@@ -840,24 +929,27 @@ const ServiceDemandPage = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
-
-                                    {/* Coordinator Notes Section */}
-                                    {(userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') && (
-                                        <div className="detail-section coordinator-section">
-                                            <h3>Coordinator Notes</h3>
-                                            {selectedDemand.coordinator_notes ? (
-                                                <div className="notes-display">
-                                                    {selectedDemand.coordinator_notes.split('\n\n').map((note, index) => (
-                                                        <div key={index} className="note-entry">
-                                                            {note}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <p className="no-notes">No coordinator notes yet.</p>
-                                            )}
-                                            
+                                    )}                                    {/* Coordinator Notes Section - Visible to all users */}
+                                    <div className="detail-section coordinator-section">
+                                        <h3>
+                                            {userData?.user?.role === 'Patient' ? 'Updates from Care Team' : 'Coordinator Notes'}
+                                        </h3>
+                                        {selectedDemand.coordinator_notes ? (
+                                            <div className="notes-display">
+                                                {selectedDemand.coordinator_notes.split('\n\n').map((note, index) => (
+                                                    <div key={index} className="note-entry">
+                                                        {note}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="no-notes">
+                                                {userData?.user?.role === 'Patient' ? 'No updates from your care team yet.' : 'No coordinator notes yet.'}
+                                            </p>
+                                        )}
+                                        
+                                        {/* Add Comment - Only for Coordinators/Admin */}
+                                        {(userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') && (
                                             <div className="add-comment">
                                                 <label>Add Comment:</label>
                                                 <textarea
@@ -878,8 +970,8 @@ const ServiceDemandPage = () => {
                                                     Add Comment
                                                 </button>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
 
                                     <div className="detail-section">
                                         <h3>Timeline</h3>
@@ -899,11 +991,10 @@ const ServiceDemandPage = () => {
                                                     <span className="timeline-date">Completed:</span>
                                                     <span>{new Date(selectedDemand.completed_at).toLocaleString()}</span>
                                                 </div>
-                                            )}
-                                            {selectedDemand.managed_by && (
+                                            )}                                            {selectedDemand.managed_by_info && (
                                                 <div className="timeline-item">
                                                     <span className="timeline-date">Managed by:</span>
-                                                    <span>{selectedDemand.managed_by.firstname} {selectedDemand.managed_by.lastname}</span>
+                                                    <span>{selectedDemand.managed_by_info.firstname} {selectedDemand.managed_by_info.lastname}</span>
                                                 </div>
                                             )}
                                         </div>

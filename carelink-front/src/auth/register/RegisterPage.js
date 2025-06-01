@@ -58,13 +58,12 @@ const RegisterPage = () => {
         }
 
         setBirthdate(e.target.value);
-    };
-
-    return (
+    };    return (
         <BaseLayout>
-            <div className="register-container">
-                <h2>Create an Account</h2>
-                <form onSubmit={handleRegister}>
+            <div className="register-page">
+                <div className="register-container">
+                    <h2>Create an Account</h2>
+                    <form onSubmit={handleRegister}>
                     <div className="form-group">
                         <label>First Name</label>
                         <input
@@ -137,10 +136,10 @@ const RegisterPage = () => {
                         <label htmlFor="gdprConsent">
                             I accept the GDPR terms and conditions.
                         </label>
-                    </div>
-                    {error && <p className="error-message">{error}</p>}
+                    </div>                    {error && <p className="error-message">{error}</p>}
                     <button type="submit" className="btn">Register</button>
                 </form>
+            </div>
             </div>
         </BaseLayout>
     );
