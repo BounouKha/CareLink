@@ -3,13 +3,13 @@ from django.utils import timezone
 from CareLink.models import ServiceDemand, Service, Patient, Provider
 from account.serializers.user import UserSerializer
 from account.serializers.service import ServiceSerializer
-from account.serializers.patient import PatientSerializer
+from account.serializers.patient import PatientSerializer, PatientWithUserSerializer
 
 class ServiceDemandSerializer(serializers.ModelSerializer):
     sent_by_info = UserSerializer(source='sent_by', read_only=True)
     managed_by_info = UserSerializer(source='managed_by', read_only=True)
     service_info = ServiceSerializer(source='service', read_only=True)
-    patient_info = PatientSerializer(source='patient', read_only=True)
+    patient_info = PatientWithUserSerializer(source='patient', read_only=True)
     days_since_created = serializers.ReadOnlyField()
     is_urgent = serializers.ReadOnlyField()
     
