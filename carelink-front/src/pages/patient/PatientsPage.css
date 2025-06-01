@@ -74,7 +74,9 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
     z-index: 1000;
-    width: 400px;
+    max-width: 800px;
+    overflow-y: auto;
+    max-height: 80vh;
 }
 
 .modal-content {

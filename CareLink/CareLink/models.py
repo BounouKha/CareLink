@@ -114,6 +114,7 @@ class MedicalFolder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True) 
     note = models.CharField(max_length=1000, null=True, blank=True)
+    service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
 
 class Patient(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)

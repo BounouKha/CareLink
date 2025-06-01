@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './PatientsPage.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import LeftToolbar from '../../auth/layout/LeftToolbar';
+import AddEntryForm from '../../components/AddEntryForm';
 
 const PatientsPage = () => {
     const [patients, setPatients] = useState([]);
@@ -12,7 +13,11 @@ const PatientsPage = () => {
     const [showMedicalFolderModal, setShowMedicalFolderModal] = useState(false);
     const [newNote, setNewNote] = useState('');
     const [newEntry, setNewEntry] = useState('');
-    const [showAddEntryModal, setShowAddEntryModal] = useState(false);
+    const [showAddEntryModal, setShowAddEntryModal] = useState(false);    const [services, setServices] = useState([]);
+    const [selectedService, setSelectedService] = useState('');
+    const [isLoadingServices, setIsLoadingServices] = useState(false);
+    const [servicesLoaded, setServicesLoaded] = useState(false);
+    const [showEditPatientModal, setShowEditPatientModal] = useState(false);
 
     useEffect(() => {
         const fetchPatients = async () => {
@@ -42,11 +47,56 @@ const PatientsPage = () => {
             }
         };
 
+        const fetchServices = async () => {
+            try {
+                setIsLoadingServices(true);
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    throw new Error('No access token found. Please log in.');
+                }
+
+                console.log('[DEBUG] Fetching services from backend...');
+                const response = await fetch('http://localhost:8000/account/services/', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                console.log('[DEBUG] Response status:', response.status);
+                console.log('[DEBUG] Response headers:', response.headers);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch services.');
+                }                const data = await response.json();
+                console.log('[DEBUG] Fetched service data:', data);
+                console.log('[DEBUG] typeof data:', typeof data);
+                console.log('[DEBUG] Array.isArray(data):', Array.isArray(data));
+                
+                // The services API returns a direct array
+                setServices(data);
+                setServicesLoaded(true);
+                console.log('[DEBUG] Services set successfully:', data);
+            } catch (err) {
+                console.error('[DEBUG] Error fetching services:', err);
+                setError(err.message);
+            } finally {
+                setIsLoadingServices(false);
+            }
+        };
+
         fetchPatients();
+        fetchServices();
     }, []);
 
     const handleShowDetails = (patient) => {
         setSelectedPatient(patient);
+        setShowEditPatientModal(true);
+    };
+
+    const handleCloseEditPatientModal = () => {
+        setShowEditPatientModal(false);
+        setSelectedPatient(null);
     };
 
     const handleCloseModal = () => {
@@ -166,21 +216,25 @@ const PatientsPage = () => {
 
     const handleCloseMedicalFolderModal = () => {
         setShowMedicalFolderModal(false);
-    };
-
-    const handleAddMedicalFolderEntry = async (newEntry) => {
+    };    const handleAddMedicalFolderEntry = async (newEntry) => {
         try {
             if (!selectedPatient || medicalFolder.length === 0) {
                 throw new Error('No patient or medical folder selected. Please select a patient and ensure the medical folder is loaded.');
             }
 
             const folderId = medicalFolder[0].id; // Assuming the first folder entry contains the folder ID
-            console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, folderId, newEntry });
+            console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, folderId, newEntry, selectedService });
 
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
-            }
+            }            const requestBody = { 
+                note: newEntry, 
+                folder_id: folderId,
+                service_id: selectedService // Include the service ID
+            };
+            console.log('[DEBUG] Request body:', requestBody);
+            console.log('[DEBUG] About to send POST request with body:', JSON.stringify(requestBody, null, 2));
 
             const response = await fetch(`http://localhost:8000/account/medical_folder/${selectedPatient.id}/`, {
                 method: 'POST',
@@ -188,47 +242,57 @@ const PatientsPage = () => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ note: newEntry, folder_id: folderId }),
+                body: JSON.stringify(requestBody),
             });
 
             if (!response.ok) {
                 throw new Error('Failed to add new entry to medical folder.');
             }
 
-            console.log('[DEBUG] Added new entry to medical folder:', { folderId, newEntry });
+            console.log('[DEBUG] Added new entry to medical folder:', { folderId, newEntry, selectedService });
             fetchMedicalFolder(selectedPatient.id); // Refresh the medical folder entries
+
+            // Clear the form fields
+            setNewNote('');
+            setSelectedService('');
+
+            // Display success message
+            alert('Successful');
         } catch (err) {
             console.error('[DEBUG] Error adding new entry to medical folder:', err);
             alert(err.message);
         }
-    };
+    };    const handleAddEntry = async (patient) => {
+        console.log('[DEBUG] Services available when opening modal:', services);
+        setShowAddEntryModal(true);
+        setSelectedPatient(patient); // Ensure the full patient object is set
+        setNewNote('');
+        setSelectedService('');
 
-    const handleAddEntry = async (patientId) => {
+        console.log('[DEBUG] Patient passed to handleAddEntry:', patient); // Debug log
+
         try {
-            const note = prompt('Enter the note for the new entry:');
-            if (!note) {
-                alert('Note cannot be empty.');
-                return;
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                throw new Error('No access token found. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/account/medical_folder/${patientId}/`, {
-                method: 'POST',
+            const response = await fetch(`http://localhost:8000/account/medical_folder/${patient.id}/`, {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ note }),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to add new entry to the medical folder.');
+                throw new Error('Failed to fetch medical folder.');
             }
 
-            alert('New entry added successfully!');
-            fetchMedicalFolder(patientId); // Refresh the medical folder entries
-        } catch (error) {
-            console.error('Error adding new entry:', error);
-            alert('An error occurred while adding the entry.');
+            const data = await response.json();
+            setMedicalFolder(data);
+        } catch (err) {
+            console.error('[DEBUG] Error fetching medical folder:', err);
+            alert('Failed to fetch medical folder.');
         }
     };
 
@@ -260,7 +324,7 @@ const PatientsPage = () => {
                                         <p><strong>Name:</strong> {patient.firstname} {patient.lastname}</p>
                                         <button onClick={() => handleShowDetails(patient)}>Patient Information</button>
                                         <button onClick={() => handleShowMedicalFolder(patient.id)}>Medical Folder</button>
-                                        <button onClick={() => handleAddEntry(patient.id)}>Add Entry</button>
+                                        <button onClick={() => handleAddEntry(patient)}>Add Entry</button>
                                     </li>
                                 ))}
                             </ul>
@@ -271,7 +335,7 @@ const PatientsPage = () => {
                 
                 </div>
 
-                {selectedPatient && (
+                {showEditPatientModal && (
                     <div className="modal">
                         <div className="modal-content">
                             <h2>Edit Patient Details</h2>
@@ -364,7 +428,7 @@ const PatientsPage = () => {
                                 />
                             </label>
                             <button onClick={handleSaveChanges}>Save</button>
-                            <button onClick={handleCloseModal}>Close</button>
+                            <button onClick={handleCloseEditPatientModal}>Close</button>
                         </div>
                     </div>
                 )}
@@ -379,6 +443,7 @@ const PatientsPage = () => {
                                         <li key={index}>
                                             <p><strong>Date:</strong> {entry.created_at}</p>
                                             <p><strong>Note:</strong> {entry.note}</p>
+                                            <p><strong>Service:</strong> {entry.service || 'N/A'}</p>
                                         </li>
                                     ))}
                                 </ul>
@@ -388,19 +453,40 @@ const PatientsPage = () => {
                             <button onClick={handleCloseMedicalFolderModal}>Close</button>
                         </div>
                     </div>
+                )}                {showAddEntryModal && services.length > 0 && (
+                    <div className="modal">
+                        <AddEntryForm
+                            newNote={newNote}
+                            setNewNote={setNewNote}
+                            selectedService={selectedService}
+                            setSelectedService={setSelectedService}
+                            services={services}                            onSubmit={() => {
+                                console.log('[DEBUG] Submit clicked - selectedService:', selectedService);
+                                console.log('[DEBUG] Submit clicked - selectedService type:', typeof selectedService);
+                                console.log('[DEBUG] Submit clicked - newNote:', newNote);
+                                console.log('[DEBUG] Submit clicked - services array:', services);
+                                
+                                // Find the selected service object
+                                const selectedServiceObj = services.find(service => service.id == selectedService);
+                                console.log('[DEBUG] Selected service object:', selectedServiceObj);
+                                
+                                if (!selectedService) {
+                                    alert('Please select a service before submitting.');
+                                    return;
+                                }
+                                handleAddMedicalFolderEntry(newNote);
+                                setShowAddEntryModal(false); // Close modal after successful submission
+                            }}
+                            onCancel={() => setShowAddEntryModal(false)}
+                        />
+                    </div>
                 )}
 
-                {showAddEntryModal && (
+                {showAddEntryModal && services.length === 0 && (
                     <div className="modal">
                         <div className="modal-content">
                             <h2>Add Entry</h2>
-                            <textarea
-                                value={newNote}
-                                onChange={(e) => setNewNote(e.target.value)}
-                                placeholder="Enter your note here..."
-                                rows="5"
-                            />
-                            <button onClick={() => handleAddMedicalFolderEntry(newNote)}>Submit</button>
+                            <p>Loading services...</p>
                             <button onClick={() => setShowAddEntryModal(false)}>Cancel</button>
                         </div>
                     </div>
