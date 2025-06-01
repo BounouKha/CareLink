@@ -193,14 +193,92 @@ class Schedule(models.Model):
         self.save()
 
 class ServiceDemand(models.Model):
+    PRIORITY_CHOICES = [
+        ('Low', 'Low'),
+        ('Normal', 'Normal'),
+        ('High', 'High'),
+        ('Urgent', 'Urgent'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Under Review', 'Under Review'),
+        ('Approved', 'Approved'),
+        ('In Progress', 'In Progress'),
+        ('Completed', 'Completed'),
+        ('Rejected', 'Rejected'),
+        ('Cancelled', 'Cancelled'),
+    ]
+    
+    CONTACT_CHOICES = [
+        ('Email', 'Email'),
+        ('Phone', 'Phone Call'),
+        ('Video Call', 'Video Call'),
+        ('In Person', 'In Person'),
+        ('SMS', 'SMS'),
+    ]
+    
+    FREQUENCY_CHOICES = [
+        ('Once', 'One-time service'),
+        ('Daily', 'Daily'),
+        ('Weekly', 'Weekly'),
+        ('Bi-weekly', 'Bi-weekly'),
+        ('Monthly', 'Monthly'),
+        ('As needed', 'As needed'),
+    ]
+    
+    # Core Information
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     sent_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='sent_demands')
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=[('Open', 'Open'), ('In Progress', 'In Progress'), ('Closed', 'Closed')])
-    manage_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_demands')
-    frequency = models.IntegerField()
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
-    contact = models.CharField(max_length=20, choices=[('Mail', 'Mail'), ('Appel', 'Appel'), ('Appel visio', 'Appel visio')])
+      # Request Details
+    title = models.CharField(max_length=200, default="Service Request", help_text="Brief title for the service request")
+    description = models.TextField(default="", blank=True, help_text="Detailed description of the service needed")
+    reason = models.TextField(default="", blank=True, help_text="Medical reason or justification for the service")
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Normal')
+    
+    # Scheduling Information
+    preferred_start_date = models.DateField(null=True, blank=True, help_text="When should the service start?")
+    frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='Once')
+    duration_weeks = models.IntegerField(null=True, blank=True, help_text="How many weeks is this service needed?")
+    preferred_time = models.CharField(max_length=100, null=True, blank=True, help_text="Preferred time of day (e.g., Morning, Afternoon, Evening)")
+    
+    # Contact & Communication
+    contact_method = models.CharField(max_length=20, choices=CONTACT_CHOICES, default='Email')
+    emergency_contact = models.CharField(max_length=15, null=True, blank=True, help_text="Emergency contact number")
+    special_instructions = models.TextField(null=True, blank=True, help_text="Any special instructions or requirements")
+    
+    # Status & Management
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    managed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_demands')
+    assigned_provider = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Response & Notes
+    coordinator_notes = models.TextField(null=True, blank=True, help_text="Internal notes from coordinators")
+    rejection_reason = models.TextField(null=True, blank=True, help_text="Reason for rejection if applicable")
+    estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at', 'priority']
+        verbose_name = "Service Demand"
+        verbose_name_plural = "Service Demands"
+    
+    def __str__(self):
+        return f"{self.title} - {self.patient} ({self.status})"
+    
+    @property
+    def is_urgent(self):
+        return self.priority == 'Urgent'
+    
+    @property
+    def days_since_created(self):
+        return (datetime.datetime.now().date() - self.created_at.date()).days
 
 class SocialAssistant(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
