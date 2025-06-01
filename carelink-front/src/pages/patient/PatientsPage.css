@@ -1,0 +1,120 @@
+/* PatientsPage.css */
+
+.profile-patient-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f4f8fb;
+    font-family: Arial, sans-serif;
+    color: #333;
+    width: 600px;
+    height: 600px;
+}
+
+.profile-patient-container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 800px;
+    width: 100%;
+    min-height: 600px;
+    overflow-y: auto; /* Enable scrolling for the container */
+}
+
+.profile-patient-content {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    overflow: unset; /* Remove scrolling from the content */
+}
+
+.profile-patient-content li {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-patient-content li p {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+
+
+.profile-patient-content li button {
+    background-color: #00bcd4;
+    color: #fff;
+    border: none;
+    padding: 5px 10px; /* Reduce padding to make the button smaller */
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    width: 100px; /* Adjust font size for a smaller appearance */
+}
+
+.profile-patient-content li button:hover {
+    background-color: #008c9e;
+}
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    z-index: 1000;
+    width: 400px;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal button {
+    background-color: #00bcd4;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.modal button:hover {
+    background-color: #008c9e;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.search-bar {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
