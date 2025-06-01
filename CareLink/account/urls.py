@@ -1,4 +1,6 @@
 from django.urls import path
+
+from account.views.coordinator.patients import ViewsPatient
 from .views.register import RegisterAPIView
 from .views.login import LoginAPIView 
 from .views.logout import LogoutAPIView
@@ -19,6 +21,8 @@ from account.views.check_unpaid_invoices import CheckUnpaidInvoicesView
 from account.views.profile_list import ProfileListView
 from account.views.fetch_logic import FetchProfileView, EditProfileView
 from account.views.refresh import CustomTokenRefreshView
+from account.views.coordinator.update_patient import UpdatePatientView
+
 
 
 
@@ -53,4 +57,9 @@ urlpatterns += [
     path('profiles/', ProfileListView.as_view(), name='profile_list'),
     path('profiles/<int:profile_id>/fetch/<str:role>/', FetchProfileView.as_view(), name='fetch_profile'),
     path('profiles/<int:profile_id>/edit/<str:role>/', EditProfileView.as_view(), name='edit_profile'),
+
+    path('views_patient/', ViewsPatient.as_view(), name='views_patient'),
+    path('update_patient/<int:patient_id>/', UpdatePatientView.as_view(), name='update_patient'),
+
+
 ]
