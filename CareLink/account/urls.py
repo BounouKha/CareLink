@@ -23,6 +23,7 @@ from account.views.fetch_logic import FetchProfileView, EditProfileView
 from account.views.refresh import CustomTokenRefreshView
 from account.views.coordinator.update_patient import UpdatePatientView
 from account.views.coordinator.medicalfolder_simple import MedicalFolderSimpleView
+from account.views.servicedemand import ServiceDemandListCreateView, ServiceDemandDetailView, ServiceDemandStatsView, ServiceDemandStatusUpdateView, ServiceDemandCommentView
 
 
 
@@ -57,12 +58,14 @@ urlpatterns += [
     path('check-unpaid-invoices/<int:user_id>/', CheckUnpaidInvoicesView.as_view(), name='check_unpaid_invoices'),
     path('profiles/', ProfileListView.as_view(), name='profile_list'),
     path('profiles/<int:profile_id>/fetch/<str:role>/', FetchProfileView.as_view(), name='fetch_profile'),
-    path('profiles/<int:profile_id>/edit/<str:role>/', EditProfileView.as_view(), name='edit_profile'),
-
-    path('views_patient/', ViewsPatient.as_view(), name='views_patient'),
+    path('profiles/<int:profile_id>/edit/<str:role>/', EditProfileView.as_view(), name='edit_profile'),    path('views_patient/', ViewsPatient.as_view(), name='views_patient'),
 
     path('update_patient/<int:patient_id>/', UpdatePatientView.as_view(), name='update_patient'),
-    path('medical_folder/<int:patient_id>/', MedicalFolderSimpleView.as_view(), name='medical_folder'),
-
+    path('medical_folder/<int:patient_id>/', MedicalFolderSimpleView.as_view(), name='medical_folder'),    # Service Demand URLs
+    path('service-demands/', ServiceDemandListCreateView.as_view(), name='service_demand_list_create'),
+    path('service-demands/<int:pk>/', ServiceDemandDetailView.as_view(), name='service_demand_detail'),
+    path('service-demands/stats/', ServiceDemandStatsView.as_view(), name='service_demand_stats'),
+    path('service-demands/<int:pk>/status/', ServiceDemandStatusUpdateView.as_view(), name='service_demand_status_update'),
+    path('service-demands/<int:pk>/comment/', ServiceDemandCommentView.as_view(), name='service_demand_comment'),
 
 ]
