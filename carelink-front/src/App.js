@@ -5,6 +5,7 @@ import RegisterPage from './auth/RegisterPage';
 import ProfilePage from './auth/ProfilePage';
 import LoginPage from './auth/LoginPage';
 import AdminPanel from './admin/AdminPanel';
+import PatientsPage from './pages/patient/PatientsPage';
 import './auth/HomePage.css';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AdminProvider } from './auth/AdminContext';
@@ -20,6 +21,7 @@ function App() {
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                        <Route path="/patients" element={<PatientsPage />} />
                     </Routes>
                 </div>
             </Router>

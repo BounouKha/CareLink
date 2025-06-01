@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.models import BaseUserManager
 import datetime
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Permission
 
 ##Attention la base de données doit être en UTF-8 pour éviter les problèmes d'encodage
 
@@ -41,6 +42,13 @@ class Contract(models.Model):
 class Coordinator(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     is_internal = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.user:
+            change_permission = Permission.objects.get(codename='change_patient')
+            view_permission = Permission.objects.get(codename='view_patient')
+            self.user.user_permissions.add(change_permission, view_permission)
 
 class FamilyPatient(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
