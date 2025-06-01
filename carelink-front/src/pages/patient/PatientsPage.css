@@ -83,6 +83,40 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    position: relative; /* Add position relative for absolute positioning of close button */
+}
+
+.modal-header {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    padding-right: 30px; /* Add padding to prevent overlap with close button */
+}
+
+.modal-close-button {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    color: #666 !important;
+    line-height: 1 !important;
+    width: 30px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.modal-close-button:hover {
+    color: #333 !important;
+    background-color: #f0f0f0 !important;
+    border-radius: 50% !important;
 }
 
 .modal button {
@@ -118,5 +152,194 @@
     border-radius: 8px;
     font-size: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Medical folder sorting styles */
+.medical-folder-sort {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.medical-folder-sort label {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #495057;
+    font-size: 14px;
+}
+
+.medical-folder-sort select {
+    padding: 6px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    color: #495057;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.medical-folder-sort select:focus {
+    border-color: #00bcd4;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+}
+
+.medical-folder-sort select:hover {
+    border-color: #00bcd4;
+}
+
+/* Medical folder entry styles */
+.modal ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.modal li {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.modal li:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.modal li p {
+    margin: 5px 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.modal li p strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Edit Patient Details modal styles */
+.modal .modal-content label {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 13px;
+}
+
+.modal .modal-content input[type="text"],
+.modal .modal-content input[type="date"] {
+    margin-top: 4px;
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #495057;
+    background-color: white;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.modal .modal-content input[type="text"]:focus,
+.modal .modal-content input[type="date"]:focus {
+    border-color: #00bcd4;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+}
+
+.modal .modal-content input[type="text"]:disabled,
+.modal .modal-content input[type="date"]:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #e9ecef;
+}
+
+.modal .modal-content input[type="checkbox"] {
+    margin-top: 6px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #00bcd4;
+}
+
+/* Patient form sections */
+.patient-form-section {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+}
+
+.patient-form-section h3 {
+    margin: 0 0 12px 0;
+    color: #495057;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 2px solid #00bcd4;
+    padding-bottom: 4px;
+}
+
+/* Form grid layout for better organization */
+.patient-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 600px) {
+    .patient-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Button styling for patient form */
+.patient-form-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.patient-form-buttons button {
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    margin-top: 0 !important;
+    transition: all 0.2s ease !important;
+}
+
+.patient-form-buttons button:first-child {
+    background-color: #28a745 !important;
+}
+
+.patient-form-buttons button:first-child:hover {
+    background-color: #218838 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.patient-form-buttons button:last-child {
+    background-color: #6c757d !important;
+}
+
+.patient-form-buttons button:last-child:hover {
+    background-color: #545b62 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
