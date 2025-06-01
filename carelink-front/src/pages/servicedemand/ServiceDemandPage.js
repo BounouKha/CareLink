@@ -31,9 +31,10 @@ const ServiceDemandPage = () => {
         emergency_contact: '',
         special_instructions: '',
         selected_patient: '' // Add selected patient for coordinators
-    });
+    });    const [patientSearch, setPatientSearch] = useState('');
+    const [linkedPatient, setLinkedPatient] = useState(null); // For Family Patients
 
-    const [patientSearch, setPatientSearch] = useState('');    useEffect(() => {
+    useEffect(() => {
         fetchUserData();
         fetchDemands();
         fetchServices();
@@ -44,6 +45,8 @@ const ServiceDemandPage = () => {
     useEffect(() => {
         if (userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') {
             fetchPatients();
+        } else if (userData?.user?.role === 'Family Patient') {
+            fetchLinkedPatient();
         }
     }, [userData?.user?.role]);
 
@@ -170,14 +173,21 @@ const ServiceDemandPage = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('accessToken');
-            
-            // Get patient ID - use selected patient for coordinators, current user for patients
+              // Get patient ID - use selected patient for coordinators, current user for patients, linked patient for family patients
             let patientId = null;
             if (userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') {
                 // For coordinators, use the selected patient
                 patientId = newDemand.selected_patient;
                 if (!patientId) {
                     setError('Please select a patient for this service request');
+                    return;
+                }
+            } else if (userData?.user?.role === 'Family Patient') {
+                // For family patients, use the linked patient ID (backend will handle validation)
+                if (linkedPatient?.id) {
+                    patientId = linkedPatient.id;
+                } else {
+                    setError('No linked patient found. Please contact your administrator.');
                     return;
                 }
             } else {
@@ -308,6 +318,29 @@ const ServiceDemandPage = () => {
             'Urgent': '#e74c3c'
         };
         return colors[priority] || '#7f8c8d';
+    };
+
+    const fetchLinkedPatient = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch('http://localhost:8000/account/family-patient/linked-patient/', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setLinkedPatient(data.linked_patient);
+                // Auto-select the linked patient for service requests
+                if (data.linked_patient) {
+                    setNewDemand(prev => ({
+                        ...prev,
+                        selected_patient: data.linked_patient.id
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching linked patient:', error);
+        }
     };
 
     if (loading) {
@@ -515,8 +548,10 @@ const ServiceDemandPage = () => {
                                                     onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
                                                     required
                                                     className="patient-select"
-                                                >                                                    <option value="">Select a patient</option>
-                                                    {Array.isArray(patients) && patients                                                        .filter(patient => {
+                                                >
+                                                    <option value="">Select a patient</option>
+                                                    {Array.isArray(patients) && patients
+                                                        .filter(patient => {
                                                             if (!patientSearch) return true;
                                                             const searchLower = patientSearch.toLowerCase();
                                                             return (
@@ -524,14 +559,17 @@ const ServiceDemandPage = () => {
                                                                 patient.firstname?.toLowerCase().includes(searchLower) ||
                                                                 patient.birth_date?.includes(searchLower)
                                                             );
-                                                        })                                                        .map(patient => (
+                                                        })
+                                                        .map(patient => (
                                                             <option key={patient.id} value={patient.id}>
                                                                 {patient.lastname}, {patient.firstname} - {patient.birth_date}
                                                             </option>
                                                         ))
                                                     }
-                                                </select>                                                {patientSearch && (
-                                                    <small className="search-info">                                                        {Array.isArray(patients) ? patients.filter(patient => {
+                                                </select>
+                                                {patientSearch && (
+                                                    <small className="search-info">
+                                                        {Array.isArray(patients) ? patients.filter(patient => {
                                                             const searchLower = patientSearch.toLowerCase();
                                                             return (
                                                                 patient.lastname?.toLowerCase().includes(searchLower) ||
@@ -541,6 +579,18 @@ const ServiceDemandPage = () => {
                                                         }).length : 0} patients found
                                                     </small>
                                                 )}
+                                            </div>
+                                        </div>
+                                    )}                                    {/* Patient Information for Family Patients */}
+                                    {userData?.user?.role === 'Family Patient' && linkedPatient && (
+                                        <div className="form-group">
+                                            <label>Patient</label>
+                                            <div className="linked-patient-info">
+                                                <div className="patient-display">
+                                                    <strong>{linkedPatient.firstname} {linkedPatient.lastname}</strong>
+                                                    <span className="patient-birthdate">Born: {linkedPatient.birthdate}</span>
+                                                    <small className="patient-note">This service request will be created for your linked patient</small>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
