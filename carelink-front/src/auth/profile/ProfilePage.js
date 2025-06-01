@@ -7,6 +7,7 @@ const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);
     const [selectedTab, setSelectedTab] = useState('user');
+    const [linkedPatient, setLinkedPatient] = useState(null);
     const profileRef = useRef(null);
 
     useEffect(() => {
@@ -40,8 +41,26 @@ const ProfilePage = () => {
 
                 const data = await response.json();
                 console.log('[DEBUG] Fetched Profile Data:', data); // Debugging fetched data
-                console.log('[DEBUG] Family Data:', data.family_relationships); // Corrected key for family data
                 setUserData(data);
+
+                // If user is a Family Patient, fetch linked patient info
+                if (data.user.role === 'Family Patient') {
+                    try {
+                        const linkedResponse = await fetch('http://localhost:8000/account/family-patient/linked-patient/', {
+                            method: 'GET',
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        });
+
+                        if (linkedResponse.ok) {
+                            const linkedData = await linkedResponse.json();
+                            setLinkedPatient(linkedData.linked_patient);
+                        }
+                    } catch (err) {
+                        console.error('Error fetching linked patient:', err);
+                    }
+                }
             } catch (err) {
                 setError('Failed to fetch profile data. Please try again.');
             }
@@ -110,8 +129,22 @@ const ProfilePage = () => {
             case 'patient':
                 return (
                     <div className="patient-info">
-                        <h2>Patient Information</h2>
-                        {userData.patient ? (
+                        <h2>{userData.user.role === 'Family Patient' ? "Linked Patient Information" : "Patient Information"}</h2>
+                        {userData.user.role === 'Family Patient' ? (
+                            linkedPatient ? (
+                                <div>                                    <p><strong>Patient Name:</strong> {linkedPatient.firstname} {linkedPatient.lastname}</p>
+                                    <p><strong>Gender:</strong> {linkedPatient.gender}</p>
+                                    <p><strong>Blood Type:</strong> {linkedPatient.blood_type}</p>
+                                    <p><strong>Emergency Contact:</strong> {linkedPatient.emergency_contact}</p>
+                                    <p><strong>Illness:</strong> {linkedPatient.illness}</p>
+                                    <div className="family-link">
+                                        <p><strong>Your Relationship:</strong> {userData.family_relationships?.[0]?.link || 'Family Member'}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p>No linked patient information available.</p>
+                            )
+                        ) : userData.patient ? (
                             <div>
                                 <p><strong>Gender:</strong> {userData.patient.gender}</p>
                                 <p><strong>Blood Type:</strong> {userData.patient.blood_type}</p>
@@ -196,7 +229,6 @@ const ProfilePage = () => {
 
     return (
         <BaseLayout>
-           
             <LeftToolbar userData={userData} />
             <div className="profile-container" ref={profileRef}>
                 <div className="role-display">
@@ -204,7 +236,12 @@ const ProfilePage = () => {
                 </div>
                 <div className="toolbar">
                     <button onClick={() => setSelectedTab('user')} className={selectedTab === 'user' ? 'active' : ''}>User Info</button>
-                    {userData.user.role !== 'Coordinator' && (
+                    {userData.user.role === 'Family Patient' ? (
+                        <>
+                            <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Linked Patient</button>
+                            <button onClick={() => setSelectedTab('contact')} className={selectedTab === 'contact' ? 'active' : ''}>Contact</button>
+                        </>
+                    ) : userData.user.role !== 'Coordinator' && (
                         <>
                             <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Patient Info</button>
                             <button onClick={() => setSelectedTab('family')} className={selectedTab === 'family' ? 'active' : ''}>Family</button>
