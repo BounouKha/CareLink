@@ -11,13 +11,13 @@ const PatientsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [medicalFolder, setMedicalFolder] = useState([]);
     const [showMedicalFolderModal, setShowMedicalFolderModal] = useState(false);
-    const [newNote, setNewNote] = useState('');
-    const [newEntry, setNewEntry] = useState('');
+    const [newNote, setNewNote] = useState('');    const [newEntry, setNewEntry] = useState('');
     const [showAddEntryModal, setShowAddEntryModal] = useState(false);    const [services, setServices] = useState([]);
     const [selectedService, setSelectedService] = useState('');
     const [isLoadingServices, setIsLoadingServices] = useState(false);
     const [servicesLoaded, setServicesLoaded] = useState(false);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+    const [sortOrder, setSortOrder] = useState('newest'); // New state for sorting
 
     useEffect(() => {
         const fetchPatients = async () => {
@@ -212,11 +212,33 @@ const PatientsPage = () => {
         console.log('[DEBUG] Medical Folder button clicked for patientId:', patientId);
         fetchMedicalFolder(patientId);
         setShowMedicalFolderModal(true);
+    };    const handleCloseMedicalFolderModal = () => {
+        setShowMedicalFolderModal(false);
     };
 
-    const handleCloseMedicalFolderModal = () => {
-        setShowMedicalFolderModal(false);
-    };    const handleAddMedicalFolderEntry = async (newEntry) => {
+    // Function to sort medical folder entries
+    const getSortedMedicalFolder = () => {
+        const sortedEntries = [...medicalFolder];
+        if (sortOrder === 'newest') {
+            return sortedEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        } else {
+            return sortedEntries.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        }
+    };    const handleSortOrderChange = (e) => {
+        setSortOrder(e.target.value);
+    };
+
+    // Function to format date for better readability
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };const handleAddMedicalFolderEntry = async (newEntry) => {
         try {
             if (!selectedPatient || medicalFolder.length === 0) {
                 throw new Error('No patient or medical folder selected. Please select a patient and ensure the medical folder is loaded.');
@@ -333,115 +355,163 @@ const PatientsPage = () => {
                         <p>No patients found.</p>
                     )}
                 
-                </div>
-
-                {showEditPatientModal && (
+                </div>                {showEditPatientModal && (
                     <div className="modal">
                         <div className="modal-content">
-                            <h2>Edit Patient Details</h2>
-                            <label>
-                                Name:
-                                <input
-                                    type="text"
-                                    value={`${selectedPatient.firstname} ${selectedPatient.lastname}`}
-                                    disabled
-                                />
-                            </label>
-                            <label>
-                                National Number:
-                                <input
-                                    type="text"
-                                    value={selectedPatient.national_number}
-                                    disabled
-                                />
-                            </label>
-                            <label>
-                                Birthdate:
-                                <input
-                                    type="date"
-                                    value={selectedPatient.birth_date}
-                                    disabled
-                                />
-                            </label>
-                            <label>
-                                Gender:
-                                <input
-                                    type="text"
-                                    value={selectedPatient.gender}
-                                    onChange={(e) => handleInputChange('gender', e.target.value)}
-                                />
-                            </label>
-                            <label>
-                                Blood Type:
-                                <input
-                                    type="text"
-                                    value={selectedPatient.blood_type}
-                                    onChange={(e) => handleInputChange('blood_type', e.target.value)}
-                                />
-                            </label>
-                            <label>
-                                Emergency Contact:
-                                <input
-                                    type="text"
-                                    value={selectedPatient.emergency_contact}
-                                    onChange={(e) => handleInputChange('emergency_contact', e.target.value)}
-                                />
-                            </label>
-                            <label>
-                                Illness:
-                                <input
-                                    type="text"
-                                    value={selectedPatient.illness}
-                                    onChange={(e) => handleInputChange('illness', e.target.value)}
-                                />
-                            </label>
-                            <label>
-                                Critical Information:
-                                <input
-                                    type="text"
-                                    value={selectedPatient.critical_information}
-                                    onChange={(e) => handleInputChange('critical_information', e.target.value)}
-                                />
-                            </label>
-                            <label>
-                                Medication:
-                                <input
-                                    type="text"
-                                    value={selectedPatient.medication}
-                                    onChange={(e) => handleInputChange('medication', e.target.value)}
-                                />
-                            </label>
-                            <label>
-                                Social Price:
-                                <input
-                                    type="checkbox"
-                                    checked={selectedPatient.social_price}
-                                    onChange={(e) => handleInputChange('social_price', e.target.checked)}
-                                />
-                            </label>
-                            <label>
-                                Alive:
-                                <input
-                                    type="checkbox"
-                                    checked={selectedPatient.is_alive}
-                                    onChange={(e) => handleInputChange('is_alive', e.target.checked)}
-                                />
-                            </label>
-                            <button onClick={handleSaveChanges}>Save</button>
-                            <button onClick={handleCloseEditPatientModal}>Close</button>
+                            <div className="modal-header">
+                                <h2>Edit Patient Details</h2>                                <button 
+                                    className="modal-close-button" 
+                                    onClick={handleCloseEditPatientModal}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            
+                            {/* Basic Information Section */}
+                            <div className="patient-form-section">
+                                <h3>Basic Information</h3>
+                                <div className="patient-form-grid">
+                                    <label>
+                                        Name:
+                                        <input
+                                            type="text"
+                                            value={`${selectedPatient.firstname} ${selectedPatient.lastname}`}
+                                            disabled
+                                        />
+                                    </label>
+                                    <label>
+                                        National Number:
+                                        <input
+                                            type="text"
+                                            value={selectedPatient.national_number}
+                                            disabled
+                                        />
+                                    </label>
+                                    <label>
+                                        Birthdate:
+                                        <input
+                                            type="date"
+                                            value={selectedPatient.birth_date}
+                                            disabled
+                                        />
+                                    </label>
+                                    <label>
+                                        Gender:
+                                        <input
+                                            type="text"
+                                            value={selectedPatient.gender}
+                                            onChange={(e) => handleInputChange('gender', e.target.value)}
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Medical Information Section */}
+                            <div className="patient-form-section">
+                                <h3>Medical Information</h3>
+                                <div className="patient-form-grid">
+                                    <label>
+                                        Blood Type:
+                                        <input
+                                            type="text"
+                                            value={selectedPatient.blood_type}
+                                            onChange={(e) => handleInputChange('blood_type', e.target.value)}
+                                        />
+                                    </label>
+                                    <label>
+                                        Emergency Contact:
+                                        <input
+                                            type="text"
+                                            value={selectedPatient.emergency_contact}
+                                            onChange={(e) => handleInputChange('emergency_contact', e.target.value)}
+                                        />
+                                    </label>
+                                </div>
+                                <label>
+                                    Illness:
+                                    <input
+                                        type="text"
+                                        value={selectedPatient.illness}
+                                        onChange={(e) => handleInputChange('illness', e.target.value)}
+                                    />
+                                </label>
+                                <label>
+                                    Critical Information:
+                                    <input
+                                        type="text"
+                                        value={selectedPatient.critical_information}
+                                        onChange={(e) => handleInputChange('critical_information', e.target.value)}
+                                    />
+                                </label>
+                                <label>
+                                    Medication:
+                                    <input
+                                        type="text"
+                                        value={selectedPatient.medication}
+                                        onChange={(e) => handleInputChange('medication', e.target.value)}
+                                    />
+                                </label>
+                            </div>
+
+                            {/* Status Information Section */}
+                            <div className="patient-form-section">
+                                <h3>Status Information</h3>
+                                <div className="patient-form-grid">
+                                    <label>
+                                        Social Price:
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPatient.social_price}
+                                            onChange={(e) => handleInputChange('social_price', e.target.checked)}
+                                        />
+                                    </label>
+                                    <label>
+                                        Alive:
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPatient.is_alive}
+                                            onChange={(e) => handleInputChange('is_alive', e.target.checked)}
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="patient-form-buttons">
+                                <button onClick={handleSaveChanges}>Save Changes</button>
+                                <button onClick={handleCloseEditPatientModal}>Cancel</button>
+                            </div>
                         </div>
                     </div>
-                )}
-
-                {showMedicalFolderModal && (
+                )}{showMedicalFolderModal && (
                     <div className="modal">
                         <div className="modal-content">
-                            <h2>Medical Folder</h2>
-                            {medicalFolder.length > 0 ? (
+                            <div className="modal-header">
+                                <h2>Medical Folder</h2>                                <button 
+                                    className="modal-close-button" 
+                                    onClick={handleCloseMedicalFolderModal}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                              {/* Sorting dropdown */}
+                            <div className="medical-folder-sort">
+                                <label htmlFor="sortOrder">
+                                    Sort by:
+                                </label>
+                                <select 
+                                    id="sortOrder"
+                                    value={sortOrder} 
+                                    onChange={handleSortOrderChange}
+                                >
+                                    <option value="newest">Newest to Oldest</option>
+                                    <option value="oldest">Oldest to Newest</option>
+                                </select>
+                            </div>                            {medicalFolder.length > 0 ? (
                                 <ul>
-                                    {medicalFolder.map((entry, index) => (
+                                    {getSortedMedicalFolder().map((entry, index) => (
                                         <li key={index}>
-                                            <p><strong>Date:</strong> {entry.created_at}</p>
+                                            <p><strong>Date:</strong> {formatDate(entry.created_at)}</p>
                                             <p><strong>Note:</strong> {entry.note}</p>
                                             <p><strong>Service:</strong> {entry.service || 'N/A'}</p>
                                         </li>
@@ -453,7 +523,7 @@ const PatientsPage = () => {
                             <button onClick={handleCloseMedicalFolderModal}>Close</button>
                         </div>
                     </div>
-                )}                {showAddEntryModal && services.length > 0 && (
+                )}{showAddEntryModal && services.length > 0 && (
                     <div className="modal">
                         <AddEntryForm
                             newNote={newNote}

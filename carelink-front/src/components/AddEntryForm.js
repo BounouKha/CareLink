@@ -4,11 +4,16 @@ const AddEntryForm = ({ newNote, setNewNote, selectedService, setSelectedService
     console.log('[DEBUG] Services passed to AddEntryForm:', services);
     console.log('[DEBUG] Services length:', services.length);
     console.log('[DEBUG] Services type:', typeof services);
-    console.log('[DEBUG] Selected service:', selectedService);
-
-    return (
+    console.log('[DEBUG] Selected service:', selectedService);    return (
         <div className="modal-content">
-            <h2>Add Entry</h2>
+            <div className="modal-header">
+                <h2>Add Entry</h2>                <button 
+                    className="modal-close-button" 
+                    onClick={onCancel}
+                >
+                    ×
+                </button>
+            </div>
             <textarea
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
