@@ -12,10 +12,12 @@ const LeftToolbar = ({ userData }) => {
 
     const handleProfileClick = () => {
         navigate('/profile');
+    };    const handlePatientsClick = () => {
+        navigate('/patients');
     };
 
-    const handlePatientsClick = () => {
-        navigate('/patients');
+    const handleServiceDemandsClick = () => {
+        navigate('/service-demands');
     };
 
     const renderRoleSpecificToolbar = () => {
@@ -24,13 +26,17 @@ const LeftToolbar = ({ userData }) => {
             return null;
         }
 
-        console.log('[DEBUG] user role:', userData.user.role);
-
-        return (
+        console.log('[DEBUG] user role:', userData.user.role);        return (
             <ul className="toolbar-list">
                 <li onClick={handleProfileClick} className="clickable">Profile</li>
-                {userData.user.role === 'Coordinator' && (
-                    <li onClick={handlePatientsClick} className="clickable">Patients</li>
+                {(userData.user.role === 'Patient' || userData.user.role === 'Family Patient') && (
+                    <li onClick={handleServiceDemandsClick} className="clickable">Service Requests</li>
+                )}
+                {(userData.user.role === 'Coordinator' || userData.user.role === 'Administrative') && (
+                    <>
+                        <li onClick={handlePatientsClick} className="clickable">Patients</li>
+                        <li onClick={handleServiceDemandsClick} className="clickable">Service Demands</li>
+                    </>
                 )}
             </ul>
         );

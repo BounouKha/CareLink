@@ -1,0 +1,318 @@
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.core.paginator import Paginator
+from django.utils import timezone
+from CareLink.models import ServiceDemand, Patient, Service
+from account.serializers.servicedemand import ServiceDemandSerializer, ServiceDemandCreateSerializer
+
+class ServiceDemandListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get list of service demands with filtering and pagination"""
+        # Get filter parameters
+        status_filter = request.query_params.get('status', None)
+        priority_filter = request.query_params.get('priority', None)
+        patient_id = request.query_params.get('patient_id', None)
+        service_id = request.query_params.get('service_id', None)
+        page = request.query_params.get('page', 1)
+        
+        # Base queryset
+        queryset = ServiceDemand.objects.select_related(
+            'patient__user', 'sent_by', 'managed_by', 'service', 'assigned_provider__user'
+        ).all()
+          # Apply filters based on user role
+        user = request.user
+        if user.role == 'Patient':
+            # Patients can only see their own demands
+            try:
+                patient = Patient.objects.get(user=user)
+                queryset = queryset.filter(patient=patient)
+            except Patient.DoesNotExist:
+                return Response({"error": "Patient profile not found."}, status=404)
+        elif user.role == 'Family Patient':
+            # Family members can see demands for their linked patients
+            from CareLink.models import FamilyPatient
+            try:
+                family_patient = FamilyPatient.objects.get(user=user)
+                if family_patient.patient_id:
+                    # Show demands for the linked patient
+                    queryset = queryset.filter(patient_id=family_patient.patient_id)
+                else:
+                    # No linked patient, show empty
+                    queryset = queryset.none()
+            except FamilyPatient.DoesNotExist:
+                return Response({"error": "Family patient profile not found."}, status=404)
+        elif user.role in ['Coordinator', 'Administrative']:
+            # Coordinators and admin can see all demands
+            pass
+        else:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        # Apply filters
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        if priority_filter:
+            queryset = queryset.filter(priority=priority_filter)
+        if patient_id:
+            queryset = queryset.filter(patient_id=patient_id)
+        if service_id:
+            queryset = queryset.filter(service_id=service_id)
+        
+        # Order by priority and creation date
+        queryset = queryset.order_by('-priority', '-created_at')
+        
+        # Paginate
+        paginator = Paginator(queryset, 20)
+        page_obj = paginator.get_page(page)
+        
+        # Serialize
+        serializer = ServiceDemandSerializer(page_obj, many=True)
+        
+        return Response({
+            "results": serializer.data,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous(),
+            "total_pages": paginator.num_pages,
+            "current_page": page_obj.number,
+            "total_count": paginator.count
+        }, status=200)
+    
+    def post(self, request):
+        """Create a new service demand"""
+        serializer = ServiceDemandCreateSerializer(data=request.data, context={'request': request})
+        
+        if serializer.is_valid():
+            # Additional validation
+            patient_id = serializer.validated_data.get('patient')
+            if patient_id:
+                # Check if user has permission to create demands for this patient
+                if request.user.role == 'Patient':
+                    try:
+                        patient = Patient.objects.get(user=request.user)
+                        if patient != patient_id:
+                            return Response(
+                                {"error": "You can only create demands for yourself."}, 
+                                status=403
+                            )
+                    except Patient.DoesNotExist:
+                        return Response({"error": "Patient profile not found."}, status=404)
+                elif request.user.role == 'Family Patient':
+                    # Check if user is family member of this patient
+                    # Implementation depends on your family relationship logic
+                    pass
+            
+            demand = serializer.save()
+            response_serializer = ServiceDemandSerializer(demand)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ServiceDemandDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self, pk, user):
+        """Get service demand with permission checking"""
+        try:
+            demand = ServiceDemand.objects.select_related(
+                'patient__user', 'sent_by', 'managed_by', 'service'
+            ).get(pk=pk)
+              # Check permissions
+            if user.role == 'Patient':
+                patient = Patient.objects.get(user=user)
+                if demand.patient != patient:
+                    return None
+            elif user.role == 'Family Patient':
+                # Check family relationship
+                from CareLink.models import FamilyPatient
+                try:
+                    family_patient = FamilyPatient.objects.get(user=user)
+                    if family_patient.patient_id != demand.patient.id:
+                        return None
+                except FamilyPatient.DoesNotExist:
+                    return None
+            elif user.role not in ['Coordinator', 'Administrative']:
+                return None
+            
+            return demand
+        except (ServiceDemand.DoesNotExist, Patient.DoesNotExist):
+            return None
+    
+    def get(self, request, pk):
+        """Get specific service demand"""
+        demand = self.get_object(pk, request.user)
+        if not demand:
+            return Response({"error": "Service demand not found or access denied."}, status=404)
+        
+        serializer = ServiceDemandSerializer(demand)
+        return Response(serializer.data)
+    
+    def put(self, request, pk):
+        """Update service demand"""
+        demand = self.get_object(pk, request.user)
+        if not demand:
+            return Response({"error": "Service demand not found or access denied."}, status=404)
+        
+        # Check if user can update this demand
+        if request.user.role == 'Patient' and demand.status not in ['Pending', 'Under Review']:
+            return Response(
+                {"error": "Cannot update demand after it has been processed."}, 
+                status=403
+            )
+        
+        serializer = ServiceDemandSerializer(demand, data=request.data, partial=True)
+        if serializer.is_valid():
+            # Update timestamps based on status changes
+            if 'status' in request.data:
+                new_status = request.data['status']
+                if new_status in ['Under Review'] and not demand.reviewed_at:
+                    serializer.validated_data['reviewed_at'] = timezone.now()
+                elif new_status == 'Completed' and not demand.completed_at:
+                    serializer.validated_data['completed_at'] = timezone.now()
+            
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk):
+        """Cancel/delete service demand"""
+        demand = self.get_object(pk, request.user)
+        if not demand:
+            return Response({"error": "Service demand not found or access denied."}, status=404)
+        
+        # Check if user can delete this demand
+        if request.user.role == 'Patient':
+            if demand.status not in ['Pending', 'Under Review']:
+                return Response(
+                    {"error": "Cannot cancel demand after it has been processed."}, 
+                    status=403
+                )
+            # Mark as cancelled instead of deleting
+            demand.status = 'Cancelled'
+            demand.save()
+            return Response({"message": "Service demand cancelled successfully."})
+        elif request.user.role in ['Coordinator', 'Administrative']:
+            demand.delete()
+            return Response({"message": "Service demand deleted successfully."})
+        
+        return Response({"error": "Permission denied."}, status=403)
+
+class ServiceDemandStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get statistics about service demands"""
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        # Get counts by status
+        stats = {
+            'total': ServiceDemand.objects.count(),
+            'pending': ServiceDemand.objects.filter(status='Pending').count(),
+            'under_review': ServiceDemand.objects.filter(status='Under Review').count(),
+            'approved': ServiceDemand.objects.filter(status='Approved').count(),
+            'in_progress': ServiceDemand.objects.filter(status='In Progress').count(),
+            'completed': ServiceDemand.objects.filter(status='Completed').count(),
+            'rejected': ServiceDemand.objects.filter(status='Rejected').count(),
+            'urgent': ServiceDemand.objects.filter(priority='Urgent').count(),
+        }
+          # Get recent demands (last 7 days)
+        from datetime import timedelta
+        recent_date = timezone.now() - timedelta(days=7)
+        stats['recent'] = ServiceDemand.objects.filter(created_at__gte=recent_date).count()
+        
+        return Response(stats)
+
+class ServiceDemandStatusUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request, pk):
+        """Update service demand status (coordinator only)"""
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        try:
+            demand = ServiceDemand.objects.get(pk=pk)
+        except ServiceDemand.DoesNotExist:
+            return Response({"error": "Service demand not found."}, status=404)
+        
+        new_status = request.data.get('status')
+        coordinator_notes = request.data.get('coordinator_notes', '')
+        
+        if not new_status:
+            return Response({"error": "Status is required."}, status=400)
+        
+        # Validate status
+        valid_statuses = [choice[0] for choice in ServiceDemand.STATUS_CHOICES]
+        if new_status not in valid_statuses:
+            return Response({"error": "Invalid status."}, status=400)
+        
+        # Update status and timestamps
+        old_status = demand.status
+        demand.status = new_status
+        demand.managed_by = request.user
+        
+        # Update relevant timestamps
+        if new_status == 'Under Review' and not demand.reviewed_at:
+            demand.reviewed_at = timezone.now()
+        elif new_status == 'Completed' and not demand.completed_at:
+            demand.completed_at = timezone.now()
+        
+        # Add coordinator notes if provided
+        if coordinator_notes:
+            if demand.coordinator_notes:
+                demand.coordinator_notes += f"\n\n[{timezone.now().strftime('%Y-%m-%d %H:%M')} - {request.user.firstname} {request.user.lastname}]: {coordinator_notes}"
+            else:
+                demand.coordinator_notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')} - {request.user.firstname} {request.user.lastname}]: {coordinator_notes}"
+        
+        demand.save()
+        
+        # Return updated demand
+        from account.serializers.servicedemand import ServiceDemandSerializer
+        serializer = ServiceDemandSerializer(demand)
+        
+        return Response({
+            "message": f"Status updated from {old_status} to {new_status}",
+            "demand": serializer.data
+        })
+
+class ServiceDemandCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, pk):
+        """Add coordinator comment to service demand"""
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        try:
+            demand = ServiceDemand.objects.get(pk=pk)
+        except ServiceDemand.DoesNotExist:
+            return Response({"error": "Service demand not found."}, status=404)
+        
+        comment = request.data.get('comment')
+        if not comment:
+            return Response({"error": "Comment is required."}, status=400)
+        
+        # Add comment with timestamp and user info
+        timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
+        user_name = f"{request.user.firstname} {request.user.lastname}"
+        new_comment = f"[{timestamp} - {user_name}]: {comment}"
+        
+        if demand.coordinator_notes:
+            demand.coordinator_notes += f"\n\n{new_comment}"
+        else:
+            demand.coordinator_notes = new_comment
+        
+        # Update managed_by if not already set
+        if not demand.managed_by:
+            demand.managed_by = request.user
+        
+        demand.save()
+        
+        return Response({
+            "message": "Comment added successfully",
+            "coordinator_notes": demand.coordinator_notes
+        })

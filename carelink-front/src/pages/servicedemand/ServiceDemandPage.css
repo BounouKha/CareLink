@@ -1,0 +1,535 @@
+/* Minimalist ServiceDemandPage.css with Compact Blue Theme */
+
+.service-demand-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8fcff 0%, #ffffff 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #2c3e50;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.service-demand-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 123, 191, 0.08);
+    padding: 20px;
+    max-width: 1000px;
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid rgba(0, 123, 191, 0.1);
+}
+
+.service-demand-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #007bbf;
+    border-radius: 10px 10px 0 0;
+}
+
+.service-demand-container h1 {
+    color: #007bbf;
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+    text-align: center;
+}
+
+/* Compact Search Bar */
+.search-bar { /* Assuming search-bar is generic, otherwise rename to .service-demand-search-bar */
+    width: 100%;
+    max-width: 350px;
+    padding: 8px 14px;
+    margin: 0 auto 15px auto;
+    border: 1px solid rgba(0, 123, 191, 0.3);
+    border-radius: 18px;
+    font-size: 0.9rem;
+    background: white;
+    transition: all 0.2s ease;
+    color: #2c3e50;
+    display: block;
+}
+
+.search-bar::placeholder {
+    color: #7fb3d3;
+}
+
+.search-bar:focus {
+    outline: none;
+    border-color: #007bbf;
+    box-shadow: 0 0 0 2px rgba(0, 123, 191, 0.1);
+}
+
+.service-demand-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    list-style: none;
+    padding: 0;
+}
+
+.service-demand-content li {
+    background: #ffffff;
+    border: 1px solid rgba(0, 123, 191, 0.15);
+    border-radius: 6px;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(0, 123, 191, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.service-demand-content li:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(0, 123, 191, 0.12);
+    border-color: rgba(0, 123, 191, 0.25);
+}
+
+.service-demand-content li p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #34495e;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.service-demand-content li p strong {
+    color: #007bbf;
+    font-weight: 500;
+    min-width: 45px;
+}
+
+/* Compact Service Demand Card Action Buttons */
+.service-demand-card-actions {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.service-demand-content li button {
+    background: #007bbf;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 400;
+    min-width: 70px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 123, 191, 0.2);
+}
+
+.service-demand-content li button:hover {
+    background: #0066a3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 123, 191, 0.3);
+}
+
+/* Compact Modal Styling (Generic) */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 123, 191, 0.15);
+    padding: 0;
+    z-index: 1000;
+    max-width: 500px;
+    width: 90%;
+    max-height: 75vh;
+    overflow: hidden;
+    border: 1px solid rgba(0, 123, 191, 0.1);
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    padding: 15px;
+    overflow-y: auto;
+    max-height: 75vh;
+}
+
+.modal-header {
+    position: relative;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 123, 191, 0.2);
+}
+
+.modal-header h2 {
+    margin: 0;
+    padding-right: 30px;
+    color: #007bbf;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.modal-close-button {
+    position: absolute !important;
+    top: -3px !important;
+    right: -3px !important;
+    background: #007bbf !important;
+    border: none !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    color: white !important;
+    line-height: 1 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    transition: all 0.2s ease !important;
+}
+
+.modal-close-button:hover {
+    background: #0066a3 !important;
+    transform: scale(1.1) !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 123, 191, 0.1);
+    z-index: 999;
+}
+
+/* Compact Service Demand Sort */
+.service-demand-sort {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.service-demand-sort label {
+    margin-right: 6px;
+    font-weight: 500;
+    color: #007bbf;
+    font-size: 0.85rem;
+}
+
+.service-demand-sort select {
+    padding: 4px 8px;
+    border: 1px solid rgba(0, 123, 191, 0.3);
+    border-radius: 4px;
+    background: white;
+    font-size: 0.8rem;
+    color: #2c3e50;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.service-demand-sort select:focus {
+    outline: none;
+    border-color: #007bbf;
+    box-shadow: 0 0 0 2px rgba(0, 123, 191, 0.1);
+}
+
+/* Compact modal list/entry styles (if applicable to service demands) */
+.modal ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.modal li {
+    background: #ffffff;
+    border: 1px solid rgba(0, 123, 191, 0.15);
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 4px rgba(0, 123, 191, 0.06);
+    transition: all 0.2s ease;
+}
+
+.modal li:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 123, 191, 0.12);
+    border-color: rgba(0, 123, 191, 0.2);
+}
+
+.modal li p {
+    margin: 4px 0;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: #34495e;
+}
+
+.modal li p strong {
+    color: #007bbf;
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+/* Compact form styles (within modal or service demand sections) */
+.modal .modal-content label,
+.service-demand-form-section label { /* Apply to general labels in form sections too */
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.8rem;
+}
+
+.modal .modal-content input[type="text"],
+.modal .modal-content input[type="date"],
+.modal .modal-content textarea,
+.modal .modal-content select,
+.service-demand-form-section input[type="text"], /* Apply to form sections */
+.service-demand-form-section input[type="date"],
+.service-demand-form-section textarea,
+.service-demand-form-section select {
+    margin-top: 4px;
+    padding: 6px 10px;
+    border: 1px solid rgba(0, 123, 191, 0.3);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #2c3e50;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.modal .modal-content input[type="text"]:focus,
+.modal .modal-content input[type="date"]:focus,
+.modal .modal-content textarea:focus,
+.modal .modal-content select:focus,
+.service-demand-form-section input[type="text"]:focus, /* Apply to form sections */
+.service-demand-form-section input[type="date"]:focus,
+.service-demand-form-section textarea:focus,
+.service-demand-form-section select:focus {
+    outline: none;
+    border-color: #007bbf;
+    box-shadow: 0 0 0 2px rgba(0, 123, 191, 0.1);
+}
+
+.modal .modal-content textarea,
+.service-demand-form-section textarea { /* Apply to form sections */
+    min-height: 60px;
+    resize: vertical;
+}
+
+.modal .modal-content input[type="checkbox"],
+.service-demand-form-section input[type="checkbox"] { /* Apply to form sections */
+    margin-top: 6px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #007bbf;
+}
+
+/* Compact service demand form sections */
+.service-demand-form-section {
+    background: #f8fcff;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(0, 123, 191, 0.1);
+}
+
+.service-demand-form-section h3 {
+    margin: 0 0 8px 0;
+    color: #007bbf;
+    font-size: 1rem;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 123, 191, 0.2);
+    padding-bottom: 4px;
+}
+
+/* Compact form grid layout */
+.service-demand-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 600px) {
+    .service-demand-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Compact button styling */
+.service-demand-form-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 123, 191, 0.1);
+}
+
+.service-demand-form-buttons button {
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+    font-size: 0.8rem !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    min-width: 70px !important;
+}
+
+.service-demand-form-buttons button:first-child { /* Save/Confirm button */
+    background: #28a745 !important;
+    color: white !important;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3) !important;
+}
+
+.service-demand-form-buttons button:first-child:hover {
+    background: #218838 !important;
+    transform: translateY(-1px) !important;
+}
+
+.service-demand-form-buttons button:last-child { /* Cancel button */
+    background: #6c757d !important;
+    color: white !important;
+    box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3) !important;
+}
+
+.service-demand-form-buttons button:last-child:hover {
+    background: #545b62 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Compact modal buttons (if different from form buttons or general buttons) */
+/* This section might be redundant if .modal button styling is already generic enough */
+/* Or if service-demand-form-buttons are used within modals */
+.modal button.confirm-action { /* Example for a specific modal button */
+    background: #007bbf !important;
+    color: white !important;
+    box-shadow: 0 2px 6px rgba(0, 123, 191, 0.3) !important;
+}
+.modal button.confirm-action:hover {
+    background: #0066a3 !important;
+    transform: translateY(-1px) !important;
+}
+/* The generic .modal button style from PatientsPage_compact.css: */
+.modal button {
+    background: #007bbf !important;
+    color: white !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    margin-top: 10px !important;
+    display: block !important; /* This might need adjustment based on layout */
+    margin-left: auto !important; /* Centers button if it's the only one */
+    margin-right: auto !important; /* Centers button if it's the only one */
+    box-shadow: 0 2px 6px rgba(0, 123, 191, 0.3) !important;
+    font-size: 0.8rem !important;
+}
+
+.modal button:hover { /* General modal button hover */
+    background: #0066a3 !important;
+    transform: translateY(-1px) !important;
+}
+
+
+/* Compact error styling */
+.error {
+    background: #dc3545;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+/* No service demands message */
+.service-demand-container p.no-demands-message { /* More specific selector */
+    text-align: center;
+    color: #7fb3d3;
+    font-size: 1rem;
+    margin: 20px 0;
+    background: #f8fcff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px dashed rgba(0, 123, 191, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .service-demand-page {
+        padding: 10px;
+    }
+    
+    .service-demand-container {
+        padding: 15px;
+        margin: 5px; /* Added for consistency if page padding is reduced */
+    }
+    
+    .service-demand-container h1 {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+    }
+    
+    .service-demand-content {
+        grid-template-columns: 1fr; /* Single column for smaller screens */
+        gap: 8px;
+    }
+    
+    .modal { /* Modal adjustments for smaller screens */
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .modal-content {
+        padding: 12px;
+    }
+    
+    .service-demand-form-buttons { /* Stack buttons vertically */
+        flex-direction: column;
+        gap: 6px;
+    }
+    .service-demand-form-buttons button { /* Ensure buttons take full width in column layout */
+        width: 100%; 
+    }
+}
+
+@media (max-width: 480px) {
+    .service-demand-container h1 {
+        font-size: 1.3rem;
+    }
+    
+    .service-demand-content li p {
+        font-size: 0.8rem;
+    }
+    
+    .service-demand-content li button {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        min-width: 60px;
+    }
+}

@@ -355,7 +355,12 @@ const PatientsPage = () => {
                         <p>No patients found.</p>
                     )}
                 
-                </div>                {showEditPatientModal && (
+                </div>                {/* Modal Overlay */}
+                {(showEditPatientModal || showMedicalFolderModal || showAddEntryModal) && (
+                    <div className="modal-overlay"></div>
+                )}
+                
+                {showEditPatientModal && (
                     <div className="modal">
                         <div className="modal-content">
                             <div className="modal-header">
