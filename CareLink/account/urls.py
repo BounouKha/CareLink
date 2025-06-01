@@ -22,6 +22,7 @@ from account.views.profile_list import ProfileListView
 from account.views.fetch_logic import FetchProfileView, EditProfileView
 from account.views.refresh import CustomTokenRefreshView
 from account.views.coordinator.update_patient import UpdatePatientView
+from account.views.coordinator.medicalfolder_simple import MedicalFolderSimpleView
 
 
 
@@ -59,7 +60,9 @@ urlpatterns += [
     path('profiles/<int:profile_id>/edit/<str:role>/', EditProfileView.as_view(), name='edit_profile'),
 
     path('views_patient/', ViewsPatient.as_view(), name='views_patient'),
+
     path('update_patient/<int:patient_id>/', UpdatePatientView.as_view(), name='update_patient'),
+    path('medical_folder/<int:patient_id>/', MedicalFolderSimpleView.as_view(), name='medical_folder'),
 
 
 ]

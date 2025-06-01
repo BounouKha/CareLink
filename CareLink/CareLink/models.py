@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.models import BaseUserManager
 import datetime
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, Group
 
 ##Attention la base de données doit être en UTF-8 pour éviter les problèmes d'encodage
 
@@ -46,9 +46,24 @@ class Coordinator(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if self.user:
-            change_permission = Permission.objects.get(codename='change_patient')
-            view_permission = Permission.objects.get(codename='view_patient')
-            self.user.user_permissions.add(change_permission, view_permission)
+            # Ensure the coordinator exists
+            coordinator_group, created = Group.objects.get_or_create(name='coordinator')
+
+            # Assign permissions to the group if it was newly created
+            if created:
+                permissions = [
+                    'change_patient',
+                    'view_patient',
+                    'view_medicalfolder',
+                    'change_medicalfolder',
+                    'add_medicalfolder'
+                ]
+                for codename in permissions:
+                    permission = Permission.objects.get(codename=codename)
+                    coordinator_group.permissions.add(permission)
+
+            # Add the user to the CoordinatorGroup
+            self.user.groups.add(coordinator_group)
 
 class FamilyPatient(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
