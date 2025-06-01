@@ -77,16 +77,34 @@ class ServiceDemandListCreateView(APIView):
             "has_previous": page_obj.has_previous(),
             "total_pages": paginator.num_pages,
             "current_page": page_obj.number,
-            "total_count": paginator.count
-        }, status=200)
+            "total_count": paginator.count        }, status=200)
     
     def post(self, request):
         """Create a new service demand"""
         serializer = ServiceDemandCreateSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
-            # Additional validation
+            # Auto-set patient for Family Patients if not provided
             patient_id = serializer.validated_data.get('patient')
+            
+            if request.user.role == 'Family Patient' and not patient_id:
+                # Automatically set the linked patient for Family Patients
+                from CareLink.models import FamilyPatient
+                try:
+                    family_patient = FamilyPatient.objects.get(user=request.user)
+                    if not family_patient.patient_id:
+                        return Response(
+                            {"error": "No linked patient found for this family member."}, 
+                            status=400
+                        )
+                    # Get the actual Patient object
+                    linked_patient = Patient.objects.get(id=family_patient.patient_id)
+                    serializer.validated_data['patient'] = linked_patient
+                    patient_id = linked_patient
+                except (FamilyPatient.DoesNotExist, Patient.DoesNotExist):
+                    return Response({"error": "Family patient or linked patient not found."}, status=404)
+            
+            # Additional validation
             if patient_id:
                 # Check if user has permission to create demands for this patient
                 if request.user.role == 'Patient':
@@ -101,8 +119,21 @@ class ServiceDemandListCreateView(APIView):
                         return Response({"error": "Patient profile not found."}, status=404)
                 elif request.user.role == 'Family Patient':
                     # Check if user is family member of this patient
-                    # Implementation depends on your family relationship logic
-                    pass
+                    from CareLink.models import FamilyPatient
+                    try:
+                        family_patient = FamilyPatient.objects.get(user=request.user)
+                        if not family_patient.patient_id:
+                            return Response(
+                                {"error": "No linked patient found for this family member."}, 
+                                status=400
+                            )
+                        if family_patient.patient_id != patient_id.id:
+                            return Response(
+                                {"error": "You can only create demands for your linked patient."}, 
+                                status=403
+                            )
+                    except FamilyPatient.DoesNotExist:
+                        return Response({"error": "Family patient profile not found."}, status=404)
             
             demand = serializer.save()
             response_serializer = ServiceDemandSerializer(demand)
@@ -316,3 +347,26 @@ class ServiceDemandCommentView(APIView):
             "message": "Comment added successfully",
             "coordinator_notes": demand.coordinator_notes
         })
+
+class FamilyPatientLinkedView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get linked patient information for Family Patients"""
+        if request.user.role != 'Family Patient':
+            return Response({"error": "This endpoint is only for Family Patients."}, status=403)
+        
+        try:
+            from CareLink.models import FamilyPatient
+            from account.serializers.patient import PatientWithUserSerializer
+            
+            family_patient = FamilyPatient.objects.get(user=request.user)
+            if not family_patient.patient_id:
+                return Response({"linked_patient": None})
+            
+            linked_patient = Patient.objects.get(id=family_patient.patient_id)
+            serializer = PatientWithUserSerializer(linked_patient)
+            return Response({"linked_patient": serializer.data})
+            
+        except (FamilyPatient.DoesNotExist, Patient.DoesNotExist):
+            return Response({"error": "Family patient or linked patient not found."}, status=404)

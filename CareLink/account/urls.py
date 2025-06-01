@@ -23,7 +23,7 @@ from account.views.fetch_logic import FetchProfileView, EditProfileView
 from account.views.refresh import CustomTokenRefreshView
 from account.views.coordinator.update_patient import UpdatePatientView
 from account.views.coordinator.medicalfolder_simple import MedicalFolderSimpleView
-from account.views.servicedemand import ServiceDemandListCreateView, ServiceDemandDetailView, ServiceDemandStatsView, ServiceDemandStatusUpdateView, ServiceDemandCommentView
+from account.views.servicedemand import ServiceDemandListCreateView, ServiceDemandDetailView, ServiceDemandStatsView, ServiceDemandStatusUpdateView, ServiceDemandCommentView, FamilyPatientLinkedView
 
 
 
@@ -67,5 +67,6 @@ urlpatterns += [
     path('service-demands/stats/', ServiceDemandStatsView.as_view(), name='service_demand_stats'),
     path('service-demands/<int:pk>/status/', ServiceDemandStatusUpdateView.as_view(), name='service_demand_status_update'),
     path('service-demands/<int:pk>/comment/', ServiceDemandCommentView.as_view(), name='service_demand_comment'),
+    path('family-patient/linked-patient/', FamilyPatientLinkedView.as_view(), name='family_patient_linked'),
 
 ]

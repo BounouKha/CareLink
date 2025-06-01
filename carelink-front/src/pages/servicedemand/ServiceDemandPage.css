@@ -1195,3 +1195,47 @@
         transform: translateY(0);
     }
 }
+
+/* Linked Patient Display for Family Patients */
+.linked-patient-info {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(39, 174, 96, 0.1));
+    border: 2px solid rgba(46, 204, 113, 0.3);
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 8px;
+}
+
+.patient-display {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    text-align: center;
+}
+
+.patient-display strong {
+    font-size: 1.1rem;
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.patient-birthdate {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.patient-note {
+    color: #2c3e50;
+    font-size: 0.85rem;
+    background: rgba(46, 204, 113, 0.1);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+    margin-top: 4px;
+}
+
+/* Animation for linked patient info */
+.linked-patient-info {
+    animation: slideInUp 0.3s ease-out;
+}
