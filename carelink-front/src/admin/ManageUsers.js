@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './ManageUsers.css';
-import BaseLayout from '../auth/BaseLayout';
+import BaseLayout from '../auth/layout/BaseLayout';
 import EditUserModal from './EditUserModal';
 import CreateUserModal from './CreateUserModal';
 import CreateProfileModal from './CreateProfileModal';

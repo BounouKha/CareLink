@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './AdminPanel.css';
-import BaseLayout from '../auth/BaseLayout';
+import BaseLayout from '../auth/layout/BaseLayout';
 import ManageUsers from './ManageUsers'; // Import the ManageUsers component
 import ProfileList from './ProfileList';
 import { useNavigate } from 'react-router-dom';

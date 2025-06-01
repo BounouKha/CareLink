@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './ProfileList.css';
-import BaseLayout from '../auth/BaseLayout'; // Adjust the import path as necessary
+import BaseLayout from '../auth/layout/BaseLayout'; // Adjust the import path as necessary
 import ShowProfileModal from './ShowProfileModal';
 import EditProfileModal from './EditProfileModal';
 
