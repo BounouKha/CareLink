@@ -22,7 +22,7 @@ class MedicalFolderSimpleView(APIView):
                 "created_at": folder.created_at,
                 "updated_at": folder.updated_at,
                 "note": folder.note,
-            }
+                "service": folder.service.name if folder.service else None,            }
             for folder in medical_folders
         ]
 
@@ -34,15 +34,26 @@ class MedicalFolderSimpleView(APIView):
             return Response({"error": "Permission denied."}, status=403)
 
         note = request.data.get("note")
+        service_id = request.data.get("service_id")
+        
+        print(f"[DEBUG] POST request data: {request.data}")
+        print(f"[DEBUG] Note: {note}, Service ID: {service_id}")
+        
         if not note:
-            return Response({"error": "Note is required."}, status=400)
-
-        medical_folder = MedicalFolder.objects.create(patient_id=patient_id, note=note)
+            return Response({"error": "Note is required."}, status=400)        # Create medical folder with service_id if provided
+        create_data = {"patient_id": patient_id, "note": note}
+        if service_id:
+            create_data["service_id"] = service_id
+            
+        medical_folder = MedicalFolder.objects.create(**create_data)
         return Response({
-
+            "id": medical_folder.id,
             "created_at": medical_folder.created_at,
             "updated_at": medical_folder.updated_at,
             "note": medical_folder.note,
+            "service": medical_folder.service.name if medical_folder.service else None,
+            
+            
         }, status=201)
 
     def put(self, request, patient_id):
