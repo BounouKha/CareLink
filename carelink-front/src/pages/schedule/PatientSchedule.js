@@ -153,11 +153,12 @@ const PatientSchedule = () => {
     e.preventDefault();
     fetchAppointments();
   };
-
   // Handle appointment click
   const handleAppointmentClick = (appointmentId) => {
     setSelectedAppointmentId(appointmentId);
-    fetchAppointmentDetails(appointmentId);
+    // Find the appointment data we already have instead of making another API call
+    const selectedAppointment = appointments.find(app => app.id === appointmentId);
+    setAppointmentDetails(selectedAppointment);
   };
 
   // Handle family member change
@@ -283,25 +284,38 @@ const PatientSchedule = () => {
                 No appointments found for the selected date range
               </div>
             )}
-          </div>
-
-          {appointmentDetails && (
+          </div>          {appointmentDetails && (
             <div className="appointment-detail-view">
-              <h2>Appointment Details</h2>
+              <div className="appointment-detail-header">
+                <h2>Appointment Details</h2>
+                <button 
+                  className="close-button"
+                  onClick={() => setAppointmentDetails(null)}
+                  title="Close"
+                >
+                  ×
+                </button>
+              </div>
               <div className="appointment-detail-content">
                 <p><strong>Date:</strong> {new Date(appointmentDetails.date).toLocaleDateString('en-US')}</p>
-                <p><strong>Time:</strong> {appointmentDetails.start_time} - {appointmentDetails.end_time}</p>
-                <p><strong>Duration:</strong> {appointmentDetails.duration} minutes</p>
-                <p><strong>Provider:</strong> {appointmentDetails.provider_name}</p>
-                {isFamilyView && <p><strong>Patient:</strong> {appointmentDetails.patient_name}</p>}
-                <p><strong>Location:</strong> {appointmentDetails.location || 'Not specified'}</p>
-                <p><strong>Status:</strong> <span className={getStatusClass(appointmentDetails.status)}>{appointmentDetails.status}</span></p>
-                <p><strong>Type:</strong> {appointmentDetails.appointment_type}</p>
-                {appointmentDetails.notes && (
-                  <div className="appointment-notes">
-                    <h3>Notes</h3>
-                    <p>{appointmentDetails.notes}</p>
-                  </div>
+                {appointmentDetails.appointments && appointmentDetails.appointments.length > 0 && (
+                  <>
+                    <p><strong>Time:</strong> {appointmentDetails.appointments[0].start_time} - {appointmentDetails.appointments[0].end_time}</p>
+                    {appointmentDetails.appointments[0].service && (
+                      <p><strong>Service:</strong> {appointmentDetails.appointments[0].service.name}</p>
+                    )}
+                    {appointmentDetails.appointments[0].description && (
+                      <p><strong>Description:</strong> {appointmentDetails.appointments[0].description}</p>
+                    )}
+                    <p><strong>Status:</strong> <span className={getStatusClass(appointmentDetails.appointments[0].status || 'scheduled')}>{appointmentDetails.appointments[0].status || 'scheduled'}</span></p>
+                  </>
+                )}
+                <p><strong>Provider:</strong> {appointmentDetails.provider?.name || 'Provider TBD'}</p>
+                {appointmentDetails.provider?.service_type && (
+                  <p><strong>Provider Service:</strong> {appointmentDetails.provider.service_type}</p>
+                )}
+                {isFamilyView && appointmentDetails.patient_name && (
+                  <p><strong>Patient:</strong> {appointmentDetails.patient_name}</p>
                 )}
               </div>
             </div>
