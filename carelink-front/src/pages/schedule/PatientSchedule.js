@@ -263,16 +263,18 @@ const PatientSchedule = () => {
                         month: 'short',
                         day: 'numeric'
                       })}
+                    </span>                    <span className={`appointment-status ${getStatusClass(appointment.appointments?.[0]?.status || 'scheduled')}`}>
+                      {appointment.appointments?.[0]?.status || 'scheduled'}
                     </span>
-                    <span className={`appointment-status ${getStatusClass(appointment.status)}`}>
-                      {appointment.status}
-                    </span>
-                  </div>
-                  <div className="appointment-details">
-                    <p><strong>Provider:</strong> {appointment.provider_name}</p>
-                    <p><strong>Time:</strong> {appointment.start_time} - {appointment.end_time}</p>
+                  </div>                  <div className="appointment-details">
+                    <p><strong>Provider:</strong> {appointment.provider?.name || 'Provider TBD'}</p>
+                    {appointment.appointments && appointment.appointments.length > 0 && (
+                      <p><strong>Time:</strong> {appointment.appointments[0].start_time} - {appointment.appointments[0].end_time}</p>
+                    )}
                     {isFamilyView && <p><strong>Patient:</strong> {appointment.patient_name}</p>}
-                    <p><strong>Type:</strong> {appointment.appointment_type}</p>
+                    {appointment.appointments && appointment.appointments.length > 0 && appointment.appointments[0].service && (
+                      <p><strong>Service:</strong> {appointment.appointments[0].service.name}</p>
+                    )}
                   </div>
                 </div>
               ))
