@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',  # Add token authentication
     'rest_framework_simplejwt.token_blacklist',  # Enable token blacklisting
     'corsheaders',  # Add corsheaders to installed apps
+    'schedule'
 ]
 
 MIDDLEWARE = [
