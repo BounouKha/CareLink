@@ -9,6 +9,7 @@ const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSuperuser, setIsSuperuser] = useState(false);
     const [loading, setLoading] = useState(true); // Add loading state
+    const [userData, setUserData] = useState(null); // Add userData state
 
     const { isSuperUser } = useContext(AdminContext);
 
@@ -49,9 +50,7 @@ const BaseLayout = ({ children }) => {
 
         const interval = setInterval(refreshToken, 59 * 60 * 1000); // Refresh every 59 minutes
         return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
+    }, []);    useEffect(() => {
         const preloadAdminStatus = async () => {
             const token = localStorage.getItem('accessToken');
             if (token) {
@@ -69,6 +68,22 @@ const BaseLayout = ({ children }) => {
                         console.log('Admin status preloaded:', data.is_superuser);
                     } else {
                         console.error('Failed to preload admin status');
+                    }
+
+                    // Fetch user profile data
+                    const profileResponse = await fetch('http://localhost:8000/account/profile/', {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    if (profileResponse.ok) {
+                        const profileData = await profileResponse.json();
+                        setUserData(profileData);
+                        console.log('User data loaded:', profileData);
+                    } else {
+                        console.error('Failed to load user profile');
                     }
                 } catch (error) {
                     console.error('Error preloading admin status:', error);
@@ -115,10 +130,10 @@ const BaseLayout = ({ children }) => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
-    };
-
-    const isConnected = !!localStorage.getItem('accessToken');
-    const isMemberArea = window.location.pathname.startsWith('/profile'); // Adjust for other member area routes
+    };    const isConnected = !!localStorage.getItem('accessToken');
+    const isMemberArea = ['/profile', '/patients', '/service-demands', '/schedule'].some(path => 
+        window.location.pathname.startsWith(path)
+    ); // Include all member area routes
 
     if (loading) {
         return <div className="loading-spinner">Loading...</div>; // Show loading spinner
@@ -151,7 +166,7 @@ const BaseLayout = ({ children }) => {
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
                 </div>
             </header>
-            {isMemberArea && <LeftToolbar />}
+            {isMemberArea && <LeftToolbar userData={userData} />}
             <main className="homepage-main">
                 {children}
             </main>

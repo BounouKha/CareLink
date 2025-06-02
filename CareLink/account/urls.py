@@ -65,8 +65,6 @@ urlpatterns += [
     path('service-demands/', ServiceDemandListCreateView.as_view(), name='service_demand_list_create'),
     path('service-demands/<int:pk>/', ServiceDemandDetailView.as_view(), name='service_demand_detail'),
     path('service-demands/stats/', ServiceDemandStatsView.as_view(), name='service_demand_stats'),
-    path('service-demands/<int:pk>/status/', ServiceDemandStatusUpdateView.as_view(), name='service_demand_status_update'),
-    path('service-demands/<int:pk>/comment/', ServiceDemandCommentView.as_view(), name='service_demand_comment'),
-    path('family-patient/linked-patient/', FamilyPatientLinkedView.as_view(), name='family_patient_linked'),
+    path('service-demands/<int:pk>/status/', ServiceDemandStatusUpdateView.as_view(), name='service_demand_status_update'),    path('service-demands/<int:pk>/comment/', ServiceDemandCommentView.as_view(), name='service_demand_comment'),    path('family-patient/linked-patient/', FamilyPatientLinkedView.as_view(), name='family_patient_linked'),
 
 ]

@@ -7,6 +7,10 @@ import LoginPage from './auth/login/LoginPage';
 import AdminPanel from './admin/AdminPanel';
 import PatientsPage from './pages/patient/PatientsPage';
 import ServiceDemandPage from './pages/servicedemand/ServiceDemandPage';
+import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
+import PatientSchedule from './pages/schedule/PatientSchedule';
+import ScheduleRouter from './pages/schedule/ScheduleRouter';
+import TestUserAuth from './auth/test/TestUserAuth';
 import './auth/layout/HomePage.css';
 import ProtectedRoute from './auth/login/ProtectedRoute';
 import { AdminProvider } from './auth/login/AdminContext';
@@ -20,9 +24,11 @@ function App() {
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/login" element={<LoginPage />} />
-                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-                        <Route path="/patients" element={<PatientsPage />} />
-                        <Route path="/service-demands" element={<ServiceDemandPage />} />
+                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />                        <Route path="/patients" element={<PatientsPage />} />
+                        <Route path="/service-demands" element={<ServiceDemandPage />} />                        <Route path="/schedule" element={<ScheduleRouter />} />
+                        <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
+                        <Route path="/schedule/patient" element={<PatientSchedule />} />
+                        <Route path="/test-auth" element={<TestUserAuth />} />
                     </Routes>
                 </div>
             </Router>
