@@ -22,8 +22,7 @@ class ServiceDemandListCreateView(APIView):
         # Base queryset
         queryset = ServiceDemand.objects.select_related(
             'patient__user', 'sent_by', 'managed_by', 'service', 'assigned_provider__user'
-        ).all()
-          # Apply filters based on user role
+        ).all()        # Apply filters based on user role
         user = request.user
         if user.role == 'Patient':
             # Patients can only see their own demands
@@ -33,18 +32,22 @@ class ServiceDemandListCreateView(APIView):
             except Patient.DoesNotExist:
                 return Response({"error": "Patient profile not found."}, status=404)
         elif user.role == 'Family Patient':
-            # Family members can see demands for their linked patients
+            # Family members can see demands for ALL their linked patients
             from CareLink.models import FamilyPatient
             try:
-                family_patient = FamilyPatient.objects.get(user=user)
-                if family_patient.patient_id:
-                    # Show demands for the linked patient
-                    queryset = queryset.filter(patient_id=family_patient.patient_id)
+                family_patients = FamilyPatient.objects.filter(user=user)
+                if family_patients.exists():
+                    # Get all patient IDs that this family member is linked to
+                    patient_ids = [fp.patient_id for fp in family_patients if fp.patient_id]
+                    if patient_ids:
+                        queryset = queryset.filter(patient_id__in=patient_ids)
+                    else:
+                        queryset = queryset.none()
                 else:
-                    # No linked patient, show empty
+                    # No linked patients, show empty
                     queryset = queryset.none()
-            except FamilyPatient.DoesNotExist:
-                return Response({"error": "Family patient profile not found."}, status=404)
+            except Exception:
+                return Response({"error": "Error fetching family patient relationships."}, status=500)
         elif user.role in ['Coordinator', 'Administrative']:
             # Coordinators and admin can see all demands
             pass
@@ -352,7 +355,7 @@ class FamilyPatientLinkedView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        """Get linked patient information for Family Patients"""
+        """Get all linked patient information for Family Patients"""
         if request.user.role != 'Family Patient':
             return Response({"error": "This endpoint is only for Family Patients."}, status=403)
         
@@ -360,13 +363,27 @@ class FamilyPatientLinkedView(APIView):
             from CareLink.models import FamilyPatient
             from account.serializers.patient import PatientWithUserSerializer
             
-            family_patient = FamilyPatient.objects.get(user=request.user)
-            if not family_patient.patient_id:
-                return Response({"linked_patient": None})
+            # Get ALL family patient relationships for this user
+            family_patients = FamilyPatient.objects.filter(user=request.user)
             
-            linked_patient = Patient.objects.get(id=family_patient.patient_id)
-            serializer = PatientWithUserSerializer(linked_patient)
-            return Response({"linked_patient": serializer.data})
+            if not family_patients.exists():
+                return Response({"linked_patients": []})
             
-        except (FamilyPatient.DoesNotExist, Patient.DoesNotExist):
-            return Response({"error": "Family patient or linked patient not found."}, status=404)
+            linked_patients_data = []
+            for family_patient in family_patients:
+                if family_patient.patient_id:
+                    try:
+                        linked_patient = Patient.objects.get(id=family_patient.patient_id)
+                        patient_serializer = PatientWithUserSerializer(linked_patient)
+                        patient_data = patient_serializer.data
+                        # Add relationship information
+                        patient_data['relationship'] = family_patient.link
+                        patient_data['family_patient_id'] = family_patient.id
+                        linked_patients_data.append(patient_data)
+                    except Patient.DoesNotExist:
+                        continue
+            
+            return Response({"linked_patients": linked_patients_data})
+            
+        except Exception as e:
+            return Response({"error": "Error fetching linked patients."}, status=500)

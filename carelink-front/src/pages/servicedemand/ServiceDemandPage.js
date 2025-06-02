@@ -32,7 +32,7 @@ const ServiceDemandPage = () => {
         special_instructions: '',
         selected_patient: '' // Add selected patient for coordinators
     });    const [patientSearch, setPatientSearch] = useState('');
-    const [linkedPatient, setLinkedPatient] = useState(null); // For Family Patients
+    const [linkedPatients, setLinkedPatients] = useState([]); // For Family Patients - now array
 
     useEffect(() => {
         fetchUserData();
@@ -44,9 +44,8 @@ const ServiceDemandPage = () => {
     // Separate useEffect to fetch patients when userData is loaded
     useEffect(() => {
         if (userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') {
-            fetchPatients();
-        } else if (userData?.user?.role === 'Family Patient') {
-            fetchLinkedPatient();
+            fetchPatients();        } else if (userData?.user?.role === 'Family Patient') {
+            fetchLinkedPatients();
         }
     }, [userData?.user?.role]);
 
@@ -181,16 +180,21 @@ const ServiceDemandPage = () => {
                 if (!patientId) {
                     setError('Please select a patient for this service request');
                     return;
-                }
-            } else if (userData?.user?.role === 'Family Patient') {
-                // For family patients, use the linked patient ID (backend will handle validation)
-                if (linkedPatient?.id) {
-                    patientId = linkedPatient.id;
+                }            } else if (userData?.user?.role === 'Family Patient') {
+                // For family patients, use selected patient ID or auto-selected patient
+                if (newDemand.selected_patient) {
+                    patientId = newDemand.selected_patient;
+                } else if (linkedPatients.length === 1) {
+                    // If only one linked patient, use it automatically
+                    patientId = linkedPatients[0].id;
+                } else if (linkedPatients.length > 1) {
+                    setError('Please select which patient this service request is for.');
+                    return;
                 } else {
-                    setError('No linked patient found. Please contact your administrator.');
+                    setError('No linked patients found. Please contact your administrator.');
                     return;
                 }
-            } else {
+            }else {
                 // For patients, use their own patient ID
                 if (userData?.patient?.id) {
                     patientId = userData.patient.id;
@@ -318,9 +322,7 @@ const ServiceDemandPage = () => {
             'Urgent': '#e74c3c'
         };
         return colors[priority] || '#7f8c8d';
-    };
-
-    const fetchLinkedPatient = async () => {
+    };    const fetchLinkedPatients = async () => {
         try {
             const token = localStorage.getItem('accessToken');
             const response = await fetch('http://localhost:8000/account/family-patient/linked-patient/', {
@@ -329,17 +331,31 @@ const ServiceDemandPage = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                setLinkedPatient(data.linked_patient);
-                // Auto-select the linked patient for service requests
-                if (data.linked_patient) {
+                console.log('[DEBUG] Service Demand - Linked Patients Data:', data);
+                
+                // Handle both old (linked_patient) and new (linked_patients) API format
+                if (data.linked_patients && Array.isArray(data.linked_patients)) {
+                    setLinkedPatients(data.linked_patients);
+                    // If there's only one patient, auto-select it
+                    if (data.linked_patients.length === 1) {
+                        setNewDemand(prev => ({
+                            ...prev,
+                            selected_patient: data.linked_patients[0].id
+                        }));
+                    }
+                } else if (data.linked_patient) {
+                    // Fallback for old API format
+                    setLinkedPatients([data.linked_patient]);
                     setNewDemand(prev => ({
                         ...prev,
                         selected_patient: data.linked_patient.id
                     }));
+                } else {
+                    setLinkedPatients([]);
                 }
             }
         } catch (error) {
-            console.error('Error fetching linked patient:', error);
+            console.error('Error fetching linked patients:', error);
         }
     };
 
@@ -581,17 +597,41 @@ const ServiceDemandPage = () => {
                                                 )}
                                             </div>
                                         </div>
-                                    )}                                    {/* Patient Information for Family Patients */}
-                                    {userData?.user?.role === 'Family Patient' && linkedPatient && (
+                                    )}                                    {/* Patient Selection/Information for Family Patients */}
+                                    {userData?.user?.role === 'Family Patient' && linkedPatients && linkedPatients.length > 0 && (
                                         <div className="form-group">
-                                            <label>Patient</label>
-                                            <div className="linked-patient-info">
-                                                <div className="patient-display">
-                                                    <strong>{linkedPatient.firstname} {linkedPatient.lastname}</strong>
-                                                    <span className="patient-birthdate">Born: {linkedPatient.birthdate}</span>
-                                                    <small className="patient-note">This service request will be created for your linked patient</small>
+                                            <label>Patient *</label>
+                                            {linkedPatients.length === 1 ? (
+                                                // Single patient - show info only
+                                                <div className="linked-patient-info">
+                                                    <div className="patient-display">
+                                                        <strong>{linkedPatients[0].firstname} {linkedPatients[0].lastname}</strong>
+                                                        <span className="patient-birthdate">Born: {linkedPatients[0].birth_date}</span>
+                                                        <span className="relationship-badge">{linkedPatients[0].relationship || 'Family Member'}</span>
+                                                        <small className="patient-note">This service request will be created for your linked patient</small>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                // Multiple patients - show selection dropdown
+                                                <div className="patient-selection-container">
+                                                    <select
+                                                        value={newDemand.selected_patient}
+                                                        onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
+                                                        required
+                                                        className="patient-select"
+                                                    >
+                                                        <option value="">Select which patient this request is for</option>
+                                                        {linkedPatients.map((patient, index) => (
+                                                            <option key={index} value={patient.id}>
+                                                                {patient.firstname} {patient.lastname} ({patient.relationship || 'Family Member'}) - Born: {patient.birth_date}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <small className="patient-selection-note">
+                                                        You have {linkedPatients.length} linked patients. Please select who this service request is for.
+                                                    </small>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
