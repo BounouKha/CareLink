@@ -477,13 +477,15 @@ class AppointmentManagementView(APIView):
             return Response({'error': f'Failed to update appointment: {str(e)}'}, status=500)
     
     def delete(self, request, appointment_id):
-        """Delete an appointment"""
+        """Delete an appointment with improved logic to prevent orphaned schedules"""
         if request.user.role not in ['Coordinator', 'Administrative']:
             return Response({"error": "Permission denied."}, status=403)
         
         try:
             # Get the timeslot_id from query parameters if provided
             timeslot_id = request.query_params.get('timeslot_id')
+            # Get deletion strategy from query parameters (default: 'smart')
+            deletion_strategy = request.query_params.get('strategy', 'smart')
             
             schedule = Schedule.objects.get(id=appointment_id)
             timeslots = schedule.time_slots.all()
@@ -495,33 +497,62 @@ class AppointmentManagementView(APIView):
                     schedule.time_slots.remove(specific_timeslot)
                     specific_timeslot.delete()
                     
-                    # If no more timeslots, delete the schedule
-                    if schedule.time_slots.count() == 0:
+                    # Apply deletion strategy
+                    remaining_timeslots = schedule.time_slots.count()
+                    
+                    if deletion_strategy == 'aggressive' or remaining_timeslots == 0:
+                        # Always delete schedule when any timeslot is deleted (aggressive)
+                        # OR when no timeslots remain (default behavior)
                         schedule.delete()
+                        return Response({
+                            'message': 'Timeslot and schedule deleted successfully',
+                            'deletion_type': 'schedule_deleted'
+                        }, status=200)
+                    elif deletion_strategy == 'conservative':
+                        # Keep schedule even if no timeslots remain (conservative)
+                        return Response({
+                            'message': 'Timeslot deleted successfully, schedule preserved',
+                            'deletion_type': 'timeslot_only',
+                            'remaining_timeslots': remaining_timeslots
+                        }, status=200)
+                    else:  # 'smart' strategy (default)
+                        # Delete schedule only if no timeslots remain (current behavior)
+                        if remaining_timeslots == 0:
+                            schedule.delete()
+                            return Response({
+                                'message': 'Last timeslot deleted, schedule removed',
+                                'deletion_type': 'schedule_deleted'
+                            }, status=200)
+                        else:
+                            return Response({
+                                'message': 'Timeslot deleted successfully',
+                                'deletion_type': 'timeslot_only',
+                                'remaining_timeslots': remaining_timeslots
+                            }, status=200)
                         
                 except TimeSlot.DoesNotExist:
                     return Response({'error': 'Timeslot not found'}, status=404)
             else:
-                # Original behavior: delete all timeslots and schedule
-                # But let's be smarter about it
-                timeslot_count = timeslots.count()
-                if timeslot_count == 1:
-                    # Only one timeslot, delete everything
-                    timeslots.first().delete()
-                    schedule.delete()
-                elif timeslot_count > 1:
-                    # Multiple timeslots, delete the first one only
-                    # In practice, we should get timeslot_id to know which one to delete
-                    first_timeslot = timeslots.first()
-                    schedule.time_slots.remove(first_timeslot)
-                    first_timeslot.delete()
+                # Delete entire appointment/schedule
+                if deletion_strategy == 'timeslot_only':
+                    # Delete all timeslots but keep schedule
+                    for timeslot in timeslots:
+                        schedule.time_slots.remove(timeslot)
+                        timeslot.delete()
+                    return Response({
+                        'message': 'All timeslots deleted, schedule preserved',
+                        'deletion_type': 'timeslots_only'
+                    }, status=200)
                 else:
-                    # No timeslots, just delete the schedule
+                    # Delete everything (default behavior)
+                    timeslot_count = timeslots.count()
+                    for timeslot in timeslots:
+                        timeslot.delete()
                     schedule.delete()
-            
-            return Response({
-                'message': 'Appointment deleted successfully'
-            }, status=200)
+                    return Response({
+                        'message': f'Appointment deleted successfully ({timeslot_count} timeslots removed)',
+                        'deletion_type': 'complete_deletion'
+                    }, status=200)
             
         except Schedule.DoesNotExist:
             return Response({'error': 'Appointment not found'}, status=404)
@@ -542,17 +573,17 @@ class PatientScheduleView(APIView):
         if request.user.role != 'Patient':
             return Response({"error": "Permission denied. Only patients can access this view."}, status=403)
         
-        try:
-            # Get the patient record for the current user
+        try:            # Get the patient record for the current user
             try:
                 patient = Patient.objects.get(user=request.user)
             except Patient.DoesNotExist:
                 return Response({"error": "Patient profile not found."}, status=404)
             
-            # Get query parameters
-            start_date = request.query_params.get('start_date')
-            end_date = request.query_params.get('end_date')
-            view_type = request.query_params.get('view', 'week')  # day, week, month
+            # Get query parameters (handle both DRF and regular Django requests)
+            query_params = getattr(request, 'query_params', request.GET)
+            start_date = query_params.get('start_date')
+            end_date = query_params.get('end_date')
+            view_type = query_params.get('view', 'week')  # day, week, month
             
             # Parse dates or use defaults
             if start_date:
@@ -626,14 +657,15 @@ class PatientScheduleView(APIView):
             
             # Get recent appointments (last 3)
             recent = self.get_recent_appointments(patient)
-            
+              
             return Response({
                 'patient_info': {
                     'id': patient.id,
                     'name': f"{request.user.firstname} {request.user.lastname}",
                     'email': request.user.email
                 },
-                'schedule_data': schedule_data,
+                'appointments': schedule_data,  # Frontend expects 'appointments' key
+                'schedule_data': schedule_data,  # Keep for backward compatibility
                 'date_range': {
                     'start_date': start_date,
                     'end_date': end_date,

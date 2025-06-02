@@ -24,6 +24,8 @@ const EditAppointment = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteStrategy, setDeleteStrategy] = useState('smart'); // 'smart', 'aggressive', 'conservative'
+  
   useEffect(() => {
     if (isOpen && appointment) {
       // Populate form with appointment data
@@ -151,10 +153,17 @@ const EditAppointment = ({
       const timeslot = appointment.timeslots[0];
       const timeslotId = timeslot?.id;
       
-      // Build the URL with timeslot_id as query parameter if available
+      // Build the URL with deletion strategy and timeslot_id parameters
       let deleteUrl = `http://localhost:8000/schedule/appointment/${appointment.id}/`;
+      const params = new URLSearchParams();
+      
       if (timeslotId) {
-        deleteUrl += `?timeslot_id=${timeslotId}`;
+        params.append('timeslot_id', timeslotId);
+      }
+      params.append('strategy', deleteStrategy);
+      
+      if (params.toString()) {
+        deleteUrl += `?${params.toString()}`;
       }
       
       const response = await fetch(deleteUrl, {
@@ -166,6 +175,8 @@ const EditAppointment = ({
       });
 
       if (response.ok) {
+        const data = await response.json();
+        console.log('Deletion result:', data);
         onAppointmentDeleted();
         onClose();
       } else {
@@ -347,6 +358,30 @@ const EditAppointment = ({
             <div className="delete-confirm-modal">
               <h3>Confirm Deletion</h3>
               <p>Are you sure you want to delete this appointment? This action cannot be undone.</p>
+                <div className="form-group">
+                <label>Deletion Strategy</label>
+                <select
+                  value={deleteStrategy}
+                  onChange={(e) => setDeleteStrategy(e.target.value)}
+                  className="strategy-select"
+                >
+                  <option value="smart">Smart Delete (Delete schedule when no timeslots remain)</option>
+                  <option value="aggressive">Aggressive Delete (Always delete schedule)</option>
+                  <option value="conservative">Conservative Delete (Keep schedule)</option>
+                </select>
+                <div className="strategy-explanation">
+                  {deleteStrategy === 'smart' && (
+                    <small>Deletes the schedule only when the last timeslot is removed. Preserves provider associations if other timeslots exist.</small>
+                  )}
+                  {deleteStrategy === 'aggressive' && (
+                    <small>Immediately deletes the entire schedule and all provider associations when any timeslot is deleted.</small>
+                  )}
+                  {deleteStrategy === 'conservative' && (
+                    <small>Only deletes the timeslot, preserving the schedule and provider information even if no timeslots remain.</small>
+                  )}
+                </div>
+              </div>
+
               <div className="confirm-actions">
                 <button 
                   onClick={() => setShowDeleteConfirm(false)} 

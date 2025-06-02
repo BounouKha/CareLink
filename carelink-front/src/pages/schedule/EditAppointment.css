@@ -224,7 +224,7 @@
   background: white;
   border-radius: 8px;
   padding: 24px;
-  max-width: 400px;
+  max-width: 500px; /* Increased from 400px */
   width: 90%;
   text-align: center;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
@@ -266,6 +266,43 @@
 .confirm-delete-btn:disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
+}
+
+/* Deletion Strategy Styling */
+.strategy-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.strategy-explanation {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #3498db;
+}
+
+.strategy-explanation small {
+  color: #6c757d;
+  font-size: 12px;
+  line-height: 1.4;
+  display: block;
+}
+
+.delete-confirm-modal .form-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.delete-confirm-modal .form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2c3e50;
 }
 
 /* Responsive design */
