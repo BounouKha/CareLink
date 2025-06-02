@@ -5,13 +5,13 @@ import LeftToolbar from '../layout/LeftToolbar';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
-    const [error, setError] = useState(null);
-    const [selectedTab, setSelectedTab] = useState('user');
-    const [linkedPatient, setLinkedPatient] = useState(null);
+    const [error, setError] = useState(null);    const [selectedTab, setSelectedTab] = useState('user');
+    const [linkedPatients, setLinkedPatients] = useState([]);
     const profileRef = useRef(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
+            console.log('[DEBUG] Starting profile data fetch');
             try {
                 const token = localStorage.getItem('accessToken');
 
@@ -37,13 +37,10 @@ const ProfilePage = () => {
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch profile data.');
-                }
-
-                const data = await response.json();
+                }                const data = await response.json();
                 console.log('[DEBUG] Fetched Profile Data:', data); // Debugging fetched data
                 setUserData(data);
-
-                // If user is a Family Patient, fetch linked patient info
+                  // If user is a Family Patient, fetch linked patient info
                 if (data.user.role === 'Family Patient') {
                     try {
                         const linkedResponse = await fetch('http://localhost:8000/account/family-patient/linked-patient/', {
@@ -55,10 +52,19 @@ const ProfilePage = () => {
 
                         if (linkedResponse.ok) {
                             const linkedData = await linkedResponse.json();
-                            setLinkedPatient(linkedData.linked_patient);
+                            console.log('[DEBUG] Linked Patients Data:', linkedData);
+                            // Handle both old (linked_patient) and new (linked_patients) API format
+                            if (linkedData.linked_patients && Array.isArray(linkedData.linked_patients)) {
+                                setLinkedPatients(linkedData.linked_patients);
+                            } else if (linkedData.linked_patient) {
+                                // Fallback for old API format
+                                setLinkedPatients([linkedData.linked_patient]);
+                            } else {
+                                setLinkedPatients([]);
+                            }
                         }
                     } catch (err) {
-                        console.error('Error fetching linked patient:', err);
+                        console.error('Error fetching linked patients:', err);
                     }
                 }
             } catch (err) {
@@ -121,25 +127,31 @@ const ProfilePage = () => {
                         <p><strong>Last Name:</strong> {userData.user.lastname}</p>
                         <p><strong>Address:</strong> {userData.user.address}</p>
                         {userData.user.national_number && userData.user.national_number !== "null" && (
-                            <p><strong>National Number:</strong> {userData.user.national_number}</p>
-                        )}
+                            <p><strong>National Number:</strong> {userData.user.national_number}</p>                        )}
                         <p><strong>Birthdate:</strong> {userData.user.birthdate}</p>
                     </div>
-                );
-            case 'patient':
+                );            case 'patient':
                 return (
                     <div className="patient-info">
                         <h2>{userData.user.role === 'Family Patient' ? "Linked Patient Information" : "Patient Information"}</h2>
                         {userData.user.role === 'Family Patient' ? (
-                            linkedPatient ? (
-                                <div>                                    <p><strong>Patient Name:</strong> {linkedPatient.firstname} {linkedPatient.lastname}</p>
-                                    <p><strong>Gender:</strong> {linkedPatient.gender}</p>
-                                    <p><strong>Blood Type:</strong> {linkedPatient.blood_type}</p>
-                                    <p><strong>Emergency Contact:</strong> {linkedPatient.emergency_contact}</p>
-                                    <p><strong>Illness:</strong> {linkedPatient.illness}</p>
-                                    <div className="family-link">
-                                        <p><strong>Your Relationship:</strong> {userData.family_relationships?.[0]?.link || 'Family Member'}</p>
-                                    </div>
+                            linkedPatients && linkedPatients.length > 0 ? (
+                                <div className="linked-patients-container">
+                                    {linkedPatients.map((patient, index) => (
+                                        <div key={index} className="patient-card">
+                                            <div className="patient-header">
+                                                <h3>{patient.firstname} {patient.lastname}</h3>
+                                                <span className="relationship-badge">{patient.relationship || 'Family Member'}</span>
+                                            </div>
+                                            <div className="patient-details">
+                                                <p><strong>Gender:</strong> {patient.gender}</p>
+                                                <p><strong>Blood Type:</strong> {patient.blood_type}</p>
+                                                <p><strong>Emergency Contact:</strong> {patient.emergency_contact}</p>
+                                                <p><strong>Illness:</strong> {patient.illness}</p>
+                                                <p><strong>Birth Date:</strong> {patient.birth_date}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 <p>No linked patient information available.</p>
@@ -233,12 +245,12 @@ const ProfilePage = () => {
             <div className="profile-container" ref={profileRef}>
                 <div className="role-display">
                     <p><strong>Role:</strong> {userData.user.role}</p>
-                </div>
-                <div className="toolbar">
+                </div>                <div className="toolbar">
                     <button onClick={() => setSelectedTab('user')} className={selectedTab === 'user' ? 'active' : ''}>User Info</button>
                     {userData.user.role === 'Family Patient' ? (
                         <>
-                            <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Linked Patient</button>
+                            <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Linked Patients</button>
+                            <button onClick={() => setSelectedTab('family')} className={selectedTab === 'family' ? 'active' : ''}>Family</button>
                             <button onClick={() => setSelectedTab('contact')} className={selectedTab === 'contact' ? 'active' : ''}>Contact</button>
                         </>
                     ) : userData.user.role !== 'Coordinator' && (
