@@ -618,7 +618,6 @@ class PatientScheduleView(APIView):
             
             # Build patient's schedule data
             schedule_data = []
-            
             for schedule in schedules:
                 # Get timeslots for this schedule
                 schedule_timeslots = timeslots_by_schedule.get(schedule.id, [])
@@ -628,7 +627,7 @@ class PatientScheduleView(APIView):
                     'date': schedule.date,
                     'provider': {
                         'id': schedule.provider.id if schedule.provider else None,
-                        'name': f"Dr. {schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
+                        'name': f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
                         'service_type': schedule.provider.service.name if schedule.provider and schedule.provider.service else 'General Care'
                     },
                     'appointments': []
