@@ -27,8 +27,11 @@ const LeftToolbar = ({ userData }) => {
                     if (userRole === 'Coordinator' || userRole === 'Administrative') {
                         navigate('/schedule/coordinator');
                         return;
-                    } else if (userRole === 'Patient' || userRole === 'Family Patient') {
+                    } else if (userRole === 'Patient') {
                         navigate('/schedule/patient');
+                        return;
+                    } else if (userRole === 'Family Patient') {
+                        navigate('/schedule/family');
                         return;
                     }
                 }
