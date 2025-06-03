@@ -425,9 +425,9 @@ class AppointmentManagementView(APIView):
             
             if date_str:
                 schedule.date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            
-            # Handle timeslot updates
-            if start_time_str or end_time_str or service_id or description:
+              # Handle timeslot updates
+            status = data.get('status')
+            if start_time_str or end_time_str or service_id or description or status:
                 # Get the first timeslot (assuming one timeslot per appointment for now)
                 timeslot = schedule.time_slots.first()
                 if timeslot:
@@ -440,6 +440,9 @@ class AppointmentManagementView(APIView):
                     if service_id:
                         service = Service.objects.get(id=service_id) if service_id else None
                         timeslot.service = service
+                    if status:
+                        # Update the status field if provided
+                        timeslot.status = status
                     
                     # Check for conflicts before saving
                     if start_time_str or end_time_str or date_str or provider_id:

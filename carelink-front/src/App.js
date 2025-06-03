@@ -7,6 +7,7 @@ import LoginPage from './auth/login/LoginPage';
 import AdminPanel from './admin/AdminPanel';
 import PatientsPage from './pages/patient/PatientsPage';
 import ServiceDemandPage from './pages/servicedemand/ServiceDemandPage';
+import SchedulePage from './pages/schedule/SchedulePage';
 import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
 import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
@@ -25,7 +26,11 @@ function App() {
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />                        <Route path="/patients" element={<PatientsPage />} />
-                        <Route path="/service-demands" element={<ServiceDemandPage />} />                        <Route path="/schedule" element={<ScheduleRouter />} />
+                        <Route path="/service-demands" element={<ServiceDemandPage />} />                        {/* New unified schedule route that stays in BaseLayout */}
+                        <Route path="/schedule" element={<SchedulePage />} />
+                        
+                        {/* Keep the old routes for backward compatibility */}
+                        <Route path="/schedule/router" element={<ScheduleRouter />} />
                         <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
                         <Route path="/schedule/patient" element={<PatientSchedule />} />
                         <Route path="/schedule/family" element={<PatientSchedule />} />
@@ -38,3 +43,4 @@ function App() {
 }
 
 export default App;
+

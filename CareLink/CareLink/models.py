@@ -301,9 +301,19 @@ class TimelineEventPatient(models.Model):
     author = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
 
 class TimeSlot(models.Model):
+    TIMESLOT_STATUS_CHOICES = [
+        ('scheduled', 'Scheduled'),
+        ('confirmed', 'Confirmed'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('no_show', 'No Show'),
+    ]
+    
     start_time = models.TimeField()
     end_time = models.TimeField()
     description = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=TIMESLOT_STATUS_CHOICES, default='scheduled')
     prescription = models.ForeignKey('Prescription', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True, blank=True)

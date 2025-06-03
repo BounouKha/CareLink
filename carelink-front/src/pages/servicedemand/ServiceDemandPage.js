@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import './ServiceDemandPage.css';
+import './ServiceDemandPage-new.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
-import LeftToolbar from '../../auth/layout/LeftToolbar';
 
 const ServiceDemandPage = () => {
     const [demands, setDemands] = useState([]);
@@ -299,9 +299,7 @@ const ServiceDemandPage = () => {
             setError('Error adding comment');
             console.error('Error:', error);
         }
-    };
-
-    const getStatusColor = (status) => {
+    };    const getStatusColor = (status) => {
         const colors = {
             'Pending': '#f39c12',
             'Under Review': '#3498db',
@@ -313,6 +311,20 @@ const ServiceDemandPage = () => {
         };
         return colors[status] || '#7f8c8d';
     };
+    
+    // Bootstrap status badge class helper
+    const getStatusBadgeClass = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'pending': return 'bg-warning text-dark';
+            case 'under review': return 'bg-info text-white';
+            case 'approved': return 'bg-success text-white';
+            case 'in progress': return 'bg-primary text-white';
+            case 'completed': return 'bg-success text-white';
+            case 'rejected': return 'bg-danger text-white';
+            case 'cancelled': return 'bg-secondary text-white';
+            default: return 'bg-secondary text-white';
+        }
+    };
 
     const getPriorityColor = (priority) => {
         const colors = {
@@ -322,7 +334,18 @@ const ServiceDemandPage = () => {
             'Urgent': '#e74c3c'
         };
         return colors[priority] || '#7f8c8d';
-    };    const fetchLinkedPatients = async () => {
+    };
+    
+    // Bootstrap priority badge class helper
+    const getPriorityBadgeClass = (priority) => {
+        switch (priority?.toLowerCase()) {
+            case 'low': return 'bg-success text-white';
+            case 'normal': return 'bg-info text-white';
+            case 'high': return 'bg-warning text-dark';
+            case 'urgent': return 'bg-danger text-white';
+            default: return 'bg-secondary text-white';
+        }
+    };const fetchLinkedPatients = async () => {
         try {
             const token = localStorage.getItem('accessToken');
             const response = await fetch('http://localhost:8000/account/family-patient/linked-patient/', {
@@ -357,12 +380,26 @@ const ServiceDemandPage = () => {
         } catch (error) {
             console.error('Error fetching linked patients:', error);
         }
-    };
+    };    useEffect(() => {
+        // Add scroll event listener to add shadow to header when scrolling
+        const handleScroll = () => {
+            const header = document.querySelector('.page-header');
+            if (header) {
+                if (window.scrollY > 10) {
+                    header.classList.add('shadow');
+                } else {
+                    header.classList.remove('shadow');
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     if (loading) {
         return (
             <BaseLayout>
-                <LeftToolbar userData={userData} />
                 <div className="service-demand-page">
                     <div className="loading">Loading service demands...</div>
                 </div>
@@ -370,49 +407,63 @@ const ServiceDemandPage = () => {
         );
     }    return (
         <BaseLayout>
-            <LeftToolbar userData={userData} />
             <div className="service-demand-page">
+                {/* Fixed Header */}
+                <div className="page-header">
+                    <h1>Service Demands</h1>                    <button 
+                        className="btn btn-primary"
+                        style={{ backgroundColor: '#22C7EE', borderColor: '#22C7EE' }}
+                        onClick={() => setShowCreateForm(true)}
+                    >
+                        <i className="bi bi-plus-circle me-1"></i> Request New Service
+                    </button>
+                </div>
+                
+                {/* Scrollable Content */}
                 <div className="service-demand-container">
-                    <div className="page-header">
-                        <h1>Service Demands</h1>
-                        <button 
-                            className="create-demand-btn"
-                            onClick={() => setShowCreateForm(true)}
-                        >
-                            + Request New Service
-                        </button>
-                    </div>
-
-                    {error && <div className="error-message">{error}</div>}
-
-                    {/* Stats Dashboard (for coordinators/admin) */}
+                    {error && <div className="error-message">{error}</div>}                    {/* Stats Dashboard (for coordinators/admin) */}
                     {stats && (
-                        <div className="stats-dashboard">
-                            <div className="stat-card">
-                                <h3>Total Demands</h3>
-                                <span className="stat-number">{stats.total}</span>
+                        <div className="stats-dashboard row row-cols-1 row-cols-md-4 g-3 mb-4">
+                            <div className="col">
+                                <div className="card text-center h-100 border-0 shadow-sm">
+                                    <div className="card-body">
+                                        <h5 className="card-title">Total Demands</h5>
+                                        <p className="card-text fs-1 fw-bold">{stats.total}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="stat-card">
-                                <h3>Pending</h3>
-                                <span className="stat-number">{stats.pending}</span>
+                            <div className="col">
+                                <div className="card text-center h-100 border-0 shadow-sm">
+                                    <div className="card-body">
+                                        <h5 className="card-title">Pending</h5>
+                                        <p className="card-text fs-1 fw-bold text-warning">{stats.pending}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="stat-card">
-                                <h3>In Progress</h3>
-                                <span className="stat-number">{stats.in_progress}</span>
+                            <div className="col">
+                                <div className="card text-center h-100 border-0 shadow-sm">
+                                    <div className="card-body">
+                                        <h5 className="card-title">In Progress</h5>
+                                        <p className="card-text fs-1 fw-bold text-primary">{stats.in_progress}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="stat-card urgent">
-                                <h3>Urgent</h3>
-                                <span className="stat-number">{stats.urgent}</span>
+                            <div className="col">
+                                <div className="card text-center h-100 border-0 shadow-sm">
+                                    <div className="card-body">
+                                        <h5 className="card-title">Urgent</h5>
+                                        <p className="card-text fs-1 fw-bold text-danger">{stats.urgent}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    )}
-
-                    {/* Filters */}
-                    <div className="filters">
+                    )}{/* Filters */}
+                    <div className="filters d-flex gap-2 mb-3">
                         <select 
                             value={filterStatus} 
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="filter-select"
+                            className="form-select"
+                            style={{ maxWidth: '200px' }}
                         >
                             <option value="">All Statuses</option>
                             <option value="Pending">Pending</option>
@@ -427,7 +478,8 @@ const ServiceDemandPage = () => {
                         <select 
                             value={filterPriority} 
                             onChange={(e) => setFilterPriority(e.target.value)}
-                            className="filter-select"
+                            className="form-select"
+                            style={{ maxWidth: '200px' }}
                         >
                             <option value="">All Priorities</option>
                             <option value="Low">Low</option>
@@ -435,65 +487,71 @@ const ServiceDemandPage = () => {
                             <option value="High">High</option>
                             <option value="Urgent">Urgent</option>
                         </select>
-                    </div>
-
-                    {/* Service Demands List */}
+                    </div>                    {/* Service Demands List */}
                     <div className="demands-list">
                         {demands.length === 0 ? (
-                            <div className="no-demands">
-                                <p>No service demands found.</p>
+                            <div className="text-center p-5 bg-light rounded-3 my-4">
+                                <p className="fs-5 mb-3">No service demands found.</p>
                                 <button 
-                                    className="create-first-demand-btn"
+                                    className="btn btn-primary"
+                                    style={{ backgroundColor: '#22C7EE', borderColor: '#22C7EE' }}
                                     onClick={() => setShowCreateForm(true)}
                                 >
-                                    Create Your First Service Request
+                                    <i className="bi bi-plus-circle me-1"></i> Create Your First Service Request
                                 </button>
                             </div>
                         ) : (
                             demands.map(demand => (
-                                <div key={demand.id} className="demand-card">
-                                    <div className="demand-header">
-                                        <h3>{demand.title}</h3>
-                                        <div className="demand-badges">
+                                <div key={demand.id} className="card mb-3 shadow-sm">
+                                    <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom-0 pt-3 pb-1">
+                                        <h5 className="card-title mb-0">{demand.title}</h5>
+                                        <div className="d-flex">
                                             <span 
-                                                className="status-badge" 
-                                                style={{ backgroundColor: getStatusColor(demand.status) }}
+                                                className={`badge ${getStatusBadgeClass(demand.status)}`}
                                             >
                                                 {demand.status}
                                             </span>
                                             <span 
-                                                className="priority-badge" 
-                                                style={{ backgroundColor: getPriorityColor(demand.priority) }}
+                                                className={`badge ${getPriorityBadgeClass(demand.priority)} ms-1`}
                                             >
                                                 {demand.priority}
                                             </span>
                                         </div>
                                     </div>
-                                      <div className="demand-content">
-                                        <p><strong>Service:</strong> {demand.service_info?.name || 'N/A'}</p>
-                                        {demand.patient_info && (
-                                            <p><strong>Patient:</strong> {demand.patient_info.firstname} {demand.patient_info.lastname} - {demand.patient_info.birthdate || 'DOB not available'}</p>
-                                        )}
-                                        <p><strong>Description:</strong> {demand.description}</p>
-                                        <p><strong>Reason:</strong> {demand.reason}</p>
-                                        {demand.preferred_start_date && (
-                                            <p><strong>Preferred Start Date:</strong> {demand.preferred_start_date}</p>
-                                        )}
-                                        <p><strong>Frequency:</strong> {demand.frequency}</p>
-                                        <p><strong>Contact Method:</strong> {demand.contact_method}</p>
+                                    <div className="card-body pt-2">
+                                        <div className="row mb-2">
+                                            <div className="col-md-6">
+                                                <p className="mb-1"><strong>Service:</strong> {demand.service_info?.name || 'N/A'}</p>
+                                                {demand.patient_info && (
+                                                    <p className="mb-1"><strong>Patient:</strong> {demand.patient_info.firstname} {demand.patient_info.lastname} - {demand.patient_info.birthdate || 'DOB not available'}</p>
+                                                )}
+                                                <p className="mb-1"><strong>Description:</strong> {demand.description}</p>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <p className="mb-1"><strong>Reason:</strong> {demand.reason}</p>
+                                                {demand.preferred_start_date && (
+                                                    <p className="mb-1"><strong>Preferred Start Date:</strong> {demand.preferred_start_date}</p>
+                                                )}
+                                                <p className="mb-1"><strong>Frequency:</strong> {demand.frequency}</p>
+                                                <p className="mb-1"><strong>Contact Method:</strong> {demand.contact_method}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                      <div className="demand-footer">
-                                        <div className="demand-meta">
-                                            <small>Created: {new Date(demand.created_at).toLocaleDateString()}</small>
+                                    <div className="card-footer bg-white d-flex justify-content-between align-items-center">
+                                        <div className="text-muted">
+                                            <small className="me-2">Created: {new Date(demand.created_at).toLocaleDateString()}</small>
                                             {demand.days_since_created > 0 && (
-                                                <small>{demand.days_since_created} days ago</small>
-                                            )}                                            {demand.managed_by_info && (
+                                                <small className="me-2">{demand.days_since_created} days ago</small>
+                                            )}
+                                            {demand.managed_by_info && (
                                                 <small>Managed by: {demand.managed_by_info.firstname} {demand.managed_by_info.lastname}</small>
                                             )}
-                                        </div>                                        {/* Show More Info button for all users to see coordinator notes */}
-                                        <div className="demand-actions">
+                                        </div>
+                                        {/* Show More Info button for all users to see coordinator notes */}
+                                        <div>
                                             <button 
-                                                className="details-btn"
+                                                className="btn btn-sm btn-outline-primary"
+                                                style={{ borderColor: '#22C7EE', color: '#FFF' }}
                                                 onClick={() => handleShowDetails(demand)}
                                             >
                                                 More Info
@@ -895,21 +953,17 @@ const ServiceDemandPage = () => {
                                         <div className="detail-row">
                                             <span className="detail-label">Patient:</span>
                                             <span>{selectedDemand.patient_info?.firstname} {selectedDemand.patient_info?.lastname}</span>
-                                        </div>
-                                        <div className="detail-row">
+                                        </div>                                        <div className="detail-row">
                                             <span className="detail-label">Priority:</span>
                                             <span 
-                                                className="priority-badge" 
-                                                style={{ backgroundColor: getPriorityColor(selectedDemand.priority) }}
+                                                className={`badge ${getPriorityBadgeClass(selectedDemand.priority)}`}
                                             >
                                                 {selectedDemand.priority}
                                             </span>
-                                        </div>
-                                        <div className="detail-row">
+                                        </div><div className="detail-row">
                                             <span className="detail-label">Current Status:</span>
                                             <span 
-                                                className="status-badge" 
-                                                style={{ backgroundColor: getStatusColor(selectedDemand.status) }}
+                                                className={`badge ${getStatusBadgeClass(selectedDemand.status)}`}
                                             >
                                                 {selectedDemand.status}
                                             </span>
@@ -979,38 +1033,37 @@ const ServiceDemandPage = () => {
                                         <div className="detail-section coordinator-section">
                                             <h3>Status Management</h3>
                                             <div className="status-actions">
-                                                <label>Change Status:</label>
-                                                <div className="status-buttons">
+                                                <label>Change Status:</label>                                                <div className="status-buttons d-flex flex-wrap gap-2 mt-2">
                                                     <button 
-                                                        className="status-btn under-review"
+                                                        className="btn btn-info btn-sm"
                                                         onClick={() => handleStatusUpdate(selectedDemand.id, 'Under Review')}
                                                         disabled={selectedDemand.status === 'Under Review'}
                                                     >
                                                         Under Review
                                                     </button>
                                                     <button 
-                                                        className="status-btn approved"
+                                                        className="btn btn-success btn-sm"
                                                         onClick={() => handleStatusUpdate(selectedDemand.id, 'Approved')}
                                                         disabled={selectedDemand.status === 'Approved'}
                                                     >
                                                         Approve
                                                     </button>
                                                     <button 
-                                                        className="status-btn in-progress"
+                                                        className="btn btn-primary btn-sm"
                                                         onClick={() => handleStatusUpdate(selectedDemand.id, 'In Progress')}
                                                         disabled={selectedDemand.status === 'In Progress'}
                                                     >
                                                         In Progress
                                                     </button>
                                                     <button 
-                                                        className="status-btn completed"
+                                                        className="btn btn-success btn-sm"
                                                         onClick={() => handleStatusUpdate(selectedDemand.id, 'Completed')}
                                                         disabled={selectedDemand.status === 'Completed'}
                                                     >
                                                         Complete
                                                     </button>
                                                     <button 
-                                                        className="status-btn rejected"
+                                                        className="btn btn-danger btn-sm"
                                                         onClick={() => handleStatusUpdate(selectedDemand.id, 'Rejected')}
                                                         disabled={selectedDemand.status === 'Rejected'}
                                                     >

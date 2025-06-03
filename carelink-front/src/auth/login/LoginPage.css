@@ -1,12 +1,19 @@
-/* General styles for the login page */
-body {
+/* Login Page Specific Styles - Scoped to avoid global impact */
+
+/* Only apply body styles when login page is active */
+.login-page-wrapper {
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
 }
 
 .login-container {
@@ -19,18 +26,19 @@ body {
     text-align: center;
 }
 
-h2 {
+/* Scope h2 styles to login container only */
+.login-container h2 {
     margin-bottom: 20px;
     font-size: 24px;
     color: #333;
 }
 
-.form-group {
+.login-container .form-group {
     margin-bottom: 20px;
     text-align: left;
 }
 
-.form-group label {
+.login-container .form-group label {
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
@@ -38,7 +46,7 @@ h2 {
     color: #333;
 }
 
-.form-group input {
+.login-container .form-group input {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -48,13 +56,14 @@ h2 {
     transition: border-color 0.3s;
 }
 
-.form-group input:focus {
+.login-container .form-group input:focus {
     border-color: #00bcd4;
     outline: none;
     box-shadow: 0 0 5px rgba(0, 188, 212, 0.5);
 }
 
-button {
+/* Scope button styles to login container only */
+.login-container button {
     width: 100%;
     padding: 10px;
     background-color: #00bcd4;
@@ -66,15 +75,15 @@ button {
     transition: background-color 0.3s;
 }
 
-button:hover {
+.login-container button:hover {
     background-color: #0199a8;
 }
 
-button:active {
+.login-container button:active {
     transform: scale(0.95);
 }
 
-.error-message {
+.login-container .error-message {
     color: red;
     font-size: 14px;
     margin-top: -10px;

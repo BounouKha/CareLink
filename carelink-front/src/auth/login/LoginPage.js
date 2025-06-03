@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
-import BaseLayout from '../layout/BaseLayout';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -32,10 +31,8 @@ const LoginPage = () => {
         } catch (err) {
             setError(err.message);
         }
-    };
-
-    return (
-        <BaseLayout>
+    };    return (
+        <div className="login-page-wrapper">
             <div className="login-container">
                 <h2>Login</h2>
                 <form onSubmit={handleLogin}>
@@ -61,7 +58,7 @@ const LoginPage = () => {
                     <button type="submit">Login</button>
                 </form>
             </div>
-        </BaseLayout>
+        </div>
     );
 };
 
