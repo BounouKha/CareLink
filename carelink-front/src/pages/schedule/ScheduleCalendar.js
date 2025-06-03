@@ -4,9 +4,9 @@ import QuickSchedule from './QuickSchedule';
 import EditAppointment from './EditAppointment';
 
 const ScheduleCalendar = () => {
-  const [calendarData, setCalendarData] = useState([]);
-  const [providers, setProviders] = useState([]);
+  const [calendarData, setCalendarData] = useState([]);  const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState(''); // Add status filter
   const [viewType, setViewType] = useState('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
@@ -17,10 +17,9 @@ const ScheduleCalendar = () => {
   const [draggedAppointment, setDraggedAppointment] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showRecapModal, setShowRecapModal] = useState(false);
-
   useEffect(() => {
     fetchCalendarData();
-  }, [currentDate, viewType, selectedProvider]);
+  }, [currentDate, viewType, selectedProvider, selectedStatus]);
 
   const fetchCalendarData = async () => {
     setLoading(true);
@@ -40,10 +39,12 @@ const ScheduleCalendar = () => {
         start_date: startDate,
         end_date: endDate,
         view: viewType
-      });
-
-      if (selectedProvider) {
+      });      if (selectedProvider) {
         queryParams.append('provider_id', selectedProvider);
+      }
+
+      if (selectedStatus) {
+        queryParams.append('status', selectedStatus);
       }
 
       const response = await fetch(`http://localhost:8000/schedule/calendar/?${queryParams}`, {
@@ -400,11 +401,10 @@ const ScheduleCalendar = () => {
                 
                 // Get all timeslots for this time slot (individual timeslots, not grouped by appointment)
                 const timeslots = getTimeslotsForTimeSlot(dateStr, time);
-                
-                return (
+                  return (
                   <div 
                     key={`${dateStr}-${time}`} 
-                    className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''}`}
+                    className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''} ${timeslots.length > 0 ? getPrimaryTimeSlotStatus(timeslots) : ''}`}
                     onClick={() => timeslots.length === 0 ? onTimeSlotClick(dateStr, time) : null}
                     onDragOver={onDragOver}
                     onDrop={(e) => onDrop(e, dateStr, time)}
@@ -414,7 +414,7 @@ const ScheduleCalendar = () => {
                         {timeslots.map((timeslot, index) => (
                           <div 
                             key={`${timeslot.appointmentId}-${timeslot.id}-${index}`}
-                            className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''}`}
+                            className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)}`}
                             draggable="true"
                             onDragStart={(e) => onDragStart(e, timeslot.schedule)}
                             onDragEnd={onDragEnd}
@@ -468,10 +468,9 @@ const ScheduleCalendar = () => {
             // Get all individual timeslots for this time slot (like WeekView)
             const timeslots = getTimeslotsForTimeSlot(dateStr, time);
             
-            return (
-              <div 
+            return (              <div 
                 key={time} 
-                className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''}`}
+                className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''} ${timeslots.length > 0 ? getPrimaryTimeSlotStatus(timeslots) : ''}`}
                 onClick={() => timeslots.length === 0 ? onTimeSlotClick(dateStr, time) : null}
                 onDragOver={onDragOver}
                 onDrop={(e) => onDrop(e, dateStr, time)}
@@ -483,7 +482,7 @@ const ScheduleCalendar = () => {
                       {timeslots.map((timeslot, index) => (
                         <div 
                           key={`${timeslot.appointmentId}-${timeslot.id}-${index}`}
-                          className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''}`}
+                          className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)}`}
                           draggable="true"
                           onDragStart={(e) => onDragStart(e, timeslot.schedule)}
                           onDragEnd={onDragEnd}
@@ -568,9 +567,8 @@ const ScheduleCalendar = () => {
                     <span className="count-badge">{appointments.length}</span>
                   )}
                 </div>
-                <div className="appointments-preview">
-                  {appointments.slice(0, 2).map((appointment, index) => (
-                    <div key={index} className="appointment-dot" title={appointment.patient.name}>
+                <div className="appointments-preview">                  {appointments.slice(0, 2).map((appointment, index) => (
+                    <div key={index} className={`appointment-dot ${getStatusClass(appointment.status)}`} title={`${appointment.patient.name} - ${appointment.status || 'scheduled'}`}>
                       {appointment.patient.name.charAt(0)}
                     </div>
                   ))}
@@ -744,6 +742,53 @@ const ScheduleCalendar = () => {
     );
   };
 
+  // Helper function to get status-based CSS class
+  const getStatusClass = (status) => {
+    if (!status) return 'status-scheduled'; // Default fallback
+    
+    // Normalize status (handle potential variations)
+    const normalizedStatus = status.toLowerCase().replace(/\s+/g, '_');
+    
+    // Valid status classes that match our CSS
+    const validStatuses = ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'];
+    
+    if (validStatuses.includes(normalizedStatus)) {
+      return `status-${normalizedStatus}`;
+    }
+    
+    return 'status-scheduled'; // Default fallback
+  };
+
+  // Helper function to get the primary status for a time slot (when multiple timeslots exist)
+  const getPrimaryTimeSlotStatus = (timeslots) => {
+    if (!timeslots || timeslots.length === 0) return 'available';
+    
+    // Priority order: in_progress > confirmed > scheduled > completed > cancelled > no_show
+    const statusPriority = {
+      'in_progress': 6,
+      'confirmed': 5,
+      'scheduled': 4,
+      'completed': 3,
+      'cancelled': 2,
+      'no_show': 1
+    };
+    
+    let highestPriority = 0;
+    let primaryStatus = 'scheduled';
+    
+    timeslots.forEach(timeslot => {
+      const status = timeslot.status || 'scheduled';
+      const priority = statusPriority[status] || statusPriority['scheduled'];
+      
+      if (priority > highestPriority) {
+        highestPriority = priority;
+        primaryStatus = status;
+      }
+    });
+    
+    return getStatusClass(primaryStatus);
+  };
+
   return (
     <div className="schedule-calendar">
       <div className="calendar-header">
@@ -809,6 +854,54 @@ const ScheduleCalendar = () => {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="status-filter">
+          <label htmlFor="status-select">Filter by Status:</label>
+          <select
+            id="status-select"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="no_show">No Show</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Status Legend */}
+      <div className="status-legend">
+        <div className="legend-title">Status Legend:</div>
+        <div className="legend-items">
+          <div className="legend-item">
+            <div className="legend-color-box status-scheduled"></div>
+            <span>Scheduled</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color-box status-confirmed"></div>
+            <span>Confirmed</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color-box status-in_progress"></div>
+            <span>In Progress</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color-box status-completed"></div>
+            <span>Completed</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color-box status-cancelled"></div>
+            <span>Cancelled</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color-box status-no_show"></div>
+            <span>No Show</span>
+          </div>
         </div>
       </div>
 
