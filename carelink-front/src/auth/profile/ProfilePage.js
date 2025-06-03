@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './ProfilePage.css';
 import BaseLayout from '../layout/BaseLayout';
-import LeftToolbar from '../layout/LeftToolbar';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
@@ -237,11 +236,8 @@ const ProfilePage = () => {
 
     if (!userData) {
         return <BaseLayout><div>Loading...</div></BaseLayout>;
-    }
-
-    return (
+    }    return (
         <BaseLayout>
-            <LeftToolbar userData={userData} />
             <div className="profile-container" ref={profileRef}>
                 <div className="role-display">
                     <p><strong>Role:</strong> {userData.user.role}</p>
