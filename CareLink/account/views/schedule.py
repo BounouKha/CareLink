@@ -57,26 +57,14 @@ class ScheduleCalendarView(APIView):
             # Filter by provider if specified
             if provider_id:
                 schedules_query = schedules_query.filter(provider_id=provider_id)
-            
             schedules = schedules_query.all()
-              # Get all timeslots for these schedules
-            schedule_ids = [schedule.id for schedule in schedules]
-            timeslots_query = TimeSlot.objects.filter(
-                schedule__in=schedule_ids
-            ).select_related('service', 'prescription')
-            
-            # Filter by status if specified
-            if status:
-                timeslots_query = timeslots_query.filter(status=status)
-            
-            timeslots = timeslots_query.all()
             
             # Build calendar data structure
             calendar_data = []
             
             for schedule in schedules:
-                # Get timeslots for this schedule
-                schedule_timeslots = [ts for ts in timeslots if ts.schedule_set.filter(id=schedule.id).exists()]
+                # Get timeslots for this schedule using the correct ManyToMany relationship
+                schedule_timeslots = schedule.time_slots.all()
                 
                 schedule_data = {
                     'id': schedule.id,
@@ -92,7 +80,10 @@ class ScheduleCalendarView(APIView):
                         'email': schedule.patient.user.email if schedule.patient and schedule.patient.user else None
                     },
                     'timeslots': []
-                }
+                }                
+                # Apply status filter if specified
+                if status:
+                    schedule_timeslots = schedule_timeslots.filter(status=status)
                 
                 for timeslot in schedule_timeslots:
                     timeslot_data = {
