@@ -870,39 +870,7 @@ const ScheduleCalendar = () => {
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
             <option value="no_show">No Show</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Status Legend */}
-      <div className="status-legend">
-        <div className="legend-title">Status Legend:</div>
-        <div className="legend-items">
-          <div className="legend-item">
-            <div className="legend-color-box status-scheduled"></div>
-            <span>Scheduled</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color-box status-confirmed"></div>
-            <span>Confirmed</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color-box status-in_progress"></div>
-            <span>In Progress</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color-box status-completed"></div>
-            <span>Completed</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color-box status-cancelled"></div>
-            <span>Cancelled</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color-box status-no_show"></div>
-            <span>No Show</span>
-          </div>
-        </div>
+          </select>        </div>
       </div>
 
       {stats && Object.keys(stats).length > 0 && (
