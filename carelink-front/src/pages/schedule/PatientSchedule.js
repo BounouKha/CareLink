@@ -14,6 +14,7 @@ const PatientSchedule = () => {
   const [isFamilyView, setIsFamilyView] = useState(false);
   const [familyMembers, setFamilyMembers] = useState([]);
   const [selectedFamilyMember, setSelectedFamilyMember] = useState(null);
+  const [roleChecked, setRoleChecked] = useState(false); // Add this to track if role check is complete
   const navigate = useNavigate();
 
   // Format date for input field
@@ -29,25 +30,61 @@ const PatientSchedule = () => {
       day = '0' + day;
 
     return [year, month, day].join('-');
-  }
-
-  // Check if the user is a family member
+  }  // Check if the user is a family member
   useEffect(() => {
-    const userDataString = localStorage.getItem('userData');
-    if (userDataString) {
-      const userData = JSON.parse(userDataString);
-      if (userData && userData.user && userData.user.role === 'Family Patient') {
-        setIsFamilyView(true);
-        fetchFamilyMembers();
-      }
-    }
-  }, []);
+    console.log('=== PatientSchedule useEffect - Role Detection ===');
+    
+    const checkUserRole = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          console.log('No access token found');
+          return;
+        }
 
+        console.log('Fetching user profile...');
+        // Fetch user profile to get role information
+        const response = await fetch('http://localhost:8000/account/profile/', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('User profile data:', userData);
+          
+          const userRole = userData?.user?.role;
+          console.log('Detected user role:', userRole);
+            if (userRole === 'Family Patient') {
+            console.log('✅ User is Family Patient - enabling family view');
+            setIsFamilyView(true);
+            fetchFamilyMembers();
+          } else {
+            console.log('❌ User is not Family Patient - regular patient view');
+            console.log('User role is:', userRole);
+            setIsFamilyView(false);
+          }
+          
+          // Mark role check as complete
+          setRoleChecked(true);        } else {
+          console.error('Failed to fetch user profile:', response.status);
+          // Even if profile fetch fails, mark role check as complete to avoid infinite waiting
+          setRoleChecked(true);
+        }
+      } catch (err) {
+        console.error('Error checking user role:', err);
+      }
+    };
+
+    checkUserRole();
+  }, []);
   // Fetch family members if the user is a family member
   const fetchFamilyMembers = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/family/linked-patients/`, {
+      const response = await fetch(`http://localhost:8000/account/family-patient/linked-patient/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -56,17 +93,66 @@ const PatientSchedule = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setFamilyMembers(data.linked_patients || []);
+        console.log('Family members data:', data);
+        // Handle both linked_patients (array) and linked_patient (single) format
+        const linkedPatients = data.linked_patients || (data.linked_patient ? [data.linked_patient] : []);
+        setFamilyMembers(linkedPatients);
       } else {
-        console.error('Failed to fetch family members');
+        console.error('Failed to fetch family members:', response.status);
       }
     } catch (err) {
       console.error('Error fetching family members:', err);
     }
   };
+  // Transform family schedule data from nested to flat structure
+  const transformFamilyScheduleData = (data) => {
+    console.log('=== transformFamilyScheduleData ===');
+    console.log('Input data:', data);
+    
+    if (!data || !data.patients) {
+      console.log('No patients data found');
+      return [];
+    }
+    
+    const flatAppointments = [];
+    
+    data.patients.forEach(patient => {
+      console.log('Processing patient:', patient.patient_info);
+      const patientName = patient.patient_info.name;
+      
+      patient.schedules.forEach(schedule => {
+        console.log('Processing schedule:', schedule.id, 'with', schedule.appointments.length, 'appointments');
+          // Transform each schedule to match frontend expectations
+        const transformedSchedule = {
+          id: schedule.id,
+          date: schedule.date,
+          provider: {
+            id: schedule.provider.id,
+            name: schedule.provider.name, // Keep the full name for display
+            // Split the provider name to match frontend expectations
+            firstname: schedule.provider.name.split(' ')[0] || '',
+            lastname: schedule.provider.name.split(' ').slice(1).join(' ') || '',
+            service_type: schedule.provider.service_type
+          },
+          appointments: schedule.appointments, // Keep appointments as-is
+          patient_name: patientName,
+          service_type: schedule.provider.service_type
+        };
+        
+        flatAppointments.push(transformedSchedule);
+      });
+    });
+    
+    console.log('Transformed appointments:', flatAppointments);
+    return flatAppointments;
+  };
 
   // Fetch appointments
   const fetchAppointments = async () => {
+    console.log('=== fetchAppointments called ===');
+    console.log('isFamilyView:', isFamilyView);
+    console.log('selectedFamilyMember:', selectedFamilyMember);
+    
     setLoading(true);
     setError('');
     setAppointmentDetails(null);
@@ -83,23 +169,36 @@ const PatientSchedule = () => {
         ? `http://localhost:8000/schedule/family/schedule/?start_date=${startDate}&end_date=${endDate}`
         : `http://localhost:8000/schedule/patient/schedule/?start_date=${startDate}&end_date=${endDate}`;
       
+      console.log('Selected endpoint:', endpoint);
+      
       // Add patient_id if a family member is selected
       if (isFamilyView && selectedFamilyMember) {
         endpoint += `&patient_id=${selectedFamilyMember}`;
+        console.log('Added patient_id, final endpoint:', endpoint);
       }
 
+      console.log('Making request to:', endpoint);
       const response = await fetch(endpoint, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      });
-
+      });      console.log('Response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        setAppointments(data.appointments || []);
+        console.log('Raw API response:', data);
+        
+        if (isFamilyView) {
+          // Transform the nested family schedule data to flat structure
+          const transformedAppointments = transformFamilyScheduleData(data);
+          setAppointments(transformedAppointments);
+        } else {
+          // Regular patient view expects flat structure already
+          setAppointments(data.appointments || []);
+        }
       } else {
         const errorData = await response.json();
+        console.log('Error response:', errorData);
         setError(errorData.error || 'Failed to fetch appointments');
       }
     } catch (err) {
@@ -192,10 +291,19 @@ const PatientSchedule = () => {
         return '';
     }
   };
-
   useEffect(() => {
-    fetchAppointments();
-  }, [startDate, endDate, selectedFamilyMember, isFamilyView]);
+    console.log('=== useEffect for fetchAppointments ===');
+    console.log('roleChecked:', roleChecked);
+    console.log('isFamilyView:', isFamilyView);
+    
+    // Only fetch appointments after role check is complete
+    if (roleChecked) {
+      console.log('✅ Role check complete, fetching appointments');
+      fetchAppointments();
+    } else {
+      console.log('⏳ Waiting for role check to complete...');
+    }
+  }, [startDate, endDate, selectedFamilyMember, isFamilyView, roleChecked]);
 
   return (
     <div className="patient-schedule-container">
@@ -229,10 +337,9 @@ const PatientSchedule = () => {
                 value={selectedFamilyMember || ''}
                 onChange={handleFamilyMemberChange}
               >
-                <option value="">All Family Members</option>
-                {familyMembers.map(member => (
+                <option value="">All Family Members</option>                {familyMembers.map(member => (
                   <option key={member.id} value={member.id}>
-                    {member.first_name} {member.last_name}
+                    {member.firstname} {member.lastname}
                   </option>
                 ))}
               </select>
