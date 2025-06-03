@@ -20,12 +20,12 @@ class ScheduleCalendarView(APIView):
         # Only coordinators and admin can access schedule management
         if request.user.role not in ['Coordinator', 'Administrative']:
             return Response({"error": "Permission denied."}, status=403)
-        
-        # Get query parameters
+          # Get query parameters
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
         view_type = request.query_params.get('view', 'week')  # day, week, month
         provider_id = request.query_params.get('provider_id')
+        status = request.query_params.get('status')
         
         try:
             # Parse dates or use defaults
@@ -59,12 +59,17 @@ class ScheduleCalendarView(APIView):
                 schedules_query = schedules_query.filter(provider_id=provider_id)
             
             schedules = schedules_query.all()
-            
-            # Get all timeslots for these schedules
+              # Get all timeslots for these schedules
             schedule_ids = [schedule.id for schedule in schedules]
-            timeslots = TimeSlot.objects.filter(
+            timeslots_query = TimeSlot.objects.filter(
                 schedule__in=schedule_ids
             ).select_related('service', 'prescription')
+            
+            # Filter by status if specified
+            if status:
+                timeslots_query = timeslots_query.filter(status=status)
+            
+            timeslots = timeslots_query.all()
             
             # Build calendar data structure
             calendar_data = []
@@ -94,13 +99,12 @@ class ScheduleCalendarView(APIView):
                         'id': timeslot.id,
                         'start_time': timeslot.start_time,
                         'end_time': timeslot.end_time,
-                        'description': timeslot.description,
-                        'service': {
+                        'description': timeslot.description,                        'service': {
                             'id': timeslot.service.id if timeslot.service else None,
                             'name': timeslot.service.name if timeslot.service else 'No Service',
                             'price': float(timeslot.service.price) if timeslot.service else 0
                         },
-                        'status': 'scheduled',  # We'll enhance this later
+                        'status': timeslot.status if hasattr(timeslot, 'status') and timeslot.status else 'scheduled',
                         'notes': timeslot.description or ''
                     }
                     schedule_data['timeslots'].append(timeslot_data)

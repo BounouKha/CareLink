@@ -95,8 +95,8 @@ body {
     justify-content: center;
     flex-grow: 1;
     width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
+    max-width: 1200px;
+    margin-top: 170px;
 }
 
 /* Add media query for smaller screens */
