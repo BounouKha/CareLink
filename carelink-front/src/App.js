@@ -28,6 +28,7 @@ function App() {
                         <Route path="/service-demands" element={<ServiceDemandPage />} />                        <Route path="/schedule" element={<ScheduleRouter />} />
                         <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
                         <Route path="/schedule/patient" element={<PatientSchedule />} />
+                        <Route path="/schedule/family" element={<PatientSchedule />} />
                         <Route path="/test-auth" element={<TestUserAuth />} />
                     </Routes>
                 </div>
