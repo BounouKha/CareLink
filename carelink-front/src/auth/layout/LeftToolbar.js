@@ -17,29 +17,6 @@ const LeftToolbar = ({ userData }) => {
     };    const handleServiceDemandsClick = () => {
         navigate('/service-demands');
     };    const handleScheduleClick = () => {
-        // Get user role to determine which schedule view to show
-        const userDataString = localStorage.getItem('userData');
-        if (userDataString) {
-            try {
-                const userData = JSON.parse(userDataString);
-                if (userData && userData.user && userData.user.role) {
-                    const userRole = userData.user.role;
-                    if (userRole === 'Coordinator' || userRole === 'Administrative') {
-                        navigate('/schedule/coordinator');
-                        return;
-                    } else if (userRole === 'Patient') {
-                        navigate('/schedule/patient');
-                        return;
-                    } else if (userRole === 'Family Patient') {
-                        navigate('/schedule/family');
-                        return;
-                    }
-                }
-            } catch (err) {
-                console.error('Error parsing user data', err);
-            }
-        }
-        // Default fallback
         navigate('/schedule');
     };
 

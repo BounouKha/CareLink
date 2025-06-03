@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './PatientsPage.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
-import LeftToolbar from '../../auth/layout/LeftToolbar';
 import AddEntryForm from '../../components/AddEntryForm';
 
 const PatientsPage = () => {
@@ -322,11 +321,8 @@ const PatientsPage = () => {
         `${patient.firstname} ${patient.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.national_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.birth_date?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    return (
+    );    return (
         <BaseLayout>
-            <LeftToolbar userData={{ user: { role: 'Coordinator' } }} />
             <div className="profile-patient-page">
                 <div className="profile-patient-container">
                     <h1>Patients</h1>

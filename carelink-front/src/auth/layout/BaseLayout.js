@@ -145,12 +145,13 @@ const BaseLayout = ({ children }) => {
                 <img src="/Logo.png" alt="Logo" className="homepage-logo" style={{ width: '100px', height: 'auto' }} />
                 <button className="hamburger-menu" onClick={toggleMenu}>
                     ☰
-                </button>
-                {isMenuOpen && <div className="hamburger-overlay" onClick={closeMenu}></div>}
+                </button>                {isMenuOpen && <div className="hamburger-overlay" onClick={closeMenu}></div>}
                 <div className={`homepage-buttons ${isMenuOpen ? 'open' : 'closed'}`}>
-                    <button className="btn btn-secondary close-menu" onClick={closeMenu}>
-                        <i className="bi bi-x"></i>
-                    </button>
+                    {isMenuOpen && (
+                        <button className="btn btn-secondary close-menu" onClick={closeMenu}>
+                            <i className="bi bi-x"></i>
+                        </button>
+                    )}
                     <button className="btn btn-primary" onClick={() => window.location.href = '/'}>Home</button>
                     {!isConnected && (
                         <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>Register</button>
