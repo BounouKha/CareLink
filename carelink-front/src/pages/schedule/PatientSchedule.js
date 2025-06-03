@@ -275,21 +275,26 @@ const PatientSchedule = () => {
     });
     return `${formattedDate} ${timeString}`;
   };
-
   // Get status class for styling
   const getStatusClass = (status) => {
-    switch (status) {
-      case 'confirmed':
-        return 'status-confirmed';
-      case 'pending':
-        return 'status-pending';
-      case 'completed':
-        return 'status-completed';
-      case 'cancelled':
-        return 'status-cancelled';
-      default:
-        return '';
+    if (!status) return 'status-scheduled'; // Default fallback
+    
+    // Normalize status (handle potential variations)
+    const normalizedStatus = status.toLowerCase().replace(/\s+/g, '_');
+    
+    // Valid status classes that match our CSS
+    const validStatuses = ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'];
+    
+    if (validStatuses.includes(normalizedStatus)) {
+      return `status-${normalizedStatus}`;
     }
+    
+    // Legacy status mappings for backward compatibility
+    if (normalizedStatus === 'pending') {
+      return 'status-scheduled';
+    }
+    
+    return 'status-scheduled'; // Default fallback
   };
   useEffect(() => {
     console.log('=== useEffect for fetchAppointments ===');

@@ -110,8 +110,11 @@
 }
 
 .calendar-filters {
+  display: flex;
+  gap: 20px;
+  align-items: center;
   background: white;
-  padding: 15px 20px;
+  padding: 15px;
   border-radius: 8px;
   margin-bottom: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -129,6 +132,25 @@
 }
 
 .provider-filter select {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: white;
+  min-width: 200px;
+}
+
+.status-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-filter label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.status-filter select {
   padding: 8px 12px;
   border: 1px solid #ced4da;
   border-radius: 4px;
@@ -1122,6 +1144,237 @@
 .appointment-summary .timeslot-time:hover {
   background: #e0f2fe;
   border-color: #7dd3fc;
+}
+
+/* Status-based Color Coding */
+.status-scheduled .timeslot-item,
+.status-scheduled.timeslot-item {
+  background: #e3f2fd !important; 
+  border-color: #1976d2 !important;
+  color: #1565c0;
+}
+
+.status-scheduled .timeslot-item:hover,
+.status-scheduled.timeslot-item:hover {
+  background: #bbdefb !important;
+  border-color: #1565c0 !important;
+}
+
+.status-confirmed .timeslot-item,
+.status-confirmed.timeslot-item {
+  background: #e8f5e8 !important;
+  border-color: #388e3c !important;
+  color: #2e7d32;
+}
+
+.status-confirmed .timeslot-item:hover,
+.status-confirmed.timeslot-item:hover {
+  background: #c8e6c9 !important;
+  border-color: #2e7d32 !important;
+}
+
+.status-in_progress .timeslot-item,
+.status-in_progress.timeslot-item {
+  background: #fff3e0 !important;
+  border-color: #f57c00 !important;
+  color: #e65100;
+}
+
+.status-in_progress .timeslot-item:hover,
+.status-in_progress.timeslot-item:hover {
+  background: #ffe0b2 !important;
+  border-color: #e65100 !important;
+}
+
+.status-completed .timeslot-item,
+.status-completed.timeslot-item {
+  background: #e8f5e8 !important;
+  border-color: #4caf50 !important;
+  color: #2e7d32;
+}
+
+.status-completed .timeslot-item:hover,
+.status-completed.timeslot-item:hover {
+  background: #c8e6c9 !important;
+  border-color: #388e3c !important;
+}
+
+.status-cancelled .timeslot-item,
+.status-cancelled.timeslot-item {
+  background: #ffebee !important;
+  border-color: #f44336 !important;
+  color: #c62828;
+  opacity: 0.8;
+}
+
+.status-cancelled .timeslot-item:hover,
+.status-cancelled.timeslot-item:hover {
+  background: #ffcdd2 !important;
+  border-color: #d32f2f !important;
+}
+
+.status-no_show .timeslot-item,
+.status-no_show.timeslot-item {
+  background: #f3e5f5 !important;
+  border-color: #9c27b0 !important;
+  color: #7b1fa2;
+  opacity: 0.7;
+}
+
+.status-no_show .timeslot-item:hover,
+.status-no_show.timeslot-item:hover {
+  background: #e1bee7 !important;
+  border-color: #8e24aa !important;
+}
+
+/* Week View Time Slot Status Colors */
+.time-slot.status-scheduled {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+  border-color: #1976d2;
+}
+
+.time-slot.status-confirmed {
+  background: linear-gradient(135deg, #e8f5e8, #c8e6c9) !important;
+  border-color: #388e3c;
+}
+
+.time-slot.status-in_progress {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2) !important;
+  border-color: #f57c00;
+}
+
+.time-slot.status-completed {
+  background: linear-gradient(135deg, #e8f5e8, #c8e6c9) !important;
+  border-color: #4caf50;
+}
+
+.time-slot.status-cancelled {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2) !important;
+  border-color: #f44336;
+  opacity: 0.8;
+}
+
+.time-slot.status-no_show {
+  background: linear-gradient(135deg, #f3e5f5, #e1bee7) !important;
+  border-color: #9c27b0;
+  opacity: 0.7;
+}
+
+/* Month View Appointment Dots Status Colors */
+.appointment-dot.status-scheduled {
+  background: #1976d2;
+}
+
+.appointment-dot.status-confirmed {
+  background: #388e3c;
+}
+
+.appointment-dot.status-in_progress {
+  background: #f57c00;
+}
+
+.appointment-dot.status-completed {
+  background: #4caf50;
+}
+
+.appointment-dot.status-cancelled {
+  background: #f44336;
+  opacity: 0.8;
+}
+
+.appointment-dot.status-no_show {
+  background: #9c27b0;
+  opacity: 0.7;
+}
+
+/* Day View Appointment Status Colors */
+.day-view .timeslot-item.status-scheduled {
+  background: #e3f2fd !important;
+  border-color: #1976d2 !important;
+}
+
+.day-view .timeslot-item.status-confirmed {
+  background: #e8f5e8 !important;
+  border-color: #388e3c !important;
+}
+
+.day-view .timeslot-item.status-in_progress {
+  background: #fff3e0 !important;
+  border-color: #f57c00 !important;
+}
+
+.day-view .timeslot-item.status-completed {
+  background: #e8f5e8 !important;
+  border-color: #4caf50 !important;
+}
+
+.day-view .timeslot-item.status-cancelled {
+  background: #ffebee !important;
+  border-color: #f44336 !important;
+  opacity: 0.8;
+}
+
+.day-view .timeslot-item.status-no_show {
+  background: #f3e5f5 !important;
+  border-color: #9c27b0 !important;
+  opacity: 0.7;
+}
+
+/* Status Legend */
+.status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.legend-color-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Status color boxes for legend */
+.legend-color-box.status-scheduled {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.legend-color-box.status-confirmed {
+  background: #e8f5e8;
+  border-color: #388e3c;
+}
+
+.legend-color-box.status-in_progress {
+  background: #fff3e0;
+  border-color: #f57c00;
+}
+
+.legend-color-box.status-completed {
+  background: #e8f5e8;
+  border-color: #4caf50;
+}
+
+.legend-color-box.status-cancelled {
+  background: #ffebee;
+  border-color: #f44336;
+}
+
+.legend-color-box.status-no_show {
+  background: #f3e5f5;
+  border-color: #9c27b0;
 }
 
 /* Responsive Design */
