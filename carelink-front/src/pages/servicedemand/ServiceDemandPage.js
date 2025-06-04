@@ -463,7 +463,7 @@ const ServiceDemandPage = () => {
                             value={filterStatus} 
                             onChange={(e) => setFilterStatus(e.target.value)}
                             className="form-select"
-                            style={{ maxWidth: '200px' }}
+                            style={{ maxWidth: '200px', borderColor: '#22C7EE', borderRadius: '12px' }}
                         >
                             <option value="">All Statuses</option>
                             <option value="Pending">Pending</option>
@@ -479,7 +479,7 @@ const ServiceDemandPage = () => {
                             value={filterPriority} 
                             onChange={(e) => setFilterPriority(e.target.value)}
                             className="form-select"
-                            style={{ maxWidth: '200px' }}
+                            style={{ maxWidth: '200px', borderColor: '#22C7EE', borderRadius: '12px' }}
                         >
                             <option value="">All Priorities</option>
                             <option value="Low">Low</option>
@@ -518,7 +518,7 @@ const ServiceDemandPage = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="card-body pt-2">
+                                    <div className="card-body pt-2 bg-white">
                                         <div className="row mb-2">
                                             <div className="col-md-6">
                                                 <p className="mb-1"><strong>Service:</strong> {demand.service_info?.name || 'N/A'}</p>
@@ -561,262 +561,475 @@ const ServiceDemandPage = () => {
                                 </div>
                             ))
                         )}
-                    </div>
-
-                    {/* Create Demand Modal */}
+                    </div>                    {/* Create Demand Modal */}
                     {showCreateForm && (
                         <div className="modal-overlay">
-                            <div className="create-demand-modal">
-                                <div className="modal-header">
-                                    <h2>Request New Service</h2>                                    <button 
-                                        className="close-modal"
-                                        onClick={resetCreateForm}
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                                
-                                <form onSubmit={handleCreateDemand} className="demand-form">                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Service *</label>
-                                            <select
-                                                value={newDemand.service}
-                                                onChange={(e) => setNewDemand({...newDemand, service: e.target.value})}
-                                                required
-                                            >
-                                                <option value="">Select a service</option>
-                                                {services.map(service => (
-                                                    <option key={service.id} value={service.id}>
-                                                        {service.name} - €{service.price}
-                                                    </option>
-                                                ))}
-                                            </select>
+                            <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                <div className="modal-content shadow-lg border-0" style={{borderRadius: '20px', overflow: 'hidden',}}>
+                                        <div className="modal-header bg-gradient text-white border-0 p-4" style={{background: 'linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%)'}}>
+                                            <div className="d-flex align-items-center">
+                                                
+                                                <div>
+                                                    <h4 className="modal-title mb-0 fw-bold">Request New Service</h4>
+                                                    <small className="opacity-90">Complete the form below to submit your service request</small>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                className="btn-close" 
+                                                onClick={resetCreateForm}
+                                                aria-label="Close"
+                                            ></button>
                                         </div>
                                         
-                                        <div className="form-group">
-                                            <label>Priority</label>
-                                            <select
-                                                value={newDemand.priority}
-                                                onChange={(e) => setNewDemand({...newDemand, priority: e.target.value})}
-                                            >
-                                                <option value="Low">Low</option>
-                                                <option value="Normal">Normal</option>
-                                                <option value="High">High</option>
-                                                <option value="Urgent">Urgent</option>
-                                            </select>
-                                        </div>
-                                    </div>                                    {/* Patient Selection for Coordinators */}
-                                    {(userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') && (
-                                        <div className="form-group">
-                                            <label>Patient *</label>
-                                            <div className="patient-selection-container">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Search patients by name or birthdate..."
-                                                    value={patientSearch}
-                                                    onChange={(e) => setPatientSearch(e.target.value)}
-                                                    className="patient-search"
-                                                />
-                                                <select
-                                                    value={newDemand.selected_patient}
-                                                    onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
-                                                    required
-                                                    className="patient-select"
-                                                >
-                                                    <option value="">Select a patient</option>
-                                                    {Array.isArray(patients) && patients
-                                                        .filter(patient => {
-                                                            if (!patientSearch) return true;
-                                                            const searchLower = patientSearch.toLowerCase();
-                                                            return (
-                                                                patient.lastname?.toLowerCase().includes(searchLower) ||
-                                                                patient.firstname?.toLowerCase().includes(searchLower) ||
-                                                                patient.birth_date?.includes(searchLower)
-                                                            );
-                                                        })
-                                                        .map(patient => (
-                                                            <option key={patient.id} value={patient.id}>
-                                                                {patient.lastname}, {patient.firstname} - {patient.birth_date}
-                                                            </option>
-                                                        ))
-                                                    }
-                                                </select>
-                                                {patientSearch && (
-                                                    <small className="search-info">
-                                                        {Array.isArray(patients) ? patients.filter(patient => {
-                                                            const searchLower = patientSearch.toLowerCase();
-                                                            return (
-                                                                patient.lastname?.toLowerCase().includes(searchLower) ||
-                                                                patient.firstname?.toLowerCase().includes(searchLower) ||
-                                                                patient.birth_date?.includes(searchLower)
-                                                            );
-                                                        }).length : 0} patients found
-                                                    </small>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}                                    {/* Patient Selection/Information for Family Patients */}
-                                    {userData?.user?.role === 'Family Patient' && linkedPatients && linkedPatients.length > 0 && (
-                                        <div className="form-group">
-                                            <label>Patient *</label>
-                                            {linkedPatients.length === 1 ? (
-                                                // Single patient - show info only
-                                                <div className="linked-patient-info">
-                                                    <div className="patient-display">
-                                                        <strong>{linkedPatients[0].firstname} {linkedPatients[0].lastname}</strong>
-                                                        <span className="patient-birthdate">Born: {linkedPatients[0].birth_date}</span>
-                                                        <span className="relationship-badge">{linkedPatients[0].relationship || 'Family Member'}</span>
-                                                        <small className="patient-note">This service request will be created for your linked patient</small>
+                                        <div className="modal-body p-4" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+                                            <form onSubmit={handleCreateDemand} id="demandForm">                                                {/* Service & Priority Section */}
+                                                <div className="row mb-4">
+                                                    <div className="col-12">
+                                                        <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #f8f9ff 0%, #ffffff 100%)'}}>
+                                                            <div className="card-body p-4">
+                                                                <div className="d-flex align-items-center mb-3">
+                                                                    <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                                                        <i className="bi bi-gear-fill text-primary"></i>
+                                                                    </div>
+                                                                    <h5 className="mb-0 text-primary fw-bold">Service Details</h5>
+                                                                </div>
+                                                                <div className="row">
+                                                                    <div className="col-md-8">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-white">
+                                                                                <i className="bi bi-collection me-2" style={{color: '#22C7EE'}}></i>
+                                                                                Service Type <span className="text-danger">*</span>
+                                                                            </label>
+                                                                            <select
+                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.service}
+                                                                                onChange={(e) => setNewDemand({...newDemand, service: e.target.value})}
+                                                                                required
+                                                                            >
+                                                                                <option value="">Choose a service...</option>
+                                                                                {services.map(service => (
+                                                                                    <option key={service.id} value={service.id}>
+                                                                                        {service.name} - €{service.price}
+                                                                                    </option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-4">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-exclamation-triangle me-2" style={{color: '#ff9800'}}></i>
+                                                                                Priority Level
+                                                                            </label>
+                                                                            <select
+                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.priority}
+                                                                                onChange={(e) => setNewDemand({...newDemand, priority: e.target.value})}
+                                                                            >
+                                                                                <option value="Low">🟢 Low Priority</option>
+                                                                                <option value="Normal">🟡 Normal Priority</option>
+                                                                                <option value="High">🟠 High Priority</option>
+                                                                                <option value="Urgent">🔴 Urgent</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>                                                {/* Patient Selection for Coordinators */}
+                                                {(userData?.user?.role === 'Coordinator' || userData?.user?.role === 'Administrative') && (
+                                                    <div className="row mb-4">
+                                                        <div className="col-12">
+                                                            <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #fff9e6 0%, #ffffff 100%)'}}>
+                                                                <div className="card-body p-4">
+                                                                    <div className="d-flex align-items-center mb-3">
+                                                                        <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                                                            <i className="bi bi-person-check-fill text-warning"></i>
+                                                                        </div>
+                                                                        <h5 className="mb-0 text-warning fw-bold">Patient Selection</h5>
+                                                                    </div>
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-light">
+                                                                            <i className="bi bi-search me-2" style={{color: '#22C7EE'}}></i>
+                                                                            Search Patients
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            className="form-control form-control-lg border-2 shadow-sm mb-3"
+                                                                            style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                            placeholder="🔍 Search by name or birthdate..."
+                                                                            value={patientSearch}
+                                                                            onChange={(e) => setPatientSearch(e.target.value)}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-light">
+                                                                            <i className="bi bi-person-fill me-2" style={{color: '#22C7EE'}}></i>
+                                                                            Select Patient <span className="text-danger">*</span>
+                                                                        </label>
+                                                                        <select
+                                                                            className="form-select form-select-lg border-2 shadow-sm"
+                                                                            style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                            value={newDemand.selected_patient}
+                                                                            onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
+                                                                            required
+                                                                        >
+                                                                            <option value="">Choose a patient...</option>
+                                                                            {Array.isArray(patients) && patients
+                                                                                .filter(patient => {
+                                                                                    if (!patientSearch) return true;
+                                                                                    const searchLower = patientSearch.toLowerCase();
+                                                                                    return (
+                                                                                        patient.lastname?.toLowerCase().includes(searchLower) ||
+                                                                                        patient.firstname?.toLowerCase().includes(searchLower) ||
+                                                                                        patient.birth_date?.includes(searchLower)
+                                                                                    );
+                                                                                })
+                                                                                .map(patient => (
+                                                                                    <option key={patient.id} value={patient.id}>
+                                                                                        {patient.lastname}, {patient.firstname} - {patient.birth_date}
+                                                                                    </option>
+                                                                                ))
+                                                                            }
+                                                                        </select>
+                                                                        {patientSearch && (
+                                                                            <div className="mt-2">
+                                                                                <small className="text-info">
+                                                                                    <i className="bi bi-info-circle me-1"></i>
+                                                                                    {Array.isArray(patients) ? patients.filter(patient => {
+                                                                                        const searchLower = patientSearch.toLowerCase();
+                                                                                        return (
+                                                                                            patient.lastname?.toLowerCase().includes(searchLower) ||
+                                                                                            patient.firstname?.toLowerCase().includes(searchLower) ||
+                                                                                            patient.birth_date?.includes(searchLower)
+                                                                                        );
+                                                                                    }).length : 0} patients found
+                                                                                </small>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}                                                {/* Patient Selection/Information for Family Patients */}
+                                                {userData?.user?.role === 'Family Patient' && linkedPatients && linkedPatients.length > 0 && (
+                                                    <div className="row mb-4">
+                                                        <div className="col-12">
+                                                            <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #e8f5e8 0%, #ffffff 100%)'}}>
+                                                                <div className="card-body p-4">
+                                                                    <div className="d-flex align-items-center mb-3">
+                                                                        <div className="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                                                            <i className="bi bi-people-fill text-success"></i>
+                                                                        </div>
+                                                                        <h5 className="mb-0 text-success fw-bold">Linked Patient Information</h5>
+                                                                    </div>
+                                                                    {linkedPatients.length === 1 ? (
+                                                                        <div className="alert alert-info border-0 shadow-sm" style={{borderRadius: '12px'}}>
+                                                                            <div className="d-flex align-items-center">
+                                                                                <div className="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                                                                                    <i className="bi bi-person-heart text-info fs-5"></i>
+                                                                                </div>
+                                                                                <div>
+                                                                                    <h6 className="mb-1 fw-bold">{linkedPatients[0].firstname} {linkedPatients[0].lastname}</h6>
+                                                                                    <p className="mb-1 text-muted">Born: {linkedPatients[0].birth_date}</p>
+                                                                                    <span className="badge bg-info text-white">
+                                                                                        {linkedPatients[0].relationship || 'Family Member'}
+                                                                                    </span>
+                                                                                    <small className="d-block mt-2 text-secondary">
+                                                                                        <i className="bi bi-info-circle me-1"></i>
+                                                                                        This service request will be created for your linked patient
+                                                                                    </small>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div>
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-person-fill me-2" style={{color: '#22C7EE'}}></i>
+                                                                                Select Patient <span className="text-danger">*</span>
+                                                                            </label>
+                                                                            <select
+                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.selected_patient}
+                                                                                onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
+                                                                                required
+                                                                            >
+                                                                                <option value="">Select which patient this request is for...</option>
+                                                                                {linkedPatients.map((patient, index) => (
+                                                                                    <option key={index} value={patient.id}>
+                                                                                        {patient.firstname} {patient.lastname} ({patient.relationship || 'Family Member'}) - Born: {patient.birth_date}
+                                                                                    </option>
+                                                                                ))}
+                                                                            </select>
+                                                                            <small className="form-text text-muted mt-2">
+                                                                                <i className="bi bi-info-circle me-1"></i>
+                                                                                You have {linkedPatients.length} linked patients. Please select who this service request is for.
+                                                                            </small>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}                                                {/* Basic Information Section */}
+                                                <div className="row mb-4">
+                                                    <div className="col-12">
+                                                        <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #f0f8ff 0%, #ffffff 100%)'}}>
+                                                            <div className="card-body p-4">
+                                                                <div className="d-flex align-items-center mb-3">
+                                                                    <div className="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                                                                        <i className="bi bi-clipboard-data-fill text-info"></i>
+                                                                    </div>
+                                                                    <h5 className="mb-0 text-info fw-bold">Service Request Details</h5>
+                                                                </div>
+                                                                <div className="row">
+                                                                    <div className="col-12">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-card-heading me-2" style={{color: '#22C7EE'}}></i>
+                                                                                Request Title <span className="text-danger">*</span>
+                                                                            </label>
+                                                                            <input
+                                                                                type="text"
+                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.title}
+                                                                                onChange={(e) => setNewDemand({...newDemand, title: e.target.value})}
+                                                                                placeholder="💬 Brief title for your service request..."
+                                                                                required
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-6">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-file-text me-2" style={{color: '#22C7EE'}}></i>
+                                                                                Description <span className="text-danger">*</span>
+                                                                            </label>
+                                                                            <textarea
+                                                                                className="form-control border-2 shadow-sm "
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                rows="4"
+                                                                                value={newDemand.description}
+                                                                                onChange={(e) => setNewDemand({...newDemand, description: e.target.value})}
+                                                                                placeholder="📝 Detailed description of the service needed..."
+                                                                                required
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-6">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-heart-pulse me-2" style={{color: '#e91e63'}}></i>
+                                                                                Medical Reason <span className="text-danger">*</span>
+                                                                            </label>
+                                                                            <textarea
+                                                                                className="form-control border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                rows="4"
+                                                                                value={newDemand.reason}
+                                                                                onChange={(e) => setNewDemand({...newDemand, reason: e.target.value})}
+                                                                                placeholder="🏥 Medical reason or justification for this service..."
+                                                                                required
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>                                                {/* Scheduling Section */}
+                                                <div className="row mb-4">
+                                                    <div className="col-12">
+                                                        <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #fff5f5 0%, #ffffff 100%)'}}>
+                                                            <div className="card-body p-4">
+                                                                <div className="d-flex align-items-center mb-3">
+                                                                    <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                                                                        <i className="bi bi-calendar-event-fill text-danger"></i>
+                                                                    </div>
+                                                                    <h5 className="mb-0 text-danger fw-bold">Scheduling Information</h5>
+                                                                </div>
+                                                                <div className="row">
+                                                                    <div className="col-md-4">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-calendar-date me-2" style={{color: '#22C7EE'}}></i>
+                                                                                Preferred Start Date
+                                                                            </label>
+                                                                            <input
+                                                                                type="date"
+                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.preferred_start_date}
+                                                                                onChange={(e) => setNewDemand({...newDemand, preferred_start_date: e.target.value})}
+                                                                                min={new Date().toISOString().split('T')[0]}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-4">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-arrow-repeat me-2" style={{color: '#9c27b0'}}></i>
+                                                                                Frequency
+                                                                            </label>
+                                                                            <select
+                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.frequency}
+                                                                                onChange={(e) => setNewDemand({...newDemand, frequency: e.target.value})}
+                                                                            >
+                                                                                <option value="Once">🔄 One-time service</option>
+                                                                                <option value="Daily">📅 Daily</option>
+                                                                                <option value="Weekly">📅 Weekly</option>
+                                                                                <option value="Bi-weekly">📅 Bi-weekly</option>
+                                                                                <option value="Monthly">📅 Monthly</option>
+                                                                                <option value="As needed">📅 As needed</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-4">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-hourglass-split me-2" style={{color: '#ff9800'}}></i>
+                                                                                Duration (weeks)
+                                                                            </label>
+                                                                            <input
+                                                                                type="number"
+                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.duration_weeks}
+                                                                                onChange={(e) => setNewDemand({...newDemand, duration_weeks: e.target.value})}
+                                                                                placeholder="Number of weeks"
+                                                                                min="1"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-6">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-clock me-2" style={{color: '#4caf50'}}></i>
+                                                                                Preferred Time
+                                                                            </label>
+                                                                            <input
+                                                                                type="text"
+                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.preferred_time}
+                                                                                onChange={(e) => setNewDemand({...newDemand, preferred_time: e.target.value})}
+                                                                                placeholder="🕐 e.g., Morning, Afternoon, Evening..."
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-6">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-telephone me-2" style={{color: '#2196f3'}}></i>
+                                                                                Contact Method
+                                                                            </label>
+                                                                            <select
+                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.contact_method}
+                                                                                onChange={(e) => setNewDemand({...newDemand, contact_method: e.target.value})}
+                                                                            >
+                                                                                <option value="Email">📧 Email</option>
+                                                                                <option value="Phone">📞 Phone Call</option>
+                                                                                <option value="Video Call">📹 Video Call</option>
+                                                                                <option value="In Person">👥 In Person</option>
+                                                                                <option value="SMS">💬 SMS</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>                                                {/* Additional Information Section */}
+                                                <div className="row mb-4">
+                                                    <div className="col-12">
+                                                        <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #f5f0ff 0%, #ffffff 100%)'}}>
+                                                            <div className="card-body p-4">
+                                                                <div className="d-flex align-items-center mb-3">
+                                                                    <div className="bg-secondary bg-opacity-10 rounded-circle p-2 me-3">
+                                                                        <i className="bi bi-info-circle-fill text-secondary"></i>
+                                                                    </div>
+                                                                    <h5 className="mb-0 text-secondary fw-bold">Additional Information</h5>
+                                                                </div>
+                                                                <div className="row">
+                                                                    <div className="col-md-6">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-telephone-fill me-2" style={{color: '#f44336'}}></i>
+                                                                                Emergency Contact
+                                                                            </label>
+                                                                            <input
+                                                                                type="tel"
+                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                value={newDemand.emergency_contact}
+                                                                                onChange={(e) => setNewDemand({...newDemand, emergency_contact: e.target.value})}
+                                                                                placeholder="📱 Emergency contact number..."
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-6">
+                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-light">
+                                                                                <i className="bi bi-chat-dots me-2" style={{color: '#22C7EE'}}></i>
+                                                                                Special Instructions
+                                                                            </label>
+                                                                            <textarea
+                                                                                className="form-control border-2 shadow-sm"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
+                                                                                rows="3"
+                                                                                value={newDemand.special_instructions}
+                                                                                onChange={(e) => setNewDemand({...newDemand, special_instructions: e.target.value})}
+                                                                                placeholder="📋 Any special instructions or requirements..."
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                // Multiple patients - show selection dropdown
-                                                <div className="patient-selection-container">
-                                                    <select
-                                                        value={newDemand.selected_patient}
-                                                        onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
-                                                        required
-                                                        className="patient-select"
-                                                    >
-                                                        <option value="">Select which patient this request is for</option>
-                                                        {linkedPatients.map((patient, index) => (
-                                                            <option key={index} value={patient.id}>
-                                                                {patient.firstname} {patient.lastname} ({patient.relationship || 'Family Member'}) - Born: {patient.birth_date}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <small className="patient-selection-note">
-                                                        You have {linkedPatients.length} linked patients. Please select who this service request is for.
-                                                    </small>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    <div className="form-group">
-                                        <label>Title *</label>
-                                        <input
-                                            type="text"
-                                            value={newDemand.title}
-                                            onChange={(e) => setNewDemand({...newDemand, title: e.target.value})}
-                                            placeholder="Brief title for your service request"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Description *</label>
-                                        <textarea
-                                            value={newDemand.description}
-                                            onChange={(e) => setNewDemand({...newDemand, description: e.target.value})}
-                                            placeholder="Detailed description of the service needed"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Medical Reason *</label>
-                                        <textarea
-                                            value={newDemand.reason}
-                                            onChange={(e) => setNewDemand({...newDemand, reason: e.target.value})}
-                                            placeholder="Medical reason or justification for this service"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Preferred Start Date</label>
-                                            <input
-                                                type="date"
-                                                value={newDemand.preferred_start_date}
-                                                onChange={(e) => setNewDemand({...newDemand, preferred_start_date: e.target.value})}
-                                                min={new Date().toISOString().split('T')[0]}
-                                            />
+                                            </form>
                                         </div>
                                         
-                                        <div className="form-group">
-                                            <label>Frequency</label>
-                                            <select
-                                                value={newDemand.frequency}
-                                                onChange={(e) => setNewDemand({...newDemand, frequency: e.target.value})}
-                                            >
-                                                <option value="Once">One-time service</option>
-                                                <option value="Daily">Daily</option>
-                                                <option value="Weekly">Weekly</option>
-                                                <option value="Bi-weekly">Bi-weekly</option>
-                                                <option value="Monthly">Monthly</option>
-                                                <option value="As needed">As needed</option>
-                                            </select>
+                                        <div className="modal-footer border-0 p-4" style={{borderRadius: '0 0 20px 20px', backgroundColor: '#2d3748'}}>
+                                            <div className="d-flex w-100 gap-3">
+                                                <button 
+                                                    type="button" 
+                                                    className="btn btn-light btn-lg border-2 flex-fill"
+                                                    style={{borderRadius: '12px', borderColor: '#dee2e6'}}
+                                                    onClick={resetCreateForm}
+                                                >
+                                                    <i className="bi bi-x-circle me-2"></i>
+                                                    Cancel
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    form="demandForm"
+                                                    className="btn btn-lg flex-fill text-white fw-bold"
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%)',
+                                                        border: 'none',
+                                                        borderRadius: '12px',
+                                                        boxShadow: '0 4px 15px rgba(34, 199, 238, 0.3)'
+                                                    }}
+                                                >
+                                                    <i className="bi bi-send-fill me-2"></i>
+                                                    Submit Service Request                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Duration (weeks)</label>
-                                            <input
-                                                type="number"
-                                                value={newDemand.duration_weeks}
-                                                onChange={(e) => setNewDemand({...newDemand, duration_weeks: e.target.value})}
-                                                placeholder="How many weeks?"
-                                                min="1"
-                                            />
-                                        </div>
-                                        
-                                        <div className="form-group">
-                                            <label>Preferred Time</label>
-                                            <input
-                                                type="text"
-                                                value={newDemand.preferred_time}
-                                                onChange={(e) => setNewDemand({...newDemand, preferred_time: e.target.value})}
-                                                placeholder="e.g., Morning, Afternoon, Evening"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Contact Method</label>
-                                            <select
-                                                value={newDemand.contact_method}
-                                                onChange={(e) => setNewDemand({...newDemand, contact_method: e.target.value})}
-                                            >
-                                                <option value="Email">Email</option>
-                                                <option value="Phone">Phone Call</option>
-                                                <option value="Video Call">Video Call</option>
-                                                <option value="In Person">In Person</option>
-                                                <option value="SMS">SMS</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div className="form-group">
-                                            <label>Emergency Contact</label>
-                                            <input
-                                                type="tel"
-                                                value={newDemand.emergency_contact}
-                                                onChange={(e) => setNewDemand({...newDemand, emergency_contact: e.target.value})}
-                                                placeholder="Emergency contact number"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Special Instructions</label>
-                                        <textarea
-                                            value={newDemand.special_instructions}
-                                            onChange={(e) => setNewDemand({...newDemand, special_instructions: e.target.value})}
-                                            placeholder="Any special instructions or requirements"
-                                        />
-                                    </div>                                    <div className="form-actions">
-                                        <button type="button" onClick={resetCreateForm}>
-                                            Cancel
-                                        </button>
-                                        <button type="submit">
-                                            Submit Request
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                                </div>
                         </div>
                     )}
 
