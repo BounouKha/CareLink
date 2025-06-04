@@ -1264,11 +1264,13 @@ class RecurringScheduleView(APIView):
                         
                         # Use existing schedule
                         schedule = existing_schedule
-                    else:                        # Create new schedule
+                    else:
+                        # Create new schedule
                         schedule = Schedule.objects.create(
                             date=schedule_date,
                             provider=provider,
-                            patient=patient
+                            patient=patient,
+                            created_by=request.user
                         )
                         created_schedules.append(schedule)
                     
