@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './ScheduleCalendar.css';
 import QuickSchedule from './QuickSchedule';
 import EditAppointment from './EditAppointment';
+import RecurringSchedule from './features/RecurringSchedule';
 
 const ScheduleCalendar = () => {
   const [calendarData, setCalendarData] = useState([]);  const [providers, setProviders] = useState([]);
@@ -11,17 +12,67 @@ const ScheduleCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [stats, setStats] = useState({});
-  const [showQuickSchedule, setShowQuickSchedule] = useState(false);  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [stats, setStats] = useState({});  const [showQuickSchedule, setShowQuickSchedule] = useState(false);  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [showEditAppointment, setShowEditAppointment] = useState(false);  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [showRecurringSchedule, setShowRecurringSchedule] = useState(false);
   const [draggedAppointment, setDraggedAppointment] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showRecapModal, setShowRecapModal] = useState(false);
-  useEffect(() => {
+  // Add scroll position preservation
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Function to preserve scroll position
+  const preserveScrollPosition = () => {
+    const scrollContainer = document.querySelector('.schedule-calendar');
+    if (scrollContainer) {
+      setScrollPosition(scrollContainer.scrollTop);
+    }
+  };
+    // Function to restore scroll position
+  const restoreScrollPosition = () => {
+    const scrollContainer = document.querySelector('.schedule-calendar');
+    if (scrollContainer && scrollPosition > 0) {
+      // Use multiple attempts to ensure scroll position is restored
+      setTimeout(() => {
+        scrollContainer.scrollTop = scrollPosition;
+        // Double-check after a longer delay
+        setTimeout(() => {
+          if (scrollContainer.scrollTop !== scrollPosition) {
+            scrollContainer.scrollTop = scrollPosition;
+          }
+        }, 100);
+      }, 100); // Increased delay for better DOM stability
+    }
+  };
+    useEffect(() => {
     fetchCalendarData();
   }, [currentDate, viewType, selectedProvider, selectedStatus]);
 
-  const fetchCalendarData = async () => {
+  // Debug effect to track calendar data changes
+  useEffect(() => {
+    console.log('Calendar data updated:', {
+      appointmentCount: calendarData.length,
+      totalTimeslots: calendarData.reduce((total, appt) => total + (appt.timeslots?.length || 0), 0),
+      viewType,
+      selectedProvider,
+      selectedStatus
+    });
+  }, [calendarData, viewType, selectedProvider, selectedStatus]);  const fetchCalendarData = async (preserveScroll = false) => {
+    // Prevent multiple simultaneous refreshes
+    if (refreshing) {
+      console.log('Skipping fetch - already refreshing');
+      return;
+    }
+    
+    setRefreshing(true);
+    
+    // Preserve scroll position if requested
+    if (preserveScroll) {
+      preserveScrollPosition();
+      console.log('Preserving scroll position:', scrollPosition);
+    }
+    
     setLoading(true);
     setError('');
     
@@ -52,22 +103,29 @@ const ScheduleCalendar = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      });
-
-      if (response.ok) {
+      });      if (response.ok) {
         const data = await response.json();
+        console.log('Calendar data received:', data.calendar_data?.length || 0, 'appointments');
         setCalendarData(data.calendar_data || []);
         setProviders(data.providers || []);
         setStats(data.stats || {});
+        
+        // Restore scroll position if it was preserved
+        if (preserveScroll) {
+          console.log('Restoring scroll position:', scrollPosition);
+          restoreScrollPosition();
+        }
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to fetch calendar data');
+        console.error('Failed to fetch calendar data:', errorData);
       }
     } catch (err) {
       setError('Network error occurred');
       console.error('Error fetching calendar data:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -75,28 +133,26 @@ const ScheduleCalendar = () => {
     const startOfWeek = new Date(date);
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day;
-    startOfWeek.setDate(diff);
-
-    let startDate, endDate;
+    startOfWeek.setDate(diff);    let startDate, endDate;
 
     switch (view) {
       case 'day':
-        startDate = date.toISOString().split('T')[0];
-        endDate = date.toISOString().split('T')[0];
+        startDate = formatDateToString(date);
+        endDate = formatDateToString(date);
         break;
       case 'week':
-        startDate = startOfWeek.toISOString().split('T')[0];
-        endDate = new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        startDate = formatDateToString(startOfWeek);
+        endDate = formatDateToString(new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000));
         break;
       case 'month':
         const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
         const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        startDate = startOfMonth.toISOString().split('T')[0];
-        endDate = endOfMonth.toISOString().split('T')[0];
+        startDate = formatDateToString(startOfMonth);
+        endDate = formatDateToString(endOfMonth);
         break;
       default:
-        startDate = startOfWeek.toISOString().split('T')[0];
-        endDate = new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        startDate = formatDateToString(startOfWeek);
+        endDate = formatDateToString(new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000));
     }
 
     return { startDate, endDate };
@@ -128,10 +184,17 @@ const ScheduleCalendar = () => {
       month: 'short',
       day: 'numeric'
     });
-  };
-  const formatTime = (timeString) => {
+  };  const formatTime = (timeString) => {
     // Return time in 24-hour format
     return timeString;
+  };
+
+  // Helper function to format date without timezone conversion
+  const formatDateToString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const getViewTitle = () => {
@@ -233,9 +296,7 @@ const ScheduleCalendar = () => {
     });
 
     return recap;
-  };
-
-  const handleTimeSlotClick = (date, time) => {
+  };  const handleTimeSlotClick = (date, time) => {
     if (!isDragging) {
       setSelectedTimeSlot({ date, time });
       setShowQuickSchedule(true);
@@ -275,11 +336,12 @@ const ScheduleCalendar = () => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
-
   const handleDrop = async (e, targetDate, targetTime) => {
     e.preventDefault();
     
     if (!draggedAppointment) return;
+
+    console.log('Dropping appointment:', draggedAppointment.id, 'to', targetDate, targetTime);
 
     // Calculate new end time (assuming same duration)
     const originalTimeslot = draggedAppointment.timeslots[0];
@@ -308,14 +370,14 @@ const ScheduleCalendar = () => {
           start_time: newStartTimeStr,
           end_time: newEndTimeStr,
         }),
-      });
-
-      if (response.ok) {
-        // Refresh calendar data
-        fetchCalendarData();
+      });      if (response.ok) {
+        console.log('Appointment moved successfully, refreshing calendar...');
+        // Temporarily disable scroll preservation for drag operations to debug
+        fetchCalendarData(false); // Changed from true to false
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to move appointment');
+        console.error('Failed to move appointment:', errorData);
       }
     } catch (err) {
       setError('Network error occurred while moving appointment');
@@ -326,8 +388,8 @@ const ScheduleCalendar = () => {
     setIsDragging(false);
   };  const generateTimeSlots = () => {
     const slots = [];
-    // Generate 1-hour time slots from 6am to 10pm (22h)
-    for (let hour = 6; hour <= 22; hour += 1) {
+    // Generate 1-hour time slots from 6am to 11pm (23h) to include appointments ending at 23:00
+    for (let hour = 6; hour <= 23; hour += 1) {
       const time = `${hour.toString().padStart(2, '0')}:00`;
       slots.push(time);
     }
@@ -394,10 +456,9 @@ const ScheduleCalendar = () => {
           ))}
         </div>        <div className="week-grid">
           {timeSlots.map(time => (
-            <div key={time} className="time-row">
-              <div className="time-label">{formatTime(time + ':00')}</div>
+            <div key={time} className="time-row">              <div className="time-label">{formatTime(time + ':00')}</div>
               {weekDays.map(date => {
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = formatDateToString(date);
                 
                 // Get all timeslots for this time slot (individual timeslots, not grouped by appointment)
                 const timeslots = getTimeslotsForTimeSlot(dateStr, time);
@@ -451,7 +512,7 @@ const ScheduleCalendar = () => {
   };  // Day View Component
   const DayView = ({ calendarData, currentDate, onTimeSlotClick, onAppointmentEdit, onDragStart, onDragEnd, onDragOver, onDrop, isDragging }) => {
     const timeSlots = generateTimeSlots();
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = formatDateToString(currentDate);
 
     return (
       <div className="day-view">
@@ -534,10 +595,8 @@ const ScheduleCalendar = () => {
     while (current <= lastDay || days.length < 42) {
       days.push(new Date(current));
       current.setDate(current.getDate() + 1);
-    }
-
-    const getAppointmentsForDay = (date) => {
-      const dateStr = date.toISOString().split('T')[0];
+    }    const getAppointmentsForDay = (date) => {
+      const dateStr = formatDateToString(date);
       return calendarData.filter(schedule => schedule.date === dateStr);
     };
 
@@ -829,6 +888,24 @@ const ScheduleCalendar = () => {
           >
             + Quick Schedule
           </button>
+            <button 
+            className="recurring-schedule-btn"
+            onClick={() => setShowRecurringSchedule(true)}
+            style={{
+              background: '#22C7EE',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: '500',
+              fontSize: '14px',
+              transition: 'all 0.2s',
+              marginLeft: '8px'
+            }}
+          >
+            🔄 Recurring Schedule
+          </button>
           
           <button 
             className="recap-btn"
@@ -936,18 +1013,31 @@ const ScheduleCalendar = () => {
             />
           )}
         </div>
-      )}
-
-      {/* Quick Schedule Modal */}
+      )}      {/* Quick Schedule Modal */}
       <QuickSchedule
         isOpen={showQuickSchedule}
         onClose={() => {
           setShowQuickSchedule(false);
           setSelectedTimeSlot(null);
+        }}        onScheduleCreated={(data) => {
+          console.log('Schedule created:', data);
+          fetchCalendarData(true);
+        }}
+        providers={providers}
+        preselectedDate={selectedTimeSlot?.date}
+        preselectedTime={selectedTimeSlot?.time}
+      />
+
+      {/* Recurring Schedule Modal */}
+      <RecurringSchedule
+        isOpen={showRecurringSchedule}
+        onClose={() => {
+          setShowRecurringSchedule(false);
+          setSelectedTimeSlot(null);
         }}
         onScheduleCreated={(data) => {
-          console.log('Schedule created:', data);
-          fetchCalendarData();
+          console.log('Recurring schedule created:', data);
+          fetchCalendarData(true);
         }}
         providers={providers}
         preselectedDate={selectedTimeSlot?.date}
@@ -960,14 +1050,12 @@ const ScheduleCalendar = () => {
           onClose={() => {
             setShowEditAppointment(false);
             setSelectedAppointment(null);
-          }}
-          onAppointmentUpdated={(data) => {
+          }}          onAppointmentUpdated={(data) => {
             console.log('Appointment updated:', data);
-            fetchCalendarData();
-          }}
-          onAppointmentDeleted={() => {
+            fetchCalendarData(true);
+          }}          onAppointmentDeleted={() => {
             console.log('Appointment deleted');
-            fetchCalendarData();
+            fetchCalendarData(true);
           }}
           providers={providers}
         />

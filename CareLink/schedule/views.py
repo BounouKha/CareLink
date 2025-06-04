@@ -1166,3 +1166,161 @@ class FamilyPatientAppointmentDetailView(APIView):
                 return 'completed'
         except:
             return 'unknown'
+        
+
+class RecurringScheduleView(APIView):
+    """
+    Create recurring schedules with weekly, bi-weekly, or monthly patterns
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    
+    def post(self, request):
+        """Create multiple schedule appointments based on recurring pattern"""
+        # Only coordinators and admin can create recurring schedules
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        try:
+            data = request.data
+            
+            # Extract basic schedule data
+            provider_id = data.get('provider_id')
+            patient_id = data.get('patient_id')
+            start_time = data.get('start_time')
+            end_time = data.get('end_time')
+            service_id = data.get('service_id')
+            description = data.get('description', '')
+            
+            # Extract recurring settings
+            recurring_settings = data.get('recurring_settings', {})
+            dates = recurring_settings.get('dates', [])
+            
+            # Validate required fields
+            if not all([provider_id, patient_id, start_time, end_time]):
+                return Response({
+                    "error": "Missing required fields: provider_id, patient_id, start_time, end_time"
+                }, status=400)
+            
+            if not dates:
+                return Response({
+                    "error": "No dates provided for recurring schedule"
+                }, status=400)
+            
+            # Validate provider and patient exist
+            try:
+                provider = Provider.objects.get(id=provider_id)
+                patient = Patient.objects.get(id=patient_id)
+            except Provider.DoesNotExist:
+                return Response({"error": "Provider not found"}, status=404)
+            except Patient.DoesNotExist:
+                return Response({"error": "Patient not found"}, status=404)
+            
+            # Validate service if provided
+            service = None
+            if service_id:
+                try:
+                    service = Service.objects.get(id=service_id)
+                except Service.DoesNotExist:
+                    return Response({"error": "Service not found"}, status=404)
+            
+            # Parse time strings
+            try:
+                start_time_obj = datetime.strptime(start_time, '%H:%M').time()
+                end_time_obj = datetime.strptime(end_time, '%H:%M').time()
+            except ValueError:
+                return Response({
+                    "error": "Invalid time format. Use HH:MM format"
+                }, status=400)
+            
+            created_schedules = []
+            created_timeslots = []
+            errors = []
+            
+            # Create schedules for each date
+            for date_str in dates:
+                try:
+                    # Parse date
+                    schedule_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    
+                    # Check if schedule already exists for this date/provider/patient
+                    existing_schedule = Schedule.objects.filter(
+                        date=schedule_date,
+                        provider=provider,
+                        patient=patient
+                    ).first()
+                    
+                    if existing_schedule:
+                        # Check for time conflicts
+                        conflicting_timeslots = TimeSlot.objects.filter(
+                            schedule=existing_schedule,
+                            start_time__lt=end_time_obj,
+                            end_time__gt=start_time_obj
+                        )
+                        
+                        if conflicting_timeslots.exists():
+                            errors.append(f"Time conflict on {schedule_date}: overlapping appointment exists")
+                            continue
+                        
+                        # Use existing schedule
+                        schedule = existing_schedule
+                    else:                        # Create new schedule
+                        schedule = Schedule.objects.create(
+                            date=schedule_date,
+                            provider=provider,
+                            patient=patient
+                        )
+                        created_schedules.append(schedule)
+                    
+                    # Create timeslot
+                    timeslot = TimeSlot.objects.create(
+                        start_time=start_time_obj,
+                        end_time=end_time_obj,
+                        service=service,
+                        status='scheduled',
+                        description=description
+                    )
+                    
+                    # Link timeslot to schedule
+                    schedule.time_slots.add(timeslot)
+                    created_timeslots.append(timeslot)
+                    
+                except ValueError as e:
+                    errors.append(f"Invalid date format for {date_str}: {str(e)}")
+                except Exception as e:
+                    errors.append(f"Error creating schedule for {date_str}: {str(e)}")
+            
+            # Prepare response
+            response_data = {
+                "success": True,
+                "created_schedules": len(created_schedules),
+                "created_timeslots": len(created_timeslots),
+                "total_appointments": len(created_timeslots),
+                "errors": errors
+            }
+            
+            # Add details of created appointments
+            appointment_details = []
+            for schedule in created_schedules:
+                for timeslot in schedule.time_slots.all():
+                    appointment_details.append({
+                        "date": schedule.date,
+                        "start_time": timeslot.start_time,
+                        "end_time": timeslot.end_time,
+                        "provider": f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}",
+                        "patient": f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}",
+                        "service": timeslot.service.name if timeslot.service else None,
+                        "status": timeslot.status
+                    })
+            
+            response_data["appointments"] = appointment_details
+            
+            if errors:
+                response_data["warning"] = f"Some appointments could not be created: {len(errors)} errors"
+            
+            return Response(response_data, status=201)
+            
+        except Exception as e:
+            return Response({
+                "error": f"Server error: {str(e)}"
+            }, status=500)
