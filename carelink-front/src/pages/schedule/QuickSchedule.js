@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './QuickSchedule.css';
 
-const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [] }) => {
+const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
   const [formData, setFormData] = useState({
     provider_id: '',
     patient_id: '',
@@ -21,16 +21,60 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [] }) =
   const [patientSearch, setPatientSearch] = useState('');
   const [showProviderDropdown, setShowProviderDropdown] = useState(false);
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  // Helper function to calculate end time (1 hour after start time)
+  const calculateEndTime = (startTime) => {
+    if (!startTime) return '';
+    
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const endHour = hours + 1;
+    
+    // Handle 24-hour wrap around
+    const finalHour = endHour >= 24 ? endHour - 24 : endHour;
+    
+    return `${finalHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     if (isOpen) {
       fetchPatients();
       fetchServices();
-      // Set default date to today
-      const today = new Date().toISOString().split('T')[0];
-      setFormData(prev => ({ ...prev, date: today }));
+      
+      // Auto-fill form if preselected values are provided
+      if (preselectedDate && preselectedTime) {
+        const endTime = calculateEndTime(preselectedTime);
+        setFormData(prev => ({ 
+          ...prev, 
+          date: preselectedDate,
+          start_time: preselectedTime,
+          end_time: endTime
+        }));
+      } else {
+        // Set default date to today if no preselected date
+        const today = new Date().toISOString().split('T')[0];
+        setFormData(prev => ({ ...prev, date: today }));
+      }
     }
-  }, [isOpen]);  const fetchPatients = async () => {
+  }, [isOpen, preselectedDate, preselectedTime]);
+
+  // Reset form when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        provider_id: '',
+        patient_id: '',
+        date: '',
+        start_time: '',
+        end_time: '',
+        service_id: '',
+        description: ''
+      });
+      setProviderSearch('');
+      setPatientSearch('');
+      setError('');
+    }
+  }, [isOpen]);
+
+const fetchPatients = async () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch('http://localhost:8000/account/views_patient/', {

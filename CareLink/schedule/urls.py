@@ -7,7 +7,8 @@ from .views import (
     PatientScheduleView,
     PatientAppointmentDetailView,
     FamilyPatientScheduleView,
-    FamilyPatientAppointmentDetailView
+    FamilyPatientAppointmentDetailView,
+    RecurringScheduleView
 )
 
 app_name = 'schedule'
@@ -16,6 +17,7 @@ urlpatterns = [
     # Schedule Management URLs (for Coordinators and Admin)
     path('calendar/', ScheduleCalendarView.as_view(), name='schedule_calendar'),
     path('quick-schedule/', QuickScheduleView.as_view(), name='quick_schedule'),
+    path('recurring-schedule/', RecurringScheduleView.as_view(), name='recurring_schedule'),
     path('availability/', ScheduleAvailabilityView.as_view(), name='schedule_availability'),
     path('appointment/<int:appointment_id>/', AppointmentManagementView.as_view(), name='appointment_management'),
     
