@@ -1,4 +1,4 @@
-// filepath: c:\Users\460020779\Desktop\CareLink\carelink-front\src\pages\servicedemand\ServiceDemandMoreInfo.js
+
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -37,7 +37,7 @@ const ServiceDemandMoreInfo = ({
     return (
         <div className="modal-overlay">
             <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" >
-                <div className="modal-content shadow-lg border-0 bg-white" style={{borderRadius: '20px', overflow: 'hidden' }}>
+                <div className="modal-content shadow-lg border-0 bg-white" style={{borderRadius: '20px', overflow: 'hidden', }}>
                     {/* Modal Header */}
                     <div className="modal-header bg-gradient text-muted border-2 p-4" style={{background: 'linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%)'}}>
                         <div className="d-flex align-items-center">

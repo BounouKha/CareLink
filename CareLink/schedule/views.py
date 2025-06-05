@@ -1261,8 +1261,7 @@ class RecurringScheduleView(APIView):
                         if conflicting_timeslots.exists():
                             errors.append(f"Time conflict on {schedule_date}: overlapping appointment exists")
                             continue
-                        
-                        # Use existing schedule
+                          # Use existing schedule
                         schedule = existing_schedule
                     else:
                         # Create new schedule
