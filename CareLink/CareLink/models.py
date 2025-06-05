@@ -167,6 +167,7 @@ class Schedule(models.Model):
     provider = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True)
     date = models.DateField()
     time_slots = models.ManyToManyField('TimeSlot', blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_schedules')
 
     def generate_daily_schedule(self, date, provider):
         """Generate timeslots for a specific day and provider."""
