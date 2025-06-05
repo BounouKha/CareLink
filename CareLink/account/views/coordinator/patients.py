@@ -14,7 +14,12 @@ class ViewsPatient(APIView):
         if not request.user.has_perm('CareLink.view_patient'):
             return Response({"error": "Permission denied."}, status=403)
 
-        patients = Patient.objects.all()
+        # Filter out patients with inactive or null users
+        patients = Patient.objects.select_related('user').filter(
+            user__isnull=False,
+            user__is_active=True
+        )
+        
         patient_data = [
             {
                 "id": patient.id,

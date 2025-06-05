@@ -47,13 +47,12 @@ class ScheduleCalendarView(APIView):
                     # Get last day of the month
                     last_day = calendar.monthrange(start_date.year, start_date.month)[1]
                     end_date = start_date.replace(day=last_day)
-                else:
-                    end_date = start_date + timedelta(days=6)
+                else:                end_date = start_date + timedelta(days=6)
 
             # Get schedules within date range
             schedules_query = Schedule.objects.filter(
                 date__range=[start_date, end_date]
-            ).select_related('patient__user', 'provider__user')
+            ).select_related('patient__user', 'provider__user', 'created_by')
             
             # Filter by provider if specified
             if provider_id:
@@ -78,7 +77,6 @@ class ScheduleCalendarView(APIView):
             for schedule in schedules:
                 # Get timeslots for this schedule
                 schedule_timeslots = [ts for ts in timeslots if ts.schedule_set.filter(id=schedule.id).exists()]
-                
                 schedule_data = {
                     'id': schedule.id,
                     'date': schedule.date,
@@ -92,6 +90,11 @@ class ScheduleCalendarView(APIView):
                         'name': f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}" if schedule.patient and schedule.patient.user else 'No Patient',
                         'email': schedule.patient.user.email if schedule.patient and schedule.patient.user else None
                     },
+                    'created_by': {
+                        'id': schedule.created_by.id if schedule.created_by else None,
+                        'name': f"{schedule.created_by.firstname} {schedule.created_by.lastname}" if schedule.created_by else 'Unknown',
+                        'email': schedule.created_by.email if schedule.created_by else None
+                    } if hasattr(schedule, 'created_by') and schedule.created_by else None,
                     'timeslots': []
                 }
                 
@@ -242,12 +245,12 @@ class QuickScheduleView(APIView):
                 return Response({
                     'error': 'Time conflict detected. Provider already has an appointment during this time.'
                 }, status=409)
-            
-            # Create schedule
+              # Create schedule
             schedule = Schedule.objects.create(
                 provider=provider,
                 patient=patient,
-                date=schedule_date
+                date=schedule_date,
+                created_by=request.user
             )
             
             # Create timeslot
