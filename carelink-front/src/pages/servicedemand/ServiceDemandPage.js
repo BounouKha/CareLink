@@ -424,10 +424,10 @@ const ServiceDemandPage = () => {
                 <div className="service-demand-container">
                     {error && <div className="error-message">{error}</div>}                    {/* Stats Dashboard (for coordinators/admin) */}
                     {stats && (
-                        <div className="stats-dashboard row row-cols-1 row-cols-md-4 g-3 mb-4">
+                        <div className="stats-dashboard row row-cols-1 row-cols-md-4 g-3 mb-4 bg-light p-3 rounded-3 shadow-sm">
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
-                                    <div className="card-body">
+                                    <div className="card-body bg-white">
                                         <h5 className="card-title">Total Demands</h5>
                                         <p className="card-text fs-1 fw-bold">{stats.total}</p>
                                     </div>
@@ -435,7 +435,7 @@ const ServiceDemandPage = () => {
                             </div>
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
-                                    <div className="card-body">
+                                    <div className="card-body bg-white">
                                         <h5 className="card-title">Pending</h5>
                                         <p className="card-text fs-1 fw-bold text-warning">{stats.pending}</p>
                                     </div>
@@ -443,7 +443,7 @@ const ServiceDemandPage = () => {
                             </div>
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
-                                    <div className="card-body">
+                                    <div className="card-body bg-white">
                                         <h5 className="card-title">In Progress</h5>
                                         <p className="card-text fs-1 fw-bold text-primary">{stats.in_progress}</p>
                                     </div>
@@ -451,7 +451,7 @@ const ServiceDemandPage = () => {
                             </div>
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
-                                    <div className="card-body">
+                                    <div className="card-body bg-white">
                                         <h5 className="card-title">Urgent</h5>
                                         <p className="card-text fs-1 fw-bold text-danger">{stats.urgent}</p>
                                     </div>
@@ -566,7 +566,7 @@ const ServiceDemandPage = () => {
                     {showCreateForm && (
                         <div className="modal-overlay">
                             <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                                <div className="modal-content shadow-lg border-0" style={{borderRadius: '20px', overflow: 'hidden',}}>
+                                <div className="modal-content shadow-lg border-0 bg-white" style={{borderRadius: '20px', overflow: 'hidden',}}>
                                         <div className="modal-header bg-gradient text-white border-0 p-4" style={{background: 'linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%)'}}>
                                             <div className="d-flex align-items-center">
                                                 
@@ -580,7 +580,7 @@ const ServiceDemandPage = () => {
                                                 className="btn-close" 
                                                 onClick={resetCreateForm}
                                                 aria-label="Close"
-                                            ></button>
+                                            >X</button>
                                         </div>
                                         
                                         <div className="modal-body p-4" style={{maxHeight: '70vh', overflowY: 'auto'}}>
@@ -643,7 +643,7 @@ const ServiceDemandPage = () => {
                                                     <div className="row mb-4">
                                                         <div className="col-12">
                                                             <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #fff9e6 0%, #ffffff 100%)'}}>
-                                                                <div className="card-body p-4">
+                                                                <div className="card-body p-4 bg-white">
                                                                     <div className="d-flex align-items-center mb-3">
                                                                         <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
                                                                             <i className="bi bi-person-check-fill text-warning"></i>
@@ -656,7 +656,7 @@ const ServiceDemandPage = () => {
                                                                         </label>
                                                                         <input
                                                                             type="text"
-                                                                            className="form-control form-control-lg border-2 shadow-sm mb-3"
+                                                                            className="form-control form-control-lg border-2 shadow-sm mb-3 bg-light"
                                                                             style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                             placeholder="🔍 Search by name or birthdate..."
                                                                             value={patientSearch}

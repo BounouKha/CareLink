@@ -1,5 +1,4 @@
 body {
-    overflow-y: scroll; /* Ensure the scrollbar is always present */
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -19,17 +18,9 @@ body {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     z-index: 1000;
-}
-
-/* Ensure consistent header placement and full width */
-.homepage-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    background-color: #fff; /* Optional: Ensure header background is visible */
+    box-sizing: border-box;
 }
 
 .homepage-logo {
@@ -71,22 +62,16 @@ body {
     margin: 0 auto;
 }
 
-/* Ensure the header spans 100% width */
-.homepage-header {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
 /* Ensure responsive layout for HomePage */
 .homepage-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    padding: 20px;
+    min-height: 100vh;
+    padding: 0;
     box-sizing: border-box;
+    width: 100%;
 }
 
 .homepage-main {
@@ -236,7 +221,7 @@ body {
 }
 
 .btn {
-    width: 100%;
+
     padding: 15px;
     background-color: #00bcd4;
     color: #fff;

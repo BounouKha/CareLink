@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SearchableSelect from '../../components/SearchableSelect';
 import './EditAppointment.css';
 
 const EditAppointment = ({ 
@@ -209,42 +210,49 @@ const EditAppointment = ({
             </div>
           )}
 
-          <form onSubmit={handleUpdate}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Provider *</label>
-                <select
+          <form onSubmit={handleUpdate}>            <div className="form-row">              <div className="form-group">
+                <SearchableSelect
+                  label="Provider"
                   name="provider_id"
                   value={formData.provider_id}
                   onChange={handleInputChange}
+                  options={providers}
+                  placeholder="Search Provider by name or service..."
                   required
-                >
-                  <option value="">Select Provider</option>
-                  {providers.map(provider => (
-                    <option key={provider.id} value={provider.id}>
-                      {provider.name} - {provider.service}
-                    </option>
-                  ))}
-                </select>
+                  formatDisplay={(provider) => `${provider.name} - ${provider.service}`}
+                  searchFields={['name', 'service', 'user.firstname', 'user.lastname', 'user.email']}
+                />
               </div>
 
               <div className="form-group">
-                <label>Patient *</label>
-                <select
+                <SearchableSelect
+                  label="Patient"
                   name="patient_id"
                   value={formData.patient_id}
                   onChange={handleInputChange}
+                  options={patients}
+                  placeholder="Search Patient by name or national number..."
                   required
-                >
-                  <option value="">Select Patient</option>
-                  {patients.map(patient => (
-                    <option key={patient.id} value={patient.id}>
-                      {patient.firstname} {patient.lastname}
-                    </option>
-                  ))}
-                </select>
+                  formatDisplay={(patient) => `${patient.firstname} ${patient.lastname}${patient.national_number ? ` - ${patient.national_number}` : ''}`}
+                  searchFields={['firstname', 'lastname', 'national_number', 'user.email']}
+                />
               </div>
-            </div>
+            </div>            {/* Created By Information - Non-editable */}
+            {appointment && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Created By</label>
+                  <div className="read-only-field">
+                    <span className="created-by-info">
+                      {appointment.created_by?.name || 'Unknown User'}
+                      {appointment.created_by?.email && (
+                        <span className="creator-email"> ({appointment.created_by.email})</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="form-row">
               <div className="form-group">
