@@ -14,9 +14,17 @@ const PatientsPage = () => {
     const [showAddEntryModal, setShowAddEntryModal] = useState(false);    const [services, setServices] = useState([]);
     const [selectedService, setSelectedService] = useState('');
     const [isLoadingServices, setIsLoadingServices] = useState(false);
-    const [servicesLoaded, setServicesLoaded] = useState(false);
-    const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+    const [servicesLoaded, setServicesLoaded] = useState(false);    const [showEditPatientModal, setShowEditPatientModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('newest'); // New state for sorting
+
+    // Debug effect to track modal state changes
+    useEffect(() => {
+        console.log('[DEBUG] Modal states changed:', {
+            showEditPatientModal,
+            showMedicalFolderModal,
+            showAddEntryModal
+        });
+    }, [showEditPatientModal, showMedicalFolderModal, showAddEntryModal]);
 
     useEffect(() => {
         const fetchPatients = async () => {
@@ -86,11 +94,11 @@ const PatientsPage = () => {
 
         fetchPatients();
         fetchServices();
-    }, []);
-
-    const handleShowDetails = (patient) => {
+    }, []);    const handleShowDetails = (patient) => {
+        console.log('[DEBUG] handleShowDetails called with patient:', patient);
         setSelectedPatient(patient);
         setShowEditPatientModal(true);
+        console.log('[DEBUG] setShowEditPatientModal(true) called');
     };
 
     const handleCloseEditPatientModal = () => {
@@ -205,13 +213,13 @@ const PatientsPage = () => {
             console.error('[DEBUG] Error fetching medical folder:', err);
             alert('Failed to fetch medical folder.');
         }
-    };
-
-    const handleShowMedicalFolder = (patientId) => {
+    };    const handleShowMedicalFolder = (patientId) => {
+        console.log('[DEBUG] handleShowMedicalFolder called with patientId:', patientId);
         console.log('[DEBUG] Medical Folder button clicked for patientId:', patientId);
         fetchMedicalFolder(patientId);
         setShowMedicalFolderModal(true);
-    };    const handleCloseMedicalFolderModal = () => {
+        console.log('[DEBUG] setShowMedicalFolderModal(true) called');
+    };const handleCloseMedicalFolderModal = () => {
         setShowMedicalFolderModal(false);
     };
 
@@ -284,8 +292,10 @@ const PatientsPage = () => {
             alert(err.message);
         }
     };    const handleAddEntry = async (patient) => {
+        console.log('[DEBUG] handleAddEntry called with patient:', patient);
         console.log('[DEBUG] Services available when opening modal:', services);
         setShowAddEntryModal(true);
+        console.log('[DEBUG] setShowAddEntryModal(true) called');
         setSelectedPatient(patient); // Ensure the full patient object is set
         setNewNote('');
         setSelectedService('');
@@ -320,41 +330,50 @@ const PatientsPage = () => {
     const filteredPatients = patients.filter(patient =>
         `${patient.firstname} ${patient.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.national_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.birth_date?.toLowerCase().includes(searchTerm.toLowerCase())
-    );    return (
-        <BaseLayout>
-            <div className="profile-patient-page">
-                <div className="profile-patient-container">
-                    <h1>Patients</h1>
-                    <input
-                        type="text"
-                        placeholder="Search patients..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="search-bar"
-                    />
-                    {error && <p className="error">{error}</p>}
-                    {filteredPatients.length > 0 ? (
-                        <div>
-                            <ul className="profile-patient-content">
-                                {filteredPatients.filter(patient => patient.firstname && patient.lastname).map((patient, index) => (
-                                    <li key={index}>
-                                        <p><strong>Name:</strong> {patient.firstname} {patient.lastname}</p>
-                                        <button onClick={() => handleShowDetails(patient)}>Patient Information</button>
-                                        <button onClick={() => handleShowMedicalFolder(patient.id)}>Medical Folder</button>
-                                        <button onClick={() => handleAddEntry(patient)}>Add Entry</button>
-                                    </li>
-                                ))}
-                            </ul>
+        patient.birth_date?.toLowerCase().includes(searchTerm.toLowerCase())    );    return (
+        <>
+            <BaseLayout>
+                <div className="profile-patient-page">
+                    <div className="profile-patient-container">
+                        <h1>Patients</h1>
+                        <input
+                            type="text"
+                            placeholder="Search patients..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            className="search-bar"
+                        />                        {error && <p className="error">{error}</p>}
+                        
+                        {/* Debug modal states */}
+                        <div style={{position: 'fixed', top: '10px', right: '10px', background: 'yellow', padding: '10px', zIndex: 9999}}>
+                            Debug: Edit={showEditPatientModal.toString()}, Medical={showMedicalFolderModal.toString()}, Add={showAddEntryModal.toString()}
                         </div>
-                    ) : (
-                        <p>No patients found.</p>
-                    )}
-                
-                </div>                {/* Modal Overlay */}
-                {(showEditPatientModal || showMedicalFolderModal || showAddEntryModal) && (
-                    <div className="modal-overlay"></div>
-                )}
+                        
+                        {filteredPatients.length > 0 ? (
+                            <div>
+                                <ul className="profile-patient-content">
+                                    {filteredPatients.filter(patient => patient.firstname && patient.lastname).map((patient, index) => (
+                                        <li key={index}>
+                                            <p><strong>Name:</strong> {patient.firstname} {patient.lastname}</p>
+                                            <button onClick={() => handleShowDetails(patient)}>Patient Information</button>
+                                            <button onClick={() => handleShowMedicalFolder(patient.id)}>Medical Folder</button>
+                                            <button onClick={() => handleAddEntry(patient)}>Add Entry</button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : (
+                            <p>No patients found.</p>
+                        )}
+                    
+                    </div>
+                </div>
+            </BaseLayout>
+
+            {/* Modal Overlay */}
+            {(showEditPatientModal || showMedicalFolderModal || showAddEntryModal) && (
+                <div className="modal-overlay"></div>
+            )}
                 
                 {showEditPatientModal && (
                     <div className="modal">
@@ -558,12 +577,10 @@ const PatientsPage = () => {
                         <div className="modal-content">
                             <h2>Add Entry</h2>
                             <p>Loading services...</p>
-                            <button onClick={() => setShowAddEntryModal(false)}>Cancel</button>
-                        </div>
+                            <button onClick={() => setShowAddEntryModal(false)}>Cancel</button>                        </div>
                     </div>
                 )}
-            </div>
-        </BaseLayout>
+        </>
     );
 };
 
