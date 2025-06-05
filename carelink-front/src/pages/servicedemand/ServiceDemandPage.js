@@ -459,7 +459,7 @@ const ServiceDemandPage = () => {
                             </div>
                         </div>
                     )}{/* Filters */}
-                    <div className="filters d-flex gap-2 mb-3">
+                    <div className="filters d-flex gap-2 mb-3 bg-light p-3 rounded-3 shadow-sm bg-">
                         <select 
                             value={filterStatus} 
                             onChange={(e) => setFilterStatus(e.target.value)}
@@ -571,8 +571,8 @@ const ServiceDemandPage = () => {
                                             <div className="d-flex align-items-center">
                                                 
                                                 <div>
-                                                    <h4 className="modal-title mb-0 fw-bold">Request New Service</h4>
-                                                    <small className="opacity-90">Complete the form below to submit your service request</small>
+                                                    <h4 className="modal-title mb-0 fw-bold text-muted">Request New Service</h4>
+                                                    <small className="opacity-90  text-muted">Complete the form below to submit your service request</small>
                                                 </div>
                                             </div>
                                             <button 
@@ -588,7 +588,7 @@ const ServiceDemandPage = () => {
                                                 <div className="row mb-4">
                                                     <div className="col-12">
                                                         <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #f8f9ff 0%, #ffffff 100%)'}}>
-                                                            <div className="card-body p-4">
+                                                            <div className="card-body p-4 bg-white">
                                                                 <div className="d-flex align-items-center mb-3">
                                                                     <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
                                                                         <i className="bi bi-gear-fill text-primary"></i>
@@ -596,14 +596,13 @@ const ServiceDemandPage = () => {
                                                                     <h5 className="mb-0 text-primary fw-bold">Service Details</h5>
                                                                 </div>
                                                                 <div className="row">
-                                                                    <div className="col-md-8">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-white">
+                                                                    <div className="col-md-8">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-collection me-2" style={{color: '#22C7EE'}}></i>
                                                                                 Service Type <span className="text-danger">*</span>
                                                                             </label>
                                                                             <select
-                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                className="form-select form-select-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.service}
                                                                                 onChange={(e) => setNewDemand({...newDemand, service: e.target.value})}
@@ -618,15 +617,13 @@ const ServiceDemandPage = () => {
                                                                             </select>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-4">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-4">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-exclamation-triangle me-2" style={{color: '#ff9800'}}></i>
                                                                                 Priority Level
-                                                                            </label>
-                                                                            <select
-                                                                                className="form-select form-select-lg border-2 shadow-sm "
-                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px', backgroundColor: '#f'}}
+                                                                            </label>                                                                            <select
+                                                                                className="form-select form-select-lg border-2 shadow-sm bg-light"
+                                                                                style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.priority}
                                                                                 onChange={(e) => setNewDemand({...newDemand, priority: e.target.value})}
                                                                             >
@@ -652,9 +649,8 @@ const ServiceDemandPage = () => {
                                                                             <i className="bi bi-person-check-fill text-warning"></i>
                                                                         </div>
                                                                         <h5 className="mb-0 text-warning fw-bold">Patient Selection</h5>
-                                                                    </div>
-                                                                    <div className="mb-3">
-                                                                        <label className="form-label fw-semibold text-light">
+                                                                    </div>                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-muted">
                                                                             <i className="bi bi-search me-2" style={{color: '#22C7EE'}}></i>
                                                                             Search Patients
                                                                         </label>
@@ -666,14 +662,13 @@ const ServiceDemandPage = () => {
                                                                             value={patientSearch}
                                                                             onChange={(e) => setPatientSearch(e.target.value)}
                                                                         />
-                                                                    </div>
-                                                                    <div className="mb-3">
-                                                                        <label className="form-label fw-semibold text-light">
+                                                                    </div>                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-muted">
                                                                             <i className="bi bi-person-fill me-2" style={{color: '#22C7EE'}}></i>
                                                                             Select Patient <span className="text-danger">*</span>
                                                                         </label>
                                                                         <select
-                                                                            className="form-select form-select-lg border-2 shadow-sm"
+                                                                            className="form-select form-select-lg border-2 shadow-sm bg-light"
                                                                             style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                             value={newDemand.selected_patient}
                                                                             onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
@@ -748,14 +743,13 @@ const ServiceDemandPage = () => {
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    ) : (
-                                                                        <div>
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    ) : (                                                                        <div>
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-person-fill me-2" style={{color: '#22C7EE'}}></i>
                                                                                 Select Patient <span className="text-danger">*</span>
                                                                             </label>
                                                                             <select
-                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                className="form-select form-select-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.selected_patient}
                                                                                 onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
@@ -782,7 +776,7 @@ const ServiceDemandPage = () => {
                                                 <div className="row mb-4">
                                                     <div className="col-12">
                                                         <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #f0f8ff 0%, #ffffff 100%)'}}>
-                                                            <div className="card-body p-4">
+                                                            <div className="card-body p-4 bg-white">
                                                                 <div className="d-flex align-items-center mb-3">
                                                                     <div className="bg-info bg-opacity-10 rounded-circle p-2 me-3">
                                                                         <i className="bi bi-clipboard-data-fill text-info"></i>
@@ -790,15 +784,14 @@ const ServiceDemandPage = () => {
                                                                     <h5 className="mb-0 text-info fw-bold">Service Request Details</h5>
                                                                 </div>
                                                                 <div className="row">
-                                                                    <div className="col-12">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-12">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-card-heading me-2" style={{color: '#22C7EE'}}></i>
                                                                                 Request Title <span className="text-danger">*</span>
                                                                             </label>
                                                                             <input
                                                                                 type="text"
-                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                className="form-control form-control-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.title}
                                                                                 onChange={(e) => setNewDemand({...newDemand, title: e.target.value})}
@@ -807,14 +800,13 @@ const ServiceDemandPage = () => {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-6">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-6">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-file-text me-2" style={{color: '#22C7EE'}}></i>
                                                                                 Description <span className="text-danger">*</span>
                                                                             </label>
                                                                             <textarea
-                                                                                className="form-control border-2 shadow-sm "
+                                                                                className="form-control border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 rows="4"
                                                                                 value={newDemand.description}
@@ -824,14 +816,13 @@ const ServiceDemandPage = () => {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-6">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-6">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-heart-pulse me-2" style={{color: '#e91e63'}}></i>
                                                                                 Medical Reason <span className="text-danger">*</span>
                                                                             </label>
                                                                             <textarea
-                                                                                className="form-control border-2 shadow-sm"
+                                                                                className="form-control border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 rows="4"
                                                                                 value={newDemand.reason}
@@ -849,7 +840,7 @@ const ServiceDemandPage = () => {
                                                 <div className="row mb-4">
                                                     <div className="col-12">
                                                         <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #fff5f5 0%, #ffffff 100%)'}}>
-                                                            <div className="card-body p-4">
+                                                            <div className=" bg-white">
                                                                 <div className="d-flex align-items-center mb-3">
                                                                     <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
                                                                         <i className="bi bi-calendar-event-fill text-danger"></i>
@@ -857,15 +848,14 @@ const ServiceDemandPage = () => {
                                                                     <h5 className="mb-0 text-danger fw-bold">Scheduling Information</h5>
                                                                 </div>
                                                                 <div className="row">
-                                                                    <div className="col-md-4">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-4">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-calendar-date me-2" style={{color: '#22C7EE'}}></i>
                                                                                 Preferred Start Date
                                                                             </label>
                                                                             <input
                                                                                 type="date"
-                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                className="form-control form-control-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.preferred_start_date}
                                                                                 onChange={(e) => setNewDemand({...newDemand, preferred_start_date: e.target.value})}
@@ -873,14 +863,13 @@ const ServiceDemandPage = () => {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-4">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-4">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-arrow-repeat me-2" style={{color: '#9c27b0'}}></i>
                                                                                 Frequency
                                                                             </label>
                                                                             <select
-                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                className="form-select form-select-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.frequency}
                                                                                 onChange={(e) => setNewDemand({...newDemand, frequency: e.target.value})}
@@ -894,15 +883,14 @@ const ServiceDemandPage = () => {
                                                                             </select>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-4">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-4">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-hourglass-split me-2" style={{color: '#ff9800'}}></i>
                                                                                 Duration (weeks)
                                                                             </label>
                                                                             <input
                                                                                 type="number"
-                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                className="form-control form-control-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.duration_weeks}
                                                                                 onChange={(e) => setNewDemand({...newDemand, duration_weeks: e.target.value})}
@@ -911,15 +899,14 @@ const ServiceDemandPage = () => {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-6">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-6">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-clock me-2" style={{color: '#4caf50'}}></i>
                                                                                 Preferred Time
                                                                             </label>
                                                                             <input
                                                                                 type="text"
-                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                className="form-control form-control-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.preferred_time}
                                                                                 onChange={(e) => setNewDemand({...newDemand, preferred_time: e.target.value})}
@@ -927,14 +914,13 @@ const ServiceDemandPage = () => {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-6">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-6">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-telephone me-2" style={{color: '#2196f3'}}></i>
                                                                                 Contact Method
                                                                             </label>
                                                                             <select
-                                                                                className="form-select form-select-lg border-2 shadow-sm"
+                                                                                className="form-select form-select-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.contact_method}
                                                                                 onChange={(e) => setNewDemand({...newDemand, contact_method: e.target.value})}
@@ -955,7 +941,7 @@ const ServiceDemandPage = () => {
                                                 <div className="row mb-4">
                                                     <div className="col-12">
                                                         <div className="card border-0 shadow-sm" style={{background: 'linear-gradient(145deg, #f5f0ff 0%, #ffffff 100%)'}}>
-                                                            <div className="card-body p-4">
+                                                            <div className="card-body p-4 bg-white">
                                                                 <div className="d-flex align-items-center mb-3">
                                                                     <div className="bg-secondary bg-opacity-10 rounded-circle p-2 me-3">
                                                                         <i className="bi bi-info-circle-fill text-secondary"></i>
@@ -963,15 +949,14 @@ const ServiceDemandPage = () => {
                                                                     <h5 className="mb-0 text-secondary fw-bold">Additional Information</h5>
                                                                 </div>
                                                                 <div className="row">
-                                                                    <div className="col-md-6">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-6">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-telephone-fill me-2" style={{color: '#f44336'}}></i>
                                                                                 Emergency Contact
                                                                             </label>
                                                                             <input
                                                                                 type="tel"
-                                                                                className="form-control form-control-lg border-2 shadow-sm"
+                                                                                className="form-control form-control-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.emergency_contact}
                                                                                 onChange={(e) => setNewDemand({...newDemand, emergency_contact: e.target.value})}
@@ -979,14 +964,13 @@ const ServiceDemandPage = () => {
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-6">
-                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-light">
+                                                                    <div className="col-md-6">                                                                        <div className="mb-3">
+                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-chat-dots me-2" style={{color: '#22C7EE'}}></i>
                                                                                 Special Instructions
                                                                             </label>
                                                                             <textarea
-                                                                                className="form-control border-2 shadow-sm"
+                                                                                className="form-control border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 rows="3"
                                                                                 value={newDemand.special_instructions}
@@ -1003,7 +987,7 @@ const ServiceDemandPage = () => {
                                             </form>
                                         </div>
                                         
-                                        <div className="modal-footer border-0 p-4" style={{borderRadius: '0 0 20px 20px', backgroundColor: '#2d3748'}}>
+                                        <div className="modal-footer border-0 p-4 bg-white" style={{borderRadius: '1 1 20px 20px', backgroundColor: '#2d3748'}}>
                                             <div className="d-flex w-100 gap-3">
                                                 <button 
                                                     type="button" 
