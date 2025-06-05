@@ -37,12 +37,10 @@
 }
 
 .recurring-schedule-modal .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  position: relative;
   padding: 20px 24px;
   border-bottom: 1px solid #e5e7eb;
-  background: #22C7EE;
+  background: #ffffff;
   color: white;
   border-radius: 12px 12px 0 0;
 }
@@ -51,20 +49,24 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  text-align: center;
+  color: #374151;
+  padding-right: 60px;
 }
 
 .recurring-schedule-modal .close-btn {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 2.5rem;
+  color: rgb(255, 0, 0);
   cursor: pointer;
-  color: white;
   padding: 4px;
   border-radius: 4px;
   transition: background-color 0.2s;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .recurring-schedule-modal .close-btn:hover {
