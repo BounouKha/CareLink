@@ -125,9 +125,7 @@ const LogsManagement = () => {
                 details: log.full_line || log.message
             };
         }
-    };
-
-    const renderLogEntry = (log) => {
+    };    const renderLogEntry = (log) => {
         const formatted = formatLogEntry(log);
         
         if (filters.type === 'user_actions') {
@@ -143,6 +141,29 @@ const LogsManagement = () => {
                     <div className="log-content">
                         <div className="log-target">{formatted.target}</div>
                         <div className="log-details">{formatted.details}</div>
+                        {/* Enhanced information display */}
+                        {(log.affected_patient_name || log.affected_provider_name) && (
+                            <div className="log-context">
+                                {log.affected_patient_name && (
+                                    <span className="context-item patient">
+                                        👤 Patient: {log.affected_patient_name}
+                                    </span>
+                                )}
+                                {log.affected_provider_name && (
+                                    <span className="context-item provider">
+                                        🏥 Provider: {log.affected_provider_name}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                        {log.additional_data && (
+                            <div className="log-additional">
+                                <details className="additional-data">
+                                    <summary>Additional Details</summary>
+                                    <pre>{JSON.stringify(log.additional_data, null, 2)}</pre>
+                                </details>
+                            </div>
+                        )}
                     </div>
                 </div>
             );
