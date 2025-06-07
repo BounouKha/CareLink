@@ -16,6 +16,7 @@ const CreateUserModal = ({ onClose, onSave }) => {
         firstname: '',
         lastname: '',
         email: '',
+        password: 'Password123@!',
         role: '',
         birthdate: '',
         address: '',
@@ -25,19 +26,24 @@ const CreateUserModal = ({ onClose, onSave }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUserData((prevData) => ({ ...prevData, [name]: value }));
-    };
-
-    const handleSave = async () => {
+    };    const handleSave = async () => {
         try {
             const token = localStorage.getItem('accessToken');
+            console.log('Token:', token ? 'Present' : 'Missing'); // Debug log
+            
             if (!token) {
-                throw new Error('No access token found. Please log in.');
+                alert('No access token found. Please log in again.');
+                window.location.href = '/login';
+                return;
             }
 
             // Remove national_number field if it's empty
-            if (!userData.national_number) {
-                delete userData.national_number;
+            const userDataToSend = { ...userData };
+            if (!userDataToSend.national_number) {
+                delete userDataToSend.national_number;
             }
+            
+            console.log('Sending user data:', userDataToSend); // Debug log
 
             const response = await fetch('http://localhost:8000/account/create-user/', {
                 method: 'POST',
@@ -45,11 +51,23 @@ const CreateUserModal = ({ onClose, onSave }) => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(userData),
+                body: JSON.stringify(userDataToSend),
             });
 
+            console.log('Response status:', response.status); // Debug log
+
+            if (response.status === 401) {
+                alert('Your session has expired. Please log in again.');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                window.location.href = '/login';
+                return;
+            }
+
             if (!response.ok) {
-                throw new Error('Failed to create user.');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Error response:', errorData);
+                throw new Error(errorData.message || `Failed to create user. Status: ${response.status}`);
             }
 
             const newUser = await response.json();
@@ -57,7 +75,8 @@ const CreateUserModal = ({ onClose, onSave }) => {
             alert('User created successfully!');
             onClose();
         } catch (err) {
-            console.error(err);
+            console.error('Error creating user:', err);
+            alert(`Error: ${err.message}`);
         }
     };
 
@@ -80,13 +99,19 @@ const CreateUserModal = ({ onClose, onSave }) => {
                         name="lastname"
                         value={userData.lastname}
                         onChange={handleChange}
-                    />
-
-                    <label>Email</label>
+                    />                    <label>Email</label>
                     <input
                         type="email"
                         name="email"
                         value={userData.email}
+                        onChange={handleChange}
+                    />
+
+                    <label>Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        value={userData.password}
                         onChange={handleChange}
                     />
 

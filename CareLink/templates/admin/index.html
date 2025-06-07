@@ -1,0 +1,250 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-card h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+    border-bottom: 2px solid #417690;
+    padding-bottom: 8px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    padding: 4px 0;
+}
+
+.stat-label {
+    color: #666;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-urgent {
+    color: #dc3545;
+}
+
+.stat-success {
+    color: #28a745;
+}
+
+.stat-warning {
+    color: #ffc107;
+}
+
+.stat-info {
+    color: #17a2b8;
+}
+
+.quick-actions {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.quick-actions h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.quick-actions a {
+    display: inline-block;
+    margin: 5px 10px 5px 0;
+    padding: 8px 15px;
+    background: #417690;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.quick-actions a:hover {
+    background: #2e5266;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{% trans 'CareLink Administration Dashboard' %}</h1>
+
+{% if dashboard_stats %}
+<div class="dashboard-stats">
+    <!-- User Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'User Statistics' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Total Users:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.users.total }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Active Users:' %}</span>
+            <span class="stat-value stat-success">{{ dashboard_stats.users.active }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'New This Week:' %}</span>
+            <span class="stat-value stat-info">{{ dashboard_stats.users.new_week }}</span>
+        </div>
+    </div>
+
+    <!-- Patient Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'Patient Statistics' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Total Patients:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.patients.total }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Active Patients:' %}</span>
+            <span class="stat-value stat-success">{{ dashboard_stats.patients.active }}</span>
+        </div>
+    </div>
+
+    <!-- Provider Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'Provider Statistics' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Total Providers:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.providers.total }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Internal:' %}</span>
+            <span class="stat-value stat-info">{{ dashboard_stats.providers.internal }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'External:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.providers.external }}</span>
+        </div>
+    </div>
+
+    <!-- Service Demand Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'Service Demands' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Total Demands:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.demands.total }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Pending:' %}</span>
+            <span class="stat-value stat-warning">{{ dashboard_stats.demands.pending }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Urgent:' %}</span>
+            <span class="stat-value stat-urgent">{{ dashboard_stats.demands.urgent }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'New This Week:' %}</span>
+            <span class="stat-value stat-info">{{ dashboard_stats.demands.new_week }}</span>
+        </div>
+    </div>
+
+    <!-- Schedule Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'Schedule Statistics' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Total Schedules:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.schedules.total }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Today:' %}</span>
+            <span class="stat-value stat-info">{{ dashboard_stats.schedules.today }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'This Week:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.schedules.this_week }}</span>
+        </div>
+    </div>
+
+    <!-- Helpdesk Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'Helpdesk' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Open Tickets:' %}</span>
+            <span class="stat-value stat-warning">{{ dashboard_stats.tickets.open }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'High Priority:' %}</span>
+            <span class="stat-value stat-urgent">{{ dashboard_stats.tickets.high_priority }}</span>
+        </div>
+    </div>
+
+    <!-- Financial Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'Financial' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Total Invoices:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.financial.total_invoices }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Unpaid:' %}</span>
+            <span class="stat-value stat-urgent">{{ dashboard_stats.financial.unpaid_invoices }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Payments This Month:' %}</span>
+            <span class="stat-value stat-success">{{ dashboard_stats.financial.payments_month }}</span>
+        </div>
+    </div>
+
+    <!-- Time Slot Statistics -->
+    <div class="stat-card">
+        <h3>{% trans 'Time Slots' %}</h3>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Total Slots:' %}</span>
+            <span class="stat-value">{{ dashboard_stats.timeslots.total }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Completed:' %}</span>
+            <span class="stat-value stat-success">{{ dashboard_stats.timeslots.completed }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Cancelled:' %}</span>
+            <span class="stat-value stat-urgent">{{ dashboard_stats.timeslots.cancelled }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">{% trans 'Completion Rate:' %}</span>
+            <span class="stat-value stat-info">{{ dashboard_stats.timeslots.completion_rate }}%</span>
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <h3>{% trans 'Quick Actions' %}</h3>
+    <a href="{% url 'admin:CareLink_servicedemand_changelist' %}">{% trans 'Manage Service Demands' %}</a>
+    <a href="{% url 'admin:CareLink_schedule_changelist' %}">{% trans 'View Schedules' %}</a>
+    <a href="{% url 'admin:CareLink_helpdeskticket_changelist' %}">{% trans 'Helpdesk Tickets' %}</a>
+    <a href="{% url 'admin:CareLink_user_changelist' %}">{% trans 'Manage Users' %}</a>
+    <a href="{% url 'admin:CareLink_invoice_changelist' %}">{% trans 'Financial Management' %}</a>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-error">
+    <strong>{% trans 'Error:' %}</strong> {{ error }}
+</div>
+{% endif %}
+
+{{ block.super }}
+{% endblock %}
