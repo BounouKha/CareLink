@@ -262,6 +262,70 @@
     line-height: 1.4;
 }
 
+/* Enhanced context information */
+.log-context {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.context-item {
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.context-item.patient {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.context-item.provider {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Additional data styling */
+.log-additional {
+    margin-top: 8px;
+}
+
+.additional-data {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.additional-data summary {
+    background: #f3f4f6;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.additional-data summary:hover {
+    background: #e5e7eb;
+}
+
+.additional-data pre {
+    margin: 0;
+    padding: 12px;
+    font-size: 11px;
+    color: #4b5563;
+    background: white;
+    overflow-x: auto;
+}
+
 /* Loading and Empty States */
 .loading-container {
     display: flex;
