@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from datetime import datetime, timedelta, date
 from django.db.models import Q, Count, Avg
-from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand
+from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog
 from account.serializers.user import UserSerializer
 import calendar
 
@@ -251,9 +251,16 @@ class QuickScheduleView(APIView):
                 service=service,
                 user=request.user
             )
-            
-            # Add timeslot to schedule
+              # Add timeslot to schedule
             schedule.time_slots.add(timeslot)
+            
+            # Log the CREATE_SCHEDULE action
+            UserActionLog.objects.create(
+                user=request.user,
+                action_type="CREATE_SCHEDULE",
+                target_model="Schedule",
+                target_id=schedule.id
+            )
             
             return Response({
                 'message': 'Schedule created successfully',

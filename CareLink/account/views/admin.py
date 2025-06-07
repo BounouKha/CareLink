@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
-from CareLink.models import User
+from CareLink.models import User, UserActionLog
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
 
@@ -55,9 +55,7 @@ class AdminCreateUserView(APIView):
             return Response(
                 {"error": "Access denied. Superuser privileges required."},
                 status=403
-            )
-
-        # Extract user data from the request
+            )        # Extract user data from the request
         data = request.data
         try:
             user = User.objects.create(
@@ -73,6 +71,15 @@ class AdminCreateUserView(APIView):
                 role=data.get("role"),
                 birthdate=data.get("birthdate"),
             )
+            
+            # Log the user creation action
+            UserActionLog.objects.create(
+                user=request.user,
+                action_type="CREATE_USER",
+                target_model="User",
+                target_id=user.id
+            )
+            
             return Response({"message": "User created successfully.", "user_id": user.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
