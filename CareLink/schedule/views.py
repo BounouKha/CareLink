@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from datetime import datetime, timedelta, date
 from django.db.models import Q, Count, Avg
-from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand
+from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog
 from account.serializers.user import UserSerializer
 import calendar
 
@@ -261,9 +261,16 @@ class QuickScheduleView(APIView):
                 service=service,
                 user=request.user
             )
-            
-            # Add timeslot to schedule
+              # Add timeslot to schedule
             schedule.time_slots.add(timeslot)
+            
+            # Log the CREATE_SCHEDULE action
+            UserActionLog.objects.create(
+                user=request.user,
+                action_type="CREATE_SCHEDULE",
+                target_model="Schedule",
+                target_id=schedule.id
+            )
             
             return Response({
                 'message': 'Schedule created successfully',
@@ -466,8 +473,16 @@ class AppointmentManagementView(APIView):
                             }, status=409)
                     
                     timeslot.save()
+                    schedule.save()
             
-            schedule.save()
+            # Log the UPDATE_APPOINTMENT action
+            UserActionLog.objects.create(
+                user=request.user,
+                action_type="UPDATE_APPOINTMENT",
+                target_model="Schedule",
+                target_id=schedule.id
+            )
+            
             return Response({
                 'message': 'Appointment updated successfully',
                 'appointment_id': schedule.id
@@ -500,10 +515,10 @@ class AppointmentManagementView(APIView):
             schedule = Schedule.objects.get(id=appointment_id)
             timeslots = schedule.time_slots.all()
             
-            if timeslot_id:
-                # Delete specific timeslot
+            if timeslot_id:                # Delete specific timeslot
                 try:
                     specific_timeslot = timeslots.get(id=timeslot_id)
+                    timeslot_id_for_log = specific_timeslot.id  # Store ID before deletion
                     schedule.time_slots.remove(specific_timeslot)
                     specific_timeslot.delete()
                     
@@ -514,12 +529,29 @@ class AppointmentManagementView(APIView):
                         # Always delete schedule when any timeslot is deleted (aggressive)
                         # OR when no timeslots remain (default behavior)
                         schedule.delete()
+                        
+                        # Log the DELETE_APPOINTMENT action
+                        UserActionLog.objects.create(
+                            user=request.user,
+                            action_type="DELETE_APPOINTMENT",
+                            target_model="Schedule",
+                            target_id=schedule.id
+                        )
+                        
                         return Response({
                             'message': 'Timeslot and schedule deleted successfully',
                             'deletion_type': 'schedule_deleted'
                         }, status=200)
                     elif deletion_strategy == 'conservative':
                         # Keep schedule even if no timeslots remain (conservative)
+                        # Log the DELETE_APPOINTMENT action (timeslot only)
+                        UserActionLog.objects.create(
+                            user=request.user,
+                            action_type="DELETE_APPOINTMENT",
+                            target_model="TimeSlot",
+                            target_id=timeslot_id_for_log
+                        )
+                        
                         return Response({
                             'message': 'Timeslot deleted successfully, schedule preserved',
                             'deletion_type': 'timeslot_only',
@@ -529,11 +561,28 @@ class AppointmentManagementView(APIView):
                         # Delete schedule only if no timeslots remain (current behavior)
                         if remaining_timeslots == 0:
                             schedule.delete()
+                            
+                            # Log the DELETE_APPOINTMENT action
+                            UserActionLog.objects.create(
+                                user=request.user,
+                                action_type="DELETE_APPOINTMENT",
+                                target_model="Schedule",
+                                target_id=schedule.id
+                            )
+                            
                             return Response({
                                 'message': 'Last timeslot deleted, schedule removed',
                                 'deletion_type': 'schedule_deleted'
                             }, status=200)
                         else:
+                            # Log the DELETE_APPOINTMENT action (timeslot only)
+                            UserActionLog.objects.create(
+                                user=request.user,
+                                action_type="DELETE_APPOINTMENT",
+                                target_model="TimeSlot",
+                                target_id=timeslot_id_for_log
+                            )
+                            
                             return Response({
                                 'message': 'Timeslot deleted successfully',
                                 'deletion_type': 'timeslot_only',
@@ -542,13 +591,21 @@ class AppointmentManagementView(APIView):
                         
                 except TimeSlot.DoesNotExist:
                     return Response({'error': 'Timeslot not found'}, status=404)
-            else:
-                # Delete entire appointment/schedule
+            else:                # Delete entire appointment/schedule
                 if deletion_strategy == 'timeslot_only':
                     # Delete all timeslots but keep schedule
                     for timeslot in timeslots:
                         schedule.time_slots.remove(timeslot)
                         timeslot.delete()
+                    
+                    # Log the DELETE_APPOINTMENT action (timeslots only)
+                    UserActionLog.objects.create(
+                        user=request.user,
+                        action_type="DELETE_APPOINTMENT",
+                        target_model="Schedule",
+                        target_id=schedule.id
+                    )
+                    
                     return Response({
                         'message': 'All timeslots deleted, schedule preserved',
                         'deletion_type': 'timeslots_only'
@@ -556,9 +613,19 @@ class AppointmentManagementView(APIView):
                 else:
                     # Delete everything (default behavior)
                     timeslot_count = timeslots.count()
+                    schedule_id = schedule.id  # Store ID before deletion
                     for timeslot in timeslots:
                         timeslot.delete()
                     schedule.delete()
+                    
+                    # Log the DELETE_APPOINTMENT action
+                    UserActionLog.objects.create(
+                        user=request.user,
+                        action_type="DELETE_APPOINTMENT",
+                        target_model="Schedule",
+                        target_id=schedule_id
+                    )
+                    
                     return Response({
                         'message': f'Appointment deleted successfully ({timeslot_count} timeslots removed)',
                         'deletion_type': 'complete_deletion'
@@ -1266,8 +1333,7 @@ class RecurringScheduleView(APIView):
                             continue
                           # Use existing schedule
                         schedule = existing_schedule
-                    else:
-                        # Create new schedule
+                    else:                        # Create new schedule
                         schedule = Schedule.objects.create(
                             date=schedule_date,
                             provider=provider,
@@ -1275,6 +1341,14 @@ class RecurringScheduleView(APIView):
                             created_by=request.user
                         )
                         created_schedules.append(schedule)
+                        
+                        # Log the CREATE_SCHEDULE action for new schedules
+                        UserActionLog.objects.create(
+                            user=request.user,
+                            action_type="CREATE_SCHEDULE",
+                            target_model="Schedule",
+                            target_id=schedule.id
+                        )
                     
                     # Create timeslot
                     timeslot = TimeSlot.objects.create(

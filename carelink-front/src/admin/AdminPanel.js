@@ -3,6 +3,7 @@ import './AdminPanel.css';
 import BaseLayout from '../auth/layout/BaseLayout';
 import ManageUsers from './ManageUsers'; // Import the ManageUsers component
 import ProfileList from './ProfileList';
+import LogsManagement from './LogsManagement'; // Import the LogsManagement component
 import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
@@ -17,19 +18,11 @@ const AdminPanel = () => {
         { id: 'profile', label: 'Profiles', icon: '👤', description: 'Manage user profiles' }
     ];
 
-    const renderContent = () => {
-        switch (selectedTab) {
+    const renderContent = () => {        switch (selectedTab) {
             case 'users':
                 return <ManageUsers key={refreshKey} />;
             case 'logs':
-                return (
-                    <div className="admin-section-placeholder">
-                        <div className="placeholder-icon">📋</div>
-                        <h2>System Logs</h2>
-                        <p>View and monitor all system activities, user actions, and changes.</p>
-                        <div className="coming-soon">Coming Soon</div>
-                    </div>
-                );
+                return <LogsManagement />;
             case 'settings':
                 return (
                     <div className="admin-section-placeholder">

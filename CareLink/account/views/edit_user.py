@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from CareLink.models import User
+from CareLink.models import User, UserActionLog
 from django.contrib.auth.hashers import make_password
 
 class EditUserView(APIView):
@@ -42,12 +42,21 @@ class EditUserView(APIView):
         if "national_number" in data:
             user.national_number = data["national_number"]
         if "role" in data:
-            user.role = data["role"]
+            user.role = data["role"]        
         if "birthdate" in data:
             from datetime import datetime
             user.birthdate = datetime.strptime(data["birthdate"], '%Y-%m-%d') if data["birthdate"] else None
 
         user.save()
+        
+        # Log the user edit action
+        UserActionLog.objects.create(
+            user=request.user,
+            action_type="EDIT_USER",
+            target_model="User",
+            target_id=user.id
+        )
+        
         return Response({
             "message": "User updated successfully.",
             "user": {

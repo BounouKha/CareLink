@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from CareLink.models import User, Patient, Coordinator, FamilyPatient, SocialAssistant, Provider, Administrative, Service
+from CareLink.models import User, Patient, Coordinator, FamilyPatient, SocialAssistant, Provider, Administrative, Service, UserActionLog
 
 class CreateProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -75,8 +75,15 @@ class CreateProfileView(APIView):
             try:
                 role_specific_data["service"] = Service.objects.get(id=service_id)
             except Service.DoesNotExist:
-                return Response({"error": "Invalid service ID."}, status=400)
-
-        # Create the profile with role-specific data
-        model.objects.create(user=user, **role_specific_data)
+                return Response({"error": "Invalid service ID."}, status=400)        # Create the profile with role-specific data
+        profile = model.objects.create(user=user, **role_specific_data)
+        
+        # Log the profile creation action
+        UserActionLog.objects.create(
+            user=request.user,
+            action_type="CREATE_PROFILE",
+            target_model=model._meta.model_name,
+            target_id=profile.id
+        )
+        
         return Response({"message": "Profile created successfully."}, status=201)

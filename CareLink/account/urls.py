@@ -24,6 +24,7 @@ from account.views.refresh import CustomTokenRefreshView
 from account.views.coordinator.update_patient import UpdatePatientView
 from account.views.coordinator.medicalfolder_simple import MedicalFolderSimpleView
 from account.views.servicedemand import ServiceDemandListCreateView, ServiceDemandDetailView, ServiceDemandStatsView, ServiceDemandStatusUpdateView, ServiceDemandCommentView, FamilyPatientLinkedView
+from account.views.logs import LogsView, LogStatsView
 
 
 
@@ -66,5 +67,9 @@ urlpatterns += [
     path('service-demands/<int:pk>/', ServiceDemandDetailView.as_view(), name='service_demand_detail'),
     path('service-demands/stats/', ServiceDemandStatsView.as_view(), name='service_demand_stats'),
     path('service-demands/<int:pk>/status/', ServiceDemandStatusUpdateView.as_view(), name='service_demand_status_update'),    path('service-demands/<int:pk>/comment/', ServiceDemandCommentView.as_view(), name='service_demand_comment'),    path('family-patient/linked-patient/', FamilyPatientLinkedView.as_view(), name='family_patient_linked'),
+
+    # Logs API endpoints
+    path('logs/', LogsView.as_view(), name='logs'),
+    path('logs/stats/', LogStatsView.as_view(), name='logs_stats'),
 
 ]
