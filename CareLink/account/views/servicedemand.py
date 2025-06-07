@@ -6,6 +6,52 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from CareLink.models import ServiceDemand, Patient, Service, UserActionLog
 from account.serializers.servicedemand import ServiceDemandSerializer, ServiceDemandCreateSerializer
+import json
+
+def log_service_demand_action(user, action_type, target_model, target_id, service_demand=None, description=None, additional_data=None):
+    """
+    Enhanced logging function for service demand-related actions
+    
+    Args:
+        user: The user who performed the action
+        action_type: Type of action (CREATE_SERVICE_DEMAND, UPDATE_SERVICE_DEMAND_STATUS, etc.)
+        target_model: Model name (ServiceDemand)
+        target_id: ID of the target object
+        service_demand: ServiceDemand object to extract patient/service info
+        description: Optional description of the action
+        additional_data: Optional dict with additional context
+    """
+    log_data = {
+        'user': user,        'action_type': action_type,
+        'target_model': target_model,
+        'target_id': target_id,
+        'description': description,
+        'additional_data': json.dumps(additional_data) if additional_data else None
+    }
+    
+    # Extract patient and service information if service_demand is provided
+    if service_demand:
+        if service_demand.patient:
+            log_data['affected_patient_id'] = service_demand.patient.id
+            log_data['affected_patient_name'] = f"{service_demand.patient.user.firstname} {service_demand.patient.user.lastname}" if service_demand.patient.user else f"Patient ID: {service_demand.patient.id}"
+          # For service demands, we can log the service in additional_data
+        if service_demand.service:
+            if not additional_data:
+                additional_data = {}
+            additional_data['service_name'] = service_demand.service.name
+            additional_data['service_id'] = service_demand.service.id
+        
+        # Add status and priority info
+        if not additional_data:
+            additional_data = {}
+        additional_data.update({
+            'status': service_demand.status,
+            'priority': service_demand.priority,
+            'title': service_demand.title
+        })
+        log_data['additional_data'] = json.dumps(additional_data)
+    
+    UserActionLog.objects.create(**log_data)
 
 class ServiceDemandListCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -113,8 +159,7 @@ class ServiceDemandListCreateView(APIView):
                 if request.user.role == 'Patient':
                     try:
                         patient = Patient.objects.get(user=request.user)
-                        if patient != patient_id:
-                            return Response(
+                        if patient != patient_id:                            return Response(
                                 {"error": "You can only create demands for yourself."}, 
                                 status=403
                             )
@@ -125,7 +170,8 @@ class ServiceDemandListCreateView(APIView):
                     from CareLink.models import FamilyPatient
                     try:
                         family_patient = FamilyPatient.objects.get(user=request.user)
-                        if not family_patient.patient_id:                            return Response(
+                        if not family_patient.patient_id:
+                            return Response(
                                 {"error": "No linked patient found for this family member."}, 
                                 status=400
                             )
@@ -139,12 +185,14 @@ class ServiceDemandListCreateView(APIView):
             
             demand = serializer.save()
             
-            # Log the service demand creation action
-            UserActionLog.objects.create(
+            # Enhanced logging for service demand creation
+            log_service_demand_action(
                 user=request.user,
                 action_type="CREATE_SERVICE_DEMAND",
                 target_model="ServiceDemand",
-                target_id=demand.id
+                target_id=demand.id,
+                service_demand=demand,
+                description=f"Created service demand '{demand.title}' for patient {demand.patient.user.firstname} {demand.patient.user.lastname if demand.patient.user else 'Unknown'}"
             )
             
             response_serializer = ServiceDemandSerializer(demand)
@@ -224,8 +272,7 @@ class ServiceDemandDetailView(APIView):
         demand = self.get_object(pk, request.user)
         if not demand:
             return Response({"error": "Service demand not found or access denied."}, status=404)
-        
-        # Check if user can delete this demand
+          # Check if user can delete this demand
         if request.user.role == 'Patient':
             if demand.status not in ['Pending', 'Under Review']:
                 return Response(
@@ -233,10 +280,33 @@ class ServiceDemandDetailView(APIView):
                     status=403
                 )
             # Mark as cancelled instead of deleting
+            old_status = demand.status
             demand.status = 'Cancelled'
             demand.save()
+            
+            # Enhanced logging for cancellation
+            log_service_demand_action(
+                user=request.user,
+                action_type="CANCEL_SERVICE_DEMAND",
+                target_model="ServiceDemand",
+                target_id=demand.id,
+                service_demand=demand,
+                description=f"Cancelled service demand '{demand.title}'",
+                additional_data={'old_status': old_status, 'new_status': 'Cancelled'}
+            )
+            
             return Response({"message": "Service demand cancelled successfully."})
         elif request.user.role in ['Coordinator', 'Administrative']:
+            # Enhanced logging for deletion
+            log_service_demand_action(
+                user=request.user,
+                action_type="DELETE_SERVICE_DEMAND",
+                target_model="ServiceDemand",
+                target_id=demand.id,
+                service_demand=demand,
+                description=f"Deleted service demand '{demand.title}'"
+            )
+            
             demand.delete()
             return Response({"message": "Service demand deleted successfully."})
         
@@ -310,13 +380,15 @@ class ServiceDemandStatusUpdateView(APIView):
             else:
                 demand.coordinator_notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')} - {request.user.firstname} {request.user.lastname}]: {coordinator_notes}"
         demand.save()
-        
-        # Log the status update action
-        UserActionLog.objects.create(
+          # Enhanced logging for status update
+        log_service_demand_action(
             user=request.user,
             action_type="UPDATE_SERVICE_DEMAND_STATUS",
             target_model="ServiceDemand",
-            target_id=demand.id
+            target_id=demand.id,
+            service_demand=demand,
+            description=f"Updated service demand '{demand.title}' status from {old_status} to {new_status}",
+            additional_data={'old_status': old_status, 'new_status': new_status}
         )
         
         # Return updated demand
@@ -353,19 +425,20 @@ class ServiceDemandCommentView(APIView):
         if demand.coordinator_notes:
             demand.coordinator_notes += f"\n\n{new_comment}"
         else:
-            demand.coordinator_notes = new_comment
-          # Update managed_by if not already set
+            demand.coordinator_notes = new_comment        # Update managed_by if not already set
         if not demand.managed_by:
             demand.managed_by = request.user
         
         demand.save()
         
-        # Log the comment addition action
-        UserActionLog.objects.create(
+        # Enhanced logging for comment addition
+        log_service_demand_action(
             user=request.user,
             action_type="ADD_SERVICE_DEMAND_COMMENT",
             target_model="ServiceDemand",
-            target_id=demand.id
+            target_id=demand.id,
+            service_demand=demand,
+            description=f"Added comment to service demand '{demand.title}'"
         )
         
         return Response({
