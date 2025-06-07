@@ -1,57 +1,32 @@
 /* Modern PatientsPage.css with Blue Theme */
 
+/* Minimalist page layout override */
 .profile-patient-page {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 30px;
-    background: linear-gradient(135deg, #e3f2fd 0%, #f8fbff 50%, #e8f4f8 100%);
+    padding: 40px 20px;
+    background: #f8fafc;
     min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #2c3e50;
-    width: 800px;
-    height: 800px;
-    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .profile-patient-container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    box-shadow: 
-        0 20px 40px rgba(0, 123, 191, 0.1),
-        0 8px 16px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    padding: 40px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 32px;
     max-width: 1200px;
     width: 100%;
-    min-height: auto;
-    overflow: visible;
-    position: relative;
-    box-sizing: border-box;
-}
-
-.profile-patient-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #007bbf, #00bcd4, #4fc3f7);
-    border-radius: 20px 20px 0 0;
+    border: 1px solid #e5e7eb;
 }
 
 .profile-patient-container h1 {
-    background: linear-gradient(135deg, #007bbf, #00bcd4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 2.5rem;
+    color: #1f2937;
+    font-size: 2rem;
     font-weight: 700;
-    margin: 0 0 30px 0;
+    margin: 0 0 24px 0;
     text-align: center;
-    letter-spacing: -0.02em;
 }
 
 .profile-patient-content {
@@ -285,41 +260,26 @@
 /* Modern Search Bar */
 .search-bar {
     width: 100%;
-    max-width: 500px;
-    padding: 16px 20px;
-    margin: 0 auto 30px auto;
-    border: 2px solid transparent;
-    border-radius: 25px;
-    font-size: 1.1rem;
-    background: linear-gradient(white, white) padding-box,
-                linear-gradient(135deg, #007bbf, #00bcd4) border-box;
-    box-shadow: 
-        0 8px 24px rgba(0, 123, 191, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #2c3e50;
+    max-width: 400px;
+    padding: 12px 16px;
+    margin: 0 auto 32px auto;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #374151;
     display: block;
-}
-
-.search-bar::placeholder {
-    color: #7fb3d3;
-    font-style: italic;
+    transition: all 0.2s ease;
 }
 
 .search-bar:focus {
     outline: none;
-    transform: translateY(-2px);
-    box-shadow: 
-        0 12px 32px rgba(0, 123, 191, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8),
-        0 0 0 4px rgba(0, 188, 212, 0.1);
-    border-color: #00bcd4;
+    border-color: #007bbf;
+    box-shadow: 0 0 0 3px rgba(0, 123, 191, 0.1);
 }
 
-.search-bar:hover {
-    box-shadow: 
-        0 10px 28px rgba(0, 123, 191, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+.search-bar::placeholder {
+    color: #9ca3af;
 }
 
 /* Medical folder sorting styles with blue theme */
@@ -736,6 +696,156 @@
         font-size: 0.75rem;
         padding: 6px 10px;
         min-width: 90px;
+    }
+}
+
+/* Minimalist Patient Grid Override */
+.patients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+    width: 100%;
+}
+
+/* Minimalist Patient Card */
+.patient-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 80px;
+}
+
+.patient-card:hover {
+    border-color: #007bbf;
+    box-shadow: 0 4px 12px rgba(0, 123, 191, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Patient Info Section */
+.patient-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.patient-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.patient-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.patient-id,
+.patient-birth {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Minimalist Action Buttons */
+.patient-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-btn:hover {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.folder-btn:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.add-btn:hover {
+    background: #dcfce7;
+    border-color: #22c55e;
+    color: #22c55e;
+}
+
+/* No Patients State */
+.no-patients {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.no-patients svg {
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.no-patients p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Responsive for minimalist cards */
+@media (max-width: 768px) {
+    .patients-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .patient-card {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: auto;
+        gap: 16px;
+    }
+    
+    .patient-actions {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+    
+    .action-btn {
+        flex: 1;
+        max-width: none;
     }
 }
 
