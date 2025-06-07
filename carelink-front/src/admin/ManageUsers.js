@@ -405,7 +405,10 @@ const ManageUsers = () => {    const [allUsers, setAllUsers] = useState([]); // 
             </div>            {totalPages > 1 && (
                 <div className="pagination">
                     <button 
-                        onClick={() => setPage(page - 1)} 
+                        onClick={() => {
+                            setPage(page - 1);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }} 
                         disabled={page <= 1}
                         className="btn btn-secondary"
                     >
@@ -413,7 +416,10 @@ const ManageUsers = () => {    const [allUsers, setAllUsers] = useState([]); // 
                     </button>
                     <span className="pagination-info">Page {page} of {totalPages}</span>
                     <button 
-                        onClick={() => setPage(page + 1)} 
+                        onClick={() => {
+                            setPage(page + 1);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }} 
                         disabled={page >= totalPages}
                         className="btn btn-secondary"
                     >

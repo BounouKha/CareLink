@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from CareLink.models import Patient, Coordinator, FamilyPatient, SocialAssistant, Provider, Administrative, Service
+from CareLink.models import Patient, Coordinator, FamilyPatient, SocialAssistant, Provider, Administrative, Service, UserActionLog
 # Fetch the Service data using ServiceListView
 from account.views.service import ServiceListView
 from account.serializers.service import ServiceSerializer  # Import the ServiceSerializer
@@ -125,6 +125,15 @@ class EditProfileView(APIView):
                         return Response({"error": f"Field '{field}' cannot be empty."}, status=400)
                     setattr(profile, field, value)
             profile.save()
+            
+            # Log the profile edit action
+            UserActionLog.objects.create(
+                user=request.user,
+                action_type="EDIT_PROFILE",
+                target_model=model._meta.model_name,
+                target_id=profile.id
+            )
+            
             return Response({"message": "Profile updated successfully."}, status=200)
         except model.DoesNotExist:
             return Response({"error": "Profile not found."}, status=404)
