@@ -320,6 +320,11 @@
   font-weight: 500;
 }
 
+.created-at-info {
+  color: #495057;
+  font-weight: 500;
+}
+
 .creator-email {
   color: #6c757d;
   font-weight: 400;
@@ -329,6 +334,10 @@
 /* Responsive adjustments for created by field */
 @media (max-width: 768px) {
   .created-by-info {
+    font-size: 0.9rem;
+  }
+  
+  .created-at-info {
     font-size: 0.9rem;
   }
   

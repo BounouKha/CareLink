@@ -89,12 +89,12 @@ class ScheduleCalendarView(APIView):
                         'id': schedule.patient.id if schedule.patient else None,
                         'name': f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}" if schedule.patient and schedule.patient.user else 'No Patient',
                         'email': schedule.patient.user.email if schedule.patient and schedule.patient.user else None
-                    },
-                    'created_by': {
+                    },                    'created_by': {
                         'id': schedule.created_by.id if schedule.created_by else None,
                         'name': f"{schedule.created_by.firstname} {schedule.created_by.lastname}" if schedule.created_by else 'Unknown',
                         'email': schedule.created_by.email if schedule.created_by else None
                     } if hasattr(schedule, 'created_by') and schedule.created_by else None,
+                    'created_at': schedule.created_at.isoformat() if hasattr(schedule, 'created_at') and schedule.created_at else None,
                     'timeslots': []
                 }
                 
