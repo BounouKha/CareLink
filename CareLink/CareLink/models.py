@@ -5,6 +5,7 @@ from django.contrib.auth.models import BaseUserManager
 import datetime
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission, Group
+from django.utils import timezone
 
 ##Attention la base de données doit être en UTF-8 pour éviter les problèmes d'encodage
 
@@ -168,6 +169,7 @@ class Schedule(models.Model):
     date = models.DateField()
     time_slots = models.ManyToManyField('TimeSlot', blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_schedules')
+    created_at = models.DateTimeField(default=timezone.now)
 
     def generate_daily_schedule(self, date, provider):
         """Generate timeslots for a specific day and provider."""
