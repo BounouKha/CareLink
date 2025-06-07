@@ -230,42 +230,70 @@ class LogStatsView(APIView):
             )
 
         try:
-            # Get date range
-            end_date = timezone.now()
-            start_date = end_date - timedelta(days=7)  # Last 7 days
+            # Get date ranges
+            today = timezone.now().date()
+            week_ago = today - timedelta(days=7)
+            
+            # All user actions
+            all_user_actions = UserActionLog.objects.all()
+            
+            # Actions today
+            actions_today = UserActionLog.objects.filter(
+                created_at__date=today
+            ).count()
+            
+            # Actions this week  
+            actions_this_week = UserActionLog.objects.filter(
+                created_at__date__gte=week_ago
+            ).count()
+            
+            # Active users (users who performed actions in last 7 days)
+            active_users = UserActionLog.objects.filter(
+                created_at__date__gte=week_ago
+            ).values('user').distinct().count()
+            
+            # Total user actions
+            total_user_actions = all_user_actions.count()
 
-            # User action stats
-            user_actions = UserActionLog.objects.filter(
-                created_at__gte=start_date
-            )
-
+            # Frontend expects these exact field names
             stats = {
+                'total_user_actions': total_user_actions,
+                'actions_today': actions_today,
+                'actions_this_week': actions_this_week,
+                'active_users': active_users,
                 'user_actions': {
-                    'total': user_actions.count(),
+                    'total': total_user_actions,
                     'by_type': {},
                     'by_user': {},
                     'recent_activity': []
                 },
                 'log_files': {},
                 'time_range': {
-                    'start': start_date.strftime('%Y-%m-%d'),
-                    'end': end_date.strftime('%Y-%m-%d')
+                    'start': week_ago.strftime('%Y-%m-%d'),
+                    'end': today.strftime('%Y-%m-%d')
                 }
-            }            # Group by action type
-            action_types = list(user_actions.values_list('action_type', flat=True))
+            }
+
+            # Get actions from last week for detailed stats
+            user_actions_week = UserActionLog.objects.filter(
+                created_at__gte=timezone.now() - timedelta(days=7)
+            )
+
+            # Group by action type
+            action_types = list(user_actions_week.values_list('action_type', flat=True))
             for action_type in set(action_types):
                 if action_type:
                     stats['user_actions']['by_type'][action_type] = action_types.count(action_type)
 
             # Group by user
-            for action in user_actions.select_related('user')[:10]:
+            for action in user_actions_week.select_related('user')[:10]:
                 user_key = f"{action.user.firstname} {action.user.lastname}" if action.user else "System"
                 if user_key not in stats['user_actions']['by_user']:
                     stats['user_actions']['by_user'][user_key] = 0
                 stats['user_actions']['by_user'][user_key] += 1
 
             # Recent activity
-            recent_actions = user_actions.order_by('-created_at')[:5]
+            recent_actions = all_user_actions.order_by('-created_at')[:5]
             for action in recent_actions:
                 stats['user_actions']['recent_activity'].append({
                     'user': f"{action.user.firstname} {action.user.lastname}" if action.user else "System",

@@ -8,6 +8,7 @@ from django.db.models import Q, Count, Avg
 from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog
 from account.serializers.user import UserSerializer
 import calendar
+import json
 
 def log_schedule_action(user, action_type, target_model, target_id, schedule=None, description=None, additional_data=None):
     """
@@ -17,8 +18,7 @@ def log_schedule_action(user, action_type, target_model, target_id, schedule=Non
         user: The user who performed the action
         action_type: Type of action (CREATE_SCHEDULE, UPDATE_APPOINTMENT, DELETE_APPOINTMENT)
         target_model: Model name (Schedule, TimeSlot)
-        target_id: ID of the target object
-        schedule: Schedule object to extract patient/provider info
+        target_id: ID of the target object        schedule: Schedule object to extract patient/provider info
         description: Optional description of the action
         additional_data: Optional dict with additional context
     """
@@ -28,7 +28,7 @@ def log_schedule_action(user, action_type, target_model, target_id, schedule=Non
         'target_model': target_model,
         'target_id': target_id,
         'description': description,
-        'additional_data': additional_data
+        'additional_data': json.dumps(additional_data) if additional_data else None
     }
     
     # Extract patient and provider information if schedule is provided

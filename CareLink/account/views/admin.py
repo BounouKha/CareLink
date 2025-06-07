@@ -5,6 +5,66 @@ from rest_framework.pagination import PageNumberPagination
 from CareLink.models import User, UserActionLog
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+import json
+
+def log_user_action(user, action_type, target_model, target_id, target_user=None, description=None, additional_data=None):
+    """
+    Enhanced logging function for user management actions
+    
+    Args:
+        user: The user who performed the action
+        action_type: Type of action (CREATE_USER, EDIT_USER, DELETE_USER)
+        target_model: Model name (User)
+        target_id: ID of the target object
+        target_user: User object being acted upon
+        description: Optional description of the action
+        additional_data: Optional dict with additional context
+    """
+    log_data = {
+        'user': user,
+        'action_type': action_type,
+        'target_model': target_model,
+        'target_id': target_id,
+        'description': description,
+        'additional_data': json.dumps(additional_data) if additional_data else None
+    }
+    
+    # For user actions, we can add the target user as "affected patient" if they have patient profile
+    # or store their basic info in additional_data
+    if target_user:
+        if not additional_data:
+            additional_data = {}
+        
+        additional_data.update({
+            'target_user_email': target_user.email,
+            'target_user_name': f"{target_user.firstname} {target_user.lastname}",
+            'target_user_role': target_user.role,
+            'target_user_active': target_user.is_active
+        })
+        log_data['additional_data'] = json.dumps(additional_data)
+        
+        # Try to get patient info if target user has a patient profile
+        try:
+            from CareLink.models import Patient
+            patient = Patient.objects.get(user=target_user)
+            log_data['affected_patient_id'] = patient.id
+            log_data['affected_patient_name'] = f"{target_user.firstname} {target_user.lastname}"
+        except Patient.DoesNotExist:
+            # Not a patient, that's fine
+            pass
+            
+        # Try to get provider info if target user has a provider profile
+        try:
+            from CareLink.models import Provider
+            provider = Provider.objects.get(user=target_user)
+            log_data['affected_provider_id'] = provider.id
+            log_data['affected_provider_name'] = f"{target_user.firstname} {target_user.lastname}"
+        except Provider.DoesNotExist:
+            # Not a provider, that's fine
+            pass
+    
+    UserActionLog.objects.create(**log_data)
 
 class AdminUserListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -55,7 +115,9 @@ class AdminCreateUserView(APIView):
             return Response(
                 {"error": "Access denied. Superuser privileges required."},
                 status=403
-            )        # Extract user data from the request
+            )
+        
+        # Extract user data from the request
         data = request.data
         try:
             user = User.objects.create(
@@ -72,12 +134,22 @@ class AdminCreateUserView(APIView):
                 birthdate=data.get("birthdate"),
             )
             
-            # Log the user creation action
-            UserActionLog.objects.create(
+            # Log the user creation action with enhanced logging
+            log_user_action(
                 user=request.user,
                 action_type="CREATE_USER",
                 target_model="User",
-                target_id=user.id
+                target_id=user.id,
+                target_user=user,
+                description=f"Created new user {user.firstname} {user.lastname} ({user.email}) with role {user.role}",
+                additional_data={
+                    "created_via": "admin_panel",
+                    "user_role": user.role,
+                    "is_superuser": user.is_superuser,
+                    "is_staff": user.is_staff,
+                    "is_active": user.is_active,
+                    "timestamp": timezone.now().isoformat()
+                }
             )
             
             return Response({"message": "User created successfully.", "user_id": user.id}, status=status.HTTP_201_CREATED)
