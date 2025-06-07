@@ -66,20 +66,39 @@ class LogsView(APIView):
 
             # Paginate
             paginator = Paginator(queryset, page_size)
-            page_obj = paginator.get_page(page)
-
-            # Format the logs
+            page_obj = paginator.get_page(page)            # Format the logs
             logs = []
             for log in page_obj:
+                # Build enhanced description with patient/provider info
+                enhanced_description = log.description or f"{log.action_type} on {log.target_model} (ID: {log.target_id})" if log.target_model else log.action_type
+                
+                # Add patient/provider info to description if available
+                context_parts = []
+                if log.affected_patient_name:
+                    context_parts.append(f"Patient: {log.affected_patient_name}")
+                if log.affected_provider_name:
+                    context_parts.append(f"Provider: {log.affected_provider_name}")
+                
+                if context_parts:
+                    enhanced_description += f" - {', '.join(context_parts)}"
+                
                 logs.append({
                     'id': log.id,
                     'user': f"{log.user.firstname} {log.user.lastname}" if log.user else "System",
+                    'user_name': f"{log.user.firstname} {log.user.lastname}" if log.user else "System",
                     'user_email': log.user.email if log.user else "",
                     'action_type': log.action_type,
                     'target_model': log.target_model,
                     'target_id': log.target_id,
                     'created_at': log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    'description': f"{log.action_type} on {log.target_model} (ID: {log.target_id})" if log.target_model else log.action_type
+                    'description': enhanced_description,
+                    'details': enhanced_description,
+                    # Enhanced fields
+                    'affected_patient_id': log.affected_patient_id,
+                    'affected_patient_name': log.affected_patient_name,
+                    'affected_provider_id': log.affected_provider_id,
+                    'affected_provider_name': log.affected_provider_name,
+                    'additional_data': log.additional_data
                 })
 
             return Response({

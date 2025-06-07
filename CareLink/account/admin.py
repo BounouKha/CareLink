@@ -391,14 +391,38 @@ class TimeSlotAdmin(admin.ModelAdmin):
 
 @admin.register(UserActionLog)
 class UserActionLogAdmin(admin.ModelAdmin):
-    list_display = ('user_name', 'action_type', 'target_model', 'target_id', 'created_at')
+    list_display = (
+        'user_name', 'action_type', 'target_model', 'target_id', 
+        'affected_patient_name', 'affected_provider_name', 'created_at'
+    )
     list_filter = ('action_type', 'target_model', 'created_at')
-    search_fields = ('user__firstname', 'user__lastname', 'action_type', 'target_model')
+    search_fields = (
+        'user__firstname', 'user__lastname', 'action_type', 'target_model',
+        'affected_patient_name', 'affected_provider_name', 'description'
+    )
     readonly_fields = ('created_at',)
     
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('user', 'action_type', 'target_model', 'target_id', 'created_at')
+        }),
+        ('Affected Entities', {
+            'fields': ('affected_patient_name', 'affected_provider_name')
+        }),
+        ('Details', {
+            'fields': ('description', 'additional_data'),
+            'classes': ('collapse',)
+        }),
+    )
+    
     def user_name(self, obj):
-        return f"{obj.user.firstname} {obj.user.lastname}" if obj.user else "No User"
-    user_name.short_description = 'User'
+        if obj.user:
+            return f"{obj.user.firstname} {obj.user.lastname} ({obj.user.email})"
+        return "No User"
+    user_name.short_description = 'User Who Made Action'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
 
 @admin.register(UserToken)
 class UserTokenAdmin(admin.ModelAdmin):
