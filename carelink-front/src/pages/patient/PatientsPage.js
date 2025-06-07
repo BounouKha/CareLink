@@ -345,25 +345,57 @@ const PatientsPage = () => {
                         />                        {error && <p className="error">{error}</p>}
                         
                         {/* Debug modal states */}
-                        <div style={{position: 'fixed', top: '10px', right: '10px', background: 'yellow', padding: '10px', zIndex: 9999}}>
-                            Debug: Edit={showEditPatientModal.toString()}, Medical={showMedicalFolderModal.toString()}, Add={showAddEntryModal.toString()}
-                        </div>
                         
-                        {filteredPatients.length > 0 ? (
-                            <div>
-                                <ul className="profile-patient-content">
-                                    {filteredPatients.filter(patient => patient.firstname && patient.lastname).map((patient, index) => (
-                                        <li key={index}>
-                                            <p><strong>Name:</strong> {patient.firstname} {patient.lastname}</p>
-                                            <button onClick={() => handleShowDetails(patient)}>Patient Information</button>
-                                            <button onClick={() => handleShowMedicalFolder(patient.id)}>Medical Folder</button>
-                                            <button onClick={() => handleAddEntry(patient)}>Add Entry</button>
-                                        </li>
-                                    ))}
-                                </ul>
+                          {filteredPatients.length > 0 ? (
+                            <div className="patients-grid">
+                                {filteredPatients.filter(patient => patient.firstname && patient.lastname).map((patient, index) => (
+                                    <div key={index} className="patient-card">
+                                        <div className="patient-info">
+                                            <h3 className="patient-name">{patient.firstname} {patient.lastname}</h3>
+                                            <div className="patient-details">
+                                                <span className="patient-id">ID: {patient.national_number}</span>
+                                                <span className="patient-birth">Born: {patient.birth_date}</span>
+                                            </div>
+                                        </div>
+                                        <div className="patient-actions">
+                                            <button 
+                                                className="action-btn info-btn" 
+                                                onClick={() => handleShowDetails(patient)}
+                                                title="Patient Information"
+                                            >
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                            </button>
+                                            <button 
+                                                className="action-btn folder-btn" 
+                                                onClick={() => handleShowMedicalFolder(patient.id)}
+                                                title="Medical Folder"
+                                            >
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                            </button>
+                                            <button 
+                                                className="action-btn add-btn" 
+                                                onClick={() => handleAddEntry(patient)}
+                                                title="Add Entry"
+                                            >
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
-                            <p>No patients found.</p>
+                            <div className="no-patients">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                    <path d="M16 21V19C16 16.7909 14.2091 15 12 15H5C2.79086 15 1 16.7909 1 19V21M20.5 11.5L22 13L20.5 14.5M18 13H22M12.5 7C12.5 9.20914 10.7091 11 8.5 11C6.29086 11 4.5 9.20914 4.5 7C4.5 4.79086 6.29086 3 8.5 3C10.7091 3 12.5 4.79086 12.5 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                <p>No patients found</p>
+                            </div>
                         )}
                     
                     </div>
