@@ -382,6 +382,18 @@ class UserActionLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     target_model = models.TextField(null=True, blank=True)
     target_id = models.BigIntegerField(null=True, blank=True)
+    
+    # Enhanced fields for detailed logging
+    description = models.TextField(null=True, blank=True, help_text="Detailed description of the action")
+    affected_patient_id = models.BigIntegerField(null=True, blank=True, help_text="ID of affected patient")
+    affected_patient_name = models.CharField(max_length=255, null=True, blank=True, help_text="Name of affected patient")
+    affected_provider_id = models.BigIntegerField(null=True, blank=True, help_text="ID of affected provider")
+    affected_provider_name = models.CharField(max_length=255, null=True, blank=True, help_text="Name of affected provider")
+    additional_data = models.JSONField(null=True, blank=True, help_text="Additional context data in JSON format")
+    
+    def __str__(self):
+        user_name = f"{self.user.firstname} {self.user.lastname}" if self.user else "Unknown User"
+        return f"{user_name} - {self.action_type} on {self.target_model} (ID: {self.target_id})"
 
 class UserToken(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
