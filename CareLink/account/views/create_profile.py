@@ -2,6 +2,78 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from CareLink.models import User, Patient, Coordinator, FamilyPatient, SocialAssistant, Provider, Administrative, Service, UserActionLog
+from django.utils import timezone
+import json
+
+def log_profile_action(user, action_type, target_model, target_id, profile=None, target_user=None, description=None, additional_data=None):
+    """
+    Enhanced logging function for profile management actions
+    
+    Args:
+        user: The user who performed the action
+        action_type: Type of action (CREATE_PROFILE, EDIT_PROFILE, DELETE_PROFILE)
+        target_model: Model name (Patient, Provider, etc.)
+        target_id: ID of the target object
+        profile: Profile object being acted upon
+        target_user: User object associated with the profile
+        description: Optional description of the action
+        additional_data: Optional dict with additional context
+    """
+    log_data = {
+        'user': user,
+        'action_type': action_type,
+        'target_model': target_model,
+        'target_id': target_id,
+        'description': description,
+        'additional_data': json.dumps(additional_data) if additional_data else None
+    }
+    
+    # Extract user and profile information
+    if target_user:
+        if not additional_data:
+            additional_data = {}
+        
+        additional_data.update({
+            'profile_user_email': target_user.email,
+            'profile_user_name': f"{target_user.firstname} {target_user.lastname}",
+            'profile_user_role': target_user.role,
+            'profile_type': target_model.lower()        })
+        log_data['additional_data'] = json.dumps(additional_data)
+        
+        # If this is a patient profile, add to affected_patient fields
+        if target_model.lower() == 'patient':
+            log_data['affected_patient_id'] = target_id
+            log_data['affected_patient_name'] = f"{target_user.firstname} {target_user.lastname}"
+        
+        # If this is a provider profile, add to affected_provider fields
+        elif target_model.lower() == 'provider':
+            log_data['affected_provider_id'] = target_id
+            log_data['affected_provider_name'] = f"{target_user.firstname} {target_user.lastname}"
+    
+    # Add profile-specific information
+    if profile and hasattr(profile, '__dict__'):
+        profile_data = {}
+        
+        # Extract common profile fields
+        for field in ['is_internal', 'gender', 'service', 'link', 'from_hospital']:
+            if hasattr(profile, field):
+                value = getattr(profile, field)
+                if value is not None:
+                    # Handle foreign key fields
+                    if hasattr(value, 'name'):
+                        profile_data[field] = value.name
+                    elif hasattr(value, 'id'):
+                        profile_data[field] = f"ID: {value.id}"
+                    else:
+                        profile_data[field] = str(value)
+        
+        if profile_data:
+            if not additional_data:
+                additional_data = {}            
+                additional_data['profile_details'] = profile_data
+            log_data['additional_data'] = json.dumps(additional_data)
+    
+    UserActionLog.objects.create(**log_data)
 
 class CreateProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -78,12 +150,21 @@ class CreateProfileView(APIView):
                 return Response({"error": "Invalid service ID."}, status=400)        # Create the profile with role-specific data
         profile = model.objects.create(user=user, **role_specific_data)
         
-        # Log the profile creation action
-        UserActionLog.objects.create(
+        # Log the profile creation action with enhanced logging
+        log_profile_action(
             user=request.user,
             action_type="CREATE_PROFILE",
             target_model=model._meta.model_name,
-            target_id=profile.id
+            target_id=profile.id,
+            profile=profile,
+            target_user=user,
+            description=f"Created {role.lower()} profile for {user.firstname} {user.lastname} ({user.email})",
+            additional_data={
+                "role_type": role.lower(),
+                "created_via": "admin_panel",
+                "profile_data": role_specific_data,
+                "timestamp": timezone.now().isoformat()
+            }
         )
         
         return Response({"message": "Profile created successfully."}, status=201)
