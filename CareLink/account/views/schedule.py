@@ -9,6 +9,40 @@ from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, Serv
 from account.serializers.user import UserSerializer
 import calendar
 
+def log_schedule_action(user, action_type, target_model, target_id, schedule=None, description=None, additional_data=None):
+    """
+    Enhanced logging function for schedule-related actions
+    
+    Args:
+        user: The user who performed the action
+        action_type: Type of action (CREATE_SCHEDULE, UPDATE_APPOINTMENT, DELETE_APPOINTMENT)
+        target_model: Model name (Schedule, TimeSlot)
+        target_id: ID of the target object
+        schedule: Schedule object to extract patient/provider info
+        description: Optional description of the action
+        additional_data: Optional dict with additional context
+    """
+    log_data = {
+        'user': user,
+        'action_type': action_type,
+        'target_model': target_model,
+        'target_id': target_id,
+        'description': description,
+        'additional_data': additional_data
+    }
+    
+    # Extract patient and provider information if schedule is provided
+    if schedule:
+        if schedule.patient:
+            log_data['affected_patient_id'] = schedule.patient.id
+            log_data['affected_patient_name'] = f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}" if schedule.patient.user else f"Patient ID: {schedule.patient.id}"
+        
+        if schedule.provider:
+            log_data['affected_provider_id'] = schedule.provider.id
+            log_data['affected_provider_name'] = f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider.user else f"Provider ID: {schedule.provider.id}"
+    
+    UserActionLog.objects.create(**log_data)
+
 class ScheduleCalendarView(APIView):
     """
     Main calendar view for coordinators to see schedules, appointments, and availability
@@ -255,12 +289,7 @@ class QuickScheduleView(APIView):
             schedule.time_slots.add(timeslot)
             
             # Log the CREATE_SCHEDULE action
-            UserActionLog.objects.create(
-                user=request.user,
-                action_type="CREATE_SCHEDULE",
-                target_model="Schedule",
-                target_id=schedule.id
-            )
+            log_schedule_action(request.user, "CREATE_SCHEDULE", "Schedule", schedule.id, schedule, "Quick schedule created")
             
             return Response({
                 'message': 'Schedule created successfully',
