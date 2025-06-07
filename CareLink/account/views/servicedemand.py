@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator
 from django.utils import timezone
-from CareLink.models import ServiceDemand, Patient, Service
+from CareLink.models import ServiceDemand, Patient, Service, UserActionLog
 from account.serializers.servicedemand import ServiceDemandSerializer, ServiceDemandCreateSerializer
 
 class ServiceDemandListCreateView(APIView):
@@ -125,8 +125,7 @@ class ServiceDemandListCreateView(APIView):
                     from CareLink.models import FamilyPatient
                     try:
                         family_patient = FamilyPatient.objects.get(user=request.user)
-                        if not family_patient.patient_id:
-                            return Response(
+                        if not family_patient.patient_id:                            return Response(
                                 {"error": "No linked patient found for this family member."}, 
                                 status=400
                             )
@@ -139,6 +138,15 @@ class ServiceDemandListCreateView(APIView):
                         return Response({"error": "Family patient profile not found."}, status=404)
             
             demand = serializer.save()
+            
+            # Log the service demand creation action
+            UserActionLog.objects.create(
+                user=request.user,
+                action_type="CREATE_SERVICE_DEMAND",
+                target_model="ServiceDemand",
+                target_id=demand.id
+            )
+            
             response_serializer = ServiceDemandSerializer(demand)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         
@@ -301,8 +309,15 @@ class ServiceDemandStatusUpdateView(APIView):
                 demand.coordinator_notes += f"\n\n[{timezone.now().strftime('%Y-%m-%d %H:%M')} - {request.user.firstname} {request.user.lastname}]: {coordinator_notes}"
             else:
                 demand.coordinator_notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')} - {request.user.firstname} {request.user.lastname}]: {coordinator_notes}"
-        
         demand.save()
+        
+        # Log the status update action
+        UserActionLog.objects.create(
+            user=request.user,
+            action_type="UPDATE_SERVICE_DEMAND_STATUS",
+            target_model="ServiceDemand",
+            target_id=demand.id
+        )
         
         # Return updated demand
         from account.serializers.servicedemand import ServiceDemandSerializer
@@ -339,12 +354,19 @@ class ServiceDemandCommentView(APIView):
             demand.coordinator_notes += f"\n\n{new_comment}"
         else:
             demand.coordinator_notes = new_comment
-        
-        # Update managed_by if not already set
+          # Update managed_by if not already set
         if not demand.managed_by:
             demand.managed_by = request.user
         
         demand.save()
+        
+        # Log the comment addition action
+        UserActionLog.objects.create(
+            user=request.user,
+            action_type="ADD_SERVICE_DEMAND_COMMENT",
+            target_model="ServiceDemand",
+            target_id=demand.id
+        )
         
         return Response({
             "message": "Comment added successfully",

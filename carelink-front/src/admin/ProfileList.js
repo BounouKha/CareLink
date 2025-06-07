@@ -97,17 +97,22 @@ const ProfileList = () => {
                                 )}
                             </tbody>
                         </table>
-                    </div>
-                    <div className="pagination">
+                    </div>                    <div className="pagination">
                         <button
                             disabled={!hasPreviousPage}
-                            onClick={() => setPage((prevPage) => Math.max(prevPage - 1, 1))}
+                            onClick={() => {
+                                setPage((prevPage) => Math.max(prevPage - 1, 1));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
                         >
                             Previous
                         </button>
                         <button
                             disabled={!hasNextPage}
-                            onClick={() => setPage((prevPage) => prevPage + 1)}
+                            onClick={() => {
+                                setPage((prevPage) => prevPage + 1);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
                         >
                             Next
                         </button>
