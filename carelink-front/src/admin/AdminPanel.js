@@ -10,36 +10,73 @@ const AdminPanel = () => {
     const [refreshKey, setRefreshKey] = useState(0);
     const navigate = useNavigate();
 
+    const tabs = [
+        { id: 'users', label: 'Users', icon: '👥', description: 'Manage user accounts and roles' },
+        { id: 'logs', label: 'Logs', icon: '📋', description: 'View system activity logs' },
+        { id: 'settings', label: 'Settings', icon: '⚙️', description: 'Configure system settings' },
+        { id: 'profile', label: 'Profiles', icon: '👤', description: 'Manage user profiles' }
+    ];
+
     const renderContent = () => {
         switch (selectedTab) {
             case 'users':
+                return <ManageUsers key={refreshKey} />;
+            case 'logs':
                 return (
-                    <div>
-                        <ManageUsers key={refreshKey} />
+                    <div className="admin-section-placeholder">
+                        <div className="placeholder-icon">📋</div>
+                        <h2>System Logs</h2>
+                        <p>View and monitor all system activities, user actions, and changes.</p>
+                        <div className="coming-soon">Coming Soon</div>
                     </div>
                 );
-            case 'logs':
-                return <p>View Logs Section</p>;
             case 'settings':
-                return <p>Settings Section</p>;
+                return (
+                    <div className="admin-section-placeholder">
+                        <div className="placeholder-icon">⚙️</div>
+                        <h2>System Settings</h2>
+                        <p>Configure website settings, preferences, and system parameters.</p>
+                        <div className="coming-soon">Coming Soon</div>
+                    </div>
+                );
             case 'profile':
                 return <ProfileList />;
             default:
-                return <p>Select a tab to view content.</p>;
+                return (
+                    <div className="admin-section-placeholder">
+                        <div className="placeholder-icon">🎯</div>
+                        <h2>Welcome to Admin Panel</h2>
+                        <p>Select a tab to view and manage different aspects of the system.</p>
+                    </div>
+                );
         }
     };
 
     return (
         <BaseLayout>
-            <div className="admin-panel">
-                <h1>Admin Panel</h1>
-                <div className="admin-toolbar">
-                    <button onClick={() => setSelectedTab('users')} className={`tab-button ${selectedTab === 'users' ? 'active' : ''}`}>Users</button>
-                    <button onClick={() => setSelectedTab('logs')} className={`tab-button ${selectedTab === 'logs' ? 'active' : ''}`}>Logs</button>
-                    <button onClick={() => setSelectedTab('settings')} className={`tab-button ${selectedTab === 'settings' ? 'active' : ''}`}>Settings</button>
-                    <button onClick={() => setSelectedTab('profile')} className={`tab-button ${selectedTab === 'profile' ? 'active' : ''}`}>Profile</button>
+            <div className="admin-panel-container">
+                <div className="admin-panel-header">
+                    <h1>Admin Panel</h1>
+                    <p className="admin-panel-subtitle">Comprehensive system administration</p>
                 </div>
-                <div className="content">
+                
+                <div className="admin-tabs">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setSelectedTab(tab.id)}
+                            className={`admin-tab ${selectedTab === tab.id ? 'active' : ''}`}
+                        >
+                            <span className="tab-icon">{tab.icon}</span>
+                            <div className="tab-content">
+                                <span className="tab-label">{tab.label}</span>
+                                <span className="tab-description">{tab.description}</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+                
+                <div className="admin-content">
                     {renderContent()}
                 </div>
             </div>
