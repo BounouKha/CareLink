@@ -19,13 +19,13 @@ const EditAppointment = ({
     service_id: '',
     description: '',
     status: 'scheduled'
-  });
-  const [patients, setPatients] = useState([]);
+  });  const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteStrategy, setDeleteStrategy] = useState('smart'); // 'smart', 'aggressive', 'conservative'
+  const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
   
   useEffect(() => {
     if (isOpen && appointment) {
@@ -97,10 +97,29 @@ const EditAppointment = ({
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
+    }));  };
+
+  // Helper function to check if date is in the past
+  const isDateInPast = (dateString) => {
+    const today = new Date();
+    const selectedDate = new Date(dateString);
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    selectedDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    return selectedDate < today;
   };
   const handleUpdate = async (e) => {
     e.preventDefault();
+    
+    // Check if date is in the past
+    if (isDateInPast(formData.date)) {
+      setShowPastDateConfirm(true);
+      return;
+    }
+    
+    await performUpdate();
+  };
+
+  const performUpdate = async () => {
     setLoading(true);
     setError('');
 
@@ -237,7 +256,7 @@ const EditAppointment = ({
                   searchFields={['firstname', 'lastname', 'national_number', 'user.email']}
                 />
               </div>
-            </div>            {/* Created By Information - Non-editable */}
+            </div>            {/* Created By and Created At Information - Non-editable */}
             {appointment && (
               <div className="form-row">
                 <div className="form-group">
@@ -248,6 +267,22 @@ const EditAppointment = ({
                       {appointment.created_by?.email && (
                         <span className="creator-email"> ({appointment.created_by.email})</span>
                       )}
+                    </span>
+                  </div>
+                </div>                <div className="form-group">
+                  <label>Created At</label>
+                  <div className="read-only-field">
+                    <span className="created-at-info">
+                      {appointment.created_at ? 
+                        new Date(appointment.created_at).toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        }) : 'Unknown Date'
+                      }
                     </span>
                   </div>
                 </div>
@@ -357,8 +392,37 @@ const EditAppointment = ({
                 </button>
               </div>
             </div>
-          </form>
-        </div>
+          </form>        </div>
+
+        {/* Past Date Confirmation Dialog */}
+        {showPastDateConfirm && (
+          <div className="delete-confirm-overlay">
+            <div className="delete-confirm-modal">
+              <h3>⚠️ Attention: Date in the Past</h3>
+              <p>
+                You are trying to schedule an appointment for a past date ({formData.date}). 
+                Are you sure you want to continue?
+              </p>
+              <div className="confirm-actions">
+                <button 
+                  onClick={() => setShowPastDateConfirm(false)} 
+                  className="cancel-btn"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowPastDateConfirm(false);
+                    performUpdate();
+                  }} 
+                  className="confirm-delete-btn"
+                >
+                  Yes, Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (

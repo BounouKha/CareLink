@@ -10,11 +10,11 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     end_time: '',
     service_id: '',
     description: ''
-  });
-  const [patients, setPatients] = useState([]);
+  });  const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
   
   // Search states
   const [providerSearch, setProviderSearch] = useState('');
@@ -155,11 +155,29 @@ const fetchPatients = async () => {
         ...prev,
         end_time: endTime
       }));
-    }
-  };
+    }  };
 
+  // Helper function to check if date is in the past
+  const isDateInPast = (dateString) => {
+    const today = new Date();
+    const selectedDate = new Date(dateString);
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    selectedDate.setHours(0, 0, 0, 0); // Reset time to start of day
+    return selectedDate < today;
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if date is in the past
+    if (isDateInPast(formData.date)) {
+      setShowPastDateConfirm(true);
+      return;
+    }
+    
+    await performSubmit();
+  };
+
+  const performSubmit = async () => {
     setLoading(true);
     setError('');
 
@@ -367,9 +385,38 @@ const fetchPatients = async () => {
             <button type="submit" disabled={loading} className="submit-btn">
               {loading ? 'Creating...' : 'Create Schedule'}
             </button>
-          </div>
-        </form>
+          </div>        </form>
       </div>
+
+      {/* Past Date Confirmation Dialog */}
+      {showPastDateConfirm && (
+        <div className="modal-overlay">
+          <div className="confirm-modal">
+            <h3>⚠️ Attention: Date in the Past</h3>
+            <p>
+              You are trying to schedule an appointment for a past date ({formData.date}). 
+              Are you sure you want to continue?
+            </p>
+            <div className="confirm-actions">
+              <button 
+                onClick={() => setShowPastDateConfirm(false)} 
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowPastDateConfirm(false);
+                  performSubmit();
+                }} 
+                className="confirm-btn"
+              >
+                Yes, Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
