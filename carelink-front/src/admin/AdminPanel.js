@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './AdminPanel.css';
+// CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../auth/layout/BaseLayout';
 import ManageUsers from './ManageUsers'; // Import the ManageUsers component
 import ProfileList from './ProfileList';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './layout/LeftToolbar.css'; // Ensure you have the correct path to your CSS file
+// CSS is now handled by UnifiedBaseLayout.css
 import { useNavigate } from 'react-router-dom';
 
 const LeftToolbar = ({ userData }) => {

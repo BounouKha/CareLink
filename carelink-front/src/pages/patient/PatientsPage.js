@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './PatientsPage.css';
+// CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../../auth/layout/BaseLayout';
 import AddEntryForm from '../../components/AddEntryForm';
 

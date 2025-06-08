@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './ScheduleCalendar.css';
+// CSS is now handled by UnifiedBaseLayout.css
 import QuickSchedule from './QuickSchedule';
 import EditAppointment from './EditAppointment';
 import RecurringSchedule from './features/RecurringSchedule';

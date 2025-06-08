@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './LoginPage.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');

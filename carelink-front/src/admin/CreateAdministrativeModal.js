@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './CreateAdministrativeModal.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const CreateAdministrativeModal = ({ userId, onClose, onProfileCreated }) => {
     const [formData, setFormData] = useState({
@@ -44,25 +44,58 @@ const CreateAdministrativeModal = ({ userId, onClose, onProfileCreated }) => {
             console.error(err);
             alert(err.message);
         }
-    };
-
-    return (
+    };    return (
         <div className="modal-overlay">
-            <div className="modal-content">
-                <h2>Create Administrative Profile</h2>
-                <form onSubmit={handleSubmit}>
-                    <label>
-                        Internal:
-                        <input
-                            type="checkbox"
-                            name="is_internal"
-                            checked={formData.is_internal}
-                            onChange={handleChange}
-                        />
-                    </label>
-                    <button type="submit">Create Profile</button>
-                    <button type="button" onClick={onClose}>Cancel</button>
-                </form>
+            <div className="modal-dialog">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h4 className="modal-title">
+                            <i className="fas fa-user-tie me-2 text-primary"></i>
+                            Create Administrative Profile
+                        </h4>
+                        <button type="button" className="btn-close" onClick={onClose}></button>
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <div className="modal-body">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-header bg-warning bg-opacity-10 border-0">
+                                    <h6 className="card-title mb-0">
+                                        <i className="fas fa-cog me-2 text-warning"></i>
+                                        Administrative Settings
+                                    </h6>
+                                </div>
+                                <div className="card-body">
+                                    <div className="form-check form-switch">
+                                        <input
+                                            className="form-check-input"
+                                            type="checkbox"
+                                            id="is_internal"
+                                            name="is_internal"
+                                            checked={formData.is_internal}
+                                            onChange={handleChange}
+                                        />
+                                        <label className="form-check-label" htmlFor="is_internal">
+                                            <strong>Internal Staff Member</strong>
+                                            <div className="small text-muted">
+                                                Enable if this user is an internal administrative staff member
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" onClick={onClose}>
+                                <i className="fas fa-times me-2"></i>
+                                Cancel
+                            </button>
+                            <button type="submit" className="btn btn-primary">
+                                <i className="fas fa-save me-2"></i>
+                                Create Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );

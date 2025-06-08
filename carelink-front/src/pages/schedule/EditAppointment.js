@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SearchableSelect from '../../components/SearchableSelect';
-import './EditAppointment.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const EditAppointment = ({ 
   isOpen, 
