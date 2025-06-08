@@ -5,6 +5,7 @@ import EditUserModal from './EditUserModal';
 import CreateUserModal from './CreateUserModal';
 import CreateProfileModal from './CreateProfileModal';
 import AddRelationModal from './AddRelationModal';
+import NewEntryModal from './NewEntryModal';
 
 const ManageUsers = () => {
     const [allUsers, setAllUsers] = useState([]); // Store all users from all pages
@@ -19,6 +20,7 @@ const ManageUsers = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);    const [showAddRelationModal, setShowAddRelationModal] = useState(false);
+    const [showNewEntryModal, setShowNewEntryModal] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [selectedFamilyPatientId, setSelectedFamilyPatientId] = useState(null);
     const [selectedRole, setSelectedRole] = useState(null);
@@ -417,7 +419,7 @@ const ManageUsers = () => {
                                                 
                                                 if (familyPatientId) {
                                                     setSelectedFamilyPatientId(familyPatientId);
-                                                    setShowAddRelationModal(true);                                                } else {
+                                                    setShowNewEntryModal(true);} else {
                                                     console.log('[DEBUG] No family patient profile found, showing error message');
                                                     // Show beautiful and friendly message to create profile first
                                                     setMessage(
@@ -574,7 +576,25 @@ const ManageUsers = () => {
                     onClose={() => setShowCreateProfileModal(false)}
                     onProfileCreated={handleProfileCreated}
                 />
-            )}            {showAddRelationModal && (
+            )}            {showNewEntryModal && (
+                <NewEntryModal
+                    show={showNewEntryModal}
+                    familyPatientId={selectedFamilyPatientId}
+                    onClose={() => {
+                        setShowNewEntryModal(false);
+                        setSelectedFamilyPatientId(null);
+                        setSelectedUserId(null);
+                    }}
+                    onSuccess={() => {
+                        setMessage('New patient relationships added successfully!');
+                        setMessageType('success');
+                        setTimeout(() => setMessage(null), 5000);
+                        setShowNewEntryModal(false);
+                        setSelectedFamilyPatientId(null);
+                        setSelectedUserId(null);
+                    }}
+                />
+            )}{showAddRelationModal && (
                 <>
                     {console.log('[DEBUG] Rendering AddRelationModal with:', { showAddRelationModal, selectedFamilyPatientId })}
                     {/* Test with a very simple div first */}
