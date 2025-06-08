@@ -87,29 +87,28 @@ const ManageUsers = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    // Filter users and update pagination
+    };    // Filter users and update pagination
     const updateDisplayedUsers = (filtered, currentPage) => {
         const totalFilteredPages = Math.ceil(filtered.length / USERS_PER_PAGE);
         setTotalPages(totalFilteredPages);
         
-        // If current page exceeds total pages, reset to page 1
+        // If current page exceeds total pages, use page 1
         const validPage = currentPage > totalFilteredPages ? 1 : currentPage;
-        if (validPage !== currentPage) {
-            setPage(validPage);
-        }
         
         const startIndex = (validPage - 1) * USERS_PER_PAGE;
         const endIndex = startIndex + USERS_PER_PAGE;
         setDisplayedUsers(filtered.slice(startIndex, endIndex));
-    };
-
-    // Filter users based on search term and field
+        
+        // Return the valid page so caller can update page state if needed
+        return validPage;
+    };// Filter users based on search term and field
     useEffect(() => {
         if (!searchTerm) {
             setFilteredUsers(allUsers);
-            updateDisplayedUsers(allUsers, page);
+            const validPage = updateDisplayedUsers(allUsers, page);
+            if (validPage !== page) {
+                setPage(validPage);
+            }
             return;
         }
 
@@ -138,7 +137,7 @@ const ManageUsers = () => {
         if (page !== 1) {
             setPage(1);
         }
-    }, [searchTerm, searchField, allUsers]);
+    }, [searchTerm, searchField, allUsers]); // Removed 'page' from dependencies to fix infinite loop
 
     // Update displayed users when page changes
     useEffect(() => {
@@ -406,7 +405,6 @@ const ManageUsers = () => {
                                     <p className="user-email">{user.email}</p>                                    <span className={`user-role role-${user.role?.toLowerCase().replace(' ', '-')}`}>
                                         {user.role}
                                     </span>
-                                    {console.log('[DEBUG] Checking if user is Family Patient:', { userId: user.id, userName: user.firstname + ' ' + user.lastname, userRole: user.role, isFamilyPatient: user.role === 'Family Patient' })}
                                     {user.role === 'Family Patient' && (
                                         <button 
                                             className="btn btn-sm btn-success bg-opacity-20 text-dark ms-2 border-0"                                            onClick={async () => {
@@ -593,10 +591,8 @@ const ManageUsers = () => {
                         setSelectedFamilyPatientId(null);
                         setSelectedUserId(null);
                     }}
-                />
-            )}{showAddRelationModal && (
+                />            )}{showAddRelationModal && (
                 <>
-                    {console.log('[DEBUG] Rendering AddRelationModal with:', { showAddRelationModal, selectedFamilyPatientId })}
                     {/* Test with a very simple div first */}
                     <div style={{
                         position: 'fixed',

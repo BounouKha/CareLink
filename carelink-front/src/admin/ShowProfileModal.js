@@ -6,6 +6,20 @@ const ShowProfileModal = ({ profile, onClose }) => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        // For FamilyPatient profiles, we already have the relations data
+        // No need to fetch from server, just use the profile data directly
+        if (profile.role === 'FamilyPatient' && profile.relations) {
+            setDetails({
+                firstname: profile.firstname,
+                lastname: profile.lastname,
+                role: profile.role,
+                relations: profile.relations,
+                additional_fields: {}
+            });
+            return;
+        }
+
+        // For other roles, fetch details from the server
         const fetchDetails = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
@@ -80,8 +94,53 @@ const ShowProfileModal = ({ profile, onClose }) => {
                                                 <p className="fs-6 fw-medium mb-0">{details.lastname}</p>
                                             </div>
                                         </div>
+                                    </div>                                </div>
+
+                                {/* Family Patient Relations - Show detailed relations information */}
+                                {details.role === 'FamilyPatient' && details.relations && details.relations.length > 0 && (
+                                    <div className="card border-0 shadow-sm mb-4">
+                                        <div className="card-header bg-info bg-opacity-10 border-0">
+                                            <h5 className="card-title mb-0">
+                                                <i className="fas fa-users me-2 text-info"></i>
+                                                Patient Relations
+                                            </h5>
+                                        </div>
+                                        <div className="card-body">
+                                            {details.relations.map((relation, index) => (
+                                                <div key={index} className={`relation-item ${index !== details.relations.length - 1 ? 'border-bottom pb-3 mb-3' : ''}`}>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-4">
+                                                            <label className="form-label text-muted">Relationship:</label>
+                                                            <p className="fs-6 fw-medium mb-0">
+                                                                <span className="badge bg-primary bg-opacity-20 text-primary px-3 py-2 text-light">
+                                                                    {relation.link}
+                                                                </span>
+                                                            </p>
+                                                        </div>
+                                                        <div className="col-md-4">
+                                                            <label className="form-label text-muted">Patient Name:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{relation.patient_name || 'N/A'}</p>
+                                                        </div>
+                                                        <div className="col-md-4">
+                                                            <label className="form-label text-muted">Patient ID:</label>
+                                                            <p className="fs-6 fw-medium mb-0">
+                                                                <span className="badge bg-secondary bg-opacity-20 text-secondary px-2 py-1 text-light">
+                                                                    #{relation.patient_id || 'N/A'}
+                                                                </span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <div className="mt-3 pt-3 border-top">
+                                                <small className="text-muted">
+                                                    <i className="fas fa-info-circle me-1"></i>
+                                                    Total Relations: <strong>{details.relations.length}</strong>
+                                                </small>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Linked Patient Information */}
                                 {details.patient && (
