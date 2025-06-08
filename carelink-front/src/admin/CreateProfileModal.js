@@ -8,6 +8,8 @@ import CreateAdministrativeModal from './CreateAdministrativeModal';
 import CreateFamilyPatientModal from './CreateFamilyPatientModal';
 
 const CreateProfileModal = ({ userId, role, onClose, onProfileCreated }) => {
+    console.log('CreateProfileModal - userId:', userId, 'role:', role); // Debug log
+    
     const renderRoleForm = () => {
         switch (role) {
             case 'Patient':
@@ -61,15 +63,8 @@ const CreateProfileModal = ({ userId, role, onClose, onProfileCreated }) => {
             default:
                 return null;
         }
-    };
-
-    return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                {renderRoleForm()}
-            </div>
-        </div>
-    );
+    };    // Return the role form directly since each modal handles its own overlay/structure
+    return renderRoleForm();
 };
 
 export default CreateProfileModal;

@@ -12,7 +12,7 @@ import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
 import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
 import TestUserAuth from './auth/test/TestUserAuth';
-import './auth/layout/HomePage.css';
+import './auth/layout/UnifiedBaseLayout.css';
 import ProtectedRoute from './auth/login/ProtectedRoute';
 import { AdminProvider } from './auth/login/AdminContext';
 

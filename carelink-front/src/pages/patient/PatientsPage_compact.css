@@ -150,11 +150,11 @@
     background: rgba(255, 255, 255, 0.98);
     border-radius: 8px;
     box-shadow: 0 6px 20px rgba(0, 123, 191, 0.15);
-    padding: 0;
-    z-index: 1050;
+    padding: 0;    z-index: 1050;
     max-width: 500px;
     width: 90%;
-    max-height: 75vh;
+    min-height: auto;
+    max-height: 90vh;
     overflow: hidden;
     border: 1px solid rgba(0, 123, 191, 0.1);
 }
@@ -162,11 +162,11 @@
 .modal-content {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    position: relative;
+    gap: 10px;    position: relative;
     padding: 15px;
     overflow-y: auto;
-    max-height: 75vh;
+    min-height: auto;
+    max-height: 85vh;
 }
 
 .modal-header {
@@ -475,10 +475,10 @@
         grid-template-columns: 1fr;
         gap: 8px;
     }
-    
-    .modal {
+      .modal {
         width: 95%;
-        max-height: 90vh;
+        min-height: auto;
+        max-height: 95vh;
     }
     
     .modal-content {

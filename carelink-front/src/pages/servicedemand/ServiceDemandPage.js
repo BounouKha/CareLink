@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './ServiceDemandPage-new.css';
+// CSS is now handled by UnifiedBaseLayout.css
 import 'bootstrap/dist/css/bootstrap.min.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import ServiceDemandMoreInfo from './ServiceDemandMoreInfo';

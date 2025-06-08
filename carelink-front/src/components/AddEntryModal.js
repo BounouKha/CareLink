@@ -1,5 +1,5 @@
 import React from 'react';
-import './AddEntryModal.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const AddEntryModal = ({ isVisible, onSubmit, onCancel, note, setNote }) => {
     if (!isVisible) return null;

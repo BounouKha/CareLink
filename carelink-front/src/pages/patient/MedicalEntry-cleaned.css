@@ -1,0 +1,69 @@
+/* MedicalEntry.css - CLEANED */
+/* Modal and general form styles are now handled by UnifiedBaseLayout.css */
+
+/* MedicalEntry-specific styles only */
+
+/* Entry form section */
+.entry-form-section {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #e9ecef;
+}
+
+.entry-form-section h3 {
+    margin: 0 0 12px 0;
+    color: #495057;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 2px solid #00bcd4;
+    padding-bottom: 4px;
+}
+
+.entry-textarea {
+    width: 100%;
+    min-height: 120px;
+    margin-top: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #495057;
+    background-color: white;
+}
+
+.entry-textarea:focus {
+    border-color: #00bcd4;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+}
+
+.entry-textarea:hover {
+    border-color: #00bcd4;
+}
+
+/* Service dropdown styling for medical entries */
+.entry-form-section select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #495057;
+    background-color: white;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.entry-form-section select:focus {
+    border-color: #00bcd4;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+}
+
+.entry-form-section select:hover {
+    border-color: #00bcd4;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './SearchableSelect.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const SearchableSelect = ({ 
   label, 

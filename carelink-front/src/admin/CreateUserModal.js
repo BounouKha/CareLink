@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './CreateUserModal.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const ROLE_CHOICES = [
     { value: 'Administrative', label: 'Administrative' },
@@ -78,84 +78,170 @@ const CreateUserModal = ({ onClose, onSave }) => {
             console.error('Error creating user:', err);
             alert(`Error: ${err.message}`);
         }
-    };
-
-    return (
+    };    return (
         <div className="modal-overlay">
-            <div className="modal-content">
-                <h2>Create New User</h2>
-                <form>
-                    <label>First Name</label>
-                    <input
-                        type="text"
-                        name="firstname"
-                        value={userData.firstname}
-                        onChange={handleChange}
-                    />
+            <div className="modal-dialog modal-lg">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h4 className="modal-title">
+                            <i className="fas fa-user-plus me-2 text-primary"></i>
+                            Create New User
+                        </h4>
+                        <button type="button" className="btn-close" onClick={onClose}></button>
+                    </div>
+                    <div className="modal-body">
+                        <div className="card border-0 shadow-sm">
+                            <div className="card-header bg-primary bg-opacity-10 border-0">
+                                <h5 className="card-title mb-0">
+                                    <i className="fas fa-user-cog me-2 text-primary"></i>
+                                    User Information
+                                </h5>
+                            </div>
+                            <div className="card-body">
+                                <div className="row g-3">
+                                    <div className="col-md-6">
+                                        <label className="form-label">
+                                            <i className="fas fa-user me-2 text-muted"></i>
+                                            First Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="firstname"
+                                            className="form-control"
+                                            value={userData.firstname}
+                                            onChange={handleChange}
+                                            placeholder="Enter first name"
+                                            required
+                                        />
+                                    </div>
 
-                    <label>Last Name</label>
-                    <input
-                        type="text"
-                        name="lastname"
-                        value={userData.lastname}
-                        onChange={handleChange}
-                    />                    <label>Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={userData.email}
-                        onChange={handleChange}
-                    />
+                                    <div className="col-md-6">
+                                        <label className="form-label">
+                                            <i className="fas fa-user me-2 text-muted"></i>
+                                            Last Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="lastname"
+                                            className="form-control"
+                                            value={userData.lastname}
+                                            onChange={handleChange}
+                                            placeholder="Enter last name"
+                                            required
+                                        />
+                                    </div>
 
-                    <label>Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        value={userData.password}
-                        onChange={handleChange}
-                    />
+                                    <div className="col-12">
+                                        <label className="form-label">
+                                            <i className="fas fa-envelope me-2 text-muted"></i>
+                                            Email Address
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            className="form-control"
+                                            value={userData.email}
+                                            onChange={handleChange}
+                                            placeholder="Enter email address"
+                                            required
+                                        />
+                                    </div>
 
-                    <label>Role</label>
-                    <select
-                        name="role"
-                        value={userData.role}
-                        onChange={handleChange}
-                    >
-                        <option value="">Select Role</option>
-                        {ROLE_CHOICES.map((role) => (
-                            <option key={role.value} value={role.value}>
-                                {role.label}
-                            </option>
-                        ))}
-                    </select>
+                                    <div className="col-md-6">
+                                        <label className="form-label">
+                                            <i className="fas fa-lock me-2 text-muted"></i>
+                                            Password
+                                        </label>
+                                        <input
+                                            type="password"
+                                            name="password"
+                                            className="form-control"
+                                            value={userData.password}
+                                            onChange={handleChange}
+                                            placeholder="Enter password"
+                                            required
+                                        />
+                                    </div>
 
-                    <label>Birthdate</label>
-                    <input
-                        type="date"
-                        name="birthdate"
-                        value={userData.birthdate}
-                        onChange={handleChange}
-                    />
+                                    <div className="col-md-6">
+                                        <label className="form-label">
+                                            <i className="fas fa-user-tag me-2 text-muted"></i>
+                                            Role
+                                        </label>
+                                        <select
+                                            name="role"
+                                            className="form-select"
+                                            value={userData.role}
+                                            onChange={handleChange}
+                                            required
+                                        >
+                                            <option value="">Select Role</option>
+                                            {ROLE_CHOICES.map((role) => (
+                                                <option key={role.value} value={role.value}>
+                                                    {role.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                    <label>Address</label>
-                    <input
-                        type="text"
-                        name="address"
-                        value={userData.address}
-                        onChange={handleChange}
-                    />
+                                    <div className="col-md-6">
+                                        <label className="form-label">
+                                            <i className="fas fa-calendar me-2 text-muted"></i>
+                                            Birthdate
+                                        </label>
+                                        <input
+                                            type="date"
+                                            name="birthdate"
+                                            className="form-control"
+                                            value={userData.birthdate}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
 
-                    <label>National Number</label>
-                    <input
-                        type="text"
-                        name="national_number"
-                        value={userData.national_number}
-                        onChange={handleChange}
-                    />
+                                    <div className="col-md-6">
+                                        <label className="form-label">
+                                            <i className="fas fa-id-card me-2 text-muted"></i>
+                                            National Number
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="national_number"
+                                            className="form-control"
+                                            value={userData.national_number}
+                                            onChange={handleChange}
+                                            placeholder="Enter national number (optional)"
+                                        />
+                                    </div>
 
-                    <button type="button" onClick={handleSave}>Create User</button>
-                    <button type="button" onClick={onClose}>Cancel</button>
-                </form>
+                                    <div className="col-12">
+                                        <label className="form-label">
+                                            <i className="fas fa-map-marker-alt me-2 text-muted"></i>
+                                            Address
+                                        </label>
+                                        <textarea
+                                            name="address"
+                                            className="form-control"
+                                            rows="2"
+                                            value={userData.address}
+                                            onChange={handleChange}
+                                            placeholder="Enter full address"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary" onClick={onClose}>
+                            <i className="fas fa-times me-2"></i>
+                            Cancel
+                        </button>
+                        <button type="button" className="btn btn-primary" onClick={handleSave}>
+                            <i className="fas fa-user-plus me-2"></i>
+                            Create User
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

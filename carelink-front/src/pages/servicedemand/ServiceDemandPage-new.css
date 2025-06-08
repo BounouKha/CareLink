@@ -1,13 +1,14 @@
-/* Service Demand Styles - Minimal layout */
+/* ServiceDemandPage.css - Page-specific styles only
+   Base layout styles are handled by UnifiedBaseLayout.css */
+
+/* Service Demand Page Layout */
 .service-demand-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
-  width:950px;
-  height:800px
+  width: 100%;
+  min-height: 100vh;
 }
-
-
 
 /* Controls section for filters */
 .service-controls {
@@ -97,6 +98,132 @@
 .demand-title {
   font-weight: bold;
   font-size: 16px;
+}
+
+.demand-status {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: capitalize;
+}
+
+.demand-details {
+  margin-top: 10px;
+}
+
+/* Status colors */
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-assigned {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Priority indicators */
+.priority-high {
+  border-left: 4px solid #dc3545;
+}
+
+.priority-normal {
+  border-left: 4px solid #ffc107;
+}
+
+.priority-low {
+  border-left: 4px solid #28a745;
+}
+
+/* Detail view panel */
+.detail-panel {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.detail-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.detail-actions button {
+  flex: 1;
+}
+
+/* Service demand specific button styling */
+.service-demand-container .btn-primary {
+  background-color: #22C7EE;
+  border-color: #22C7EE;
+}
+
+.service-demand-container .btn-primary:hover {
+  background-color: #1ba8ca;
+  border-color: #1ba8ca;
+}
+
+/* Enhanced scrollbar for demands list */
+.demands-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.demands-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.demands-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #22C7EE, #1ba8ca);
+  border-radius: 10px;
+}
+
+.demands-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1ba8ca, #22C7EE);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .service-demand-container {
+    padding: 10px;
+  }
+  
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .create-demand-btn {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  
+  .detail-actions {
+    flex-direction: column;
+  }
+  
+  .detail-actions button {
+    margin-bottom: 10px;
+  }
 }
 
 .demand-status {
@@ -485,5 +612,4 @@
 .form-select{
   background-color: #374151;
   border-color: #e3f2fd !important;
-
 }

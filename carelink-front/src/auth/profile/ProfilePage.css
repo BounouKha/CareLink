@@ -1,315 +1,138 @@
-/* ProfilePage.css - Enhanced Professional Design */
+/* ProfilePage.css - Bootstrap Enhanced Design */
 
-.profile-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px;
-    background: 
-        radial-gradient(circle at 20% 20%, rgba(0, 123, 191, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(0, 188, 212, 0.05) 0%, transparent 50%),
-        linear-gradient(135deg, #f8fbff 0%, #ffffff 50%, #f5f9ff 100%);
-    min-height: 100vh;
-    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #1a202c;
-}
-
-.profile-container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border-radius: 24px;
-    box-shadow: 
-        0 20px 40px rgba(0, 123, 191, 0.08),
-        0 8px 24px rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    padding: 32px;
-    max-width: 900px;
-    width: 100%;
-    min-height: auto;
-    border: 1px solid rgba(0, 123, 191, 0.08);
-    position: relative;
+/* Profile-specific enhancements for Bootstrap cards */
+.profile-content .card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.profile-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(135deg, #007bbf 0%, #00bcd4 50%, #4fc3f7 100%);
-    border-radius: 24px 24px 0 0;
-    opacity: 0.8;
+.profile-content .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Role Display Header */
-.role-display {
-    text-align: center;
-    margin-bottom: 32px;
-    padding: 20px;
-    background: linear-gradient(145deg, rgba(0, 123, 191, 0.03), rgba(0, 188, 212, 0.03));
-    border-radius: 16px;
-    border: 1px solid rgba(0, 123, 191, 0.1);
-    position: relative;
-    overflow: hidden;
+/* Enhanced navigation pills */
+.nav-pills .nav-link {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 12px 20px;
+    margin: 4px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    color: #6c757d;
 }
 
-.role-display::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #007bbf, #00bcd4);
-    border-radius: 16px 16px 0 0;
+.nav-pills .nav-link:hover {
+    background-color: rgba(0, 123, 191, 0.1);
+    color: #007bbf;
+    border-color: rgba(0, 123, 191, 0.2);
 }
 
-.role-display p {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
+.nav-pills .nav-link.active {
     background: linear-gradient(135deg, #007bbf, #00bcd4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(0, 123, 191, 0.3);
+}
+
+/* Card header enhancements */
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.card-header .card-title {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+/* Form label styling */
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Enhanced Profile Content */
+/* Enhanced badge styling */
+.badge {
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* Draggable profile header */
+.card[style*="cursor: move"] {
+    position: relative;
+    z-index: 10;
+}
+
+.card[style*="cursor: move"]:hover {
+    box-shadow: 0 8px 25px rgba(0, 123, 191, 0.15) !important;
+}
+
+/* Empty state styling */
+.text-center .fas {
+    opacity: 0.6;
+}
+
+/* Profile content styling */
 .profile-content {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    min-height: 500px;
-    overflow-y: auto;
+    min-height: 400px;
 }
 
-/* Enhanced Toolbar */
-.toolbar {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 24px;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(248, 251, 255, 0.9));
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 16px;
-    border: 1px solid rgba(0, 123, 191, 0.1);
-    box-shadow: 0 8px 24px rgba(0, 123, 191, 0.05);
+/* Enhanced nested cards for family and medical info */
+.profile-content .card .card {
+    margin-bottom: 1rem;
 }
 
-.toolbar button {
-    background: none;
-    border: none;
-    padding: 10px 20px;
-    font-size: 1rem;
-    color: #00bcd4;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s, color 0.3s;
+.profile-content .card .card:last-child {
+    margin-bottom: 0;
 }
 
-.toolbar button.active,
-.toolbar button:hover {
-    background: #00bcd4;
-    color: #fff;
+/* Icon styling in headers */
+.card-header .fas {
+    opacity: 0.8;
 }
 
-.user-info, .patient-info, .family-info, .medical-folder, .contact-info {
-    background: #f9f9f9;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.user-info h2, .patient-info h2, .family-info h2, .medical-folder h2, .contact-info h2 {
-    color: #333;
-    margin-bottom: 16px;
-}
-
-.user-info p, .patient-info p, .family-info p, .medical-folder p {
-    margin: 8px 0;
-    font-size: 1rem;
-    color: #555;
-}
-
-.family-info ul, .medical-folder ul, .contact-info ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.family-info li, .medical-folder li, .contact-info, .user-info p, .patient-info p, li {
-    margin-bottom: 12px;
-    padding: 10px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.contact-info {
-    background: #f9f9f9; /* Ensure pure white background */
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.contact-info h2 {
-    color: #333;
-    margin-bottom: 16px;
-}
-
-.contact-info ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.contact-info li {
-    margin-bottom: 12px;
-    padding: 10px;
-    background: #ffffff; /* Ensure pure white background */
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Additional Styles for Family Link and Linked Patient Information */
-.patient-info .family-link {
-    margin-top: 20px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #007bbf;
-}
-
-.patient-info .family-link p {
-    color: #2c3e50;
-    font-size: 1.1rem;
-    margin: 0;
-}
-
-.patient-info .family-link p strong {
-    color: #007bbf;
-}
-
-.family-link {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-
-.family-link p {
-    background: #f0f9ff;
-    padding: 10px;
-    border-radius: 5px;
-    font-weight: 500;
-    color: #0066cc;
-}
-
-.medical-folder {
-    /* Existing styles for medical-folder if any */
-}
-
-/* Linked Patients Display Styles */
-.linked-patients {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    width: 100%;
-}
-
-.linked-patient-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
-}
-
-.linked-patient-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.linked-patient-card h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #2c3e50;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
-}
-
-.patient-info {
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.patient-info h2 {
-    margin-bottom: 20px;
-    color: #2c3e50;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
-}
-
-.patient-details {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.patient-details p {
-    margin: 0;
+/* Data display enhancements */
+.fs-6.fw-medium {
+    color: #2d3748;
     line-height: 1.5;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
 }
 
-/* Multiple linked patients styling */
-.linked-patients-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nav-pills .nav-link {
+        padding: 10px 16px;
+        font-size: 0.875rem;
+    }
+    
+    .card-header .fas[style*="fontSize: '2rem'"] {
+        font-size: 1.5rem !important;
+    }
+    
+    .nav-pills {
+        flex-direction: column;
+    }
+    
+    .nav-pills .nav-link {
+        margin: 2px 0;
+        text-align: center;
+    }
 }
 
-.patient-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 1rem;
-    background-color: #f9f9f9;
-}
-
-.patient-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.patient-header h3 {
-    margin: 0;
-    color: #333;
-    font-size: 1.1rem;
-}
-
-.relationship-badge {
-    background-color: #007bff;
-    color: white;
-    padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-.patient-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.5rem;
-}
-
-.patient-details p {
-    margin: 0.2rem 0;
-    font-size: 0.9rem;
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+    }
 }

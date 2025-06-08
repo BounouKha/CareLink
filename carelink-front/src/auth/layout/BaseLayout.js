@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
-import './HomePage.css';
+import './UnifiedBaseLayout.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import LeftToolbar from './LeftToolbar';
 import { AdminContext } from '../login/AdminContext';
-import './LeftToolbar.css';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
