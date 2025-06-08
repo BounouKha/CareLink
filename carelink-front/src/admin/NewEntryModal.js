@@ -114,22 +114,28 @@ const NewEntryModal = ({ show, onClose, familyPatientId, onSuccess }) => {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
-            }
+            }            // Group patients by relationship type to minimize API calls
+            const relationshipGroups = {};
+            selectedPatients.forEach(patient => {
+                const relationship = selectedRelationships[patient.id];
+                if (!relationshipGroups[relationship]) {
+                    relationshipGroups[relationship] = [];
+                }
+                relationshipGroups[relationship].push(patient.id);
+            });
 
-            // Create relationships for each selected patient
-            const promises = selectedPatients.map(patient => {
-                const formData = {
-                    patient_id: patient.id,
-                    link: selectedRelationships[patient.id]
-                };
-
-                return fetch(`http://localhost:8000/account/users/${familyPatientId}/create/family-patient/`, {
+            // Create requests for each relationship group
+            const promises = Object.entries(relationshipGroups).map(([relationship, patientIds]) => {
+                return fetch(`http://localhost:8000/account/familypatient/${familyPatientId}/add-relation/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify({ user_id: familyPatientId, role_specific_data: formData }),
+                    body: JSON.stringify({
+                        patient_ids: patientIds,
+                        relationship: relationship
+                    }),
                 });
             });
 
@@ -138,7 +144,7 @@ const NewEntryModal = ({ show, onClose, familyPatientId, onSuccess }) => {
             // Check if all requests were successful
             const failed = responses.filter(response => !response.ok);
             if (failed.length > 0) {
-                throw new Error(`Failed to create ${failed.length} relationships.`);
+                throw new Error(`Failed to create ${failed.length} relationship group(s).`);
             }
 
             console.log('All relationships created successfully');

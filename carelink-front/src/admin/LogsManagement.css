@@ -178,6 +178,8 @@
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     min-height: 400px;
+    max-height: 70vh;
+    overflow-y: auto;
 }
 
 .logs-list {
@@ -189,6 +191,8 @@
     border-bottom: 1px solid #f3f4f6;
     padding: 16px 20px;
     transition: background-color 0.2s ease;
+    max-height: none;
+    overflow: visible;
 }
 
 .log-entry:hover {
@@ -302,6 +306,7 @@
     border: 1px solid #e5e7eb;
     border-radius: 4px;
     overflow: hidden;
+    max-width: 100%;
 }
 
 .additional-data summary {
@@ -324,7 +329,48 @@
     font-size: 11px;
     color: #4b5563;
     background: white;
-    overflow-x: auto;
+    overflow: auto;
+    max-height: 400px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Custom scrollbar styling for better UX */
+.additional-data pre::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.additional-data pre::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 4px;
+}
+
+.additional-data pre::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 4px;
+}
+
+.additional-data pre::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+.logs-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.logs-container::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 4px;
+}
+
+.logs-container::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.logs-container::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 /* Loading and Empty States */
@@ -469,6 +515,16 @@
         width: 50px;
         height: 50px;
         font-size: 1.5rem;
+    }
+
+    /* Adjust heights for mobile */
+    .logs-container {
+        max-height: 60vh;
+    }
+
+    .additional-data pre {
+        max-height: 250px;
+        font-size: 10px;
     }
 }
 
