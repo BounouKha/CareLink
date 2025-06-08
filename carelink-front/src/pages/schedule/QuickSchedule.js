@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './QuickSchedule.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
   const [formData, setFormData] = useState({

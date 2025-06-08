@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './CoordinatorToolbar.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const CoordinatorToolbar = () => {
   const [toolbarData, setToolbarData] = useState(null);
