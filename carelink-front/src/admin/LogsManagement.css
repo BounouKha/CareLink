@@ -1,4 +1,5 @@
-/* Logs Management Styles */
+/* LogsManagement.css - Page-specific styles only
+   Modal, form, and button styles are handled by UnifiedBaseLayout.css */
 
 .logs-management {
     background: #ffffff;

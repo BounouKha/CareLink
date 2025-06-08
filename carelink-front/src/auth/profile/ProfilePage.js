@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import './ProfilePage.css';
+// CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../layout/BaseLayout';
 
 const ProfilePage = () => {
@@ -41,6 +41,7 @@ const ProfilePage = () => {
                 setUserData(data);
                   // If user is a Family Patient, fetch linked patient info
                 if (data.user.role === 'Family Patient') {
+                    console.log('[DEBUG] User is Family Patient, fetching linked patients...');
                     try {
                         const linkedResponse = await fetch('http://localhost:8000/account/family-patient/linked-patient/', {
                             method: 'GET',
@@ -49,22 +50,30 @@ const ProfilePage = () => {
                             },
                         });
 
+                        console.log('[DEBUG] Linked patient response status:', linkedResponse.status);
                         if (linkedResponse.ok) {
                             const linkedData = await linkedResponse.json();
                             console.log('[DEBUG] Linked Patients Data:', linkedData);
                             // Handle both old (linked_patient) and new (linked_patients) API format
                             if (linkedData.linked_patients && Array.isArray(linkedData.linked_patients)) {
+                                console.log('[DEBUG] Using linked_patients array format');
                                 setLinkedPatients(linkedData.linked_patients);
                             } else if (linkedData.linked_patient) {
+                                console.log('[DEBUG] Using legacy linked_patient format');
                                 // Fallback for old API format
                                 setLinkedPatients([linkedData.linked_patient]);
                             } else {
+                                console.log('[DEBUG] No linked patients found in response');
                                 setLinkedPatients([]);
                             }
+                        } else {
+                            console.error('[DEBUG] Failed to fetch linked patients:', linkedResponse.status);
                         }
                     } catch (err) {
-                        console.error('Error fetching linked patients:', err);
+                        console.error('[DEBUG] Error fetching linked patients:', err);
                     }
+                } else {
+                    console.log('[DEBUG] User is not Family Patient, role:', data.user.role);
                 }
             } catch (err) {
                 setError('Failed to fetch profile data. Please try again.');
@@ -113,153 +122,384 @@ const ProfilePage = () => {
             window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('mouseup', onMouseUp);
         };
-    }, [profileRef]);
-
-    const renderContent = () => {
+    }, [profileRef]);    const renderContent = () => {
         switch (selectedTab) {
             case 'user':
                 return (
-                    <div className="user-info">
-                        <h2>User Information</h2>
-                        <p><strong>Email:</strong> {userData.user.email}</p>
-                        <p><strong>First Name:</strong> {userData.user.firstname}</p>
-                        <p><strong>Last Name:</strong> {userData.user.lastname}</p>
-                        <p><strong>Address:</strong> {userData.user.address}</p>
-                        {userData.user.national_number && userData.user.national_number !== "null" && (
-                            <p><strong>National Number:</strong> {userData.user.national_number}</p>                        )}
-                        <p><strong>Birthdate:</strong> {userData.user.birthdate}</p>
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-primary bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
+                                <i className="fas fa-user me-2 text-primary"></i>
+                                User Information
+                            </h5>
+                        </div>
+                        <div className="card-body">
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <label className="form-label text-muted">Email:</label>
+                                    <p className="fs-6 fw-medium">{userData.user.email}</p>
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label text-muted">First Name:</label>
+                                    <p className="fs-6 fw-medium">{userData.user.firstname}</p>
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label text-muted">Last Name:</label>
+                                    <p className="fs-6 fw-medium">{userData.user.lastname}</p>
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label text-muted">Birthdate:</label>
+                                    <p className="fs-6 fw-medium">{userData.user.birthdate}</p>
+                                </div>
+                                <div className="col-12">
+                                    <label className="form-label text-muted">Address:</label>
+                                    <p className="fs-6 fw-medium">{userData.user.address}</p>
+                                </div>
+                                {userData.user.national_number && userData.user.national_number !== "null" && (
+                                    <div className="col-md-6">
+                                        <label className="form-label text-muted">National Number:</label>
+                                        <p className="fs-6 fw-medium">{userData.user.national_number}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 );            case 'patient':
                 return (
-                    <div className="patient-info">
-                        <h2>{userData.user.role === 'Family Patient' ? "Linked Patient Information" : "Patient Information"}</h2>
-                        {userData.user.role === 'Family Patient' ? (
-                            linkedPatients && linkedPatients.length > 0 ? (
-                                <div className="linked-patients-container">
-                                    {linkedPatients.map((patient, index) => (
-                                        <div key={index} className="patient-card">
-                                            <div className="patient-header">
-                                                <h3>{patient.firstname} {patient.lastname}</h3>
-                                                <span className="relationship-badge">{patient.relationship || 'Family Member'}</span>
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-success bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
+                                <i className="fas fa-user-injured me-2 text-success"></i>
+                                {userData.user.role === 'Family Patient' ? "Linked Patient Information" : "Patient Information"}
+                            </h5>
+                        </div>
+                        <div className="card-body">
+                            {userData.user.role === 'Family Patient' ? (
+                                linkedPatients && linkedPatients.length > 0 ? (
+                                    <div className="row g-3">
+                                        {linkedPatients.map((patient, index) => (
+                                            <div key={index} className="col-12">
+                                                <div className="card bg-light border-0">
+                                                    <div className="card-body">
+                                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                                            <h6 className="card-title mb-0">{patient.firstname} {patient.lastname}</h6>
+                                                            <span className="badge bg-primary">{patient.relationship || 'Family Member'}</span>
+                                                        </div>
+                                                        <div className="row g-2">
+                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">Gender:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{patient.gender}</p>
+                                                            </div>
+                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">Blood Type:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{patient.blood_type}</p>
+                                                            </div>
+                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">Birth Date:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{patient.birth_date}</p>
+                                                            </div>
+                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">Emergency Contact:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{patient.emergency_contact}</p>
+                                                            </div>
+                                                            <div className="col-12">
+                                                                <label className="form-label text-muted">Illness:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{patient.illness}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="patient-details">
-                                                <p><strong>Gender:</strong> {patient.gender}</p>
-                                                <p><strong>Blood Type:</strong> {patient.blood_type}</p>
-                                                <p><strong>Emergency Contact:</strong> {patient.emergency_contact}</p>
-                                                <p><strong>Illness:</strong> {patient.illness}</p>
-                                                <p><strong>Birth Date:</strong> {patient.birth_date}</p>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <i className="fas fa-info-circle text-muted mb-2" style={{fontSize: '2rem'}}></i>
+                                        <p className="text-muted mb-0">No linked patient information available.</p>
+                                    </div>
+                                )
+                            ) : userData.patient ? (
+                                <div className="row g-3">
+                                    <div className="col-md-6">
+                                        <label className="form-label text-muted">Gender:</label>
+                                        <p className="fs-6 fw-medium">{userData.patient.gender}</p>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label text-muted">Blood Type:</label>
+                                        <p className="fs-6 fw-medium">{userData.patient.blood_type}</p>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label text-muted">Emergency Contact:</label>
+                                        <p className="fs-6 fw-medium">{userData.patient.emergency_contact}</p>
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="form-label text-muted">Illness:</label>
+                                        <p className="fs-6 fw-medium">{userData.patient.illness}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <i className="fas fa-info-circle text-muted mb-2" style={{fontSize: '2rem'}}></i>
+                                    <p className="text-muted mb-0">No patient information available.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );            case 'family':
+                return (
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-info bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
+                                <i className="fas fa-users me-2 text-info"></i>
+                                Family Relationships
+                            </h5>
+                        </div>
+                        <div className="card-body">
+                            {userData.family_relationships && userData.family_relationships.length > 0 ? (
+                                <div className="row g-3">
+                                    {userData.family_relationships.map((relation, index) => (
+                                        <div key={index} className="col-12">
+                                            <div className="card bg-light border-0">
+                                                <div className="card-body py-3">
+                                                    <div className="row">
+                                                        <div className="col-md-6">
+                                                            <label className="form-label text-muted">Relation:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{relation.link}</p>
+                                                        </div>
+                                                        <div className="col-md-6">
+                                                            <label className="form-label text-muted">Family Member:</label>
+                                                            {relation.user ? (
+                                                                <p className="fs-6 fw-medium mb-0">{relation.user.full_name} ({relation.user.email})</p>
+                                                            ) : (
+                                                                <p className="fs-6 text-muted mb-0">Not Available</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p>No linked patient information available.</p>
-                            )
-                        ) : userData.patient ? (
-                            <div>
-                                <p><strong>Gender:</strong> {userData.patient.gender}</p>
-                                <p><strong>Blood Type:</strong> {userData.patient.blood_type}</p>
-                                <p><strong>Emergency Contact:</strong> {userData.patient.emergency_contact}</p>
-                                <p><strong>Illness:</strong> {userData.patient.illness}</p>
-                            </div>
-                        ) : (
-                            <p>No patient information available.</p>
-                        )}
-                    </div>
-                );
-            case 'family':
-                return (
-                    <div className="family-info">
-                        <h2>Family Relationships</h2>
-                        {userData.family_relationships && userData.family_relationships.length > 0 ? (
-                            <ul>
-                                {userData.family_relationships.map((relation, index) => (
-                                    <li key={index}>
-                                        <p><strong>Relation:</strong> {relation.link}</p>
-                                        {relation.user ? (
-                                            <p><strong>Family Member:</strong> {relation.user.full_name} ({relation.user.email})</p>
-                                        ) : (
-                                            <p><strong>Family Member:</strong> Not Available</p>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No family relationships available.</p>
-                        )}
+                                <div className="text-center py-4">
+                                    <i className="fas fa-users text-muted mb-2" style={{fontSize: '2rem'}}></i>
+                                    <p className="text-muted mb-0">No family relationships available.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
             case 'medical':
                 return (
-                    <div className="medical-folder">
-                        <h2>Medical Folder</h2>
-                        {userData.medical_folder && userData.medical_folder.length > 0 ? (
-                            <ul>
-                                {userData.medical_folder.map((record, index) => (
-                                    <li key={index}>
-                                        <p><strong>Date:</strong> {record.created_at}</p>
-                                        <p><strong>Notes:</strong> {record.note || 'N/A'}</p>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No medical folder data available.</p>
-                        )}
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-warning bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
+                                <i className="fas fa-folder-medical me-2 text-warning"></i>
+                                Medical Folder
+                            </h5>
+                        </div>
+                        <div className="card-body">
+                            {userData.medical_folder && userData.medical_folder.length > 0 ? (
+                                <div className="row g-3">
+                                    {userData.medical_folder.map((record, index) => (
+                                        <div key={index} className="col-12">
+                                            <div className="card bg-light border-0">
+                                                <div className="card-body py-3">
+                                                    <div className="row">
+                                                        <div className="col-md-4">
+                                                            <label className="form-label text-muted">Date:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{record.created_at}</p>
+                                                        </div>
+                                                        <div className="col-md-8">
+                                                            <label className="form-label text-muted">Notes:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{record.note || 'N/A'}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <i className="fas fa-folder-open text-muted mb-2" style={{fontSize: '2rem'}}></i>
+                                    <p className="text-muted mb-0">No medical folder data available.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                );
-            case 'contact':
+                );            case 'contact':
                 return (
-                    <div className="contact-info">
-                        <h2>Contact Information</h2>
-                        {userData.phone_numbers && userData.phone_numbers.length > 0 ? (
-                            <ul>
-                                {userData.phone_numbers.map((phone, index) => (
-                                    <li key={index}>
-                                        <p><strong>{phone.name}</strong> {phone.phone_number}</p>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No contact information available.</p>
-                        )}
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-secondary bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
+                                <i className="fas fa-phone me-2 text-secondary"></i>
+                                Contact Information
+                            </h5>
+                        </div>
+                        <div className="card-body">
+                            {userData.phone_numbers && userData.phone_numbers.length > 0 ? (
+                                <div className="row g-3">
+                                    {userData.phone_numbers.map((phone, index) => (
+                                        <div key={index} className="col-md-6">
+                                            <div className="card bg-light border-0">
+                                                <div className="card-body py-3">
+                                                    <label className="form-label text-muted">{phone.name}:</label>
+                                                    <p className="fs-6 fw-medium mb-0">{phone.phone_number}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <i className="fas fa-phone-slash text-muted mb-2" style={{fontSize: '2rem'}}></i>
+                                    <p className="text-muted mb-0">No contact information available.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
             default:
                 return null;
         }
     };
-
-
     if (error) {
-        return <BaseLayout><div className="error">{error}</div></BaseLayout>;
+        return (
+            <BaseLayout>
+                <div className="container-fluid py-4">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-6">
+                            <div className="alert alert-danger d-flex align-items-center" role="alert">
+                                <i className="fas fa-exclamation-triangle me-2"></i>
+                                <div>{error}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </BaseLayout>
+        );
     }
 
     if (!userData) {
-        return <BaseLayout><div>Loading...</div></BaseLayout>;
-    }    return (
-        <BaseLayout>
-            <div className="profile-container" ref={profileRef}>
-                <div className="role-display">
-                    <p><strong>Role:</strong> {userData.user.role}</p>
-                </div>                <div className="toolbar">
-                    <button onClick={() => setSelectedTab('user')} className={selectedTab === 'user' ? 'active' : ''}>User Info</button>
-                    {userData.user.role === 'Family Patient' ? (
-                        <>
-                            <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Linked Patients</button>
-                            <button onClick={() => setSelectedTab('family')} className={selectedTab === 'family' ? 'active' : ''}>Family</button>
-                            <button onClick={() => setSelectedTab('contact')} className={selectedTab === 'contact' ? 'active' : ''}>Contact</button>
-                        </>
-                    ) : userData.user.role !== 'Coordinator' && (
-                        <>
-                            <button onClick={() => setSelectedTab('patient')} className={selectedTab === 'patient' ? 'active' : ''}>Patient Info</button>
-                            <button onClick={() => setSelectedTab('family')} className={selectedTab === 'family' ? 'active' : ''}>Family</button>
-                            <button onClick={() => setSelectedTab('medical')} className={selectedTab === 'medical' ? 'active' : ''}>Medical Folder</button>
-                            <button onClick={() => setSelectedTab('contact')} className={selectedTab === 'contact' ? 'active' : ''}>Contact</button>
-                        </>
-                    )}
+        return (
+            <BaseLayout>
+                <div className="container-fluid py-4">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-6">
+                            <div className="card shadow-sm border-0">
+                                <div className="card-body text-center py-5">
+                                    <div className="spinner-border text-primary mb-3" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                    <h5 className="text-muted">Loading Profile Information</h5>
+                                    <p className="text-muted mb-0">Please wait while we fetch your data...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="profile-content">
-                    {renderContent()}
+            </BaseLayout>
+        );
+    }return (
+        <BaseLayout>
+            <div className="container-fluid py-4">
+                <div className="row justify-content-center">
+                    <div className="col-lg-10 col-xl-8">
+                        {/* Fixed Profile Header Card */}
+                        <div className="card shadow-sm border-0 mb-4">
+                            <div className="card-header bg-primary bg-opacity-10 border-0">
+                                <div className="d-flex align-items-center">
+                                    <i className="fas fa-user-circle me-3 text-primary" style={{fontSize: '2rem'}}></i>
+                                    <div>
+                                        <h4 className="card-title mb-0">Profile Information</h4>                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1">
+                                            <i className="fas fa-user-tag me-1"></i>
+                                            Role: {userData.user.role}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Draggable Content Area */}
+                        <div ref={profileRef} style={{cursor: 'move'}}>
+                            {/* Navigation Tabs */}
+                            <div className="card shadow-sm border-0 mb-4">
+                                <div className="card-body p-0">
+                                    <nav className="nav nav-pills nav-justified">
+                                        <button 
+                                            className={`nav-link ${selectedTab === 'user' ? 'active' : ''}`}
+                                            onClick={() => setSelectedTab('user')}
+                                        >
+                                            <i className="fas fa-user me-2"></i>
+                                            User Info
+                                        </button>
+                                        {userData.user.role === 'Family Patient' ? (
+                                            <>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'patient' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('patient')}
+                                                >
+                                                    <i className="fas fa-user-injured me-2"></i>
+                                                    Linked Patients
+                                                </button>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'family' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('family')}
+                                                >
+                                                    <i className="fas fa-users me-2"></i>
+                                                    Family
+                                                </button>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('contact')}
+                                                >
+                                                    <i className="fas fa-phone me-2"></i>
+                                                    Contact
+                                                </button>
+                                            </>
+                                        ) : userData.user.role !== 'Coordinator' && (
+                                            <>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'patient' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('patient')}
+                                                >
+                                                    <i className="fas fa-user-injured me-2"></i>
+                                                    Patient Info
+                                                </button>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'family' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('family')}
+                                                >
+                                                    <i className="fas fa-users me-2"></i>
+                                                    Family
+                                                </button>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'medical' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('medical')}
+                                                >
+                                                    <i className="fas fa-folder-medical me-2"></i>
+                                                    Medical Folder
+                                                </button>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('contact')}
+                                                >
+                                                    <i className="fas fa-phone me-2"></i>
+                                                    Contact
+                                                </button>
+                                            </>
+                                        )}
+                                    </nav>
+                                </div>
+                            </div>
+
+                            {/* Content Area */}
+                            <div className="profile-content">
+                                {renderContent()}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </BaseLayout>

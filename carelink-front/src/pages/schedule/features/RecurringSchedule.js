@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './RecurringSchedule.css';
+// CSS is now handled by UnifiedBaseLayout.css
 
 const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
   const [formData, setFormData] = useState({

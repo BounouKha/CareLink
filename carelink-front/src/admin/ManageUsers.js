@@ -4,8 +4,10 @@ import BaseLayout from '../auth/layout/BaseLayout';
 import EditUserModal from './EditUserModal';
 import CreateUserModal from './CreateUserModal';
 import CreateProfileModal from './CreateProfileModal';
+import AddRelationModal from './AddRelationModal';
 
-const ManageUsers = () => {    const [allUsers, setAllUsers] = useState([]); // Store all users from all pages
+const ManageUsers = () => {
+    const [allUsers, setAllUsers] = useState([]); // Store all users from all pages
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [displayedUsers, setDisplayedUsers] = useState([]); // Users to display on current page
     const [error, setError] = useState(null);
@@ -16,13 +18,24 @@ const ManageUsers = () => {    const [allUsers, setAllUsers] = useState([]); // 
     const [messageType, setMessageType] = useState(null); // 'success' or 'error'
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
+    const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);    const [showAddRelationModal, setShowAddRelationModal] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(null);
+    const [selectedFamilyPatientId, setSelectedFamilyPatientId] = useState(null);
     const [selectedRole, setSelectedRole] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchField, setSearchField] = useState('all');
-    const [loading, setLoading] = useState(false);
-    const USERS_PER_PAGE = 50;    // Fetch all users from all pages
+    const [searchField, setSearchField] = useState('all');    const [loading, setLoading] = useState(false);
+    const USERS_PER_PAGE = 50;
+
+    // Debug effect to track modal state changes
+    useEffect(() => {
+        console.log('[DEBUG] Modal state changed:', {
+            showAddRelationModal,
+            selectedFamilyPatientId,
+            selectedUserId
+        });
+    }, [showAddRelationModal, selectedFamilyPatientId, selectedUserId]);
+
+    // Fetch all users from all pages
     const fetchAllUsers = async () => {
         setLoading(true);
         try {
@@ -206,6 +219,48 @@ const ManageUsers = () => {    const [allUsers, setAllUsers] = useState([]); // 
             handleError(err.message);
             return null;
         }
+    };    // Fetch family patient profile ID from user ID
+    const fetchFamilyPatientId = async (userId) => {
+        try {
+            console.log('[DEBUG] fetchFamilyPatientId called with userId:', userId);
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                throw new Error('No access token found. Please log in.');
+            }
+
+            // Use the FamilyPatientViewSet to get all family patient records
+            const response = await fetch(`http://localhost:8000/account/familypatient/`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                console.error('[DEBUG] API response not OK:', response.status);
+                throw new Error('Failed to fetch family patient profiles.');
+            }
+
+            const data = await response.json();
+            console.log('[DEBUG] All family patient profiles:', data);
+            
+            // Find the family patient record that matches the user ID
+            const familyPatients = data.results || data;
+            const userFamilyPatient = familyPatients.find(fp => 
+                fp.user && fp.user.id === userId
+            );
+            
+            if (userFamilyPatient && userFamilyPatient.id) {
+                console.log('[DEBUG] Found family patient profile:', userFamilyPatient);
+                return userFamilyPatient.id;
+            } else {
+                console.log('[DEBUG] No family patient profile found for user:', userId);
+                return null; // Return null instead of throwing error
+            }
+        } catch (err) {
+            console.error('[DEBUG] Error in fetchFamilyPatientId:', err);
+            return null; // Return null on error so calling function can handle the message
+        }
     };
 
     const handleCreateProfileClick = async (userId, role) => {
@@ -344,13 +399,85 @@ const ManageUsers = () => {    const [allUsers, setAllUsers] = useState([]); // 
                             <div className="user-card-header">
                                 <div className="user-avatar">
                                     {user.firstname?.charAt(0)}{user.lastname?.charAt(0)}
-                                </div>
-                                <div className="user-info">
+                                </div>                                <div className="user-info">
                                     <h3>{user.firstname} {user.lastname}</h3>
-                                    <p className="user-email">{user.email}</p>
-                                    <span className={`user-role role-${user.role?.toLowerCase().replace(' ', '-')}`}>
+                                    <p className="user-email">{user.email}</p>                                    <span className={`user-role role-${user.role?.toLowerCase().replace(' ', '-')}`}>
                                         {user.role}
                                     </span>
+                                    {console.log('[DEBUG] Checking if user is Family Patient:', { userId: user.id, userName: user.firstname + ' ' + user.lastname, userRole: user.role, isFamilyPatient: user.role === 'Family Patient' })}
+                                    {user.role === 'Family Patient' && (
+                                        <button 
+                                            className="btn btn-sm btn-success bg-opacity-20 text-dark ms-2 border-0"                                            onClick={async () => {
+                                                console.log('[DEBUG] New entry button clicked for user:', user.id);
+                                                
+                                                setSelectedUserId(user.id);
+                                                
+                                                // Fetch the actual family patient profile ID
+                                                const familyPatientId = await fetchFamilyPatientId(user.id);
+                                                
+                                                if (familyPatientId) {
+                                                    setSelectedFamilyPatientId(familyPatientId);
+                                                    setShowAddRelationModal(true);                                                } else {
+                                                    console.log('[DEBUG] No family patient profile found, showing error message');
+                                                    // Show beautiful and friendly message to create profile first
+                                                    setMessage(
+                                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
+                                                            <div style={{ 
+                                                                backgroundColor: '#3498db', 
+                                                                borderRadius: '50%', 
+                                                                width: '40px', 
+                                                                height: '40px', 
+                                                                display: 'flex', 
+                                                                alignItems: 'center', 
+                                                                justifyContent: 'center',
+                                                                flexShrink: 0
+                                                            }}>
+                                                                <i className="fas fa-user-plus" style={{ fontSize: '18px', color: 'white' }}></i>
+                                                            </div>
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ 
+                                                                    fontSize: '16px', 
+                                                                    fontWeight: 'bold', 
+                                                                    color: '#0369a1', 
+                                                                    marginBottom: '8px' 
+                                                                }}>
+                                                                    🔧 Profile Setup Required
+                                                                </div>
+                                                                <div style={{ fontSize: '14px', lineHeight: '1.5', color: '#0369a1' }}>
+                                                                    <strong>{user.firstname} {user.lastname}</strong> needs a Family Patient profile to add new entries.
+                                                                    <br />
+                                                                    <span style={{ marginTop: '8px', display: 'inline-block' }}>
+                                                                        👉 Click the 
+                                                                        <span style={{ 
+                                                                            background: '#17a2b8', 
+                                                                            color: 'white', 
+                                                                            padding: '3px 8px', 
+                                                                            borderRadius: '4px', 
+                                                                            fontSize: '12px',
+                                                                            fontWeight: 'bold',
+                                                                            margin: '0 4px'
+                                                                        }}>
+                                                                            Profile
+                                                                        </span> 
+                                                                        button below to create one first.
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                    setMessageType('info');
+                                                    // Scroll to top to make sure user sees the message
+                                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                    // Give users more time to read the detailed message
+                                                    setTimeout(() => setMessage(null), 10000);
+                                                }
+                                            }}
+                                            title="Add new patient relationships"
+                                        >
+                                            <i className="fas fa-plus me-1"></i>
+                                            New entry
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             
@@ -440,14 +567,59 @@ const ManageUsers = () => {    const [allUsers, setAllUsers] = useState([]); // 
                     onClose={() => setIsCreateModalOpen(false)}
                     onSave={handleCreateUser}
                 />
-            )}
-            {showCreateProfileModal && (
+            )}            {showCreateProfileModal && (
                 <CreateProfileModal
                     userId={selectedUserId}
                     role={selectedRole}
                     onClose={() => setShowCreateProfileModal(false)}
                     onProfileCreated={handleProfileCreated}
                 />
+            )}            {showAddRelationModal && (
+                <>
+                    {console.log('[DEBUG] Rendering AddRelationModal with:', { showAddRelationModal, selectedFamilyPatientId })}
+                    {/* Test with a very simple div first */}
+                    <div style={{
+                        position: 'fixed',
+                        top: '50px',
+                        right: '50px',
+                        backgroundColor: 'red',
+                        color: 'white',
+                        padding: '20px',
+                        zIndex: 10000,
+                        fontSize: '20px',
+                        border: '5px solid yellow'
+                    }}>
+                        MODAL IS OPEN!
+                    </div>
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999
+                    }}>
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            minWidth: '300px'
+                        }}>
+                            <h3>DEBUG: Add Relation Modal</h3>
+                            <p>Family Patient ID: {selectedFamilyPatientId}</p>
+                            <button 
+                                onClick={() => setShowAddRelationModal(false)}
+                                style={{ padding: '10px 20px', marginTop: '10px' }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );
