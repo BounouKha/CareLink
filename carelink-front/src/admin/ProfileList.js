@@ -6,22 +6,25 @@ import EditProfileModal from './EditProfileModal';
 
 const ProfileList = () => {
     const [profiles, setProfiles] = useState([]); // Ensure profiles is initialized as an empty array
+    const [allProfiles, setAllProfiles] = useState([]); // Store all profiles for search
+    const [filteredProfiles, setFilteredProfiles] = useState([]); // Store filtered profiles
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
-    const [hasNextPage, setHasNextPage] = useState(false);
-    const [hasPreviousPage, setHasPreviousPage] = useState(false);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [isShowModalOpen, setIsShowModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    const fetchProfiles = async (page) => {
+    const PROFILES_PER_PAGE = 50;    const fetchProfiles = async () => {
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/account/profiles/?page=${page}`, {
+            // Fetch all profiles without pagination to enable client-side search and pagination
+            const response = await fetch(`http://localhost:8000/account/profiles/?page_size=1000`, {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -35,18 +38,67 @@ const ProfileList = () => {
             const data = await response.json();
             console.log('Fetched profiles:', data.results); // Log fetched profiles
             const filteredProfiles = (data.results || []).filter(profile => profile.id !== null && profile.user_id !== null);
-            setProfiles(filteredProfiles); // Only include profiles with non-null id and user_id
-            setHasNextPage(!!data.next);
-            setHasPreviousPage(!!data.previous);
+            setAllProfiles(filteredProfiles); // Store all profiles
+            setFilteredProfiles(filteredProfiles); // Initially, filtered profiles are all profiles
+
+            // Calculate pagination for client-side
+            const totalPages = Math.ceil(filteredProfiles.length / PROFILES_PER_PAGE);
+            setTotalPages(totalPages);
+            
         } catch (err) {
             setError(err.message);
-            setProfiles([]); // Reset profiles to an empty array in case of an error
+            setAllProfiles([]); // Reset profiles to an empty array in case of an error
+            setFilteredProfiles([]);
         }
-    };
+    };    useEffect(() => {
+        fetchProfiles();
+    }, []);
 
+    // Handle search functionality
     useEffect(() => {
-        fetchProfiles(page);
-    }, [page]);
+        if (!searchTerm.trim()) {
+            setFilteredProfiles(allProfiles);
+        } else {
+            const filtered = allProfiles.filter(profile => {
+                const searchLower = searchTerm.toLowerCase();
+                const fullName = `${profile.firstname || ''} ${profile.lastname || ''}`.toLowerCase();
+                const nationalNumber = (profile.national_number || '').toString().toLowerCase();
+                const role = (profile.role || '').toLowerCase();
+                const birthdate = (profile.birthdate || '').toLowerCase();
+                
+                return fullName.includes(searchLower) || 
+                       nationalNumber.includes(searchLower) || 
+                       role.includes(searchLower) ||
+                       birthdate.includes(searchLower) ||
+                       profile.id.toString().includes(searchLower);
+            });
+            setFilteredProfiles(filtered);
+        }
+        
+        // Reset to first page when search changes
+        setPage(1);
+        
+        // Recalculate total pages based on filtered results
+        const totalPages = Math.ceil(filteredProfiles.length / PROFILES_PER_PAGE);
+        setTotalPages(totalPages);
+        
+    }, [searchTerm, allProfiles]);
+
+    // Update profiles to display based on current page and filtered results
+    useEffect(() => {
+        const startIndex = (page - 1) * PROFILES_PER_PAGE;
+        const endIndex = startIndex + PROFILES_PER_PAGE;
+        const paginatedProfiles = filteredProfiles.slice(startIndex, endIndex);
+        setProfiles(paginatedProfiles);
+        
+        // Recalculate total pages
+        const totalPages = Math.ceil(filteredProfiles.length / PROFILES_PER_PAGE);
+        setTotalPages(totalPages);
+    }, [page, filteredProfiles]);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
 
     const handleShowProfile = (profile) => {
         setSelectedProfile(profile);
@@ -76,181 +128,262 @@ const ProfileList = () => {
             default:
                 return 'bg-light text-dark';
         }
-    };return (
-        <BaseLayout>
-            <div className="container-fluid py-4">
-                <div className="row justify-content-center">
-                    <div className="col-12">
-                        {/* Header Section */}
-                        <div className="card shadow-sm border-0 mb-4">
-                            <div className="card-header bg-primary bg-opacity-10 border-0">
-                                <div className="d-flex align-items-center">
-                                    <i className="fas fa-users me-3 text-primary" style={{fontSize: '2rem'}}></i>
-                                    <div>
-                                        <h4 className="card-title mb-0">Profile Management</h4>
-                                        <p className="text-muted mb-0">Manage user profiles and view profile details</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    };    return (        <BaseLayout>
+            <div className="admin-users-container">
+                <div className="admin-users-header">
+                    <h1>Profile Management</h1>
+                    <p className="admin-users-subtitle">Manage user profiles and view profile details</p>
+                </div>
 
-                        {/* Error Alert */}
-                        {error && (
-                            <div className="alert alert-danger" role="alert">
-                                <i className="fas fa-exclamation-triangle me-2"></i>
-                                {error}
-                            </div>
+                {/* Search Bar */}
+                <div className="search-container">
+                    <div className="search-input-wrapper">
+                        <i className="fas fa-search search-icon"></i>
+                        <input
+                            type="text"
+                            className="form-control search-input"
+                            placeholder="Search profiles by name, national number, role, birth date, or ID..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                        />
+                        {searchTerm && (
+                            <button 
+                                className="clear-search-btn"
+                                onClick={() => setSearchTerm('')}
+                                title="Clear search"
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
                         )}
+                    </div>
+                    <div className="search-results-info">
+                        {searchTerm ? (
+                            <span className="results-count">
+                                Found {filteredProfiles.length} profile{filteredProfiles.length !== 1 ? 's' : ''}
+                            </span>
+                        ) : (
+                            <span className="total-count">
+                                Total: {allProfiles.length} profile{allProfiles.length !== 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
+                </div>
 
-                        {/* Profiles Table Card */}
-                        <div className="card shadow-sm border-0">
-                            <div className="card-header bg-light border-0">
-                                <h5 className="card-title mb-0">
-                                    <i className="fas fa-table me-2 text-secondary"></i>
-                                    All Profiles
-                                </h5>
-                            </div>
-                            <div className="card-body p-0">
-                                <div className="table-responsive">
-                                    <table className="table table-hover mb-0">
-                                        <thead className="table-light">
-                                            <tr>
-                                                <th scope="col" className="border-0">
-                                                    <i className="fas fa-hashtag me-2 text-muted"></i>
-                                                    ID
-                                                </th>
-                                                <th scope="col" className="border-0">
-                                                    <i className="fas fa-user me-2 text-muted"></i>
-                                                    First Name
-                                                </th>
-                                                <th scope="col" className="border-0">
-                                                    <i className="fas fa-user me-2 text-muted"></i>
-                                                    Last Name
-                                                </th>
-                                                <th scope="col" className="border-0">
-                                                    <i className="fas fa-user-tag me-2 text-muted"></i>
-                                                    Role
-                                                </th>
-                                                <th scope="col" className="border-0 text-center">
-                                                    <i className="fas fa-cogs me-2 text-muted"></i>
-                                                    Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {profiles.length > 0 ? (
-                                                profiles.map((profile, index) => (
-                                                    <tr key={index} className="align-middle">
-                                                        <td className="border-0">                                            <span className="badge bg-primary bg-opacity-20 text-light">
-                                                {profile.id}
-                                            </span>
-                                                        </td>
-                                                        <td className="border-0">
-                                                            <span className="fw-medium">{profile.firstname}</span>
-                                                        </td>
-                                                        <td className="border-0">
-                                                            <span className="fw-medium">{profile.lastname}</span>
-                                                        </td>                                        <td className="border-0">
+                {/* Error Alert */}
+                {error && (
+                    <div className="alert alert-danger" role="alert">
+                        <i className="fas fa-exclamation-triangle me-2"></i>
+                        {error}
+                    </div>
+                )}{/* Profiles Table */}
+                <div className="table-container">
+                    {profiles.length > 0 ? (
+                        <table className="profiles-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <i className="fas fa-user me-2"></i>
+                                        Profile
+                                    </th>
+                                    <th>
+                                        <i className="fas fa-id-card me-2"></i>
+                                        IDs
+                                    </th>                                    <th>
+                                        <i className="fas fa-user-tag me-2"></i>
+                                        Role
+                                    </th>
+                                    <th>
+                                        <i className="fas fa-heart me-2"></i>
+                                        Relations
+                                    </th>
+                                    <th>
+                                        <i className="fas fa-calendar me-2"></i>
+                                        Birth Date
+                                    </th>
+                                    <th>
+                                        <i className="fas fa-cogs me-2"></i>
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {profiles.map((profile, index) => (
+                                    <tr key={index} className="profile-row">
+                                        <td className="profile-info">
+                                            <div className="profile-name">
+                                                <div className="profile-avatar">
+                                                    {profile.firstname?.charAt(0)}{profile.lastname?.charAt(0)}
+                                                </div>
+                                                <div className="name-details">
+                                                    <div className="full-name">
+                                                        {profile.firstname} {profile.lastname}
+                                                    </div>
+                                                    <div className="profile-subtitle">
+                                                        Profile #{profile.id}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="id-info">
+                                            <div className="id-row">
+                                                <span className="id-label">Profile:</span>
+                                                <span className="id-value">{profile.id}</span>
+                                            </div>
+                                            {profile.user_id && (
+                                                <div className="id-row">
+                                                    <span className="id-label">User:</span>
+                                                    <span className="id-value">{profile.user_id}</span>
+                                                </div>
+                                            )}
+                                        </td>                                        <td className="role-info">
                                             {profile.role && profile.role.toLowerCase() !== 'new entry' ? (
-                                                <span className={`badge ${getRoleBadgeClass(profile.role)}`}>
+                                                <span className={`role-badge ${getRoleBadgeClass(profile.role)}`}>
                                                     {profile.role}
                                                 </span>
                                             ) : (
-                                                <span className="text-muted fst-italic">No role assigned</span>
+                                                <span className="role-badge no-role">
+                                                    No role assigned
+                                                </span>
                                             )}
                                         </td>
-                                                        <td className="border-0 text-center">
-                                                            <div className="btn-group" role="group">
-                                                                <button 
-                                                                    className="btn btn-info btn-sm"
-                                                                    onClick={() => handleShowProfile(profile)}
-                                                                    title="View Profile Details"
-                                                                >
-                                                                    <i className="fas fa-eye me-1"></i>
-                                                                    Show
-                                                                </button>
-                                                                <button 
-                                                                    className="btn btn-secondary btn-sm"
-                                                                    onClick={() => handleEditProfile(profile)}
-                                                                    title="Edit Profile"
-                                                                >
-                                                                    <i className="fas fa-edit me-1"></i>
-                                                                    Edit
-                                                                </button>
+                                        <td className="relations-info">
+                                            {profile.role === 'FamilyPatient' && profile.relations && profile.relations.length > 0 ? (
+                                                <div className="relations-list">
+                                                    {profile.relations.map((relation, idx) => (
+                                                        <div key={idx} className="relation-item">
+                                                            <div className="relation-link">
+                                                                <i className="fas fa-link me-1"></i>
+                                                                <span className="link-text">{relation.link}</span>
                                                             </div>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="5" className="text-center py-5 border-0">
-                                                        <div className="text-muted">
-                                                            <i className="fas fa-users" style={{fontSize: '3rem', opacity: '0.3'}}></i>
-                                                            <h5 className="mt-3">No profiles available</h5>
-                                                            <p className="mb-0">No user profiles found in the system.</p>
+                                                            <div className="relation-patient">
+                                                                <i className="fas fa-user me-1"></i>
+                                                                <span className="patient-name">{relation.patient_name || 'Unknown Patient'}</span>
+                                                            </div>
                                                         </div>
-                                                    </td>
-                                                </tr>
+                                                    ))}
+                                                </div>
+                                            ) : profile.role === 'FamilyPatient' ? (
+                                                <span className="no-relations">
+                                                    <i className="fas fa-info-circle me-1"></i>
+                                                    No relations found
+                                                </span>
+                                            ) : (
+                                                <span className="not-applicable">
+                                                    <i className="fas fa-minus me-1"></i>
+                                                    N/A
+                                                </span>
                                             )}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        </td>
+                                        <td className="birthdate-info">
+                                            {profile.birthdate ? (
+                                                <span className="date-value">{profile.birthdate}</span>
+                                            ) : (
+                                                <span className="no-data">Not provided</span>
+                                            )}
+                                        </td>
+                                        <td className="actions-cell">
+                                            <div className="action-buttons">
+                                                <button 
+                                                    className="btn btn-info btn-sm action-btn"
+                                                    onClick={() => handleShowProfile(profile)}
+                                                    title="View Profile Details"
+                                                >
+                                                    <i className="fas fa-eye"></i>
+                                                    Show
+                                                </button>
+                                                <button 
+                                                    className="btn btn-secondary btn-sm action-btn"
+                                                    onClick={() => handleEditProfile(profile)}
+                                                    title="Edit Profile"
+                                                >
+                                                    <i className="fas fa-edit"></i>
+                                                    Edit
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="no-profiles-found">
+                            <div className="no-data-icon">
+                                <i className="fas fa-user-friends"></i>
+                            </div>
+                            <h3>No profiles found</h3>
+                            <p>No user profiles found in the system.</p>
+                        </div>
+                    )}
+                </div>                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="admin-pagination">
+                        <div className="pagination-controls">
+                            <button 
+                                onClick={() => setPage(1)} 
+                                disabled={page === 1}
+                                className="btn btn-secondary pagination-btn"
+                                title="First page"
+                            >
+                                <i className="fas fa-angle-double-left"></i>
+                            </button>
+                            <button 
+                                onClick={() => setPage(page - 1)} 
+                                disabled={page === 1}
+                                className="btn btn-secondary pagination-btn"
+                                title="Previous page"
+                            >
+                                <i className="fas fa-angle-left"></i>
+                                Previous
+                            </button>
+                            
+                            <div className="page-info">
+                                <span className="current-page">Page {page}</span>
+                                <span className="page-separator">of</span>
+                                <span className="total-pages">{totalPages}</span>
                             </div>
                             
-                            {/* Pagination Footer */}
-                            {(hasNextPage || hasPreviousPage) && (
-                                <div className="card-footer bg-light border-0">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <button
-                                            className="btn btn-outline-primary"
-                                            disabled={!hasPreviousPage}
-                                            onClick={() => {
-                                                setPage((prevPage) => Math.max(prevPage - 1, 1));
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }}
-                                        >
-                                            <i className="fas fa-chevron-left me-2"></i>
-                                            Previous
-                                        </button>
-                                        
-                                        <span className="text-muted">
-                                            <i className="fas fa-file-alt me-2"></i>
-                                            Page {page}
-                                        </span>
-                                        
-                                        <button
-                                            className="btn btn-outline-primary"
-                                            disabled={!hasNextPage}
-                                            onClick={() => {
-                                                setPage((prevPage) => prevPage + 1);
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }}
-                                        >
-                                            Next
-                                            <i className="fas fa-chevron-right ms-2"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                            <button 
+                                onClick={() => setPage(page + 1)} 
+                                disabled={page === totalPages}
+                                className="btn btn-secondary pagination-btn"
+                                title="Next page"
+                            >
+                                Next
+                                <i className="fas fa-angle-right"></i>
+                            </button>
+                            <button 
+                                onClick={() => setPage(totalPages)} 
+                                disabled={page === totalPages}
+                                className="btn btn-secondary pagination-btn"
+                                title="Last page"
+                            >
+                                <i className="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                        
+                        <div className="pagination-info">
+                            Showing {((page - 1) * PROFILES_PER_PAGE) + 1} to {Math.min(page * PROFILES_PER_PAGE, filteredProfiles.length)} of {filteredProfiles.length} profiles
                         </div>
                     </div>
-                </div>
-            </div>
+                )}
 
-            {/* Modals */}
-            {isShowModalOpen && (
-                <ShowProfileModal
-                    profile={selectedProfile}
-                    onClose={() => setIsShowModalOpen(false)}
-                />
-            )}
-            {isEditModalOpen && (
-                <EditProfileModal
-                    profile={selectedProfile}
-                    onClose={() => setIsEditModalOpen(false)}
-                    onSave={() => fetchProfiles(page)}
-                />
-            )}
+                {/* Modals */}
+                {isShowModalOpen && (
+                    <ShowProfileModal
+                        profile={selectedProfile}
+                        onClose={() => setIsShowModalOpen(false)}
+                    />
+                )}
+                {isEditModalOpen && (
+                    <EditProfileModal
+                        profile={selectedProfile}
+                        onClose={() => setIsEditModalOpen(false)}                        onSave={() => {
+                            setIsEditModalOpen(false);
+                            fetchProfiles(); // Refresh profiles
+                        }}
+                    />
+                )}
+            </div>
         </BaseLayout>
     );
 };

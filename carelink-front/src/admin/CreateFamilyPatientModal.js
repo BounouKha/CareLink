@@ -79,15 +79,17 @@ const CreateFamilyPatientModal = ({ userId, onClose, onProfileCreated }) => {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
-            }
-
-            const response = await fetch(`http://localhost:8000/account/users/${userId}/create/family-patient/`, {
+            }            const response = await fetch(`http://localhost:8000/account/familypatient/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ user_id: userId, role_specific_data: formData }),
+                body: JSON.stringify({
+                    user: userId,
+                    patient: formData.patient_id,
+                    link: formData.link
+                }),
             });
 
             if (!response.ok) {
