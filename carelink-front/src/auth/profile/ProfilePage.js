@@ -412,7 +412,7 @@ const ProfilePage = () => {
                                 <div className="d-flex align-items-center">
                                     <i className="fas fa-user-circle me-3 text-primary" style={{fontSize: '2rem'}}></i>
                                     <div>
-                                        <h4 className="card-title mb-0">Profile Information</h4>                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1">
+                                        <h4 className="card-title mb-0">Profile Information</h4>                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1 text-light">
                                             <i className="fas fa-user-tag me-1"></i>
                                             Role: {userData.user.role}
                                         </div>
