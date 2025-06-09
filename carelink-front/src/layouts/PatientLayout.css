@@ -1,0 +1,30 @@
+/* Patient Layout - Dedicated Layout for Patient Management */
+
+.patient-layout-container {
+    min-height: calc(100vh - 80px); /* Account for header */
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 2rem;
+}
+
+.patient-layout-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .patient-layout-container {
+        padding: 1rem;
+    }
+    
+    .patient-layout-content {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+}

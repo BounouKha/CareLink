@@ -352,61 +352,24 @@ const PatientsPage = () => {
         `${patient.firstname} ${patient.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.national_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.birth_date?.toLowerCase().includes(searchTerm.toLowerCase())
-    );    return (
+    );
+
+    return (
         <>
             <BaseLayout>
                 <div className="page-container">
                     <div className="content-container">
-                        {/* Page Header */}
-                        <div className="page-header mb-4">
-                            <h1 className="page-title">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="me-3">
-                                    <path d="M16 21V19C16 16.7909 14.2091 15 12 15H5C2.79086 15 1 16.7909 1 19V21M12.5 7C12.5 9.20914 10.7091 11 8.5 11C6.29086 11 4.5 9.20914 4.5 7C4.5 4.79086 6.29086 3 8.5 3C10.7091 3 12.5 4.79086 12.5 7ZM20 8V14M23 11H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                                Patients Management
-                            </h1>
-                            <p className="page-subtitle">Manage patient information and medical records</p>
-                        </div>
+                        <h1>Patients</h1>
 
-                        {/* Search Bar with Stats */}
-                        <div className="search-section">
-                            <div className="search-input-wrapper">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="search-icon">
-                                    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-                                    <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2"/>
-                                </svg>
-                                <input
-                                    type="text"
-                                    placeholder="Search patients by name, ID, or birth date..."
-                                    value={searchTerm}
-                                    onChange={handleSearchChange}
-                                    className="form-control search-input"
-                                />
-                            </div>
-                            <div className="patients-stats">
-                                <div className="stat-item">
-                                    <span className="stat-value">{filteredPatients.length}</span>
-                                    <span className="stat-label">
-                                        {filteredPatients.length === 1 ? 'Patient' : 'Patients'} Found
-                                    </span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-value">{patients.length}</span>
-                                    <span className="stat-label">Total Patients</span>
-                                </div>
-                            </div>
-                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search patients..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            className="form-control"
+                        />
 
-                        {error && (
-                            <div className="alert alert-danger" role="alert">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="me-2">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                                    <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2"/>
-                                    <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
-                                </svg>
-                                {error}
-                            </div>
-                        )}
+                        {error && <p className="error">{error}</p>}
                         
                         {/* Patient List */}
                         {filteredPatients.length > 0 ? (
@@ -414,44 +377,25 @@ const PatientsPage = () => {
                                 {filteredPatients.filter(patient => patient.firstname && patient.lastname).map((patient, index) => (
                                     <div key={index} className="patient-item">
                                         <div className="patient-info">
-                                            <div className="patient-header">
-                                                <div className="patient-avatar">
-                                                    {patient.firstname.charAt(0)}{patient.lastname.charAt(0)}
-                                                </div>
-                                                <div className="patient-main-info">
-                                                    <h3 className="patient-name">{patient.firstname} {patient.lastname}</h3>
-                                                    <span className="patient-id">ID: {patient.national_number}</span>
-                                                </div>
-                                            </div>
                                             <div className="patient-details">
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
-                                                            <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
-                                                            <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
-                                                            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
-                                                        </svg>
-                                                        Birth Date
-                                                    </div>
+                                                    <div className="patient-detail-label">Name</div>
+                                                    <div className="patient-detail-value">{patient.firstname} {patient.lastname}</div>
+                                                </div>
+                                                <div className="patient-detail-item">
+                                                    <div className="patient-detail-label">ID</div>
+                                                    <div className="patient-detail-value">{patient.national_number}</div>
+                                                </div>
+                                                <div className="patient-detail-item">
+                                                    <div className="patient-detail-label">Birth Date</div>
                                                     <div className="patient-detail-value">{patient.birth_date}</div>
                                                 </div>
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                            <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" strokeWidth="2"/>
-                                                        </svg>
-                                                        Gender
-                                                    </div>
+                                                    <div className="patient-detail-label">Gender</div>
                                                     <div className="patient-detail-value">{patient.gender || 'N/A'}</div>
                                                 </div>
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                            <path d="M7 3V21L12 18L17 21V3H7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                        </svg>
-                                                        Blood Type
-                                                    </div>
+                                                    <div className="patient-detail-label">Blood Type</div>
                                                     <div className="patient-detail-value">{patient.blood_type || 'N/A'}</div>
                                                 </div>
                                             </div>
@@ -460,29 +404,29 @@ const PatientsPage = () => {
                                             <button 
                                                 className="btn-sm btn-info" 
                                                 onClick={() => handleShowDetails(patient)}
-                                                title="View and edit patient information"
+                                                title="Patient Information"
                                             >
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                     <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
-                                                Patient Info
+                                                Info
                                             </button>
 
                                             <button 
                                                 className="btn-sm btn-warning" 
                                                 onClick={() => handleShowMedicalFolder(patient.id)}
-                                                title="View medical history and records"
+                                                title="Medical Folder"
                                             >
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                     <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
-                                                Medical Records
+                                                Medical Folder
                                             </button>
 
                                             <button 
                                                 className="btn-sm btn-success" 
                                                 onClick={() => handleAddEntry(patient)}
-                                                title="Add new medical entry"
+                                                title="Add Entry"
                                             >
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                     <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -495,26 +439,10 @@ const PatientsPage = () => {
                             </div>
                         ) : (
                             <div className="no-patients">
-                                <div className="no-patients-icon">
-                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-                                        <path d="M16 21V19C16 16.7909 14.2091 15 12 15H5C2.79086 15 1 16.7909 1 19V21M20.5 11.5L22 13L20.5 14.5M18 13H22M12.5 7C12.5 9.20914 10.7091 11 8.5 11C6.29086 11 4.5 9.20914 4.5 7C4.5 4.79086 6.29086 3 8.5 3C10.7091 3 12.5 4.79086 12.5 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                    </svg>
-                                </div>
-                                <h3>No patients found</h3>
-                                <p>
-                                    {searchTerm 
-                                        ? `No patients match your search "${searchTerm}"` 
-                                        : 'No patients have been added to the system yet'
-                                    }
-                                </p>
-                                {searchTerm && (
-                                    <button 
-                                        className="btn btn-outline-primary"
-                                        onClick={() => setSearchTerm('')}
-                                    >
-                                        Clear Search
-                                    </button>
-                                )}
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                    <path d="M16 21V19C16 16.7909 14.2091 15 12 15H5C2.79086 15 1 16.7909 1 19V21M20.5 11.5L22 13L20.5 14.5M18 13H22M12.5 7C12.5 9.20914 10.7091 11 8.5 11C6.29086 11 4.5 9.20914 4.5 7C4.5 4.79086 6.29086 3 8.5 3C10.7091 3 12.5 4.79086 12.5 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                <p>No patients found</p>
                             </div>
                         )}
                     </div>
