@@ -5,7 +5,7 @@ import RegisterPage from './auth/register/RegisterPage';
 import ProfilePage from './auth/profile/ProfilePage';
 import LoginPage from './auth/login/LoginPage';
 import AdminPanel from './admin/AdminPanel';
-import PatientsPage from './pages/patient/PatientsPage';
+import PatientsPageNew from './pages/patient/PatientsPageNew';
 import ServiceDemandPage from './pages/servicedemand/ServiceDemandPage';
 import SchedulePage from './pages/schedule/SchedulePage';
 import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
@@ -25,7 +25,7 @@ function App() {
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/login" element={<LoginPage />} />
-                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />                        <Route path="/patients" element={<PatientsPage />} />
+                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />                        <Route path="/patients" element={<PatientsPageNew />} />
                         <Route path="/service-demands" element={<ServiceDemandPage />} />                        {/* New unified schedule route that stays in BaseLayout */}
                         <Route path="/schedule" element={<SchedulePage />} />
                         

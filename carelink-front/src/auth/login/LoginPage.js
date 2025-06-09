@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-// CSS is now handled by UnifiedBaseLayout.css
+import { useNavigate, Link } from 'react-router-dom';
+import BaseLayout from '../layout/BaseLayout';
+import './LoginPage.css';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -30,35 +31,80 @@ const LoginPage = () => {
             navigate('/profile');
         } catch (err) {
             setError(err.message);
-        }
-    };    return (
-        <div className="login-page-wrapper">
-            <div className="login-container">
-                <h2>Login</h2>
-                <form onSubmit={handleLogin}>
-                    <div className="form-group">
-                        <label>Email</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+        }    };    return (
+        <BaseLayout>
+            <div className="login-page">
+                <div className="login-container">
+                    <div className="login-header">
+                        <h2>Welcome Back</h2>
+                        <p className="login-subtitle">Sign in to your CareLink account</p>
                     </div>
-                    <div className="form-group">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                    
+                    <form onSubmit={handleLogin} className="login-form">
+                        <div className="form-group">
+                            <label htmlFor="email">
+                                <i className="fas fa-envelope"></i>
+                                Email Address
+                            </label>
+                            <input
+                                id="email"
+                                type="email"
+                                placeholder="Enter your email address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                autoComplete="email"
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label htmlFor="password">
+                                <i className="fas fa-lock"></i>
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                type="password"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                autoComplete="current-password"
+                            />
+                        </div>
+                        
+                        {error && (
+                            <div className="error-message">
+                                <i className="fas fa-exclamation-triangle"></i>
+                                {error}
+                            </div>
+                        )}
+                        
+                        <button type="submit" className="btn btn-primary">
+                            <i className="fas fa-sign-in-alt"></i>
+                            Sign In
+                        </button>
+                    </form>
+                    
+                    <div className="login-footer">
+                        <div className="divider">
+                            <span>New to CareLink?</span>
+                        </div>
+                        <Link to="/register" className="btn btn-secondary">
+                            <i className="fas fa-user-plus"></i>
+                            Create Account
+                        </Link>
+                        
+                        <div className="forgot-password">
+                            <Link to="/forgot-password">
+                                <i className="fas fa-key"></i>
+                                Forgot your password?
+                            </Link>
+                        </div>
                     </div>
-                    {error && <p className="error-message">{error}</p>}
-                    <button type="submit">Login</button>
-                </form>
+                </div>
             </div>
-        </div>
+        </BaseLayout>
     );
 };
 
