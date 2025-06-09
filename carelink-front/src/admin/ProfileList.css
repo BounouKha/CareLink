@@ -655,7 +655,19 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1400px) {
+    .admin-users-container {
+        padding: 24px;
+        margin: 15px;
+    }
+}
+
 @media (max-width: 1200px) {
+    .admin-users-container {
+        padding: 20px;
+        margin: 10px;
+    }
+    
     .profiles-table thead th,
     .profiles-table tbody td {
         padding: 12px 16px;
@@ -673,8 +685,14 @@
 }
 
 @media (max-width: 768px) {
+    .admin-users-container {
+        padding: 16px;
+        margin: 5px;
+        border-radius: 8px;
+    }
+    
     .search-container {
-        margin: 0 -20px 20px;
+        margin: 0 -16px 20px;
         border-radius: 0;
         border-left: none;
         border-right: none;
@@ -688,7 +706,7 @@
     
     .table-container {
         overflow-x: auto;
-        margin: 0 -20px 24px;
+        margin: 0 -16px 24px;
         border-radius: 0;
         border-left: none;
         border-right: none;
@@ -712,10 +730,9 @@
     .full-name {
         font-size: 14px;
     }
-    
-    .admin-pagination {
-        padding: 15px 20px;
-        margin: 20px -20px 0;
+      .admin-pagination {
+        padding: 15px 16px;
+        margin: 20px -16px 0;
         border-radius: 0;
         border-left: none;
         border-right: none;
