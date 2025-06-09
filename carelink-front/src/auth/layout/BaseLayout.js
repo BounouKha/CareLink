@@ -9,8 +9,37 @@ const BaseLayout = ({ children }) => {
     const [isSuperuser, setIsSuperuser] = useState(false);
     const [loading, setLoading] = useState(true); // Add loading state
     const [userData, setUserData] = useState(null); // Add userData state
+    const [toolbarVisible, setToolbarVisible] = useState(() => {
+        // Initialize from localStorage, default to true
+        const saved = localStorage.getItem('leftToolbarVisible');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
 
     const { isSuperUser } = useContext(AdminContext);
+
+    // Listen for toolbar visibility changes
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const saved = localStorage.getItem('leftToolbarVisible');
+            setToolbarVisible(saved !== null ? JSON.parse(saved) : true);
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Also listen for direct updates to localStorage
+        const interval = setInterval(() => {
+            const saved = localStorage.getItem('leftToolbarVisible');
+            const newVisible = saved !== null ? JSON.parse(saved) : true;
+            if (newVisible !== toolbarVisible) {
+                setToolbarVisible(newVisible);
+            }
+        }, 100);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(interval);
+        };
+    }, [toolbarVisible]);
 
     useEffect(() => {
         // Restore menu state from localStorage on page load
