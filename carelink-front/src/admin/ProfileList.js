@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import './ProfileList.css';
-import BaseLayout from '../auth/layout/BaseLayout'; // Adjust the import path as necessary
 import ShowProfileModal from './ShowProfileModal';
 import EditProfileModal from './EditProfileModal';
 
@@ -127,8 +126,7 @@ const ProfileList = () => {
                 return 'bg-success bg-opacity-20 text-light';
             default:
                 return 'bg-light text-dark';
-        }
-    };    return (        <BaseLayout>
+        }    };    return (        
             <div className="admin-users-container">
                 <div className="admin-users-header">
                     <h1>Profile Management</h1>
@@ -378,13 +376,11 @@ const ProfileList = () => {
                     <EditProfileModal
                         profile={selectedProfile}
                         onClose={() => setIsEditModalOpen(false)}                        onSave={() => {
-                            setIsEditModalOpen(false);
-                            fetchProfiles(); // Refresh profiles
+                            setIsEditModalOpen(false);                        fetchProfiles(); // Refresh profiles
                         }}
                     />
                 )}
             </div>
-        </BaseLayout>
     );
 };
 
