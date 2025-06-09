@@ -524,16 +524,15 @@ const PatientsPageNew = () => {
                                                 />
                                             </div>
                                             <div className="col-md-6">
-                                                <label className="form-label small fw-medium text-dark">Gender</label>
-                                                <select
+                                                <label className="form-label small fw-medium text-dark">Gender</label>                                                <select
                                                     className="form-select"
                                                     value={selectedPatient.gender || ''}
                                                     onChange={(e) => handleInputChange('gender', e.target.value)}
                                                 >
                                                     <option value="">Select Gender</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                    <option value="Other">Other</option>
+                                                    <option value="M">Male</option>
+                                                    <option value="F">Female</option>
+                                                    <option value="O">Other</option>
                                                 </select>
                                             </div>
                                         </div>

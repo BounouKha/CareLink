@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import { useNavigate } from 'react-router-dom';
 
 const LeftToolbar = ({ userData }) => {
-    const [isVisible, setIsVisible] = useState(true);
+    const [isVisible, setIsVisible] = useState(() => {
+        // Initialize from localStorage, default to true
+        const saved = localStorage.getItem('leftToolbarVisible');
+        return saved !== null ? JSON.parse(saved) : true;
+    });
     const navigate = useNavigate();
+
+    // Save state to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('leftToolbarVisible', JSON.stringify(isVisible));
+    }, [isVisible]);
 
     const toggleToolbar = () => {
         setIsVisible(!isVisible);
@@ -42,17 +51,20 @@ const LeftToolbar = ({ userData }) => {
                 )}
             </ul>
         );
-    };
-
-    return (
-        <div>
-            <button className="toggle-button" onClick={toggleToolbar}>
-                {isVisible ? '<' : '>'}
-            </button>
+    };    return (
+        <>
             <div className={`left-toolbar ${isVisible ? 'visible' : 'hidden'}`}>
                 {renderRoleSpecificToolbar()}
             </div>
-        </div>
+            <button 
+                className="toggle-button" 
+                onClick={toggleToolbar}
+                title={isVisible ? 'Hide toolbar' : 'Show toolbar'}
+                aria-label={isVisible ? 'Hide toolbar' : 'Show toolbar'}
+            >
+                {isVisible ? '<' : '>'}
+            </button>
+        </>
     );
 };
 

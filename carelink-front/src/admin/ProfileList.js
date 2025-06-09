@@ -191,14 +191,6 @@ const ProfileList = () => {
                                         Role
                                     </th>
                                     <th>
-                                        <i className="fas fa-heart me-2"></i>
-                                        Relations
-                                    </th>
-                                    <th>
-                                        <i className="fas fa-calendar me-2"></i>
-                                        Birth Date
-                                    </th>
-                                    <th>
                                         <i className="fas fa-cogs me-2"></i>
                                         Actions
                                     </th>
@@ -242,41 +234,6 @@ const ProfileList = () => {
                                                 <span className="role-badge no-role">
                                                     No role assigned
                                                 </span>
-                                            )}
-                                        </td>
-                                        <td className="relations-info">
-                                            {profile.role === 'FamilyPatient' && profile.relations && profile.relations.length > 0 ? (
-                                                <div className="relations-list">
-                                                    {profile.relations.map((relation, idx) => (
-                                                        <div key={idx} className="relation-item">
-                                                            <div className="relation-link">
-                                                                <i className="fas fa-link me-1"></i>
-                                                                <span className="link-text">{relation.link}</span>
-                                                            </div>
-                                                            <div className="relation-patient">
-                                                                <i className="fas fa-user me-1"></i>
-                                                                <span className="patient-name">{relation.patient_name || 'Unknown Patient'}</span>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : profile.role === 'FamilyPatient' ? (
-                                                <span className="no-relations">
-                                                    <i className="fas fa-info-circle me-1"></i>
-                                                    No relations found
-                                                </span>
-                                            ) : (
-                                                <span className="not-applicable">
-                                                    <i className="fas fa-minus me-1"></i>
-                                                    N/A
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="birthdate-info">
-                                            {profile.birthdate ? (
-                                                <span className="date-value">{profile.birthdate}</span>
-                                            ) : (
-                                                <span className="no-data">Not provided</span>
                                             )}
                                         </td>
                                         <td className="actions-cell">

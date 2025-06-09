@@ -11,7 +11,9 @@ const ServiceDemandPage = () => {
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [userData, setUserData] = useState(null);
-    const [filterStatus, setFilterStatus] = useState('');    const [filterPriority, setFilterPriority] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+    const [filterPriority, setFilterPriority] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
     const [stats, setStats] = useState(null);
     const [error, setError] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
@@ -32,7 +34,8 @@ const ServiceDemandPage = () => {
         emergency_contact: '',
         special_instructions: '',
         selected_patient: '' // Add selected patient for coordinators
-    });    const [patientSearch, setPatientSearch] = useState('');
+    });
+    const [patientSearch, setPatientSearch] = useState('');
     const [linkedPatients, setLinkedPatients] = useState([]); // For Family Patients - now array
 
     useEffect(() => {
@@ -40,7 +43,7 @@ const ServiceDemandPage = () => {
         fetchDemands();
         fetchServices();
         fetchStats();
-    }, [filterStatus, filterPriority]);
+    }, [filterStatus, filterPriority, searchQuery]);
 
     // Separate useEffect to fetch patients when userData is loaded
     useEffect(() => {
@@ -89,10 +92,10 @@ const ServiceDemandPage = () => {
     const fetchDemands = async () => {
         try {
             const token = localStorage.getItem('accessToken');
-            let url = 'http://localhost:8000/account/service-demands/';
-            const params = new URLSearchParams();
+            let url = 'http://localhost:8000/account/service-demands/';            const params = new URLSearchParams();
             if (filterStatus) params.append('status', filterStatus);
             if (filterPriority) params.append('priority', filterPriority);
+            if (searchQuery) params.append('search', searchQuery);
             if (params.toString()) url += `?${params.toString()}`;
 
             const response = await fetch(url, {
@@ -458,8 +461,17 @@ const ServiceDemandPage = () => {
                                 </div>
                             </div>
                         </div>
-                    )}{/* Filters */}
+                    )}                    {/* Filters */}
                     <div className="filters d-flex gap-2 mb-3 bg-light p-3 rounded-3 shadow-sm bg-">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="🔍 Search all fields"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ maxWidth: '300px', borderColor: '#22C7EE', borderRadius: '12px' }}
+                        />
+                        
                         <select 
                             value={filterStatus} 
                             onChange={(e) => setFilterStatus(e.target.value)}
@@ -488,7 +500,7 @@ const ServiceDemandPage = () => {
                             <option value="High">High</option>
                             <option value="Urgent">Urgent</option>
                         </select>
-                    </div>                    {/* Service Demands List */}
+                    </div>{/* Service Demands List */}
                     <div className="demands-list">
                         {demands.length === 0 ? (
                             <div className="text-center p-5 bg-light rounded-3 my-4">

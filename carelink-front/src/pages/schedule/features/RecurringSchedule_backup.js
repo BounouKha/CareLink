@@ -39,15 +39,16 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
   const [validationErrors, setValidationErrors] = useState({});
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [showAllPreviews, setShowAllPreviews] = useState(false);
-  // Enhanced days of week for selection with better display
+
+  // Enhanced days of week for selection
   const daysOfWeek = [
-    { value: 1, label: 'Monday', short: 'Mon', initial: 'M', color: '#3b82f6' },
-    { value: 2, label: 'Tuesday', short: 'Tue', initial: 'T', color: '#8b5cf6' },
-    { value: 3, label: 'Wednesday', short: 'Wed', initial: 'W', color: '#06b6d4' },
-    { value: 4, label: 'Thursday', short: 'Thu', initial: 'T', color: '#10b981' },
-    { value: 5, label: 'Friday', short: 'Fri', initial: 'F', color: '#f59e0b' },
-    { value: 6, label: 'Saturday', short: 'Sat', initial: 'S', color: '#ef4444' },
-    { value: 0, label: 'Sunday', short: 'Sun', initial: 'S', color: '#ec4899' }
+    { value: 1, label: 'Monday', short: 'M' },
+    { value: 2, label: 'Tuesday', short: 'T' },
+    { value: 3, label: 'Wednesday', short: 'W' },
+    { value: 4, label: 'Thursday', short: 'T' },
+    { value: 5, label: 'Friday', short: 'F' },
+    { value: 6, label: 'Saturday', short: 'S' },
+    { value: 0, label: 'Sunday', short: 'S' }
   ];
 
   // Helper function to calculate duration between times
@@ -642,18 +643,19 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             <h3>📝 Basic Information</h3>
             
             {/* Provider Selection */}
-            <div className="form-row">              <div className="form-group">
+            <div className="form-row">
+              <div className="form-group">
                 <label htmlFor="provider-search">Provider *</label>
-                <div className="searchable-dropdown">
+                <div className="search-container">
                   <input
                     type="text"
                     id="provider-search"
                     value={providerSearch}
                     onChange={(e) => {
                       setProviderSearch(e.target.value);
-                      setShowProviderDropdown(e.target.value.length > 0);
+                      setShowProviderDropdown(true);
                     }}
-                    onBlur={() => setTimeout(() => setShowProviderDropdown(false), 150)}
+                    onFocus={() => setShowProviderDropdown(true)}
                     placeholder="Search providers..."
                     className={validationErrors.provider_id ? 'error' : ''}
                     required
@@ -661,9 +663,9 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   {validationErrors.provider_id && (
                     <span className="validation-error">{validationErrors.provider_id}</span>
                   )}
-                  {showProviderDropdown && providerSearch.length > 0 && (
-                    <div className="dropdown-list">
-                      {filteredProviders.length > 0 ? filteredProviders.slice(0, 8).map(provider => (
+                  {showProviderDropdown && (
+                    <div className="dropdown">
+                      {filteredProviders.length > 0 ? filteredProviders.map(provider => (
                         <div
                           key={provider.id}
                           className="dropdown-item"
@@ -675,27 +677,24 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                       )) : (
                         <div className="dropdown-item no-results">No providers found</div>
                       )}
-                      {filteredProviders.length > 8 && (
-                        <div className="dropdown-item more-results">
-                          ... and {filteredProviders.length - 8} more results
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
-              </div>              {/* Patient Selection */}
+              </div>
+
+              {/* Patient Selection */}
               <div className="form-group">
                 <label htmlFor="patient-search">Patient *</label>
-                <div className="searchable-dropdown">
+                <div className="search-container">
                   <input
                     type="text"
                     id="patient-search"
                     value={patientSearch}
                     onChange={(e) => {
                       setPatientSearch(e.target.value);
-                      setShowPatientDropdown(e.target.value.length > 0);
+                      setShowPatientDropdown(true);
                     }}
-                    onBlur={() => setTimeout(() => setShowPatientDropdown(false), 150)}
+                    onFocus={() => setShowPatientDropdown(true)}
                     placeholder="Search patients..."
                     className={validationErrors.patient_id ? 'error' : ''}
                     required
@@ -703,9 +702,9 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   {validationErrors.patient_id && (
                     <span className="validation-error">{validationErrors.patient_id}</span>
                   )}
-                  {showPatientDropdown && patientSearch.length > 0 && (
-                    <div className="dropdown-list">
-                      {filteredPatients.length > 0 ? filteredPatients.slice(0, 8).map(patient => (
+                  {showPatientDropdown && (
+                    <div className="dropdown">
+                      {filteredPatients.length > 0 ? filteredPatients.map(patient => (
                         <div
                           key={patient.id}
                           className="dropdown-item"
@@ -713,16 +712,11 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                         >
                           <strong>{patient.firstname} {patient.lastname}</strong>
                           {patient.national_number && (
-                            <span className="patient-info">ID: {patient.national_number}</span>
+                            <span className="patient-id"> - {patient.national_number}</span>
                           )}
                         </div>
                       )) : (
                         <div className="dropdown-item no-results">No patients found</div>
-                      )}
-                      {filteredPatients.length > 8 && (
-                        <div className="dropdown-item more-results">
-                          ... and {filteredPatients.length - 8} more results
-                        </div>
                       )}
                     </div>
                   )}
@@ -960,69 +954,36 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             </div>
           </div>          {/* Enhanced Preview Section */}
           <div className="form-section">
-            <div className="enhanced-preview-header">
-              <div className="preview-title">
-                <h3>📅 Schedule Preview</h3>
-                <div className="preview-badge">
-                  {previewDates.length} appointment{previewDates.length !== 1 ? 's' : ''}
-                </div>
-              </div>
+            <div className="preview-header">
+              <h3>📅 Schedule Preview</h3>
               <div className="preview-controls">
                 {isGeneratingPreview && (
-                  <div className="preview-loading">
-                    <div className="loading-spinner small"></div>
-                    <span>Generating...</span>
-                  </div>
+                  <span className="preview-loading">
+                    <span className="loading-spinner"></span>
+                    Generating...
+                  </span>
                 )}
                 <button
                   type="button"
                   className="preview-toggle"
                   onClick={() => setShowPreview(!showPreview)}
                 >
-                  <span className="toggle-icon">{showPreview ? '🙈' : '👁️'}</span>
-                  {showPreview ? 'Hide Preview' : 'Show Preview'}
+                  {showPreview ? '👁️ Hide' : '👁️ Show'} Preview ({previewDates.length} appointments)
                 </button>
               </div>
             </div>
             
             {previewDates.length > 0 && (
-              <div className="preview-stats-grid">
-                <div className="stat-card pattern">
-                  <div className="stat-icon">🔄</div>
-                  <div className="stat-content">
-                    <div className="stat-label">Pattern</div>
-                    <div className="stat-value">{generatePatternSummary()}</div>
-                  </div>
+              <div className="preview-summary">
+                <div className="summary-item">
+                  <span className="summary-label">Pattern:</span>
+                  <span className="summary-value">{generatePatternSummary()}</span>
                 </div>
-                <div className="stat-card duration">
-                  <div className="stat-icon">⏱️</div>
-                  <div className="stat-content">
-                    <div className="stat-label">Total Duration</div>
-                    <div className="stat-value">{calculateTotalDuration()} hours</div>
-                  </div>
-                </div>
-                <div className="stat-card frequency">
-                  <div className="stat-icon">📊</div>
-                  <div className="stat-content">
-                    <div className="stat-label">Frequency</div>
-                    <div className="stat-value">
-                      {recurringData.frequency === 'weekly' ? `Every ${recurringData.interval} week${recurringData.interval > 1 ? 's' : ''}` :
-                       recurringData.frequency === 'bi-weekly' ? 'Every 2 weeks' :
-                       `Every ${recurringData.interval} month${recurringData.interval > 1 ? 's' : ''}`}
-                    </div>
-                  </div>
-                </div>
-                <div className="stat-card timeline">
-                  <div className="stat-icon">📅</div>
-                  <div className="stat-content">
-                    <div className="stat-label">Timeline</div>
-                    <div className="stat-value">
-                      {previewDates.length > 0 && 
-                        `${previewDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
-                         ${previewDates[previewDates.length - 1].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                      }
-                    </div>
-                  </div>
+                <div className="summary-item">
+                  <span className="summary-label">Total Duration:</span>
+                  <span className="summary-value">
+                    {calculateTotalDuration()} hours across {previewDates.length} appointments
+                  </span>
                 </div>
               </div>
             )}
@@ -1030,130 +991,53 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             {showPreview && (
               <div className="preview-container">
                 {previewDates.length > 0 ? (
-                  <div className="enhanced-preview-list">
-                    <div className="preview-list-header">
-                      <h4>Upcoming Appointments</h4>
-                      <div className="list-controls">
-                        {previewDates.length > 6 && (
-                          <button
-                            type="button"
-                            className="expand-toggle"
-                            onClick={() => setShowAllPreviews(!showAllPreviews)}
-                          >
-                            {showAllPreviews ? 'Show Less' : `Show All ${previewDates.length}`}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="preview-grid">
-                      {(showAllPreviews ? previewDates : previewDates.slice(0, 6)).map((date, index) => {
-                        const isToday = date.toDateString() === new Date().toDateString();
-                        const isPast = date < new Date() && !isToday;
-                        const duration = calculateDuration(formData.start_time, formData.end_time);
-                        
-                        return (
-                          <div key={index} className={`preview-card ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}`}>
-                            <div className="card-header">
-                              <div className="date-info">
-                                <div className="weekday">
-                                  {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                                </div>
-                                <div className="date">
-                                  {date.toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric'
-                                  })}
-                                </div>
-                                <div className="year">
-                                  {date.getFullYear()}
-                                </div>
-                              </div>
-                              <div className="appointment-number">#{index + 1}</div>
-                            </div>
-                            
-                            <div className="card-body">
-                              <div className="time-info">
-                                <div className="time-range">
-                                  <span className="start-time">{formData.start_time}</span>
-                                  <span className="time-separator">→</span>
-                                  <span className="end-time">{formData.end_time}</span>
-                                </div>
-                                <div className="duration-badge">{duration}</div>
-                              </div>
-                              
-                              {(formData.provider_id || formData.patient_id) && (
-                                <div className="participants">
-                                  {formData.provider_id && providerSearch && (
-                                    <div className="participant provider">
-                                      <span className="participant-icon">👩‍⚕️</span>
-                                      <span className="participant-name">{providerSearch}</span>
-                                    </div>
-                                  )}
-                                  {formData.patient_id && patientSearch && (
-                                    <div className="participant patient">
-                                      <span className="participant-icon">👤</span>
-                                      <span className="participant-name">{patientSearch}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {formData.service_id && (
-                                <div className="service-info">
-                                  <span className="service-icon">🔧</span>
-                                  <span className="service-name">
-                                    {services.find(s => s.id == formData.service_id)?.name || 'Service'}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {(isToday || isPast) && (
-                              <div className="card-status">
-                                {isToday && <span className="status-badge today">Today</span>}
-                                {isPast && <span className="status-badge past">Past Date</span>}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    
-                    {!showAllPreviews && previewDates.length > 6 && (
-                      <div className="preview-footer">
-                        <div className="remaining-count">
-                          +{previewDates.length - 6} more appointments
+                  <div className="preview-list">
+                    {previewDates.slice(0, 12).map((date, index) => (
+                      <div key={index} className="preview-item">
+                        <div className="preview-date-info">
+                          <span className="preview-date">
+                            {date.toLocaleDateString('en-US', { 
+                              weekday: 'short', 
+                              month: 'short', 
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </span>
+                          <span className="preview-time">
+                            {formData.start_time} - {formData.end_time}
+                          </span>
                         </div>
+                        <div className="preview-meta">
+                          {formData.provider_id && providerSearch && (
+                            <span className="preview-provider">{providerSearch}</span>
+                          )}
+                          {formData.patient_id && patientSearch && (
+                            <span className="preview-patient">{patientSearch}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {previewDates.length > 12 && (
+                      <div className="preview-more">
+                        <span className="more-icon">📋</span>
+                        ... and {previewDates.length - 12} more appointments
                         <button
                           type="button"
                           className="view-all-btn"
-                          onClick={() => setShowAllPreviews(true)}
+                          onClick={() => setShowAllPreviews(!showAllPreviews)}
                         >
-                          View All Appointments
+                          {showAllPreviews ? 'Show Less' : 'View All'}
                         </button>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="preview-empty">
-                    <div className="empty-illustration">
-                      <div className="empty-icon">📅</div>
-                      <div className="empty-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </div>
-                    </div>
-                    <div className="empty-content">
-                      <h4>No appointments scheduled</h4>
-                      <p>Adjust your settings to generate appointments:</p>
-                      <ul className="empty-suggestions">
-                        <li>Select at least one day of the week</li>
-                        <li>Set a valid date range</li>
-                        <li>Check your recurrence pattern</li>
-                      </ul>
-                    </div>
+                    <div className="empty-icon">📅</div>
+                    <p>No appointments will be created with current settings.</p>
+                    <p className="empty-helper">
+                      Please check your date range and selected days of the week.
+                    </p>
                   </div>
                 )}
               </div>
