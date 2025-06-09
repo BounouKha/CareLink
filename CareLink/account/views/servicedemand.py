@@ -55,7 +55,6 @@ def log_service_demand_action(user, action_type, target_model, target_id, servic
 
 class ServiceDemandListCreateView(APIView):
     permission_classes = [IsAuthenticated]
-    
     def get(self, request):
         """Get list of service demands with filtering and pagination"""
         # Get filter parameters
@@ -63,6 +62,7 @@ class ServiceDemandListCreateView(APIView):
         priority_filter = request.query_params.get('priority', None)
         patient_id = request.query_params.get('patient_id', None)
         service_id = request.query_params.get('service_id', None)
+        search_query = request.query_params.get('search', None)
         page = request.query_params.get('page', 1)
         
         # Base queryset
@@ -99,8 +99,7 @@ class ServiceDemandListCreateView(APIView):
             pass
         else:
             return Response({"error": "Permission denied."}, status=403)
-        
-        # Apply filters
+          # Apply filters
         if status_filter:
             queryset = queryset.filter(status=status_filter)
         if priority_filter:
@@ -110,8 +109,20 @@ class ServiceDemandListCreateView(APIView):
         if service_id:
             queryset = queryset.filter(service_id=service_id)
         
-        # Order by priority and creation date
-        queryset = queryset.order_by('-priority', '-created_at')
+        # Apply search filter
+        if search_query:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(reason__icontains=search_query) |
+                Q(service__name__icontains=search_query) |
+                Q(patient__user__firstname__icontains=search_query) |
+                Q(patient__user__lastname__icontains=search_query)
+            )
+        
+        # Order by creation date (newest first), then by priority
+        queryset = queryset.order_by('-created_at', '-priority')
         
         # Paginate
         paginator = Paginator(queryset, 20)
