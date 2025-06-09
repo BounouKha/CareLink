@@ -119,7 +119,7 @@ class MedicalFolder(models.Model):
 
 class Patient(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
-    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female')])
+    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
     blood_type = models.CharField(max_length=3, null=True, blank=True)
     emergency_contact = models.CharField(max_length=15)
     katz_score = models.IntegerField(null=True, blank=True)

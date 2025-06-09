@@ -1,26 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import './QuickSchedule.css';
+import './RecurringSchedule.css';
 
-const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
+const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
   const [formData, setFormData] = useState({
     provider_id: '',
     patient_id: '',
-    date: '',
+    start_date: '',
     start_time: '',
     end_time: '',
     service_id: '',
     description: ''
-  });  const [patients, setPatients] = useState([]);
+  });
+
+  // Recurring settings
+  const [recurringData, setRecurringData] = useState({
+    frequency: 'weekly',
+    weekdays: [1], // Monday=1, Sunday=0
+    end_date: ''
+  });
+
+  const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
+  const [previewDates, setPreviewDates] = useState([]);
   
   // Search states
   const [providerSearch, setProviderSearch] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
   const [showProviderDropdown, setShowProviderDropdown] = useState(false);
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+
+  // Days of week for selection
+  const daysOfWeek = [
+    { value: 1, label: 'Monday', short: 'M' },
+    { value: 2, label: 'Tuesday', short: 'T' },
+    { value: 3, label: 'Wednesday', short: 'W' },
+    { value: 4, label: 'Thursday', short: 'T' },
+    { value: 5, label: 'Friday', short: 'F' },
+    { value: 6, label: 'Saturday', short: 'S' },
+    { value: 0, label: 'Sunday', short: 'S' }
+  ];
+
   // Helper function to calculate end time (1 hour after start time)
   const calculateEndTime = (startTime) => {
     if (!startTime) return '';
@@ -34,6 +55,11 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     return `${finalHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
+  // Helper function to format date to string
+  const formatDateToString = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetchPatients();
@@ -44,14 +70,32 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
         const endTime = calculateEndTime(preselectedTime);
         setFormData(prev => ({ 
           ...prev, 
-          date: preselectedDate,
+          start_date: preselectedDate,
           start_time: preselectedTime,
           end_time: endTime
+        }));
+        
+        // Set default end date (4 weeks later)
+        const start = new Date(preselectedDate);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 28);
+        setRecurringData(prev => ({
+          ...prev,
+          end_date: formatDateToString(end)
         }));
       } else {
         // Set default date to today if no preselected date
         const today = new Date().toISOString().split('T')[0];
-        setFormData(prev => ({ ...prev, date: today }));
+        setFormData(prev => ({ ...prev, start_date: today }));
+        
+        // Set default end date (4 weeks later)
+        const start = new Date();
+        const end = new Date(start);
+        end.setDate(end.getDate() + 28);
+        setRecurringData(prev => ({
+          ...prev,
+          end_date: formatDateToString(end)
+        }));
       }
     }
   }, [isOpen, preselectedDate, preselectedTime]);
@@ -62,19 +106,25 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
       setFormData({
         provider_id: '',
         patient_id: '',
-        date: '',
+        start_date: '',
         start_time: '',
         end_time: '',
         service_id: '',
         description: ''
       });
+      setRecurringData({
+        frequency: 'weekly',
+        weekdays: [1],
+        end_date: ''
+      });
       setProviderSearch('');
       setPatientSearch('');
       setError('');
+      setPreviewDates([]);
     }
   }, [isOpen]);
 
-const fetchPatients = async () => {
+  const fetchPatients = async () => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch('http://localhost:8000/account/views_patient/', {
@@ -86,9 +136,7 @@ const fetchPatients = async () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Handle paginated response from ViewsPatient endpoint
         const patientList = data.results || [];
-        console.log('Fetched patients:', patientList); // Debug log
         setPatients(patientList);
       } else {
         console.error('Failed to fetch patients:', response.status);
@@ -112,17 +160,20 @@ const fetchPatients = async () => {
 
       if (response.ok) {
         const data = await response.json();
-        setServices(data || []);
+        setServices(data.results || data || []);
+      } else {
+        console.error('Failed to fetch services:', response.status);
       }
     } catch (err) {
-      console.error('Error fetching services:', err);    }
+      console.error('Error fetching services:', err);
+    }
   };
 
-  // Search and filter functions
   const filteredProviders = providers.filter(provider =>
     provider.name.toLowerCase().includes(providerSearch.toLowerCase()) ||
     provider.service.toLowerCase().includes(providerSearch.toLowerCase())
   );
+
   const filteredPatients = patients.filter(patient =>
     `${patient.firstname || ''} ${patient.lastname || ''}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
     patient.national_number?.toLowerCase().includes(patientSearch.toLowerCase())
@@ -133,6 +184,7 @@ const fetchPatients = async () => {
     setProviderSearch(`${provider.name} - ${provider.service}`);
     setShowProviderDropdown(false);
   };
+
   const selectPatient = (patient) => {
     setFormData(prev => ({ ...prev, patient_id: patient.id }));
     setPatientSearch(`${patient.firstname || ''} ${patient.lastname || ''}`);
@@ -141,99 +193,148 @@ const fetchPatients = async () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Auto-calculate end time if start time is set (default 1 hour duration)
+    // Auto-calculate end time if start time is set and end time is empty
     if (name === 'start_time' && value && !formData.end_time) {
-      const startTime = new Date(`2000-01-01T${value}`);
-      startTime.setHours(startTime.getHours() + 1);
-      const endTime = startTime.toTimeString().slice(0, 5);
-      setFormData(prev => ({
-        ...prev,
-        end_time: endTime
-      }));
-    }  };
-
-  // Helper function to check if date is in the past
-  const isDateInPast = (dateString) => {
-    const today = new Date();
-    const selectedDate = new Date(dateString);
-    today.setHours(0, 0, 0, 0); // Reset time to start of day
-    selectedDate.setHours(0, 0, 0, 0); // Reset time to start of day
-    return selectedDate < today;
+      const endTime = calculateEndTime(value);
+      setFormData(prev => ({ ...prev, end_time: endTime }));
+    }
   };
+
+  const handleRecurringChange = (e) => {
+    const { name, value } = e.target;
+    setRecurringData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Generate recurring dates
+  const generateRecurringDates = () => {
+    const dates = [];
+    
+    if (!formData.start_date || !recurringData.end_date || recurringData.weekdays.length === 0) {
+      return dates;
+    }
+
+    try {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(recurringData.end_date);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return dates;
+      }
+
+      let currentDate = new Date(startDate);
+      let iterationCount = 0;
+      const maxIterations = 365; // Safety limit
+
+      while (currentDate <= endDate && iterationCount < maxIterations) {
+        const dayOfWeek = currentDate.getDay();
+        
+        if (recurringData.weekdays.includes(dayOfWeek)) {
+          dates.push(new Date(currentDate));
+        }
+        
+        // Move to next day based on frequency
+        if (recurringData.frequency === 'weekly') {
+          currentDate.setDate(currentDate.getDate() + 7);
+        } else if (recurringData.frequency === 'bi-weekly') {
+          currentDate.setDate(currentDate.getDate() + 14);
+        } else {
+          currentDate.setDate(currentDate.getDate() + 30); // monthly
+        }
+        
+        iterationCount++;
+      }
+
+      return dates.sort((a, b) => a.getTime() - b.getTime());
+    } catch (error) {
+      console.error('Error generating recurring dates:', error);
+      return [];
+    }
+  };
+
+  // Update preview when settings change
+  useEffect(() => {
+    if (formData.start_date && recurringData.end_date && recurringData.weekdays.length > 0) {
+      const dates = generateRecurringDates();
+      setPreviewDates(dates);
+    } else {
+      setPreviewDates([]);
+    }
+  }, [formData.start_date, recurringData.end_date, recurringData.weekdays, recurringData.frequency]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check if date is in the past
-    if (isDateInPast(formData.date)) {
-      setShowPastDateConfirm(true);
+    if (previewDates.length === 0) {
+      setError('No valid dates found. Please check your recurring settings.');
       return;
     }
-    
-    await performSubmit();
-  };
 
-  const performSubmit = async () => {
     setLoading(true);
     setError('');
 
     try {
       const token = localStorage.getItem('accessToken');
       
-      const response = await fetch('http://localhost:8000/schedule/quick-schedule/', {
+      const recurringScheduleData = {
+        ...formData,
+        recurring_settings: {
+          ...recurringData,
+          dates: previewDates.map(date => date.toISOString().split('T')[0]),
+          total_appointments: previewDates.length
+        }
+      };
+      
+      const response = await fetch('http://localhost:8000/schedule/recurring-schedule/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(recurringScheduleData)
       });
 
       if (response.ok) {
         const data = await response.json();
-        onScheduleCreated(data);
+        const successMessage = `Successfully created ${previewDates.length} recurring appointments!`;
+        
+        onScheduleCreated({
+          ...data,
+          successMessage,
+          appointmentCount: previewDates.length
+        });
         onClose();
-        resetForm();
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to create schedule');
+        setError(errorData.error || errorData.detail || 'Failed to create recurring schedule');
       }
     } catch (err) {
-      setError('Network error occurred');
-      console.error('Error creating schedule:', err);
+      console.error('Error creating recurring schedule:', err);
+      setError('Network error occurred. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      provider_id: '',
-      patient_id: '',
-      date: '',
-      start_time: '',
-      end_time: '',
-      service_id: '',
-      description: ''
-    });
-    setError('');
-  };
-
   const handleClose = () => {
-    resetForm();
     onClose();
   };
+
+  const handleWeekdayToggle = (dayValue) => {
+    const newWeekdays = recurringData.weekdays.includes(dayValue)
+      ? recurringData.weekdays.filter(d => d !== dayValue)
+      : [...recurringData.weekdays, dayValue];
+    setRecurringData({ ...recurringData, weekdays: newWeekdays });
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={handleClose}>
       <div className="quick-schedule-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Quick Schedule</h2>
+          <h2>Recurring Schedule</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
@@ -242,7 +343,10 @@ const fetchPatients = async () => {
             <div className="error-message">
               {error}
             </div>
-          )}          <div className="form-row">
+          )}
+
+          {/* Provider and Patient Row - Matching Quick Schedule EXACTLY */}
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="provider_search">Provider *</label>
               <div className="searchable-dropdown">
@@ -282,7 +386,8 @@ const fetchPatients = async () => {
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
                   onFocus={() => setShowPatientDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}                />
+                  onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}
+                />
                 {showPatientDropdown && (
                   <div className="dropdown-list">
                     {filteredPatients.length > 0 ? (
@@ -308,14 +413,15 @@ const fetchPatients = async () => {
             </div>
           </div>
 
+          {/* Start Date and Service Row - Matching Quick Schedule EXACTLY */}
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="date">Date *</label>
+              <label htmlFor="start_date">Start Date *</label>
               <input
                 type="date"
-                id="date"
-                name="date"
-                value={formData.date}
+                id="start_date"
+                name="start_date"
+                value={formData.start_date}
                 onChange={handleInputChange}
                 required
               />
@@ -339,6 +445,7 @@ const fetchPatients = async () => {
             </div>
           </div>
 
+          {/* Start Time and End Time Row - Matching Quick Schedule EXACTLY */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="start_time">Start Time *</label>
@@ -365,6 +472,60 @@ const fetchPatients = async () => {
             </div>
           </div>
 
+          {/* Recurring Settings Row - Clean and Simple */}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="frequency">Frequency *</label>
+              <select
+                id="frequency"
+                name="frequency"
+                value={recurringData.frequency}
+                onChange={handleRecurringChange}
+                required
+              >
+                <option value="weekly">Weekly</option>
+                <option value="bi-weekly">Bi-weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="end_date">End Date *</label>
+              <input
+                type="date"
+                id="end_date"
+                name="end_date"
+                value={recurringData.end_date}
+                onChange={handleRecurringChange}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Days of Week BUTTONS - As Requested */}
+          <div className="form-group">
+            <label>Days of Week *</label>
+            <div className="weekdays-buttons">
+              {daysOfWeek.map(day => (
+                <button
+                  key={day.value}
+                  type="button"
+                  className={`weekday-btn ${recurringData.weekdays.includes(day.value) ? 'active' : ''}`}
+                  onClick={() => handleWeekdayToggle(day.value)}
+                  title={day.label}
+                >
+                  {day.short}
+                </button>
+              ))}
+            </div>
+            {previewDates.length > 0 && (
+              <div className="preview-info">
+                Will create {previewDates.length} appointments
+              </div>
+            )}
+          </div>
+
+          {/* Description - Matching Quick Schedule EXACTLY */}
           <div className="form-group">
             <label htmlFor="description">Description</label>
             <textarea
@@ -377,47 +538,19 @@ const fetchPatients = async () => {
             />
           </div>
 
+          {/* Form Actions - Matching Quick Schedule EXACTLY */}
           <div className="form-actions">
             <button type="button" onClick={handleClose} className="cancel-btn">
               Cancel
             </button>
             <button type="submit" disabled={loading} className="submit-btn">
-              {loading ? 'Creating...' : 'Create Schedule'}
+              {loading ? 'Creating...' : `Create ${previewDates.length} Appointments`}
             </button>
-          </div>        </form>
-      </div>
-
-      {/* Past Date Confirmation Dialog */}
-      {showPastDateConfirm && (
-        <div className="modal-overlay">
-          <div className="confirm-modal">
-            <h3>⚠️ Attention: Date in the Past</h3>
-            <p>
-              You are trying to schedule an appointment for a past date ({formData.date}). 
-              Are you sure you want to continue?
-            </p>
-            <div className="confirm-actions">
-              <button 
-                onClick={() => setShowPastDateConfirm(false)} 
-                className="cancel-btn"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={() => {
-                  setShowPastDateConfirm(false);
-                  performSubmit();
-                }} 
-                className="confirm-btn"
-              >
-                Yes, Continue
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        </form>
+      </div>
     </div>
   );
 };
 
-export default QuickSchedule;
+export default RecurringSchedule;

@@ -1,16 +1,6 @@
-.quick-schedule-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
+/* QuickSchedule.css - Uses UnifiedBaseLayout.css for modal structure */
 
+/* Quick Schedule Modal Specific Styles */
 .quick-schedule-modal {
   background: white;
   border-radius: 12px;
@@ -141,7 +131,7 @@
   border-radius: 0 0 6px 6px;
   max-height: 200px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 1060;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -224,7 +214,7 @@
   box-shadow: none;
 }
 
-/* Past Date Confirmation Modal */
+/* Past Date Confirmation Modal - Higher z-index than main modal */
 .modal-overlay {
   position: fixed;
   top: 0;

@@ -888,6 +888,8 @@
   margin-top: 4px;
 }
 
+
+
 .appointment-dot {
   background: #3498db;
   color: white;
@@ -932,6 +934,691 @@
 
 
 
+/* Enhanced Recap Modal Styles */
+.enhanced-recap-modal {
+  background: white;
+  border-radius: 16px;
+  width: 95%;
+  max-width: 1200px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.enhanced-recap-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 30px;
+  border-bottom: 1px solid #e9ecef;
+  color: white;
+}
+
+.header-content h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.period-info {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.export-dropdown {
+  position: relative;
+}
+
+.export-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.export-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.export-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e9ecef;
+  min-width: 160px;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.export-menu button {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  transition: background-color 0.2s;
+}
+
+.export-menu button:hover {
+  background: #f8f9fa;
+}
+
+.export-menu button:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.export-menu button:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.enhanced-recap-modal .close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.enhanced-recap-modal .close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* Enhanced Stats Grid */
+.enhanced-recap-modal .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--card-color, #667eea);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.primary {
+  --card-color: #667eea;
+}
+
+.stat-card.secondary {
+  --card-color: #f093fb;
+}
+
+.stat-card.success {
+  --card-color: #4facfe;
+}
+
+.stat-card.warning {
+  --card-color: #43e97b;
+}
+
+.stat-icon {
+  font-size: 32px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.stat-content h3 {
+  margin: 0 0 4px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1;
+}
+
+.stat-content p {
+  margin: 0 0 8px 0;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-trend {
+  font-size: 12px;
+  color: #28a745;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Quick Insights */
+.quick-insights {
+  margin-top: 30px;
+}
+
+.quick-insights h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.insight-icon {
+  font-size: 20px;
+}
+
+.insight-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.insight-content strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.insight-content p {
+  margin: 0;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* Chart Styles */
+.chart-section {
+  margin-bottom: 30px;
+}
+
+.chart-section h3 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.chart-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  min-height: 120px;
+  overflow-x: auto;
+}
+
+.chart-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 60px;
+}
+
+.chart-bar {
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  width: 40px;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.chart-bar:hover {
+  transform: scaleY(1.05);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.chart-value {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c3e50;
+  background: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-label {
+  font-size: 11px;
+  color: #6c757d;
+  font-weight: 500;
+  text-align: center;
+  word-break: break-word;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.metric-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.metric-card h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
+.metric-card p {
+  margin: 0;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* Enhanced Day Summary */
+.enhanced-day-summary {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 1px solid #e9ecef;
+}
+
+.day-info h3 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.day-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stat-badge {
+  background: #667eea;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.stat-badge.appointments {
+  background: #667eea;
+}
+
+.stat-badge.timeslots {
+  background: #f093fb;
+}
+
+.stat-badge.patients {
+  background: #4facfe;
+}
+
+.stat-badge.providers {
+  background: #43e97b;
+}
+
+.day-progress {
+  width: 100px;
+}
+
+.progress-bar {
+  background: #e9ecef;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+/* Enhanced Appointment Cards */
+.appointments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.enhanced-appointment-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.enhanced-appointment-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #667eea;
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.enhanced-appointment-card .patient-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.enhanced-appointment-card .provider-name {
+  color: #667eea;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.enhanced-appointment-card .date {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.enhanced-timeslot-time {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 2px 4px 2px 0;
+  border: 1px solid #bbdefb;
+}
+
+.service-tag {
+  background: #e8f5e8;
+  color: #2e7d32;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  margin-left: 4px;
+  border: 1px solid #c8e6c9;
+}
+
+/* Enhanced Provider/Patient Summaries */
+.enhanced-provider-summary,
+.enhanced-patient-summary {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.provider-header,
+.patient-header {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 1px solid #e9ecef;
+}
+
+.provider-info h3,
+.patient-info h3 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.provider-stats,
+.patient-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.patients-list,
+.providers-list {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.patients-list strong,
+.providers-list strong {
+  color: #495057;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .enhanced-recap-modal {
+    width: 98%;
+    max-height: 95vh;
+  }
+  
+  .enhanced-recap-modal .modal-header {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    align-self: flex-end;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-container {
+    padding: 12px;
+  }
+  
+  .appointments-grid {
+    grid-template-columns: 1fr;
+    padding: 16px 20px;
+  }
+  
+  .day-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/* Print Styles for Recap Modal */
+@media print {
+  .modal-overlay {
+    position: static !important;
+    background: none !important;
+  }
+  
+  .enhanced-recap-modal {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  .modal-header {
+    background: #f5f5f5 !important;
+    color: #333 !important;
+    print-color-adjust: exact;
+  }
+  
+  .header-actions,
+  .export-dropdown,
+  .close-btn {
+    display: none !important;
+  }
+  
+  .recap-tabs {
+    display: none !important;
+  }
+  
+  .recap-content {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  .stat-card {
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  .enhanced-appointment-card {
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  .chart-container {
+    background: #f9f9f9 !important;
+    print-color-adjust: exact;
+  }
+  
+  .chart-bar {
+    background: #667eea !important;
+    print-color-adjust: exact;
+  }
+}
+
+/* Keep existing recap modal styles for backward compatibility */
 .recap-modal {
   background: white;
   border-radius: 12px;
@@ -948,8 +1635,8 @@
   align-items: center;
   padding: 20px;
   border-bottom: 1px solid #e9ecef;
-  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
-  color: rgb(0, 0, 0);
+  background: linear-gradient(135deg, #6bafee 0%, #ade8ff 100%);
+  color: white;
 }
 
 .modal-header h2 {
@@ -959,8 +1646,8 @@
 }
 
 .close-btn {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   font-size: 24px;
   cursor: pointer;
@@ -971,11 +1658,12 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
 /* Recap Tabs */
@@ -1254,6 +1942,7 @@
 /* Month View Appointment Dots Status Colors */
 .appointment-dot.status-scheduled {
   background: #1976d2;
+  color:white
 }
 
 .appointment-dot.status-confirmed {
