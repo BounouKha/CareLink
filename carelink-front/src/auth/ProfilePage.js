@@ -339,7 +339,7 @@ const ProfilePage = () => {
                                     <div>
                                         <h4 className="card-title mb-0">Profile Information</h4>                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1">
                                             <i className="fas fa-user-tag me-1"></i>
-                                            Role: {userData.user.role}
+                                            Role: {userData.user.role === 'Family Patient' ? 'Patient' : userData.user.role}
                                         </div>
                                     </div>
                                 </div>

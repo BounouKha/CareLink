@@ -444,13 +444,6 @@ const ProfilePage = () => {
                                                     Linked Patients
                                                 </button>
                                                 <button 
-                                                    className={`nav-link ${selectedTab === 'family' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('family')}
-                                                >
-                                                    <i className="fas fa-users me-2"></i>
-                                                    Family
-                                                </button>
-                                                <button 
                                                     className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
                                                     onClick={() => setSelectedTab('contact')}
                                                 >
