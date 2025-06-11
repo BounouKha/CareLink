@@ -1148,3 +1148,93 @@
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
 }
 
+/* Form Actions and Button Styles - matching unified design */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 24px;
+  border-top: 1px solid rgba(0, 123, 191, 0.1);
+  background: linear-gradient(135deg, rgba(0, 123, 191, 0.02) 0%, rgba(255, 255, 255, 0.9) 100%);
+  margin-left: -24px;
+  margin-right: -24px;
+  margin-bottom: -24px;
+}
+
+.btn-secondary,
+.btn-primary {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  backdrop-filter: blur(10px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  border: 2px solid rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(108, 117, 125, 0.2);
+  color: #495057;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(108, 117, 125, 0.2);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007bbf 0%, #005a8b 100%);
+  color: white;
+  border: 2px solid rgba(0, 123, 191, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #005a8b 0%, #003d5c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 123, 191, 0.3);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  background: rgba(189, 195, 199, 0.5);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(189, 195, 199, 0.3);
+  color: rgba(108, 117, 125, 0.6);
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner.small {
+  width: 14px;
+  height: 14px;
+  border-width: 1.5px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
