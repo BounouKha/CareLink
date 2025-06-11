@@ -1,36 +1,39 @@
-/* EditAppointment.css */
-.edit-appointment-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
-}
+/* 
+ * EditAppointment Modal Styles
+ * 
+ * This file provides Bootstrap-style card/modal styling that is consistent with:
+ * - QuickSchedule modal
+ * - RecurringSchedule modal
+ * - UnifiedBaseLayout.css modal system
+ * 
+ * Uses modern gradient backgrounds, blur effects, and unified button/form styling.
+ */
 
+/* Edit Appointment Modal Specific Styles - inherits from unified modal system */
 .edit-appointment-modal {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  width: 90%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 50px rgba(0, 123, 191, 0.15),
+    0 12px 30px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  width: 95%;
   max-width: 700px;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: modalSlideIn 0.3s ease-out;
+  max-height: 95vh;
+  overflow: hidden;
+  border: 1px solid rgba(0, 123, 191, 0.1);
+  animation: slideInDown 0.4s ease-out;
 }
 
-@keyframes modalSlideIn {
+@keyframes slideInDown {
   from {
+    transform: translateY(-50px);
     opacity: 0;
-    transform: translateY(-20px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -39,13 +42,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e1e5e9;
-  color: white;
-  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid rgba(0, 123, 191, 0.1);
+  background: linear-gradient(135deg, rgba(0, 123, 191, 0.05) 0%, rgba(255, 255, 255, 0.8) 100%);
 }
 
 .modal-header h2 {
   margin: 0;
+  color: #2c3e50;
   font-size: 1.5rem;
   font-weight: 600;
 }
@@ -53,8 +56,8 @@
 .close-btn {
   background: none;
   border: none;
-  font-size: 2.5rem;
-  color: rgb(255, 0, 0);
+  font-size: 1.5rem;
+  color: #7f8c8d;
   cursor: pointer;
   padding: 0;
   width: 30px;
@@ -67,11 +70,16 @@
 }
 
 .close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  transform: scale(1.1);
 }
 
 .edit-appointment-form {
   padding: 24px;
+  max-height: calc(95vh - 140px);
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .error-message {
@@ -106,19 +114,23 @@
 .form-group input,
 .form-group select,
 .form-group textarea {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border: 2px solid rgba(0, 123, 191, 0.2);
+  border-radius: 12px;
   font-size: 0.9rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: rgba(0, 123, 191, 0.8);
+  box-shadow: 0 0 0 4px rgba(0, 123, 191, 0.1);
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
 }
 
 .form-group textarea {
@@ -132,8 +144,10 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #e1e5e9;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(0, 123, 191, 0.1);
+  background: linear-gradient(135deg, rgba(0, 123, 191, 0.02) 0%, rgba(255, 255, 255, 0.9) 100%);
+  margin: 24px -24px -24px -24px;
 }
 
 .primary-actions {
@@ -148,54 +162,60 @@
 .cancel-btn,
 .update-btn,
 .delete-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 100px;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  backdrop-filter: blur(10px);
 }
 
 .cancel-btn {
-  background-color: #f8f9fa;
+  background: rgba(108, 117, 125, 0.1);
   color: #6c757d;
-  border: 1px solid #dee2e6;
+  border: 2px solid rgba(108, 117, 125, 0.3);
 }
 
 .cancel-btn:hover {
-  background-color: #e9ecef;
+  background: rgba(108, 117, 125, 0.2);
   color: #495057;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(108, 117, 125, 0.2);
 }
 
 .update-btn {
-  background-color: #3498db;
+  background: linear-gradient(135deg, #007bbf 0%, #005a8b 100%);
   color: white;
+  border: 2px solid rgba(0, 123, 191, 0.3);
 }
 
 .update-btn:hover:not(:disabled) {
-  background-color: #2980b9;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+  background: linear-gradient(135deg, #005a8b 0%, #003d5c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 123, 191, 0.3);
 }
 
 .update-btn:disabled {
-  background-color: #bdc3c7;
+  background: rgba(189, 195, 199, 0.5);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+  border-color: rgba(189, 195, 199, 0.3);
 }
 
 .delete-btn {
-  background-color: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: white;
+  border: 2px solid rgba(231, 76, 60, 0.3);
 }
 
 .delete-btn:hover:not(:disabled) {
-  background-color: #c0392b;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
 }
 
 .delete-btn:disabled {
@@ -206,90 +226,105 @@
 }
 
 /* Delete Confirmation Modal */
-.delete-confirm-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1100;
-}
-
 .delete-confirm-modal {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  max-width: 500px; /* Increased from 400px */
-  width: 90%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 500px;
+  width: 95%;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 
+    0 25px 50px rgba(231, 76, 60, 0.15),
+    0 12px 30px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(231, 76, 60, 0.1);
+  animation: slideInDown 0.4s ease-out;
 }
 
 .delete-confirm-modal h3 {
   margin: 0 0 16px 0;
   color: #e74c3c;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .delete-confirm-modal p {
   margin: 0 0 24px 0;
-  color: #666;
-  line-height: 1.5;
+  color: #2c3e50;
+  line-height: 1.6;
+  font-size: 1rem;
 }
 
 .confirm-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .confirm-delete-btn {
-  background-color: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(231, 76, 60, 0.3);
 }
 
 .confirm-delete-btn:hover:not(:disabled) {
-  background-color: #c0392b;
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
 }
 
 .confirm-delete-btn:disabled {
-  background-color: #bdc3c7;
+  background: rgba(189, 195, 199, 0.5);
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(189, 195, 199, 0.3);
 }
 
 /* Deletion Strategy Styling */
 .strategy-select {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  margin-bottom: 8px;
+  padding: 12px 16px;
+  border: 2px solid rgba(0, 123, 191, 0.2);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.strategy-select:focus {
+  outline: none;
+  border-color: rgba(0, 123, 191, 0.8);
+  box-shadow: 0 0 0 4px rgba(0, 123, 191, 0.1);
+  background: rgba(255, 255, 255, 1);
 }
 
 .strategy-explanation {
-  margin-top: 8px;
-  padding: 8px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border-left: 3px solid #3498db;
+  margin-top: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(0, 123, 191, 0.05) 0%, rgba(255, 255, 255, 0.8) 100%);
+  border-radius: 12px;
+  border-left: 4px solid rgba(0, 123, 191, 0.6);
+  backdrop-filter: blur(10px);
 }
 
 .strategy-explanation small {
-  color: #6c757d;
-  font-size: 12px;
-  line-height: 1.4;
+  color: #2c3e50;
+  font-size: 0.85rem;
+  line-height: 1.5;
   display: block;
+  font-weight: 500;
 }
 
 .delete-confirm-modal .form-group {
@@ -306,28 +341,29 @@
 
 /* Created By Field Styles */
 .read-only-field {
-  background-color: #f8f9fa;
-  border: 1px solid #e1e5e9;
-  border-radius: 6px;
-  padding: 12px;
-  min-height: 44px;
+  background: linear-gradient(135deg, rgba(0, 123, 191, 0.05) 0%, rgba(255, 255, 255, 0.9) 100%);
+  border: 2px solid rgba(0, 123, 191, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 50px;
   display: flex;
   align-items: center;
+  backdrop-filter: blur(10px);
 }
 
 .created-by-info {
-  color: #495057;
-  font-weight: 500;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .created-at-info {
-  color: #495057;
-  font-weight: 500;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .creator-email {
-  color: #6c757d;
-  font-weight: 400;
+  color: #007bbf;
+  font-weight: 500;
   font-size: 0.9em;
 }
 
@@ -441,4 +477,68 @@
 .form-group .option.selected {
   background-color: #e3f2fd;
   color: #1976d2;
+}
+
+/* Searchable Dropdown Styles - same as QuickSchedule */
+.searchable-dropdown {
+  position: relative;
+}
+
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(0, 123, 191, 0.2);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1060;
+  box-shadow: 0 8px 16px rgba(0, 123, 191, 0.15);
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 123, 191, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, rgba(0, 123, 191, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+  transform: translateX(2px);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background: rgba(240, 240, 240, 0.5);
+}
+
+.dropdown-item.disabled:hover {
+  background: rgba(240, 240, 240, 0.5);
+  transform: none;
+}
+
+.dropdown-item strong {
+  color: #2c3e50;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.provider-service,
+.patient-info {
+  color: #007bbf;
+  font-size: 0.8rem;
+  margin-top: 2px;
+  font-weight: 500;
 }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import SearchableSelect from '../../components/SearchableSelect';
-// CSS is now handled by UnifiedBaseLayout.css
+import './EditAppointment.css'; // Modal-specific styles using UnifiedBaseLayout.css
 
 const EditAppointment = ({ 
   isOpen, 
@@ -27,6 +26,11 @@ const EditAppointment = ({
   const [deleteStrategy, setDeleteStrategy] = useState('smart'); // 'smart', 'aggressive', 'conservative'
   const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
   
+  // Search states - same as QuickSchedule
+  const [providerSearch, setProviderSearch] = useState('');
+  const [patientSearch, setPatientSearch] = useState('');
+  const [showProviderDropdown, setShowProviderDropdown] = useState(false);
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   useEffect(() => {
     if (isOpen && appointment) {
       // Populate form with appointment data
@@ -37,8 +41,7 @@ const EditAppointment = ({
         if (!timeStr) return '';
         return timeStr.split(':').slice(0, 2).join(':');
       };
-      
-      setFormData({
+        setFormData({
         provider_id: appointment.provider.id || '',
         patient_id: appointment.patient.id || '',
         date: appointment.date || '',
@@ -47,7 +50,24 @@ const EditAppointment = ({
         service_id: timeslot?.service?.id || '',
         description: timeslot?.description || '',
         status: timeslot?.status || 'scheduled'
-      });
+      });      // Set initial search values - handle actual data structure
+      if (appointment.provider && appointment.provider.name) {
+        // Provider might not have service field, so handle it gracefully
+        const providerService = appointment.provider.service || '';
+        setProviderSearch(providerService ? `${appointment.provider.name} - ${providerService}` : appointment.provider.name);
+      } else {
+        setProviderSearch('');
+      }
+      
+      if (appointment.patient && appointment.patient.name) {
+        // Patient data has 'name' field instead of firstname/lastname
+        setPatientSearch(appointment.patient.name);
+      } else if (appointment.patient && (appointment.patient.firstname || appointment.patient.lastname)) {
+        // Fallback: check for firstname/lastname structure
+        setPatientSearch(`${appointment.patient.firstname || ''} ${appointment.patient.lastname || ''}`.trim());
+      } else {
+        setPatientSearch('');
+      }
       
       fetchPatients();
       fetchServices();
@@ -210,16 +230,50 @@ const EditAppointment = ({
       setLoading(false);
       setShowDeleteConfirm(false);
     }
+  };  const handleClose = () => {
+    onClose();
+  };
+  // Search and filter functions - handle actual data structure
+  const filteredProviders = providers.filter(provider =>
+    provider.name.toLowerCase().includes(providerSearch.toLowerCase()) ||
+    (provider.service && provider.service.toLowerCase().includes(providerSearch.toLowerCase()))
+  );
+  
+  const filteredPatients = patients.filter(patient => {
+    const searchTerm = patientSearch.toLowerCase();
+    // Handle both 'name' field and 'firstname lastname' structure
+    if (patient.name) {
+      return patient.name.toLowerCase().includes(searchTerm);
+    } else {
+      const fullName = `${patient.firstname || ''} ${patient.lastname || ''}`.toLowerCase();
+      return fullName.includes(searchTerm) ||
+        (patient.national_number && patient.national_number.toLowerCase().includes(searchTerm));
+    }
+  });
+
+  const selectProvider = (provider) => {
+    setFormData(prev => ({ ...prev, provider_id: provider.id }));
+    const providerService = provider.service || '';
+    setProviderSearch(providerService ? `${provider.name} - ${providerService}` : provider.name);
+    setShowProviderDropdown(false);
+  };
+
+  const selectPatient = (patient) => {
+    setFormData(prev => ({ ...prev, patient_id: patient.id }));
+    // Handle both data structures
+    const patientName = patient.name || `${patient.firstname || ''} ${patient.lastname || ''}`.trim();
+    setPatientSearch(patientName);
+    setShowPatientDropdown(false);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="edit-appointment-overlay">
-      <div className="edit-appointment-modal">
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="edit-appointment-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Edit Appointment</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
         <div className="edit-appointment-form">
@@ -230,33 +284,71 @@ const EditAppointment = ({
           )}
 
           <form onSubmit={handleUpdate}>            <div className="form-row">              <div className="form-group">
-                <SearchableSelect
-                  label="Provider"
-                  name="provider_id"
-                  value={formData.provider_id}
-                  onChange={handleInputChange}
-                  options={providers}
-                  placeholder="Search Provider by name or service..."
-                  required
-                  formatDisplay={(provider) => `${provider.name} - ${provider.service}`}
-                  searchFields={['name', 'service', 'user.firstname', 'user.lastname', 'user.email']}
-                />
+                <label htmlFor="provider_search">Provider *</label>
+                <div className="searchable-dropdown">
+                  <input
+                    type="text"
+                    id="provider_search"
+                    placeholder="Search providers..."
+                    value={providerSearch}
+                    onChange={(e) => setProviderSearch(e.target.value)}
+                    onFocus={() => setShowProviderDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}
+                  />                  {showProviderDropdown && filteredProviders.length > 0 && (
+                    <div className="dropdown-list">
+                      {filteredProviders.map(provider => (
+                        <div
+                          key={provider.id}
+                          className="dropdown-item"
+                          onClick={() => selectProvider(provider)}
+                        >
+                          <strong>{provider.name}</strong>
+                          {provider.service && <span className="provider-service">{provider.service}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">
-                <SearchableSelect
-                  label="Patient"
-                  name="patient_id"
-                  value={formData.patient_id}
-                  onChange={handleInputChange}
-                  options={patients}
-                  placeholder="Search Patient by name or national number..."
-                  required
-                  formatDisplay={(patient) => `${patient.firstname} ${patient.lastname}${patient.national_number ? ` - ${patient.national_number}` : ''}`}
-                  searchFields={['firstname', 'lastname', 'national_number', 'user.email']}
-                />
+                <label htmlFor="patient_search">Patient *</label>
+                <div className="searchable-dropdown">
+                  <input
+                    type="text"
+                    id="patient_search"
+                    placeholder="Search patients..."
+                    value={patientSearch}
+                    onChange={(e) => setPatientSearch(e.target.value)}
+                    onFocus={() => setShowPatientDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}
+                  />
+                  {showPatientDropdown && (
+                    <div className="dropdown-list">                      {filteredPatients.length > 0 ? (
+                        filteredPatients.map(patient => (
+                          <div
+                            key={patient.id}
+                            className="dropdown-item"
+                            onClick={() => selectPatient(patient)}
+                          >
+                            <strong>
+                              {patient.name || `${patient.firstname || ''} ${patient.lastname || ''}`.trim()}
+                            </strong>
+                            {patient.national_number && (
+                              <span className="patient-info">ID: {patient.national_number}</span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="dropdown-item disabled">
+                          {patients.length === 0 ? 'Loading patients...' : 'No patients found'}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>            {/* Created By and Created At Information - Non-editable */}
+            </div>{/* Created By and Created At Information - Non-editable */}
             {appointment && (
               <div className="form-row">
                 <div className="form-group">
@@ -392,12 +484,10 @@ const EditAppointment = ({
                 </button>
               </div>
             </div>
-          </form>        </div>
-
-        {/* Past Date Confirmation Dialog */}
+          </form>        </div>        {/* Past Date Confirmation Dialog */}
         {showPastDateConfirm && (
-          <div className="delete-confirm-overlay">
-            <div className="delete-confirm-modal">
+          <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
               <h3>⚠️ Attention: Date in the Past</h3>
               <p>
                 You are trying to schedule an appointment for a past date ({formData.date}). 
@@ -426,8 +516,8 @@ const EditAppointment = ({
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
-          <div className="delete-confirm-overlay">
-            <div className="delete-confirm-modal">
+          <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
               <h3>Confirm Deletion</h3>
               <p>Are you sure you want to delete this appointment? This action cannot be undone.</p>
                 <div className="form-group">
