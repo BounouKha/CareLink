@@ -978,6 +978,7 @@
   font-size: 14px;
   opacity: 0.9;
   font-weight: 400;
+  color:black
 }
 
 .header-actions {
@@ -992,8 +993,7 @@
 
 .export-btn {
   background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  border: 1px solid rgba(68, 13, 13, 0.3);
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -1048,7 +1048,7 @@
 .enhanced-recap-modal .close-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  color: rgb(248, 0, 0);
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
