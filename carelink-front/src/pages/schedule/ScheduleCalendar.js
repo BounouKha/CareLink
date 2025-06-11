@@ -738,7 +738,7 @@ const ScheduleCalendar = () => {
             <div className="header-actions">
               <div className="export-dropdown">
                 <button 
-                  className="export-btn"
+                  className="export-btn "
                   onClick={() => setShowExportOptions(!showExportOptions)}
                 >
                   📥 Export
