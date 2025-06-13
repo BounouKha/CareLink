@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import AddEntryForm from '../../components/AddEntryForm';
 // Import page-specific CSS for components not covered by unified styles
-import './PatientsPageNew.css';
+import './PatientsPage.css';
 
 const PatientsPage = () => {
     const [patients, setPatients] = useState([]);
