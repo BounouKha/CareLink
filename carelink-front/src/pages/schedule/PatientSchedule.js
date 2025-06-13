@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ScheduleCalendar.css';
 import './PatientSchedule.css';
+import { SpinnerOnly } from '../../components/LoadingComponents';
 
 const PatientSchedule = () => {
   const [appointments, setAppointments] = useState([]);
@@ -356,9 +357,10 @@ const PatientSchedule = () => {
       </div>
 
       {error && <div className="error-message">{error}</div>}
-      
-      {loading ? (
-        <div className="loading">Loading...</div>
+        {loading ? (
+        <div className="loading-center">
+          <SpinnerOnly size="large" />
+        </div>
       ) : (
         <div className="schedule-content">
           <div className="appointments-list">

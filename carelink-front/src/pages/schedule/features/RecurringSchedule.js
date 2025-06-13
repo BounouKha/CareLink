@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './RecurringSchedule.css';
+import { useLoading } from '../../../hooks/useLoading';
+import { 
+  ModalLoadingOverlay, 
+  ButtonLoading, 
+  FormLoading,
+  LoadingSpinner,
+  SearchLoading 
+} from '../../../components/LoadingComponents';
 
 const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
   const [formData, setFormData] = useState({
@@ -21,12 +29,22 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     end_date: '',
     occurrences: 4
   });
-
   const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [previewDates, setPreviewDates] = useState([]);
+  
+  // Enhanced loading states
+  const { 
+    isLoading: isModalLoading, 
+    startLoading, 
+    stopLoading, 
+    executeWithLoading 
+  } = useLoading();
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   
   // Search states
   const [providerSearch, setProviderSearch] = useState('');
@@ -89,11 +107,12 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
       return 0;
     }
   };
-
   useEffect(() => {
-    if (isOpen) {
-      fetchPatients();
-      fetchServices();
+    if (isOpen) {      executeWithLoading(async () => {
+        setIsDataLoading(true);
+        await Promise.all([fetchPatients(), fetchServices()]);
+        setIsDataLoading(false);
+      }, '', 'modal');
       
       // Smart initialization with preselected values
       if (preselectedDate) {
@@ -524,8 +543,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     } catch (error) {
       console.error('Error handling recurring change:', error);
     }
-  };
-  // Enhanced form submission with validation
+  };  // Enhanced form submission with validation and loading states
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -540,10 +558,8 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
       return;
     }
 
-    setLoading(true);
-    setError('');
-
-    try {
+    await executeWithLoading(async () => {
+      setError('');
       const token = localStorage.getItem('accessToken');
       
       // Prepare enhanced recurring schedule data
@@ -591,13 +607,9 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
         } else {
           setError(errorData.error || errorData.detail || 'Failed to create recurring schedule');
         }
+        throw new Error('Failed to create recurring schedule');
       }
-    } catch (err) {
-      console.error('Error creating recurring schedule:', err);
-      setError('Network error occurred. Please check your connection and try again.');
-    } finally {
-      setLoading(false);
-    }
+    }, `Creating ${previewDates.length} appointments...`, 'form');
   };
 
   // Helper function to generate pattern summary
@@ -627,9 +639,14 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
         <div className="modal-header">
           <h2>Recurring Schedule</h2>
           <button className="close-btn" onClick={onClose}>×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="quick-schedule-form">
+        </div>        <form onSubmit={handleSubmit} className="quick-schedule-form">
+          {/* Simple loading - same as other pages */}
+          {(isDataLoading || isModalLoading) && (
+            <div className="simple-loading-container">
+              <SpinnerOnly size="large" />
+            </div>
+          )}
+          
           {error && (
             <div className="error-message">
               <span className="error-icon">⚠️</span>
@@ -660,10 +677,11 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   />
                   {validationErrors.provider_id && (
                     <span className="validation-error">{validationErrors.provider_id}</span>
-                  )}
-                  {showProviderDropdown && providerSearch.length > 0 && (
+                  )}                  {showProviderDropdown && providerSearch.length > 0 && (
                     <div className="dropdown-list">
-                      {filteredProviders.length > 0 ? filteredProviders.slice(0, 8).map(provider => (
+                      {isSearchLoading ? (
+                        <SearchLoading message="Searching providers..." />
+                      ) : filteredProviders.length > 0 ? filteredProviders.slice(0, 8).map(provider => (
                         <div
                           key={provider.id}
                           className="dropdown-item"
@@ -702,10 +720,11 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   />
                   {validationErrors.patient_id && (
                     <span className="validation-error">{validationErrors.patient_id}</span>
-                  )}
-                  {showPatientDropdown && patientSearch.length > 0 && (
+                  )}                  {showPatientDropdown && patientSearch.length > 0 && (
                     <div className="dropdown-list">
-                      {filteredPatients.length > 0 ? filteredPatients.slice(0, 8).map(patient => (
+                      {isSearchLoading ? (
+                        <SearchLoading message="Searching patients..." />
+                      ) : filteredPatients.length > 0 ? filteredPatients.slice(0, 8).map(patient => (
                         <div
                           key={patient.id}
                           className="dropdown-item"
@@ -1158,30 +1177,21 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                 )}
               </div>
             )}
-          </div>
-
-          {/* Enhanced Form Actions */}
+          </div>          {/* Enhanced Form Actions */}
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
+            <button type="button" className="btn-secondary" onClick={onClose} disabled={isModalLoading}>
               Cancel
             </button>
-            <button 
-              type="submit" 
-              className="btn-primary" 
-              disabled={loading || previewDates.length === 0 || isGeneratingPreview}
+            <ButtonLoading 
+              type="submit"
+              className="btn-primary"
+              isLoading={isModalLoading}
+              disabled={previewDates.length === 0 || isGeneratingPreview}
+              loadingText={`Creating ${previewDates.length} appointments...`}
             >
-              {loading ? (
-                <>
-                  <span className="loading-spinner small"></span>
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <span className="btn-icon">🚀</span>
-                  Create {previewDates.length} Appointment{previewDates.length !== 1 ? 's' : ''}
-                </>
-              )}
-            </button>
+              <span className="btn-icon">🚀</span>
+              Create {previewDates.length} Appointment{previewDates.length !== 1 ? 's' : ''}
+            </ButtonLoading>
           </div>
         </form>
       </div>
