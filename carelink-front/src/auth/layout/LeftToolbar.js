@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import { useNavigate } from 'react-router-dom';
+import { SpinnerOnly } from '../../components/LoadingComponents';
 
 const LeftToolbar = ({ userData }) => {
     const [isVisible, setIsVisible] = useState(() => {
@@ -8,25 +9,39 @@ const LeftToolbar = ({ userData }) => {
         const saved = localStorage.getItem('leftToolbarVisible');
         return saved !== null ? JSON.parse(saved) : true;
     });
+    const [isNavigating, setIsNavigating] = useState(false);
     const navigate = useNavigate();
 
     // Save state to localStorage whenever it changes
     useEffect(() => {
         localStorage.setItem('leftToolbarVisible', JSON.stringify(isVisible));
-    }, [isVisible]);
-
-    const toggleToolbar = () => {
+    }, [isVisible]);    const toggleToolbar = () => {
         setIsVisible(!isVisible);
     };
 
+    // Navigation helper with loading
+    const navigateWithLoading = (path, delay = 200) => {
+        setIsNavigating(true);
+        setTimeout(() => {
+            navigate(path);
+            setIsNavigating(false);
+        }, delay);
+    };
+
     const handleProfileClick = () => {
-        navigate('/profile');
-    };    const handlePatientsClick = () => {
-        navigate('/patients');
-    };    const handleServiceDemandsClick = () => {
-        navigate('/service-demands');
-    };    const handleScheduleClick = () => {
-        navigate('/schedule');
+        navigateWithLoading('/profile');
+    };
+
+    const handlePatientsClick = () => {
+        navigateWithLoading('/patients');
+    };
+
+    const handleServiceDemandsClick = () => {
+        navigateWithLoading('/service-demands');
+    };
+
+    const handleScheduleClick = () => {
+        navigateWithLoading('/schedule');
     };
 
     const renderRoleSpecificToolbar = () => {
@@ -53,6 +68,26 @@ const LeftToolbar = ({ userData }) => {
         );
     };    return (
         <>
+            {/* Navigation Loading Overlay */}
+            {isNavigating && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 9999,
+                    animation: 'fadeIn 0.2s ease-out'
+                }}>
+                    <SpinnerOnly size="large" />
+                </div>
+            )}
+            
             <div className={`left-toolbar ${isVisible ? 'visible' : 'hidden'}`}>
                 {renderRoleSpecificToolbar()}
             </div>

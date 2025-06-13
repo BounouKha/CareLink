@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import ServiceDemandMoreInfo from './ServiceDemandMoreInfo';
+import { SpinnerOnly } from '../../components/LoadingComponents';
 
 const ServiceDemandPage = () => {
     const [demands, setDemands] = useState([]);
@@ -402,12 +403,13 @@ const ServiceDemandPage = () => {
     }, []);
 
     if (loading) {
-        return (
-            <BaseLayout>
-                <div className="service-demand-page">
-                    <div className="loading">Loading service demands...</div>
+        return (        <BaseLayout>
+            <div className="service-demand-page">
+                <div className="loading-center">
+                    <SpinnerOnly size="large" />
                 </div>
-            </BaseLayout>
+            </div>
+        </BaseLayout>
         );
     }    return (
         <BaseLayout>
