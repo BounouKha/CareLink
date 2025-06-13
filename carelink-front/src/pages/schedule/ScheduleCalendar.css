@@ -526,14 +526,12 @@
 }
 
 .time-slot.occupied {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
+  background: #f8f9fa; /* Light grey background - let timeslot colors show */
+  color: inherit; /* Let timeslot text colors show */
 }
 
 .time-slot.occupied:hover {
-  background: linear-gradient(135deg, #2980b9, #1f5f8b);
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+  background: #e9ecef; /* Slightly darker grey on hover */
 }
 
 .appointment {
@@ -569,9 +567,14 @@
   white-space: nowrap;
 }
 
-/* Multiple appointments styling */
-.time-slot.multiple-appointments {
+/* Multiple appointments styling - neutral background */
+.time-slot.multiple-timeslots {
   min-height: 50px; /* Keep consistent with regular slots */
+  background: #f8f9fa !important; /* Light grey background - neutral */
+}
+
+.time-slot.multiple-timeslots:hover {
+  background: #e9ecef !important; /* Slightly darker grey on hover */
 }
 
 .appointments-container {
