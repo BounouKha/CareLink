@@ -162,8 +162,38 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Set token expiration to 60 minutes
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Refresh token valid for 1 day
+    # Security Best Practices for JWT Tokens
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),   # Short-lived access tokens (15 minutes)
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),      # Longer refresh tokens (7 days)
+    
+    # Security Settings
+    'ROTATE_REFRESH_TOKENS': True,                    # Generate new refresh token on each refresh
+    'BLACKLIST_AFTER_ROTATION': True,                 # Blacklist old refresh tokens
+    'ALGORITHM': 'HS256',                             # Use secure algorithm
+    'SIGNING_KEY': SECRET_KEY,                        # Use Django secret key
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JSON_ENCODER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+    
+    # Token Claims
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    
+    # Token Refresh Settings
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    
+    # Additional Security
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=15),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
 }
 
 
