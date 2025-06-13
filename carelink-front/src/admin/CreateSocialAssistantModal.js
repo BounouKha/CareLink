@@ -43,17 +43,17 @@ const CreateSocialAssistantModal = ({ userId, onClose, onProfileCreated }) => {
             alert(err.message);
         }
     };    return (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-overlay">
+            <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    <div className="modal-header bg-success text-white">
-                        <h5 className="modal-title">
-                            <i className="fas fa-hands-helping me-2"></i>
+                    <div className="modal-header">
+                        <h4 className="modal-title">
+                            <i className="fas fa-hands-helping me-2 text-success"></i>
                             Create Social Assistant Profile
-                        </h5>
+                        </h4>
                         <button 
                             type="button" 
-                            className="btn-close btn-close-white" 
+                            className="btn-close" 
                             onClick={onClose}
                             aria-label="Close"
                         ></button>
