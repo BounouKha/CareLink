@@ -480,11 +480,10 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
                 const dateStr = formatDateToString(date);
                 
                 // Get all timeslots for this time slot (individual timeslots, not grouped by appointment)
-                const timeslots = getTimeslotsForTimeSlot(dateStr, time);
-                  return (
+                const timeslots = getTimeslotsForTimeSlot(dateStr, time);                  return (
                   <div 
                     key={`${dateStr}-${time}`} 
-                    className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''} ${timeslots.length > 0 ? getPrimaryTimeSlotStatus(timeslots) : ''}`}
+                    className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''}`}
                     onClick={() => timeslots.length === 0 ? onTimeSlotClick(dateStr, time) : null}
                     onDragOver={onDragOver}
                     onDrop={(e) => onDrop(e, dateStr, time)}
@@ -550,7 +549,7 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
             
             return (              <div 
                 key={time} 
-                className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''} ${timeslots.length > 0 ? getPrimaryTimeSlotStatus(timeslots) : ''}`}
+                className={`time-slot ${timeslots.length > 0 ? 'occupied' : 'available'} ${isDragging && timeslots.length === 0 ? 'drop-zone' : ''} ${timeslots.length > 1 ? 'multiple-timeslots' : ''}`}
                 onClick={() => timeslots.length === 0 ? onTimeSlotClick(dateStr, time) : null}
                 onDragOver={onDragOver}
                 onDrop={(e) => onDrop(e, dateStr, time)}
@@ -1058,36 +1057,7 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
     
     return 'status-scheduled'; // Default fallback
   };
-
-  // Helper function to get the primary status for a time slot (when multiple timeslots exist)
-  const getPrimaryTimeSlotStatus = (timeslots) => {
-    if (!timeslots || timeslots.length === 0) return 'available';
-    
-    // Priority order: in_progress > confirmed > scheduled > completed > cancelled > no_show
-    const statusPriority = {
-      'in_progress': 6,
-      'confirmed': 5,
-      'scheduled': 4,
-      'completed': 3,
-      'cancelled': 2,
-      'no_show': 1
-    };
-    
-    let highestPriority = 0;
-    let primaryStatus = 'scheduled';
-    
-    timeslots.forEach(timeslot => {
-      const status = timeslot.status || 'scheduled';
-      const priority = statusPriority[status] || statusPriority['scheduled'];
-      
-      if (priority > highestPriority) {
-        highestPriority = priority;
-        primaryStatus = status;
-      }
-    });
-    
-    return getStatusClass(primaryStatus);
-  };  return (
+  return (
     <div className="schedule-calendar">
       {/* Page loading overlay for navigation only */}
       {isPageLoading && (

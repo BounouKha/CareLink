@@ -74,17 +74,17 @@ const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
             alert(err.message);
         }
     };    return (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-overlay">
+            <div className="modal-dialog modal-lg">
                 <div className="modal-content">
-                    <div className="modal-header bg-primary text-white">
-                        <h5 className="modal-title">
-                            <i className="fas fa-user-md me-2"></i>
+                    <div className="modal-header">
+                        <h4 className="modal-title">
+                            <i className="fas fa-user-md me-2 text-primary"></i>
                             Create Provider Profile
-                        </h5>
+                        </h4>
                         <button 
                             type="button" 
-                            className="btn-close btn-close-white" 
+                            className="btn-close" 
                             onClick={onClose}
                             aria-label="Close"
                         ></button>

@@ -95,7 +95,6 @@
 .appointments-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   max-height: 800px;
   overflow-y: auto;
   padding-right: 8px;

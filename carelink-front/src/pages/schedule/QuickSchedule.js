@@ -48,21 +48,32 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     const finalHour = endHour >= 24 ? endHour - 24 : endHour;
     
     return `${finalHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  };
-  useEffect(() => {
+  };  useEffect(() => {
     if (isOpen) {      executeWithLoading(async () => {
         setIsDataLoading(true);
         await Promise.all([fetchPatients(), fetchServices()]);
         setIsDataLoading(false);
       }, '', 'modal');
       
+      // Debug log the preselected values
+      console.log('QuickSchedule opened with:', { preselectedDate, preselectedTime });
+      
       // Auto-fill form if preselected values are provided
       if (preselectedDate && preselectedTime) {
-        const endTime = calculateEndTime(preselectedTime);
+        // Ensure the time format is HH:MM (not HH:MM:SS)
+        const formattedTime = preselectedTime.split(':').slice(0, 2).join(':');
+        const endTime = calculateEndTime(formattedTime);
+        
+        console.log('Setting preselected data:', {
+          date: preselectedDate,
+          start_time: formattedTime,
+          end_time: endTime
+        });
+        
         setFormData(prev => ({ 
           ...prev, 
           date: preselectedDate,
-          start_time: preselectedTime,
+          start_time: formattedTime,
           end_time: endTime
         }));
       } else {
@@ -192,12 +203,24 @@ const fetchPatients = async () => {
     }
     
     await performSubmit();
-  };
-  const performSubmit = async () => {
+  };  const performSubmit = async () => {
+    // Frontend validation
+    const requiredFields = ['provider_id', 'patient_id', 'date', 'start_time', 'end_time'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      console.error('Missing form data:', formData);
+      return;
+    }
+
     await executeWithLoading(async () => {
       setError('');
 
       const token = localStorage.getItem('accessToken');
+      
+      // Debug log the form data being sent
+      console.log('Submitting form data:', formData);
       
       const response = await fetch('http://localhost:8000/schedule/quick-schedule/', {
         method: 'POST',
@@ -259,7 +282,7 @@ const fetchPatients = async () => {
             </div>
           )}<div className="form-row">
             <div className="form-group">
-              <label htmlFor="provider_search">Provider *</label>
+              <label htmlFor="provider_search">Provider * {formData.provider_id ? '✅' : '❌'}</label>
               <div className="searchable-dropdown">
                 <input
                   type="text"
@@ -294,7 +317,7 @@ const fetchPatients = async () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="patient_search">Patient *</label>
+              <label htmlFor="patient_search">Patient * {formData.patient_id ? '✅' : '❌'}</label>
               <div className="searchable-dropdown">
                 <input
                   type="text"
