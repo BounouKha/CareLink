@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import BaseLayout from '../layout/BaseLayout';
+import tokenManager from '../../utils/tokenManager';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -22,12 +23,13 @@ const LoginPage = () => {
 
             if (!response.ok) {
                 throw new Error('Invalid email or password.');
-            }
-
-            const data = await response.json();
-            const { access, refresh,  } = data;
-            localStorage.setItem('accessToken', access);
-            localStorage.setItem('refreshToken', refresh);
+            }            const data = await response.json();
+            const { access, refresh } = data;
+            
+            // Use TokenManager to securely store tokens
+            tokenManager.setTokens(access, refresh);
+            
+            console.log('✅ Login successful, tokens stored securely');
             navigate('/profile');
         } catch (err) {
             setError(err.message);

@@ -4,6 +4,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import LeftToolbar from './LeftToolbar';
 import { AdminContext } from '../login/AdminContext';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import tokenManager from '../../utils/tokenManager'; // Import the new token manager
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,73 +52,45 @@ const BaseLayout = ({ children }) => {
         // Restore zoom level from localStorage on page load
         const savedZoom = parseFloat(localStorage.getItem('zoomLevel')) || 1;
         document.body.style.zoom = savedZoom.toString();
-    }, []);
-
-    useEffect(() => {
-        const refreshToken = async () => {
-            const refresh = localStorage.getItem('refreshToken');
-            if (!refresh) return;
+    }, []);    useEffect(() => {
+        // Remove old manual token refresh logic - now handled by TokenManager
+        // TokenManager automatically monitors and refreshes tokens
+        
+        const preloadAdminStatus = async () => {
+            if (!tokenManager.isAuthenticated()) {
+                setLoading(false);
+                return;
+            }
 
             try {
-                const response = await fetch('http://localhost:8000/account/token/refresh/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ refresh }),
+                // Use authenticated fetch for admin status check
+                const response = await tokenManager.authenticatedFetch('http://localhost:8000/account/check-admin/', {
+                    method: 'GET',
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    localStorage.setItem('accessToken', data.access);
+                    setIsSuperuser(data.is_superuser);
+                    console.log('Admin status preloaded:', data.is_superuser);
                 } else {
-                    console.error('Failed to refresh token');
+                    console.error('Failed to preload admin status');
+                }
+
+                // Fetch user profile data with authenticated request
+                const profileResponse = await tokenManager.authenticatedFetch('http://localhost:8000/account/profile/', {
+                    method: 'GET',
+                });
+
+                if (profileResponse.ok) {
+                    const profileData = await profileResponse.json();
+                    setUserData(profileData);
+                    console.log('User data loaded:', profileData);
+                } else {
+                    console.error('Failed to load user profile');
                 }
             } catch (error) {
-                console.error('Error refreshing token:', error);
-            }
-        };
-
-        const interval = setInterval(refreshToken, 59 * 60 * 1000); // Refresh every 59 minutes
-        return () => clearInterval(interval);
-    }, []);    useEffect(() => {
-        const preloadAdminStatus = async () => {
-            const token = localStorage.getItem('accessToken');
-            if (token) {
-                try {
-                    const response = await fetch('http://localhost:8000/account/check-admin/', {
-                        method: 'GET',
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        setIsSuperuser(data.is_superuser);
-                        console.log('Admin status preloaded:', data.is_superuser);
-                    } else {
-                        console.error('Failed to preload admin status');
-                    }
-
-                    // Fetch user profile data
-                    const profileResponse = await fetch('http://localhost:8000/account/profile/', {
-                        method: 'GET',
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-
-                    if (profileResponse.ok) {
-                        const profileData = await profileResponse.json();
-                        setUserData(profileData);
-                        console.log('User data loaded:', profileData);
-                    } else {
-                        console.error('Failed to load user profile');
-                    }
-                } catch (error) {
-                    console.error('Error preloading admin status:', error);
-                }
+                console.error('Error preloading data:', error);
+                // Error is handled by TokenManager (logout if needed)
             }
             setLoading(false);
         };
@@ -145,19 +118,15 @@ const BaseLayout = ({ children }) => {
         const newZoom = Math.max(currentZoom - 0.1, 0.5); // Min zoom level: 50%
         document.body.style.zoom = newZoom.toString();
         localStorage.setItem('zoomLevel', newZoom);
-    };
-
-    const handleMemberAreaClick = () => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
+    };    const handleMemberAreaClick = () => {
+        if (tokenManager.isAuthenticated()) {
             window.location.href = '/profile';
         } else {
             window.location.href = '/login';
         }
-    };    const handleLogout = () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+    };const handleLogout = () => {
+        // Use TokenManager for secure logout
+        tokenManager.handleLogout();
     };
 
     // Navigation helper with loading
@@ -168,7 +137,7 @@ const BaseLayout = ({ children }) => {
         }, delay);
     };
 
-    const isConnected = !!localStorage.getItem('accessToken');
+    const isConnected = tokenManager.isAuthenticated();
     const isMemberArea = ['/profile', '/patients', '/service-demands', '/schedule'].some(path => 
         window.location.pathname.startsWith(path)
     ); // Include all member area routes
@@ -229,10 +198,8 @@ const BaseLayout = ({ children }) => {
                     )}
                     {isConnected && (
                         <button className="btn btn-primary" onClick={handleLogout}>Logout</button>
-                    )}
-                    <button className="btn btn-primary" onClick={() => {
-                        const token = localStorage.getItem('accessToken');
-                        if (token) {
+                    )}                    <button className="btn btn-primary" onClick={() => {
+                        if (tokenManager.isAuthenticated()) {
                             navigateWithLoading('/profile');
                         } else {
                             navigateWithLoading('/login');

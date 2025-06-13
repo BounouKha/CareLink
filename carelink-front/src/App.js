@@ -12,6 +12,7 @@ import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
 import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
 import TestUserAuth from './auth/test/TestUserAuth';
+import TokenTestPage from './pages/test/TokenTestPage';
 import './auth/layout/UnifiedBaseLayout.css';
 import ProtectedRoute from './auth/login/ProtectedRoute';
 import { AdminProvider } from './auth/login/AdminContext';
@@ -35,9 +36,9 @@ function App() {
                         {/* Keep the old routes for backward compatibility */}
                         <Route path="/schedule/router" element={<ScheduleRouter />} />
                         <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
-                        <Route path="/schedule/patient" element={<PatientSchedule />} />
-                        <Route path="/schedule/family" element={<PatientSchedule />} />
+                        <Route path="/schedule/patient" element={<PatientSchedule />} />                        <Route path="/schedule/family" element={<PatientSchedule />} />
                         <Route path="/test-auth" element={<TestUserAuth />} />
+                        <Route path="/test-tokens" element={<TokenTestPage />} />
                     </Routes>
                 </div>
             </Router>
