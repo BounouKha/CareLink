@@ -20,13 +20,16 @@ function App() {
     return (
         <AdminProvider>
             <Router>
-                <div className="App">                    <Routes>
+                <div className="App">
+                    <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/login" element={<LoginPage />} />
-                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />                        <Route path="/patients" element={<PatientsPageNew />} />
-                        <Route path="/service-demands" element={<ServiceDemandPage />} />                        {/* New unified schedule route that stays in BaseLayout */}
+                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                        <Route path="/patients" element={<PatientsPageNew />} />
+                        <Route path="/service-demands" element={<ServiceDemandPage />} />
+                        {/* New unified schedule route that stays in BaseLayout */}
                         <Route path="/schedule" element={<SchedulePage />} />
                         
                         {/* Keep the old routes for backward compatibility */}

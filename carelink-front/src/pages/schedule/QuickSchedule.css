@@ -276,6 +276,19 @@
   box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
 }
 
+/* Simple Loading Container - Consistent with other pages */
+.simple-loading-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1002;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .quick-schedule-modal {

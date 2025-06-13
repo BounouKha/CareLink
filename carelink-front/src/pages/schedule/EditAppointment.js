@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './EditAppointment.css'; // Modal-specific styles using UnifiedBaseLayout.css
+import { useLoading } from '../../hooks/useLoading';
+import { 
+  ModalLoadingOverlay, 
+  ButtonLoading, 
+  FormLoading,
+  SearchLoading,
+  SpinnerOnly 
+} from '../../components/LoadingComponents';
 
 const EditAppointment = ({ 
   isOpen, 
@@ -20,11 +28,18 @@ const EditAppointment = ({
     status: 'scheduled'
   });  const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteStrategy, setDeleteStrategy] = useState('smart'); // 'smart', 'aggressive', 'conservative'
   const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
+  
+  // Enhanced loading states
+  const { 
+    isLoading: isModalLoading, 
+    executeWithLoading 
+  } = useLoading();
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   
   // Search states - same as QuickSchedule
   const [providerSearch, setProviderSearch] = useState('');
@@ -67,10 +82,12 @@ const EditAppointment = ({
         setPatientSearch(`${appointment.patient.firstname || ''} ${appointment.patient.lastname || ''}`.trim());
       } else {
         setPatientSearch('');
-      }
-      
-      fetchPatients();
-      fetchServices();
+      }        // Load initial data with loading states
+      executeWithLoading(async () => {
+        setIsDataLoading(true);
+        await Promise.all([fetchPatients(), fetchServices()]);
+        setIsDataLoading(false);
+      }, '', 'modal');
     }
   }, [isOpen, appointment]);
 
@@ -138,12 +155,10 @@ const EditAppointment = ({
     
     await performUpdate();
   };
-
   const performUpdate = async () => {
-    setLoading(true);
-    setError('');
+    await executeWithLoading(async () => {
+      setError('');
 
-    try {
       const token = localStorage.getItem('accessToken');
       
       // Ensure time format is HH:MM (remove seconds if present)
@@ -172,65 +187,62 @@ const EditAppointment = ({
         onAppointmentUpdated(data);
         onClose();
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to update appointment');
+        const errorData = await response.json();        setError(errorData.error || 'Failed to update appointment');
+        throw new Error(errorData.error || 'Failed to update appointment');
       }
-    } catch (err) {
-      setError('Network error occurred');
-      console.error('Error updating appointment:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleDelete = async () => {
-    setLoading(true);
-    setError('');
-
+    }, '', 'modal');
+  };const handleDelete = async () => {
+    setIsDeleteLoading(true);
+    
     try {
-      const token = localStorage.getItem('accessToken');
-      
-      // Get the first timeslot ID to pass to the backend
-      const timeslot = appointment.timeslots[0];
-      const timeslotId = timeslot?.id;
-      
-      // Build the URL with deletion strategy and timeslot_id parameters
-      let deleteUrl = `http://localhost:8000/schedule/appointment/${appointment.id}/`;
-      const params = new URLSearchParams();
-      
-      if (timeslotId) {
-        params.append('timeslot_id', timeslotId);
-      }
-      params.append('strategy', deleteStrategy);
-      
-      if (params.toString()) {
-        deleteUrl += `?${params.toString()}`;
-      }
-      
-      const response = await fetch(deleteUrl, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      await executeWithLoading(async () => {
+        setError('');
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Deletion result:', data);
-        onAppointmentDeleted();
-        onClose();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to delete appointment');
-      }
+        const token = localStorage.getItem('accessToken');
+        
+        // Get the first timeslot ID to pass to the backend
+        const timeslot = appointment.timeslots[0];
+        const timeslotId = timeslot?.id;
+        
+        // Build the URL with deletion strategy and timeslot_id parameters
+        let deleteUrl = `http://localhost:8000/schedule/appointment/${appointment.id}/`;
+        const params = new URLSearchParams();
+        
+        if (timeslotId) {
+          params.append('timeslot_id', timeslotId);
+        }
+        params.append('strategy', deleteStrategy);
+        
+        if (params.toString()) {
+          deleteUrl += `?${params.toString()}`;
+        }
+        
+        const response = await fetch(deleteUrl, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Deletion result:', data);
+          onAppointmentDeleted();
+          onClose();
+        } else {
+          const errorData = await response.json();          setError(errorData.error || 'Failed to delete appointment');
+          throw new Error(errorData.error || 'Failed to delete appointment');
+        }
+      }, '', 'modal');
     } catch (err) {
       setError('Network error occurred');
       console.error('Error deleting appointment:', err);
     } finally {
-      setLoading(false);
+      setIsDeleteLoading(false);
       setShowDeleteConfirm(false);
     }
-  };  const handleClose = () => {
+  };const handleClose = () => {
     onClose();
   };
   // Search and filter functions - handle actual data structure
@@ -274,9 +286,14 @@ const EditAppointment = ({
         <div className="modal-header">
           <h2>Edit Appointment</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
-        </div>
-
-        <div className="edit-appointment-form">
+        </div>        <div className="edit-appointment-form">
+          {/* Simple loading - same as other pages */}
+          {(isDataLoading || isModalLoading) && (
+            <div className="simple-loading-container">
+              <SpinnerOnly size="large" />
+            </div>
+          )}
+          
           {error && (
             <div className="error-message">
               {error}
@@ -293,19 +310,26 @@ const EditAppointment = ({
                     value={providerSearch}
                     onChange={(e) => setProviderSearch(e.target.value)}
                     onFocus={() => setShowProviderDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}
-                  />                  {showProviderDropdown && filteredProviders.length > 0 && (
-                    <div className="dropdown-list">
-                      {filteredProviders.map(provider => (
-                        <div
-                          key={provider.id}
-                          className="dropdown-item"
-                          onClick={() => selectProvider(provider)}
-                        >
-                          <strong>{provider.name}</strong>
-                          {provider.service && <span className="provider-service">{provider.service}</span>}
+                    onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}                  />
+                  {showProviderDropdown && (
+                    <div className="dropdown-list">                      {isDataLoading ? (
+                        <div style={{ padding: '8px', textAlign: 'center' }}>
+                          <SpinnerOnly size="small" />
                         </div>
-                      ))}
+                      ) : filteredProviders.length > 0 ? (
+                        filteredProviders.map(provider => (
+                          <div
+                            key={provider.id}
+                            className="dropdown-item"
+                            onClick={() => selectProvider(provider)}
+                          >
+                            <strong>{provider.name}</strong>
+                            <span className="provider-service">{provider.service || 'No service specified'}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="dropdown-item disabled">No providers found</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -322,9 +346,12 @@ const EditAppointment = ({
                     onChange={(e) => setPatientSearch(e.target.value)}
                     onFocus={() => setShowPatientDropdown(true)}
                     onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}
-                  />
-                  {showPatientDropdown && (
-                    <div className="dropdown-list">                      {filteredPatients.length > 0 ? (
+                  />                  {showPatientDropdown && (
+                    <div className="dropdown-list">                      {isDataLoading ? (
+                        <div style={{ padding: '8px', textAlign: 'center' }}>
+                          <SpinnerOnly size="small" />
+                        </div>
+                      ) : filteredPatients.length > 0 ? (
                         filteredPatients.map(patient => (
                           <div
                             key={patient.id}
@@ -341,7 +368,7 @@ const EditAppointment = ({
                         ))
                       ) : (
                         <div className="dropdown-item disabled">
-                          {patients.length === 0 ? 'Loading patients...' : 'No patients found'}
+                          {patients.length === 0 ? 'No patients available' : 'No patients found'}
                         </div>
                       )}
                     </div>
@@ -461,16 +488,19 @@ const EditAppointment = ({
                 rows="3"
                 placeholder="Add any notes or special instructions..."
               />
-            </div>
-
-            <div className="form-actions">
+            </div>            <div className="form-actions">
               <div className="primary-actions">
                 <button type="button" onClick={onClose} className="cancel-btn">
                   Cancel
                 </button>
-                <button type="submit" disabled={loading} className="update-btn">
-                  {loading ? 'Updating...' : 'Update Appointment'}
-                </button>
+                <ButtonLoading 
+                  type="submit" 
+                  disabled={isModalLoading || isDataLoading} 
+                  isLoading={isModalLoading}
+                  className="update-btn"
+                >
+                  Update Appointment
+                </ButtonLoading>
               </div>
               
               <div className="danger-actions">
@@ -478,7 +508,7 @@ const EditAppointment = ({
                   type="button" 
                   onClick={() => setShowDeleteConfirm(true)}
                   className="delete-btn"
-                  disabled={loading}
+                  disabled={isModalLoading || isDataLoading}
                 >
                   Delete Appointment
                 </button>
@@ -542,22 +572,21 @@ const EditAppointment = ({
                     <small>Only deletes the timeslot, preserving the schedule and provider information even if no timeslots remain.</small>
                   )}
                 </div>
-              </div>
-
-              <div className="confirm-actions">
+              </div>              <div className="confirm-actions">
                 <button 
                   onClick={() => setShowDeleteConfirm(false)} 
                   className="cancel-btn"
                 >
                   Cancel
                 </button>
-                <button 
+                <ButtonLoading 
                   onClick={handleDelete} 
                   className="confirm-delete-btn"
-                  disabled={loading}
+                  disabled={isDeleteLoading || isModalLoading}
+                  isLoading={isDeleteLoading}
                 >
-                  {loading ? 'Deleting...' : 'Yes, Delete'}
-                </button>
+                  Yes, Delete
+                </ButtonLoading>
               </div>
             </div>
           </div>
