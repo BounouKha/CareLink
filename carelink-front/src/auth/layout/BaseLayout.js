@@ -3,12 +3,14 @@ import './UnifiedBaseLayout.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import LeftToolbar from './LeftToolbar';
 import { AdminContext } from '../login/AdminContext';
+import { SpinnerOnly } from '../../components/LoadingComponents';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSuperuser, setIsSuperuser] = useState(false);
     const [loading, setLoading] = useState(true); // Add loading state
     const [userData, setUserData] = useState(null); // Add userData state
+    const [isNavigating, setIsNavigating] = useState(false); // Add navigation loading state
     const [toolbarVisible, setToolbarVisible] = useState(() => {
         // Initialize from localStorage, default to true
         const saved = localStorage.getItem('leftToolbarVisible');
@@ -152,44 +154,92 @@ const BaseLayout = ({ children }) => {
         } else {
             window.location.href = '/login';
         }
-    };
-
-    const handleLogout = () => {
+    };    const handleLogout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/login';
-    };    const isConnected = !!localStorage.getItem('accessToken');
+    };
+
+    // Navigation helper with loading
+    const navigateWithLoading = (url, delay = 300) => {
+        setIsNavigating(true);
+        setTimeout(() => {
+            window.location.href = url;
+        }, delay);
+    };
+
+    const isConnected = !!localStorage.getItem('accessToken');
     const isMemberArea = ['/profile', '/patients', '/service-demands', '/schedule'].some(path => 
         window.location.pathname.startsWith(path)
     ); // Include all member area routes
 
     if (loading) {
-        return <div className="loading-spinner">Loading...</div>; // Show loading spinner
-    }
-
-    return (
+        return (
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 9999
+            }}>
+                <SpinnerOnly size="large" />
+            </div>
+        );
+    }    return (
         <div className="homepage-container">
+            {/* Navigation Loading Overlay */}
+            {isNavigating && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 9999,
+                    animation: 'fadeIn 0.2s ease-out'
+                }}>
+                    <SpinnerOnly size="large" />
+                </div>
+            )}
+            
             <header className="homepage-header fixed-header">
                 <img src="/Logo.png" alt="Logo" className="homepage-logo" style={{ width: '100px', height: 'auto' }} />
                 <button className="hamburger-menu" onClick={toggleMenu}>
                     ☰
-                </button>                {isMenuOpen && <div className="hamburger-overlay" onClick={closeMenu}></div>}
+                </button>{isMenuOpen && <div className="hamburger-overlay" onClick={closeMenu}></div>}
                 <div className={`homepage-buttons ${isMenuOpen ? 'open' : 'closed'}`}>
                     {isMenuOpen && (
                         <button className="btn btn-secondary close-menu" onClick={closeMenu}>
                             <i className="bi bi-x"></i>
                         </button>
-                    )}
-                    <button className="btn btn-primary" onClick={() => window.location.href = '/'}>Home</button>
+                    )}                    <button className="btn btn-primary" onClick={() => navigateWithLoading('/')}>Home</button>
                     {!isConnected && (
-                        <button className="btn btn-primary" onClick={() => window.location.href = '/register'}>Register</button>
+                        <button className="btn btn-primary" onClick={() => navigateWithLoading('/register')}>Register</button>
                     )}
                     {isConnected && (
                         <button className="btn btn-primary" onClick={handleLogout}>Logout</button>
                     )}
-                    <button className="btn btn-primary" onClick={handleMemberAreaClick}>Member Area</button>
+                    <button className="btn btn-primary" onClick={() => {
+                        const token = localStorage.getItem('accessToken');
+                        if (token) {
+                            navigateWithLoading('/profile');
+                        } else {
+                            navigateWithLoading('/login');
+                        }
+                    }}>Member Area</button>
                     {isSuperuser && (
-                        <button className="btn btn-secondary" onClick={() => window.location.href = '/admin'}>Admin</button>
+                        <button className="btn btn-secondary" onClick={() => navigateWithLoading('/admin')}>Admin</button>
                     )}
                     <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>

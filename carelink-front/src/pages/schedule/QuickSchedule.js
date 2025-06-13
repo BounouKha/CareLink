@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './QuickSchedule.css';
+import { useLoading } from '../../hooks/useLoading';
+import { 
+  ModalLoadingOverlay, 
+  ButtonLoading, 
+  FormLoading,
+  SearchLoading,
+  SpinnerOnly 
+} from '../../components/LoadingComponents';
 
 const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
   const [formData, setFormData] = useState({
@@ -10,11 +18,19 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     end_time: '',
     service_id: '',
     description: ''
-  });  const [patients, setPatients] = useState([]);
+  });
+  const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
+  
+  // Enhanced loading states
+  const { 
+    isLoading: isModalLoading, 
+    executeWithLoading 
+  } = useLoading();
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   
   // Search states
   const [providerSearch, setProviderSearch] = useState('');
@@ -33,11 +49,12 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     
     return `${finalHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
-
   useEffect(() => {
-    if (isOpen) {
-      fetchPatients();
-      fetchServices();
+    if (isOpen) {      executeWithLoading(async () => {
+        setIsDataLoading(true);
+        await Promise.all([fetchPatients(), fetchServices()]);
+        setIsDataLoading(false);
+      }, '', 'modal');
       
       // Auto-fill form if preselected values are provided
       if (preselectedDate && preselectedTime) {
@@ -176,12 +193,10 @@ const fetchPatients = async () => {
     
     await performSubmit();
   };
-
   const performSubmit = async () => {
-    setLoading(true);
-    setError('');
+    await executeWithLoading(async () => {
+      setError('');
 
-    try {
       const token = localStorage.getItem('accessToken');
       
       const response = await fetch('http://localhost:8000/schedule/quick-schedule/', {
@@ -199,15 +214,10 @@ const fetchPatients = async () => {
         onClose();
         resetForm();
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to create schedule');
+        const errorData = await response.json();        setError(errorData.error || 'Failed to create schedule');
+        throw new Error(errorData.error || 'Failed to create schedule');
       }
-    } catch (err) {
-      setError('Network error occurred');
-      console.error('Error creating schedule:', err);
-    } finally {
-      setLoading(false);
-    }
+    }, '', 'modal');
   };
 
   const resetForm = () => {
@@ -235,14 +245,19 @@ const fetchPatients = async () => {
         <div className="modal-header">
           <h2>Quick Schedule</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="quick-schedule-form">
+        </div>        <form onSubmit={handleSubmit} className="quick-schedule-form">
+          {/* Simple loading - same as other pages */}
+          {(isDataLoading || isModalLoading) && (
+            <div className="simple-loading-container">
+              <SpinnerOnly size="large" />
+            </div>
+          )}
+          
           {error && (
             <div className="error-message">
               {error}
             </div>
-          )}          <div className="form-row">
+          )}<div className="form-row">
             <div className="form-group">
               <label htmlFor="provider_search">Provider *</label>
               <div className="searchable-dropdown">
@@ -254,19 +269,25 @@ const fetchPatients = async () => {
                   onChange={(e) => setProviderSearch(e.target.value)}
                   onFocus={() => setShowProviderDropdown(true)}
                   onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}
-                />
-                {showProviderDropdown && filteredProviders.length > 0 && (
-                  <div className="dropdown-list">
-                    {filteredProviders.map(provider => (
-                      <div
-                        key={provider.id}
-                        className="dropdown-item"
-                        onClick={() => selectProvider(provider)}
-                      >
-                        <strong>{provider.name}</strong>
-                        <span className="provider-service">{provider.service}</span>
+                />                {showProviderDropdown && (
+                  <div className="dropdown-list">                    {isSearchLoading ? (
+                      <div style={{ padding: '8px', textAlign: 'center' }}>
+                        <SpinnerOnly size="small" />
                       </div>
-                    ))}
+                    ) : filteredProviders.length > 0 ? (
+                      filteredProviders.map(provider => (
+                        <div
+                          key={provider.id}
+                          className="dropdown-item"
+                          onClick={() => selectProvider(provider)}
+                        >
+                          <strong>{provider.name}</strong>
+                          <span className="provider-service">{provider.service}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="dropdown-item disabled">No providers found</div>
+                    )}
                   </div>
                 )}
               </div>
@@ -282,10 +303,12 @@ const fetchPatients = async () => {
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
                   onFocus={() => setShowPatientDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}                />
-                {showPatientDropdown && (
-                  <div className="dropdown-list">
-                    {filteredPatients.length > 0 ? (
+                  onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}                />                {showPatientDropdown && (
+                  <div className="dropdown-list">                    {isDataLoading ? (
+                      <div style={{ padding: '8px', textAlign: 'center' }}>
+                        <SpinnerOnly size="small" />
+                      </div>
+                    ) : filteredPatients.length > 0 ? (
                       filteredPatients.map(patient => (
                         <div
                           key={patient.id}
@@ -298,7 +321,7 @@ const fetchPatients = async () => {
                       ))
                     ) : (
                       <div className="dropdown-item disabled">
-                        {patients.length === 0 ? 'Loading patients...' : 'No patients found'}
+                        {patients.length === 0 ? 'No patients available' : 'No patients found'}
                         {patients.length > 0 && <span className="patient-count">({patients.length} total patients)</span>}
                       </div>
                     )}
@@ -375,16 +398,19 @@ const fetchPatients = async () => {
               placeholder="Enter appointment details or notes..."
               rows="3"
             />
-          </div>
-
-          <div className="form-actions">
+          </div>          <div className="form-actions">
             <button type="button" onClick={handleClose} className="cancel-btn">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="submit-btn">
-              {loading ? 'Creating...' : 'Create Schedule'}
-            </button>
-          </div>        </form>
+            <ButtonLoading 
+              type="submit" 
+              disabled={isModalLoading || isDataLoading} 
+              isLoading={isModalLoading}
+              className="submit-btn"
+            >
+              Create Schedule
+            </ButtonLoading>
+          </div></form>
       </div>
 
       {/* Past Date Confirmation Dialog */}

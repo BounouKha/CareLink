@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import ScheduleCalendar from './ScheduleCalendar';
 import PatientSchedule from './PatientSchedule';
+import { SpinnerOnly } from '../../components/LoadingComponents';
 
 const SchedulePage = () => {
     const [userData, setUserData] = useState(null);
@@ -60,13 +61,17 @@ const SchedulePage = () => {
         } else {
             return <div>Schedule not available for your role: {role}</div>;
         }
-    };
-
-    if (loading) {
+    };    if (loading) {
         return (
             <BaseLayout>
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <h2>Loading Schedule...</h2>
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    height: '400px',
+                    padding: '20px' 
+                }}>
+                    <SpinnerOnly size="large" />
                 </div>
             </BaseLayout>
         );

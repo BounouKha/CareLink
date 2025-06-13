@@ -3,16 +3,31 @@ import './ScheduleCalendar.css';
 import QuickSchedule from './QuickSchedule';
 import EditAppointment from './EditAppointment';
 import RecurringSchedule from './features/RecurringSchedule';
+import { useLoading } from '../../hooks/useLoading';
+import { 
+  PageLoadingOverlay, 
+  ComponentLoadingOverlay,
+  CalendarLoading,
+  StatsLoading,
+  SpinnerOnly
+} from '../../components/LoadingComponents';
 
-const ScheduleCalendar = () => {
-  const [calendarData, setCalendarData] = useState([]);  const [providers, setProviders] = useState([]);
+const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useState([]);
+  const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState('');
   const [selectedStatus, setSelectedStatus] = useState(''); // Add status filter
   const [viewType, setViewType] = useState('week');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [stats, setStats] = useState({});  const [showQuickSchedule, setShowQuickSchedule] = useState(false);  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [stats, setStats] = useState({});
+  
+  // Enhanced loading states
+  const { 
+    isLoading: isPageLoading, 
+    executeWithLoading 
+  } = useLoading();
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);const [showQuickSchedule, setShowQuickSchedule] = useState(false);  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [showEditAppointment, setShowEditAppointment] = useState(false);  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showRecurringSchedule, setShowRecurringSchedule] = useState(false);
   const [draggedAppointment, setDraggedAppointment] = useState(null);
@@ -65,22 +80,22 @@ const ScheduleCalendar = () => {
       return;
     }
     
-    setRefreshing(true);
-    
-    // Preserve scroll position if requested
-    if (preserveScroll) {
-      preserveScrollPosition();
-      console.log('Preserving scroll position:', scrollPosition);
-    }
-    
-    setLoading(true);
-    setError('');
-    
     try {
+      setRefreshing(true);
+      
+      // Preserve scroll position if requested
+      if (preserveScroll) {
+        preserveScrollPosition();
+        console.log('Preserving scroll position:', scrollPosition);
+      }
+      
+      setIsCalendarLoading(true);
+      setError('');
+      
       const token = localStorage.getItem('accessToken');
       if (!token) {
         setError('Please log in to access the schedule');
-        return;
+        throw new Error('No access token');
       }
 
       // Calculate date range based on view type
@@ -90,7 +105,9 @@ const ScheduleCalendar = () => {
         start_date: startDate,
         end_date: endDate,
         view: viewType
-      });      if (selectedProvider) {
+      });
+
+      if (selectedProvider) {
         queryParams.append('provider_id', selectedProvider);
       }
 
@@ -103,14 +120,15 @@ const ScheduleCalendar = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      });      if (response.ok) {
+      });
+
+      if (response.ok) {
         const data = await response.json();
         console.log('Calendar data received:', data.calendar_data?.length || 0, 'appointments');
         setCalendarData(data.calendar_data || []);
         setProviders(data.providers || []);
         setStats(data.stats || {});
-        
-        // Restore scroll position if it was preserved
+          // Restore scroll position if it was preserved
         if (preserveScroll) {
           console.log('Restoring scroll position:', scrollPosition);
           restoreScrollPosition();
@@ -119,12 +137,13 @@ const ScheduleCalendar = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to fetch calendar data');
         console.error('Failed to fetch calendar data:', errorData);
+        throw new Error(errorData.error || 'Failed to fetch calendar data');
       }
-    } catch (err) {
-      setError('Network error occurred');
-      console.error('Error fetching calendar data:', err);
+    } catch (error) {
+      console.error('Error fetching calendar data:', error);
+      setError(error.message || 'Failed to fetch calendar data');
     } finally {
-      setLoading(false);
+      setIsCalendarLoading(false);
       setRefreshing(false);
     }
   };
@@ -1068,10 +1087,15 @@ const ScheduleCalendar = () => {
     });
     
     return getStatusClass(primaryStatus);
-  };
-
-  return (
+  };  return (
     <div className="schedule-calendar">
+      {/* Page loading overlay for navigation only */}
+      {isPageLoading && (
+        <div className="simple-loading-container">
+          <SpinnerOnly size="large" />
+        </div>
+      )}
+      
       <div className="calendar-header">
         <div className="calendar-title">
           <h1>Schedule Calendar</h1>
@@ -1190,16 +1214,15 @@ const ScheduleCalendar = () => {
             <h3>{stats.utilization_rate}%</h3>
             <p>Utilization Rate</p>
           </div>
-        </div>
-      )}
+        </div>      )}
 
       {error && (
         <div className="error-message">
           <p>{error}</p>
         </div>
-      )}      {loading ? (
-        <div className="loading">
-          <p>Loading calendar data...</p>
+      )}      {isCalendarLoading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+          <SpinnerOnly size="large" />
         </div>
       ) : (
         <div className="calendar-content">
