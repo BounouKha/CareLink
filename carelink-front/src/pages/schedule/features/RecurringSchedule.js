@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './RecurringSchedule.css';
 import { useLoading } from '../../../hooks/useLoading';
+import { useAuthenticatedApi } from '../../../hooks/useAuth';
+import tokenManager from '../../../utils/tokenManager';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -35,8 +37,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [previewDates, setPreviewDates] = useState([]);
-  
-  // Enhanced loading states
+    // Enhanced loading states
   const { 
     isLoading: isModalLoading, 
     startLoading, 
@@ -51,13 +52,16 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
   const [providerSearch, setProviderSearch] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
   const [showProviderDropdown, setShowProviderDropdown] = useState(false);
-  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
-  const [showPreview, setShowPreview] = useState(true); // Show preview by default
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);  const [showPreview, setShowPreview] = useState(true); // Show preview by default
 
   // Enhanced state for better UX
   const [validationErrors, setValidationErrors] = useState({});
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [showAllPreviews, setShowAllPreviews] = useState(false);
+
+  // Use modern authentication API
+  const { get, post } = useAuthenticatedApi();
+
   // Enhanced days of week for selection with better display
   const daysOfWeek = [
     { value: 1, label: 'Monday', short: 'Mon', initial: 'M', color: '#3b82f6' },
@@ -349,49 +353,38 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
 
     return () => clearTimeout(timeoutId);
   }, [formData.start_date, recurringData.weekdays, recurringData.end_type, recurringData.end_date, recurringData.occurrences, recurringData.frequency, recurringData.interval]);
-
   const fetchPatients = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/account/views_patient/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const patientList = data.results || [];
-        setPatients(patientList);
-      } else {
-        console.error('Failed to fetch patients:', response.status);
-        setError('Failed to load patients. Please refresh and try again.');
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
       }
+
+      const data = await get('http://localhost:8000/account/views_patient/');
+      const patientList = data.results || [];
+      setPatients(patientList);
     } catch (err) {
       console.error('Error fetching patients:', err);
-      setError('Network error occurred while loading patients.');
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+        setError('Please log in to access patients.');
+      } else {
+        setError('Network error occurred while loading patients.');
+      }
     }
   };
-
   const fetchServices = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/account/services/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setServices(data.results || data || []);
-      } else {
-        console.error('Failed to fetch services:', response.status);
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
       }
+
+      const data = await get('http://localhost:8000/account/services/');
+      setServices(data.results || data || []);
     } catch (err) {
       console.error('Error fetching services:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      }
     }
   };
 
@@ -557,11 +550,12 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     if (previewDates.length === 0) {
       setError('No valid dates found. Please check your recurring settings.');
       return;
-    }
-
-    await executeWithLoading(async () => {
+    }    await executeWithLoading(async () => {
       setError('');
-      const token = localStorage.getItem('accessToken');
+      
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
+      }
       
       // Prepare enhanced recurring schedule data
       const recurringScheduleData = {
@@ -577,39 +571,17 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
         }
       };
       
-      const response = await fetch('http://localhost:8000/schedule/recurring-schedule/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(recurringScheduleData)
+      const data = await post('http://localhost:8000/schedule/recurring-schedule/', recurringScheduleData);
+      
+      // Show success message with details
+      const successMessage = `Successfully created ${previewDates.length} recurring appointments!`;
+      
+      onScheduleCreated({
+        ...data,
+        successMessage,
+        appointmentCount: previewDates.length
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Show success message with details
-        const successMessage = `Successfully created ${previewDates.length} recurring appointments!`;
-        
-        onScheduleCreated({
-          ...data,
-          successMessage,
-          appointmentCount: previewDates.length
-        });
-        onClose();
-      } else {
-        const errorData = await response.json();
-        
-        // Enhanced error handling
-        if (errorData.validation_errors) {
-          setValidationErrors(errorData.validation_errors);
-          setError('Please fix the validation errors and try again.');
-        } else {
-          setError(errorData.error || errorData.detail || 'Failed to create recurring schedule');
-        }
-        throw new Error('Failed to create recurring schedule');
-      }
+      onClose();
     }, `Creating ${previewDates.length} appointments...`, 'form');
   };
 

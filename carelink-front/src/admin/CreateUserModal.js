@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuthenticatedApi } from '../hooks/useAuth';
+import tokenManager from '../utils/tokenManager';
 // CSS is now handled by UnifiedBaseLayout.css
 
 const ROLE_CHOICES = [
@@ -22,18 +24,19 @@ const CreateUserModal = ({ onClose, onSave }) => {
         address: '',
         national_number: '',
     });
+    
+    // Use modern authentication API
+    const { post } = useAuthenticatedApi();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUserData((prevData) => ({ ...prevData, [name]: value }));
     };    const handleSave = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            console.log('Token:', token ? 'Present' : 'Missing'); // Debug log
-            
-            if (!token) {
+            // Check authentication first
+            if (!tokenManager.isAuthenticated()) {
                 alert('No access token found. Please log in again.');
-                window.location.href = '/login';
+                tokenManager.handleLogout();
                 return;
             }
 
@@ -43,42 +46,24 @@ const CreateUserModal = ({ onClose, onSave }) => {
                 delete userDataToSend.national_number;
             }
             
-            console.log('Sending user data:', userDataToSend); // Debug log
+            console.log('[CreateUserModal] Sending user data:', userDataToSend);
 
-            const response = await fetch('http://localhost:8000/account/create-user/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(userDataToSend),
-            });
-
-            console.log('Response status:', response.status); // Debug log
-
-            if (response.status === 401) {
-                alert('Your session has expired. Please log in again.');
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                window.location.href = '/login';
-                return;
-            }
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Error response:', errorData);
-                throw new Error(errorData.message || `Failed to create user. Status: ${response.status}`);
-            }
-
-            const newUser = await response.json();
+            const newUser = await post('http://localhost:8000/account/create-user/', userDataToSend);
+            
             onSave(newUser);
             alert('User created successfully!');
             onClose();
         } catch (err) {
-            console.error('Error creating user:', err);
+            console.error('[CreateUserModal] Error creating user:', err);
             alert(`Error: ${err.message}`);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                alert('Your session has expired. Please log in again.');
+                tokenManager.handleLogout();
+            }
         }
-    };    return (
+    };return (
         <div className="modal-overlay">
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">

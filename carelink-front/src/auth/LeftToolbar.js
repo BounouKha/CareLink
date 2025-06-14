@@ -16,15 +16,11 @@ const LeftToolbar = ({ userData }) => {
 
     const handlePatientsClick = () => {
         navigate('/patients');
-    };
-
-    const renderRoleSpecificToolbar = () => {
+    };    const renderRoleSpecificToolbar = () => {
         if (!userData || !userData.user) {
-            console.warn('[DEBUG] userData or user is undefined');
+            console.warn('[LeftToolbar] userData or user is undefined');
             return null;
         }
-
-        console.log('[DEBUG] user role:', userData.user.role);
 
         return (
             <ul className="toolbar-list">

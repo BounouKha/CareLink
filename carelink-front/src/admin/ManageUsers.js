@@ -6,6 +6,8 @@ import CreateUserModal from './CreateUserModal';
 import CreateProfileModal from './CreateProfileModal';
 import AddRelationModal from './AddRelationModal';
 import NewEntryModal from './NewEntryModal';
+import { useAuthenticatedApi } from '../hooks/useAuth';
+import tokenManager from '../utils/tokenManager';
 
 const ManageUsers = () => {
     const [allUsers, setAllUsers] = useState([]); // Store all users from all pages
@@ -19,14 +21,19 @@ const ManageUsers = () => {
     const [messageType, setMessageType] = useState(null); // 'success' or 'error'
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);    const [showAddRelationModal, setShowAddRelationModal] = useState(false);
+    const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);    
+    const [showAddRelationModal, setShowAddRelationModal] = useState(false);
     const [showNewEntryModal, setShowNewEntryModal] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [selectedFamilyPatientId, setSelectedFamilyPatientId] = useState(null);
     const [selectedRole, setSelectedRole] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchField, setSearchField] = useState('all');    const [loading, setLoading] = useState(false);
+    const [searchField, setSearchField] = useState('all');    
+    const [loading, setLoading] = useState(false);
     const USERS_PER_PAGE = 50;
+    
+    // Use modern authentication API
+    const { get, post, delete: del } = useAuthenticatedApi();
 
     // Debug effect to track modal state changes
     useEffect(() => {
@@ -35,15 +42,13 @@ const ManageUsers = () => {
             selectedFamilyPatientId,
             selectedUserId
         });
-    }, [showAddRelationModal, selectedFamilyPatientId, selectedUserId]);
-
-    // Fetch all users from all pages
+    }, [showAddRelationModal, selectedFamilyPatientId, selectedUserId]);    // Fetch all users from all pages
     const fetchAllUsers = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            // Check authentication first
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
             let allUsersData = [];
@@ -51,18 +56,7 @@ const ManageUsers = () => {
             let hasMorePages = true;
 
             while (hasMorePages) {
-                const response = await fetch(`http://localhost:8000/account/users/?page=${currentPage}`, {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch users.');
-                }
-
-                const data = await response.json();
+                const data = await get(`http://localhost:8000/account/users/?page=${currentPage}`);
                 allUsersData = [...allUsersData, ...data.results];
                 
                 // Check if there are more pages
@@ -83,11 +77,17 @@ const ManageUsers = () => {
             setDisplayedUsers(allUsersData.slice(startIndex, endIndex));
             
         } catch (err) {
+            console.error('[ManageUsers] Error fetching users:', err);
             setError(err.message);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            }
         } finally {
             setLoading(false);
         }
-    };    // Filter users and update pagination
+    };// Filter users and update pagination
     const updateDisplayedUsers = (filtered, currentPage) => {
         const totalFilteredPages = Math.ceil(filtered.length / USERS_PER_PAGE);
         setTotalPages(totalFilteredPages);
@@ -142,20 +142,17 @@ const ManageUsers = () => {
     // Update displayed users when page changes
     useEffect(() => {
         updateDisplayedUsers(filteredUsers, page);
-    }, [page]);
-
-    useEffect(() => {
+    }, [page]);    useEffect(() => {
         fetchAllUsers();
-    }, []);
+    }, [get]); // Use get dependency so it refetches if authentication changes
 
     const handleEdit = (user) => {
         setEditingUser(user);
         setIsEditModalOpen(true);
     };    const handleUpdate = async (updatedUser) => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
             // Refresh all users data
@@ -165,9 +162,15 @@ const ManageUsers = () => {
             setTimeout(() => setMessage(null), 3000);
             setIsEditModalOpen(false);
         } catch (err) {
+            console.error('[ManageUsers] Error updating user:', err);
             setMessage(err.message);
             setMessageType('error');
             setTimeout(() => setMessage(null), 3000);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            }
         }
     };
 
@@ -177,9 +180,8 @@ const ManageUsers = () => {
         setTimeout(() => setMessage(null), 3000); // Clear message after 3 seconds
     };    const handleCreateUser = async (newUser) => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
             // Refresh all users data
@@ -189,60 +191,45 @@ const ManageUsers = () => {
             setTimeout(() => setMessage(null), 3000);
             setIsCreateModalOpen(false);
         } catch (err) {
+            console.error('[ManageUsers] Error creating user:', err);
             setMessage(err.message);
             setMessageType('error');
             setTimeout(() => setMessage(null), 3000);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            }
         }
-    };
-
-    const checkProfileExistence = async (userId, role) => {
+    };const checkProfileExistence = async (userId, role) => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/account/users/${userId}/check/${role}/`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to check profile existence.');
-            }
-
+            const data = await get(`http://localhost:8000/account/users/${userId}/check/${role}/`);
             return data;
         } catch (err) {
+            console.error('[ManageUsers] Error checking profile existence:', err);
             handleError(err.message);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            }
             return null;
         }
     };    // Fetch family patient profile ID from user ID
     const fetchFamilyPatientId = async (userId) => {
         try {
             console.log('[DEBUG] fetchFamilyPatientId called with userId:', userId);
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
             // Use the FamilyPatientViewSet to get all family patient records
-            const response = await fetch(`http://localhost:8000/account/familypatient/`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                console.error('[DEBUG] API response not OK:', response.status);
-                throw new Error('Failed to fetch family patient profiles.');
-            }
-
-            const data = await response.json();
+            const data = await get(`http://localhost:8000/account/familypatient/`);
             console.log('[DEBUG] All family patient profiles:', data);
             
             // Find the family patient record that matches the user ID
@@ -289,28 +276,15 @@ const ManageUsers = () => {
         setShowCreateProfileModal(false);
         setSelectedUserId(null);
         // Refresh user list or perform other actions
-    };
-
-    const handleDelete = async (userId) => {
+    };    const handleDelete = async (userId) => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
             // Check for unpaid invoices
-            const invoiceResponse = await fetch(`http://localhost:8000/account/check-unpaid-invoices/${userId}/`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!invoiceResponse.ok) {
-                throw new Error('Failed to check unpaid invoices.');
-            }
-
-            const invoiceData = await invoiceResponse.json();
+            const invoiceData = await get(`http://localhost:8000/account/check-unpaid-invoices/${userId}/`);
+            
             if (invoiceData.hasUnpaidInvoices) {
                 const confirmProceed = window.confirm('This user has unpaid invoices. Are you sure you want to proceed with deletion?');
                 if (!confirmProceed) return;
@@ -320,31 +294,26 @@ const ManageUsers = () => {
             const confirmDelete = window.confirm('Are you sure you want to delete this user?');
             if (!confirmDelete) return;
 
-            const deleteResponse = await fetch(`http://localhost:8000/account/delete-user/${userId}/`, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!deleteResponse.ok) {
-                throw new Error('Failed to delete user.');
-            }
-
-            const deleteData = await deleteResponse.json();
-            setMessage(deleteData.message);
-            setMessageType('success');
-            setTimeout(() => setMessage(null), 3000);            // Refresh all users data after deletion
-            await fetchAllUsers();
+            const deleteData = await del(`http://localhost:8000/account/delete-user/${userId}/`);
+            
             setMessage(deleteData.message);
             setMessageType('success');
             setTimeout(() => setMessage(null), 3000);
+            
+            // Refresh all users data after deletion
+            await fetchAllUsers();
         } catch (err) {
+            console.error('[ManageUsers] Error deleting user:', err);
             setMessage(err.message);
             setMessageType('error');
             setTimeout(() => setMessage(null), 3000);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            }
         }
-    };    return (
+    };return (
         <div className="admin-users-container">
             <div className="admin-users-header">
                 <h1>Manage Users</h1>

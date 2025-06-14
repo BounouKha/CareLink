@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import tokenManager from '../utils/tokenManager';
 
 /**
@@ -127,7 +127,7 @@ export const useAuthenticatedApi = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const makeRequest = async (url, options = {}) => {
+    const makeRequest = useCallback(async (url, options = {}) => {
         setLoading(true);
         setError(null);
 
@@ -147,18 +147,18 @@ export const useAuthenticatedApi = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const get = (url) => makeRequest(url, { method: 'GET' });
-    const post = (url, data) => makeRequest(url, { 
+    const get = useCallback((url) => makeRequest(url, { method: 'GET' }), [makeRequest]);
+    const post = useCallback((url, data) => makeRequest(url, { 
         method: 'POST', 
         body: JSON.stringify(data) 
-    });
-    const put = (url, data) => makeRequest(url, { 
+    }), [makeRequest]);
+    const put = useCallback((url, data) => makeRequest(url, { 
         method: 'PUT', 
         body: JSON.stringify(data) 
-    });
-    const del = (url) => makeRequest(url, { method: 'DELETE' });
+    }), [makeRequest]);
+    const del = useCallback((url) => makeRequest(url, { method: 'DELETE' }), [makeRequest]);
 
     return {
         loading,
