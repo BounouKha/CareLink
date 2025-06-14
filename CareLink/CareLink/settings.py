@@ -52,9 +52,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'account.middleware.SecurityLoggingMiddleware',  # Custom security logging
+    'account.middleware.SecurityLoggingMiddleware',  # Re-enabled with optimizations
     'django.contrib.messages.middleware.MessageMiddleware',
-    'account.middleware.AdminActionLoggingMiddleware',  # Custom admin action logging
+    'account.middleware.AdminActionLoggingMiddleware',  # Re-enabled with optimizations
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # Add CORS middleware
 ]
@@ -117,6 +117,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Password hashers - optimized for healthcare performance
+# Using Argon2 as primary (faster and more secure than PBKDF2)
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',  # Primary - fast and secure
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',  # Fallback
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.ScryptPasswordHasher',
+]
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -158,9 +169,9 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    # Security Best Practices for JWT Tokens
+    # Healthcare Security Best Practices for JWT Tokens
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),   # Short-lived access tokens (15 minutes)
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),      # Longer refresh tokens (7 days)
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=12),    # 12-hour refresh tokens (healthcare standard)
     
     # Security Settings
     'ROTATE_REFRESH_TOKENS': True,                    # Generate new refresh token on each refresh
