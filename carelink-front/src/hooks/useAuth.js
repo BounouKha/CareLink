@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import tokenManager from '../utils/tokenManager';
 
 /**
@@ -149,25 +149,25 @@ export const useAuthenticatedApi = () => {
         }
     }, []);
 
-    const get = useCallback((url) => makeRequest(url, { method: 'GET' }), [makeRequest]);
-    const post = useCallback((url, data) => makeRequest(url, { 
-        method: 'POST', 
-        body: JSON.stringify(data) 
-    }), [makeRequest]);
-    const put = useCallback((url, data) => makeRequest(url, { 
-        method: 'PUT', 
-        body: JSON.stringify(data) 
-    }), [makeRequest]);
-    const del = useCallback((url) => makeRequest(url, { method: 'DELETE' }), [makeRequest]);
+    // Use useMemo to create stable function references
+    const api = useMemo(() => ({
+        get: (url) => makeRequest(url, { method: 'GET' }),
+        post: (url, data) => makeRequest(url, { 
+            method: 'POST', 
+            body: JSON.stringify(data) 
+        }),
+        put: (url, data) => makeRequest(url, { 
+            method: 'PUT', 
+            body: JSON.stringify(data) 
+        }),
+        delete: (url) => makeRequest(url, { method: 'DELETE' }),
+    }), []); // Empty dependency array for maximum stability
 
     return {
         loading,
         error,
         makeRequest,
-        get,
-        post,
-        put,
-        delete: del,
+        ...api
     };
 };
 

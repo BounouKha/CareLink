@@ -215,7 +215,7 @@ CSRF_COOKIE_SECURE = True
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Allow requests from the React frontend
+    'http://localhost:3000', 'http://127.0.0.1:3000'  # Allow requests from the React frontend
 ]
 
 CORS_ALLOW_CREDENTIALS = True
