@@ -11,6 +11,9 @@ class TokenManager {
         this.maxRetries = 3;
         this.retryCount = 0;
         
+        // Global request deduplication
+        this.pendingRequests = new Map();
+        
         // Start automatic token monitoring
         this.startTokenMonitoring();
     }
