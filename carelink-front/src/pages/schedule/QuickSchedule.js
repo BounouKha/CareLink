@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './QuickSchedule.css';
 import { useLoading } from '../../hooks/useLoading';
+import { useAuthenticatedApi } from '../../hooks/useAuth';
+import tokenManager from '../../utils/tokenManager';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -23,14 +25,16 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
   const [services, setServices] = useState([]);
   const [error, setError] = useState('');
   const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
-  
-  // Enhanced loading states
+    // Enhanced loading states
   const { 
     isLoading: isModalLoading, 
     executeWithLoading 
   } = useLoading();
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
+
+  // Use modern authentication API
+  const { get, post } = useAuthenticatedApi();
   
   // Search states
   const [providerSearch, setProviderSearch] = useState('');
@@ -104,46 +108,38 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
 
 const fetchPatients = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/account/views_patient/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Handle paginated response from ViewsPatient endpoint
-        const patientList = data.results || [];
-        console.log('Fetched patients:', patientList); // Debug log
-        setPatients(patientList);
-      } else {
-        console.error('Failed to fetch patients:', response.status);
-        setError('Failed to load patients. Please refresh and try again.');
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
       }
+
+      const data = await get('http://localhost:8000/account/views_patient/');
+      // Handle paginated response from ViewsPatient endpoint
+      const patientList = data.results || [];
+      console.log('Fetched patients:', patientList); // Debug log
+      setPatients(patientList);
     } catch (err) {
       console.error('Error fetching patients:', err);
-      setError('Error loading patients. Please check your connection.');
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      } else {
+        setError('Error loading patients. Please check your connection.');
+      }
     }
   };
-
   const fetchServices = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/account/services/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setServices(data || []);
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
       }
+
+      const data = await get('http://localhost:8000/account/services/');
+      setServices(data || []);
     } catch (err) {
-      console.error('Error fetching services:', err);    }
+      console.error('Error fetching services:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      }
+    }
   };
 
   // Search and filter functions
@@ -212,34 +208,20 @@ const fetchPatients = async () => {
       setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
       console.error('Missing form data:', formData);
       return;
-    }
-
-    await executeWithLoading(async () => {
+    }    await executeWithLoading(async () => {
       setError('');
 
-      const token = localStorage.getItem('accessToken');
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
+      }
       
       // Debug log the form data being sent
       console.log('Submitting form data:', formData);
       
-      const response = await fetch('http://localhost:8000/schedule/quick-schedule/', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        onScheduleCreated(data);
-        onClose();
-        resetForm();
-      } else {
-        const errorData = await response.json();        setError(errorData.error || 'Failed to create schedule');
-        throw new Error(errorData.error || 'Failed to create schedule');
-      }
+      const data = await post('http://localhost:8000/schedule/quick-schedule/', formData);
+      onScheduleCreated(data);
+      onClose();
+      resetForm();
     }, '', 'modal');
   };
 

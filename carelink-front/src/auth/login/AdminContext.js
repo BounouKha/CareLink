@@ -1,38 +1,41 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { useAuthenticatedApi } from '../../hooks/useAuth';
+import tokenManager from '../../utils/tokenManager';
 
 export const AdminContext = createContext();
 
 export const AdminProvider = ({ children }) => {
     const [isSuperUser, setIsSuperUser] = useState(null);
+    const { get } = useAuthenticatedApi();
 
     useEffect(() => {
         const fetchAdminStatus = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    throw new Error('No access token found. Please log in.');
+                // Check authentication first
+                if (!tokenManager.isAuthenticated()) {
+                    console.log('[AdminContext] User not authenticated');
+                    setIsSuperUser(false);
+                    return;
                 }
 
-                const response = await fetch('http://localhost:8000/account/check-admin/', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setIsSuperUser(data.is_superuser);
-                } else {
-                    throw new Error('Failed to fetch admin status.');
-                }
+                console.log('[AdminContext] Fetching admin status...');
+                const data = await get('http://localhost:8000/account/check-admin/');
+                console.log('[AdminContext] Admin status received:', data.is_superuser);
+                setIsSuperUser(data.is_superuser);
             } catch (err) {
-                console.error(err.message);
+                console.error('[AdminContext] Error fetching admin status:', err);
+                setIsSuperUser(false);
+                
+                // If it's an authentication error, handle logout
+                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                    console.log('[AdminContext] Authentication error, handling logout');
+                    tokenManager.handleLogout();
+                }
             }
         };
 
         fetchAdminStatus();
-    }, []);
+    }, [get]);
 
     useEffect(() => {
         console.log('AdminProvider mounted');

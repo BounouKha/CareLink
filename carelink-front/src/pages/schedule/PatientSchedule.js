@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import './ScheduleCalendar.css';
 import './PatientSchedule.css';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import { useAuthenticatedApi } from '../../hooks/useAuth';
+import tokenManager from '../../utils/tokenManager';
 
 const PatientSchedule = () => {
   const [appointments, setAppointments] = useState([]);
@@ -17,6 +19,9 @@ const PatientSchedule = () => {
   const [selectedFamilyMember, setSelectedFamilyMember] = useState(null);
   const [roleChecked, setRoleChecked] = useState(false); // Add this to track if role check is complete
   const navigate = useNavigate();
+
+  // Use modern authentication API
+  const { get } = useAuthenticatedApi();
 
   // Format date for input field
   function formatDateForInput(date) {
@@ -34,75 +39,59 @@ const PatientSchedule = () => {
   }  // Check if the user is a family member
   useEffect(() => {
     console.log('=== PatientSchedule useEffect - Role Detection ===');
-    
-    const checkUserRole = async () => {
+      const checkUserRole = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
+        if (!tokenManager.isAuthenticated()) {
           console.log('No access token found');
           return;
         }
 
         console.log('Fetching user profile...');
         // Fetch user profile to get role information
-        const response = await fetch('http://localhost:8000/account/profile/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('User profile data:', userData);
-          
-          const userRole = userData?.user?.role;
-          console.log('Detected user role:', userRole);
-            if (userRole === 'Family Patient') {
-            console.log('✅ User is Family Patient - enabling family view');
-            setIsFamilyView(true);
-            fetchFamilyMembers();
-          } else {
-            console.log('❌ User is not Family Patient - regular patient view');
-            console.log('User role is:', userRole);
-            setIsFamilyView(false);
-          }
-          
-          // Mark role check as complete
-          setRoleChecked(true);        } else {
-          console.error('Failed to fetch user profile:', response.status);
-          // Even if profile fetch fails, mark role check as complete to avoid infinite waiting
-          setRoleChecked(true);
+        const userData = await get('http://localhost:8000/account/profile/');
+        console.log('User profile data:', userData);
+        
+        const userRole = userData?.user?.role;
+        console.log('Detected user role:', userRole);
+          if (userRole === 'Family Patient') {
+          console.log('✅ User is Family Patient - enabling family view');
+          setIsFamilyView(true);
+          fetchFamilyMembers();
+        } else {
+          console.log('❌ User is not Family Patient - regular patient view');
+          console.log('User role is:', userRole);
+          setIsFamilyView(false);
         }
-      } catch (err) {
+        
+        // Mark role check as complete
+        setRoleChecked(true);      } catch (err) {
         console.error('Error checking user role:', err);
+        if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+          tokenManager.handleLogout();
+        }
+        // Even if profile fetch fails, mark role check as complete to avoid infinite waiting
+        setRoleChecked(true);
       }
     };
 
     checkUserRole();
-  }, []);
-  // Fetch family members if the user is a family member
+  }, []);  // Fetch family members if the user is a family member
   const fetchFamilyMembers = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/account/family-patient/linked-patient/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Family members data:', data);
-        // Handle both linked_patients (array) and linked_patient (single) format
-        const linkedPatients = data.linked_patients || (data.linked_patient ? [data.linked_patient] : []);
-        setFamilyMembers(linkedPatients);
-      } else {
-        console.error('Failed to fetch family members:', response.status);
+      if (!tokenManager.isAuthenticated()) {
+        return;
       }
+
+      const data = await get(`http://localhost:8000/account/family-patient/linked-patient/`);
+      console.log('Family members data:', data);
+      // Handle both linked_patients (array) and linked_patient (single) format
+      const linkedPatients = data.linked_patients || (data.linked_patient ? [data.linked_patient] : []);
+      setFamilyMembers(linkedPatients);
     } catch (err) {
       console.error('Error fetching family members:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      }
     }
   };
   // Transform family schedule data from nested to flat structure
@@ -157,10 +146,8 @@ const PatientSchedule = () => {
     setLoading(true);
     setError('');
     setAppointmentDetails(null);
-    
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
+      try {
+      if (!tokenManager.isAuthenticated()) {
         setError('Please log in to access your schedule');
         setLoading(false);
         return;
@@ -179,44 +166,35 @@ const PatientSchedule = () => {
       }
 
       console.log('Making request to:', endpoint);
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });      console.log('Response status:', response.status);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Raw API response:', data);
-        
-        if (isFamilyView) {
-          // Transform the nested family schedule data to flat structure
-          const transformedAppointments = transformFamilyScheduleData(data);
-          setAppointments(transformedAppointments);
-        } else {
-          // Regular patient view expects flat structure already
-          setAppointments(data.appointments || []);
-        }
+      const data = await get(endpoint);
+      console.log('Raw API response:', data);
+      
+      if (isFamilyView) {
+        // Transform the nested family schedule data to flat structure
+        const transformedAppointments = transformFamilyScheduleData(data);
+        setAppointments(transformedAppointments);
       } else {
-        const errorData = await response.json();
-        console.log('Error response:', errorData);
-        setError(errorData.error || 'Failed to fetch appointments');
+        // Regular patient view expects flat structure already
+        setAppointments(data.appointments || []);
       }
     } catch (err) {
-      setError('Network error occurred');
       console.error('Error fetching appointments:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+        setError('Please log in to access your schedule');
+      } else {
+        setError('Network error occurred');
+      }
     } finally {
       setLoading(false);
     }
   };
-
   // Fetch appointment details when an appointment is selected
   const fetchAppointmentDetails = async (appointmentId) => {
     setLoading(true);
     
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
+      if (!tokenManager.isAuthenticated()) {
         setError('Please log in to access appointment details');
         setLoading(false);
         return;
@@ -226,23 +204,16 @@ const PatientSchedule = () => {
         ? `http://localhost:8000/schedule/family/appointment/${appointmentId}/`
         : `http://localhost:8000/schedule/patient/appointment/${appointmentId}/`;
 
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAppointmentDetails(data);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to fetch appointment details');
-      }
+      const data = await get(endpoint);
+      setAppointmentDetails(data);
     } catch (err) {
-      setError('Network error occurred');
       console.error('Error fetching appointment details:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+        setError('Please log in to access appointment details');
+      } else {
+        setError('Network error occurred');
+      }
     } finally {
       setLoading(false);
     }

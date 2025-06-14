@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './EditAppointment.css'; // Modal-specific styles using UnifiedBaseLayout.css
 import { useLoading } from '../../hooks/useLoading';
+import { useAuthenticatedApi } from '../../hooks/useAuth';
+import tokenManager from '../../utils/tokenManager';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -46,6 +48,10 @@ const EditAppointment = ({
   const [patientSearch, setPatientSearch] = useState('');
   const [showProviderDropdown, setShowProviderDropdown] = useState(false);
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  
+  // Use modern authentication API
+  const { get, put, delete: del } = useAuthenticatedApi();
+  
   useEffect(() => {
     if (isOpen && appointment) {
       // Populate form with appointment data
@@ -90,42 +96,34 @@ const EditAppointment = ({
       }, '', 'modal');
     }
   }, [isOpen, appointment]);
-
   const fetchPatients = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/account/views_patient/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPatients(data.results || []);
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
       }
+
+      const data = await get('http://localhost:8000/account/views_patient/');
+      setPatients(data.results || []);
     } catch (err) {
       console.error('Error fetching patients:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      }
     }
   };
-
   const fetchServices = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/account/services/', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setServices(data || []);
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
       }
+
+      const data = await get('http://localhost:8000/account/services/');
+      setServices(data || []);
     } catch (err) {
       console.error('Error fetching services:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      }
     }
   };
 
@@ -154,12 +152,13 @@ const EditAppointment = ({
     }
     
     await performUpdate();
-  };
-  const performUpdate = async () => {
+  };  const performUpdate = async () => {
     await executeWithLoading(async () => {
       setError('');
 
-      const token = localStorage.getItem('accessToken');
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
+      }
       
       // Ensure time format is HH:MM (remove seconds if present)
       const formatTimeForSubmit = (timeStr) => {
@@ -173,23 +172,9 @@ const EditAppointment = ({
         end_time: formatTimeForSubmit(formData.end_time)
       };
       
-      const response = await fetch(`http://localhost:8000/schedule/appointment/${appointment.id}/`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(submitData)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        onAppointmentUpdated(data);
-        onClose();
-      } else {
-        const errorData = await response.json();        setError(errorData.error || 'Failed to update appointment');
-        throw new Error(errorData.error || 'Failed to update appointment');
-      }
+      const data = await put(`http://localhost:8000/schedule/appointment/${appointment.id}/`, submitData);
+      onAppointmentUpdated(data);
+      onClose();
     }, '', 'modal');
   };const handleDelete = async () => {
     setIsDeleteLoading(true);
@@ -198,7 +183,9 @@ const EditAppointment = ({
       await executeWithLoading(async () => {
         setError('');
 
-        const token = localStorage.getItem('accessToken');
+        if (!tokenManager.isAuthenticated()) {
+          throw new Error('User not authenticated. Please log in.');
+        }
         
         // Get the first timeslot ID to pass to the backend
         const timeslot = appointment.timeslots[0];
@@ -217,23 +204,10 @@ const EditAppointment = ({
           deleteUrl += `?${params.toString()}`;
         }
         
-        const response = await fetch(deleteUrl, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Deletion result:', data);
-          onAppointmentDeleted();
-          onClose();
-        } else {
-          const errorData = await response.json();          setError(errorData.error || 'Failed to delete appointment');
-          throw new Error(errorData.error || 'Failed to delete appointment');
-        }
+        const data = await del(deleteUrl);
+        console.log('Deletion result:', data);
+        onAppointmentDeleted();
+        onClose();
       }, '', 'modal');
     } catch (err) {
       setError('Network error occurred');

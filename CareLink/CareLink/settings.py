@@ -149,15 +149,11 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '25/minute',  # 5 requests per minute for anonymous users
-        'user': '100/minute',  # 10 requests per minute for authenticated users
-        
+        'anon': '25/minute',  # 25 requests per minute for anonymous users
+        'user': '100/minute',  # 100 requests per minute for authenticated users
+    },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,  # Set the page size to 50
-    }
-
-   
-    
 }
 
 
