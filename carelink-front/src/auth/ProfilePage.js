@@ -1,53 +1,43 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './profile/ProfilePage.css';  // Keep profile-specific styles
 import BaseLayout from './layout/BaseLayout';
+import { useAuthenticatedApi } from '../hooks/useAuth';
+import tokenManager from '../utils/tokenManager';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);
     const [selectedTab, setSelectedTab] = useState('user');
     const profileRef = useRef(null);
-
-    useEffect(() => {
+    
+    // Use modern authentication API
+    const { get, loading, error: apiError } = useAuthenticatedApi();    useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
-
-                if (!token) {
-                    // Redirect to login if token is missing
+                // Check authentication first
+                if (!tokenManager.isAuthenticated()) {
+                    console.log('[DEBUG] User not authenticated, redirecting to login');
                     window.location.href = '/login';
                     return;
                 }
 
-                console.log('[DEBUG] Token:', token);
-                const response = await fetch('http://localhost:8000/account/profile/', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.status === 401) {
-                    // Redirect to login page on 401 Unauthorized
-                    window.location.href = '/login';
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch profile data.');
-                }
-
-                const data = await response.json();
-                console.log('[DEBUG] Fetched Profile Data:', data); // Debugging fetched data
-                console.log('[DEBUG] Family Data:', data.family_relationships); // Corrected key for family data
+                console.log('[DEBUG] Fetching profile data...');
+                const data = await get('http://localhost:8000/account/profile/');
+                console.log('[DEBUG] Fetched Profile Data:', data);
+                console.log('[DEBUG] Family Data:', data.family_relationships);
                 setUserData(data);
             } catch (err) {
+                console.error('[DEBUG] Error fetching profile:', err);
                 setError('Failed to fetch profile data. Please try again.');
+                
+                // If it's an authentication error, redirect to login
+                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                    console.log('[DEBUG] Authentication error, redirecting to login');
+                    tokenManager.handleLogout();
+                }
             }
-        };
-
-        fetchProfile();
-    }, []);
+        };        fetchProfile();
+    }, [get]); // Now safe to use [get] as dependency since it's memoized
 
     useEffect(() => {
         const profileElement = profileRef.current;

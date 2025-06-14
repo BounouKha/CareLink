@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../../auth/layout/BaseLayout';
 import AddEntryForm from '../../components/AddEntryForm';
+import { useAuthenticatedApi } from '../../hooks/useAuth';
+import tokenManager from '../../utils/tokenManager';
 // Import page-specific CSS for components not covered by unified styles
 import './PatientsPage.css';
 
@@ -21,6 +23,8 @@ const PatientsPage = () => {
     const [servicesLoaded, setServicesLoaded] = useState(false);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('newest'); // New state for sorting
+      // Use modern authentication API
+    const { get, put, post, delete: del } = useAuthenticatedApi();
 
     // Debug effect to track modal state changes
     useEffect(() => {
@@ -29,60 +33,34 @@ const PatientsPage = () => {
             showMedicalFolderModal,
             showAddEntryModal
         });
-    }, [showEditPatientModal, showMedicalFolderModal, showAddEntryModal]);
-
-    useEffect(() => {
+    }, [showEditPatientModal, showMedicalFolderModal, showAddEntryModal]);    useEffect(() => {
         const fetchPatients = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    throw new Error('No access token found. Please log in.');
+                if (!tokenManager.isAuthenticated()) {
+                    throw new Error('User not authenticated. Please log in.');
                 }
 
-                const response = await fetch('http://localhost:8000/account/views_patient/', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch patients.');
-                }
-
-                const data = await response.json();
+                const data = await get('http://localhost:8000/account/views_patient/');
                 console.log('[DEBUG] Fetched patient data:', data);
                 setPatients(data.results);
             } catch (err) {
                 console.error('[DEBUG] Error fetching patients:', err);
                 setError(err.message);
+                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                    tokenManager.handleLogout();
+                }
             }
         };
 
         const fetchServices = async () => {
             try {
                 setIsLoadingServices(true);
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    throw new Error('No access token found. Please log in.');
+                if (!tokenManager.isAuthenticated()) {
+                    throw new Error('User not authenticated. Please log in.');
                 }
 
                 console.log('[DEBUG] Fetching services from backend...');
-                const response = await fetch('http://localhost:8000/account/services/', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                console.log('[DEBUG] Response status:', response.status);
-                console.log('[DEBUG] Response headers:', response.headers);
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch services.');
-                }
-
-                const data = await response.json();
+                const data = await get('http://localhost:8000/account/services/');
                 console.log('[DEBUG] Fetched service data:', data);
                 console.log('[DEBUG] typeof data:', typeof data);
                 console.log('[DEBUG] Array.isArray(data):', Array.isArray(data));
@@ -94,6 +72,9 @@ const PatientsPage = () => {
             } catch (err) {
                 console.error('[DEBUG] Error fetching services:', err);
                 setError(err.message);
+                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                    tokenManager.handleLogout();
+                }
             } finally {
                 setIsLoadingServices(false);
             }
@@ -101,7 +82,7 @@ const PatientsPage = () => {
 
         fetchPatients();
         fetchServices();
-    }, []);
+    }, [get]);
 
     const handleShowDetails = (patient) => {
         console.log('[DEBUG] handleShowDetails called with patient:', patient);
@@ -129,54 +110,27 @@ const PatientsPage = () => {
         } else {
             setSelectedPatient({ ...selectedPatient, [field]: value });
         }
-    };
-
-    const refetchPatients = async () => {
+    };    const refetchPatients = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
-            const response = await fetch('http://localhost:8000/account/views_patient/', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch patients.');
-            }
-
-            const data = await response.json();
+            const data = await get('http://localhost:8000/account/views_patient/');
             setPatients(data.results);
         } catch (err) {
             console.error('[DEBUG] Error refetching patients:', err);
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            }
         }
-    };
-
-    const handleSaveChanges = async () => {
+    };    const handleSaveChanges = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/account/update_patient/${selectedPatient.id}/`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(selectedPatient),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update patient details.');
-            }
-
-            await response.json();
+            await put(`http://localhost:8000/account/update_patient/${selectedPatient.id}/`, selectedPatient);
 
             // Refetch the patient list after saving changes
             await refetchPatients();
@@ -184,43 +138,33 @@ const PatientsPage = () => {
             handleCloseModal();
         } catch (err) {
             console.error('[DEBUG] Error updating patient:', err);
-            alert('Failed to save changes. Please try again.');
-        }
-    };
-
-    const fetchMedicalFolder = async (patientId) => {
-        try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            } else {
+                alert('Failed to save changes. Please try again.');
             }
-
-            const response = await fetch(`http://localhost:8000/account/medical_folder/${patientId}/`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+        }
+    };    const fetchMedicalFolder = async (patientId) => {
+        try {
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
+            }
 
             console.log('[DEBUG] Request sent to fetch medical folder:', {
                 url: `http://localhost:8000/account/medical_folder/${patientId}/`,
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                method: 'GET'
             });
 
-            if (!response.ok) {
-                console.error('[DEBUG] Failed response:', response);
-                throw new Error('Failed to fetch medical folder.');
-            }
-
-            const data = await response.json();
+            const data = await get(`http://localhost:8000/account/medical_folder/${patientId}/`);
             console.log('[DEBUG] Fetched medical folder data:', data);
             setMedicalFolder(data);
         } catch (err) {
             console.error('[DEBUG] Error fetching medical folder:', err);
-            alert('Failed to fetch medical folder.');
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            } else {
+                alert('Failed to fetch medical folder.');
+            }
         }
     };
 
@@ -260,21 +204,18 @@ const PatientsPage = () => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    };
-
-    const handleAddMedicalFolderEntry = async (newEntry) => {
+    };    const handleAddMedicalFolderEntry = async (newEntry) => {
         try {
             if (!selectedPatient || medicalFolder.length === 0) {
                 throw new Error('No patient or medical folder selected. Please select a patient and ensure the medical folder is loaded.');
             }
 
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
+            }
+
             const folderId = medicalFolder[0].id; // Assuming the first folder entry contains the folder ID
             console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, folderId, newEntry, selectedService });
-
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
-            }
 
             const requestBody = { 
                 note: newEntry, 
@@ -284,18 +225,7 @@ const PatientsPage = () => {
             console.log('[DEBUG] Request body:', requestBody);
             console.log('[DEBUG] About to send POST request with body:', JSON.stringify(requestBody, null, 2));
 
-            const response = await fetch(`http://localhost:8000/account/medical_folder/${selectedPatient.id}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(requestBody),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to add new entry to medical folder.');
-            }
+            await post(`http://localhost:8000/account/medical_folder/${selectedPatient.id}/`, requestBody);
 
             console.log('[DEBUG] Added new entry to medical folder:', { folderId, newEntry, selectedService });
             fetchMedicalFolder(selectedPatient.id); // Refresh the medical folder entries
@@ -308,11 +238,13 @@ const PatientsPage = () => {
             alert('Successful');
         } catch (err) {
             console.error('[DEBUG] Error adding new entry to medical folder:', err);
-            alert(err.message);
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            } else {
+                alert(err.message);
+            }
         }
-    };
-
-    const handleAddEntry = async (patient) => {
+    };    const handleAddEntry = async (patient) => {
         console.log('[DEBUG] handleAddEntry called with patient:', patient);
         console.log('[DEBUG] Services available when opening modal:', services);
         setShowAddEntryModal(true);
@@ -324,27 +256,19 @@ const PatientsPage = () => {
         console.log('[DEBUG] Patient passed to handleAddEntry:', patient); // Debug log
 
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
-            const response = await fetch(`http://localhost:8000/account/medical_folder/${patient.id}/`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch medical folder.');
-            }
-
-            const data = await response.json();
+            const data = await get(`http://localhost:8000/account/medical_folder/${patient.id}/`);
             setMedicalFolder(data);
         } catch (err) {
             console.error('[DEBUG] Error fetching medical folder:', err);
-            alert('Failed to fetch medical folder.');
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            } else {
+                alert('Failed to fetch medical folder.');
+            }
         }
     };
 
