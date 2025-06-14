@@ -1,87 +1,71 @@
 import React, { useEffect, useState, useRef } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../layout/BaseLayout';
+import { useAuthenticatedApi } from '../../hooks/useAuth';
+import tokenManager from '../../utils/tokenManager';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
-    const [error, setError] = useState(null);    const [selectedTab, setSelectedTab] = useState('user');
+    const [error, setError] = useState(null);    
+    const [selectedTab, setSelectedTab] = useState('user');
     const [linkedPatients, setLinkedPatients] = useState([]);
     const profileRef = useRef(null);
-
-    useEffect(() => {
+    
+    // Use modern authentication API
+    const { get, loading, error: apiError } = useAuthenticatedApi();    useEffect(() => {
         const fetchProfile = async () => {
             console.log('[DEBUG] Starting profile data fetch');
             try {
-                const token = localStorage.getItem('accessToken');
-
-                if (!token) {
-                    // Redirect to login if token is missing
+                // Check authentication first
+                if (!tokenManager.isAuthenticated()) {
+                    console.log('[DEBUG] User not authenticated, redirecting to login');
                     window.location.href = '/login';
                     return;
                 }
 
-                console.log('[DEBUG] Token:', token);
-                const response = await fetch('http://localhost:8000/account/profile/', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.status === 401) {
-                    // Redirect to login page on 401 Unauthorized
-                    window.location.href = '/login';
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch profile data.');
-                }                const data = await response.json();
-                console.log('[DEBUG] Fetched Profile Data:', data); // Debugging fetched data
+                console.log('[DEBUG] Fetching profile data...');
+                const data = await get('http://localhost:8000/account/profile/');
+                console.log('[DEBUG] Fetched Profile Data:', data);
                 setUserData(data);
-                  // If user is a Family Patient, fetch linked patient info
+                  
+                // If user is a Family Patient, fetch linked patient info
                 if (data.user.role === 'Family Patient') {
                     console.log('[DEBUG] User is Family Patient, fetching linked patients...');
                     try {
-                        const linkedResponse = await fetch('http://localhost:8000/account/family-patient/linked-patient/', {
-                            method: 'GET',
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        });
-
-                        console.log('[DEBUG] Linked patient response status:', linkedResponse.status);
-                        if (linkedResponse.ok) {
-                            const linkedData = await linkedResponse.json();
-                            console.log('[DEBUG] Linked Patients Data:', linkedData);
-                            // Handle both old (linked_patient) and new (linked_patients) API format
-                            if (linkedData.linked_patients && Array.isArray(linkedData.linked_patients)) {
-                                console.log('[DEBUG] Using linked_patients array format');
-                                setLinkedPatients(linkedData.linked_patients);
-                            } else if (linkedData.linked_patient) {
-                                console.log('[DEBUG] Using legacy linked_patient format');
-                                // Fallback for old API format
-                                setLinkedPatients([linkedData.linked_patient]);
-                            } else {
-                                console.log('[DEBUG] No linked patients found in response');
-                                setLinkedPatients([]);
-                            }
+                        const linkedData = await get('http://localhost:8000/account/family-patient/linked-patient/');
+                        console.log('[DEBUG] Linked Patients Data:', linkedData);
+                        
+                        // Handle both old (linked_patient) and new (linked_patients) API format
+                        if (linkedData.linked_patients && Array.isArray(linkedData.linked_patients)) {
+                            console.log('[DEBUG] Using linked_patients array format');
+                            setLinkedPatients(linkedData.linked_patients);
+                        } else if (linkedData.linked_patient) {
+                            console.log('[DEBUG] Using legacy linked_patient format');
+                            // Fallback for old API format
+                            setLinkedPatients([linkedData.linked_patient]);
                         } else {
-                            console.error('[DEBUG] Failed to fetch linked patients:', linkedResponse.status);
+                            console.log('[DEBUG] No linked patients found in response');
+                            setLinkedPatients([]);
                         }
                     } catch (err) {
                         console.error('[DEBUG] Error fetching linked patients:', err);
+                        // Don't fail the entire profile load if linked patients fail
                     }
                 } else {
                     console.log('[DEBUG] User is not Family Patient, role:', data.user.role);
                 }
             } catch (err) {
+                console.error('[DEBUG] Error fetching profile:', err);
                 setError('Failed to fetch profile data. Please try again.');
+                
+                // If it's an authentication error, redirect to login
+                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                    console.log('[DEBUG] Authentication error, redirecting to login');
+                    tokenManager.handleLogout();
+                }
             }
-        };
-
-        fetchProfile();
-    }, []);
+        };        fetchProfile();
+    }, [get]); // Now safe to use [get] as dependency since it's memoized
 
     useEffect(() => {
         const profileElement = profileRef.current;

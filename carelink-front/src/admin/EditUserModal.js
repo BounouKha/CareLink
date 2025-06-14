@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuthenticatedApi } from '../hooks/useAuth';
+import tokenManager from '../utils/tokenManager';
 // CSS is now handled by UnifiedBaseLayout.css
 
 const ROLE_CHOICES = [
@@ -14,6 +16,9 @@ const ROLE_CHOICES = [
 const EditUserModal = ({ user, onClose, onSave }) => {
     const [selectedField, setSelectedField] = useState('');
     const [fieldValue, setFieldValue] = useState('');
+    
+    // Use modern authentication API
+    const { post } = useAuthenticatedApi();
 
     const handleFieldChange = (e) => {
         const value = e.target.value;
@@ -26,13 +31,11 @@ const EditUserModal = ({ user, onClose, onSave }) => {
         } else {
             setFieldValue(value);
         }
-    };
-
-    const handleSave = async () => {
+    };    const handleSave = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            // Check authentication first
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
             if (selectedField === 'birthdate' && !validateBirthdate(fieldValue)) {
@@ -44,22 +47,10 @@ const EditUserModal = ({ user, onClose, onSave }) => {
 
             if (fieldValue !== user[selectedField]) {
                 const payload = { [selectedField]: fieldValue };
-                console.log('Payload:', payload); // Debugging payload
+                console.log('[EditUserModal] Payload:', payload);
 
-                const response = await fetch(`http://localhost:8000/account/edit-user/${user?.id}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(payload),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to update user.');
-                }
-
-                const data = await response.json();
+                const data = await post(`http://localhost:8000/account/edit-user/${user?.id}/`, payload);
+                
                 onSave({ ...user, ...data });
                 setSelectedField('');
                 setFieldValue('');
@@ -70,7 +61,13 @@ const EditUserModal = ({ user, onClose, onSave }) => {
                 onClose();
             }
         } catch (err) {
-            console.error(err);
+            console.error('[EditUserModal] Error updating user:', err);
+            alert(`Error: ${err.message}`);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                tokenManager.handleLogout();
+            }
         }
     };
 

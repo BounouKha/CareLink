@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import './ProfileList.css';
 import ShowProfileModal from './ShowProfileModal';
 import EditProfileModal from './EditProfileModal';
+import { useAuthenticatedApi } from '../hooks/useAuth';
+import tokenManager from '../utils/tokenManager';
 
 const ProfileList = () => {
     const [profiles, setProfiles] = useState([]); // Ensure profiles is initialized as an empty array
@@ -15,26 +17,16 @@ const ProfileList = () => {
     const [isShowModalOpen, setIsShowModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+    const { get } = useAuthenticatedApi();
     const PROFILES_PER_PAGE = 50;    const fetchProfiles = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                throw new Error('No access token found. Please log in.');
+            if (!tokenManager.isAuthenticated()) {
+                throw new Error('User not authenticated. Please log in.');
             }
 
             // Fetch all profiles without pagination to enable client-side search and pagination
-            const response = await fetch(`http://localhost:8000/account/profiles/?page_size=1000`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch profiles.');
-            }
-
-            const data = await response.json();
+            const data = await get(`http://localhost:8000/account/profiles/?page_size=1000`);
+            
             console.log('Fetched profiles:', data.results); // Log fetched profiles
             const filteredProfiles = (data.results || []).filter(profile => profile.id !== null && profile.user_id !== null);
             setAllProfiles(filteredProfiles); // Store all profiles
@@ -45,13 +37,19 @@ const ProfileList = () => {
             setTotalPages(totalPages);
             
         } catch (err) {
+            console.error('[ProfileList] Error fetching profiles:', err);
             setError(err.message);
             setAllProfiles([]); // Reset profiles to an empty array in case of an error
             setFilteredProfiles([]);
+            
+            // Handle authentication errors
+            if (err.message.includes('401') || err.message.includes('Unauthorized') || err.message.includes('not authenticated')) {
+                tokenManager.handleLogout();
+            }
         }
     };    useEffect(() => {
         fetchProfiles();
-    }, []);
+    }, [get]);
 
     // Handle search functionality
     useEffect(() => {

@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import './ShowProfileModal.css';
+import { useAuthenticatedApi } from '../hooks/useAuth';
+import tokenManager from '../utils/tokenManager';
 
 const ShowProfileModal = ({ profile, onClose }) => {
     const [details, setDetails] = useState(null);
     const [error, setError] = useState(null);
+
+    const { get } = useAuthenticatedApi();
 
     useEffect(() => {
         // For FamilyPatient profiles, we already have the relations data
@@ -17,40 +21,28 @@ const ShowProfileModal = ({ profile, onClose }) => {
                 additional_fields: {}
             });
             return;
-        }
-
-        // For other roles, fetch details from the server
+        }        // For other roles, fetch details from the server
         const fetchDetails = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    throw new Error('No access token found. Please log in.');
+                if (!tokenManager.isAuthenticated()) {
+                    throw new Error('User not authenticated. Please log in.');
                 }
 
-                const response = await fetch(`http://localhost:8000/account/profiles/${profile.id}/fetch/${profile.role}/`, {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                console.log('Fetch response:', response);
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch profile details.');
-                }
-
-                const data = await response.json();
+                const data = await get(`http://localhost:8000/account/profiles/${profile.id}/fetch/${profile.role}/`);
+                
                 console.log('Fetched data:', data);
                 setDetails(data);
             } catch (err) {
-                console.error('Fetch error:', err);
+                console.error('[ShowProfileModal] Fetch error:', err);
                 setError(err.message);
+                
+                // Handle authentication errors
+                if (err.message.includes('401') || err.message.includes('Unauthorized') || err.message.includes('not authenticated')) {
+                    tokenManager.handleLogout();
+                }
             }
-        };
-
-        fetchDetails();
-    }, [profile]);
+        };        fetchDetails();
+    }, [profile, get]);
 
     useEffect(() => {
         console.log('Updated details state:', details);

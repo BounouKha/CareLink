@@ -3,49 +3,40 @@ import BaseLayout from '../../auth/layout/BaseLayout';
 import ScheduleCalendar from './ScheduleCalendar';
 import PatientSchedule from './PatientSchedule';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import { useAuthenticatedApi } from '../../hooks/useAuth';
+import tokenManager from '../../utils/tokenManager';
 
 const SchedulePage = () => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    useEffect(() => {
+    // Use modern authentication API
+    const { get } = useAuthenticatedApi();    useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
+                if (!tokenManager.isAuthenticated()) {
                     window.location.href = '/login';
                     return;
                 }
 
-                const response = await fetch('http://localhost:8000/account/profile/', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                }
-
-                if (response.ok) {
-                    const profileData = await response.json();
-                    setUserData(profileData);
-                } else {
-                    setError('Failed to load user profile');
-                }
+                const profileData = await get('http://localhost:8000/account/profile/');
+                setUserData(profileData);
             } catch (err) {
                 console.error('Error fetching user profile:', err);
-                setError('Network error occurred');
+                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+                    tokenManager.handleLogout();
+                    window.location.href = '/login';
+                } else {
+                    setError('Network error occurred');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchUserData();
-    }, []);
+    }, [get]);
 
     const renderScheduleComponent = () => {
         if (!userData?.user?.role) {

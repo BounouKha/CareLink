@@ -42,17 +42,15 @@ const LeftToolbar = ({ userData }) => {
 
     const handleScheduleClick = () => {
         navigateWithLoading('/schedule');
-    };
-
-    const renderRoleSpecificToolbar = () => {
+    };    const renderRoleSpecificToolbar = () => {
         if (!userData || !userData.user) {
-            console.warn('[DEBUG] userData or user is undefined');
+            console.warn('[LeftToolbar] userData or user is undefined');
             return null;
         }
 
-        console.log('[DEBUG] user role:', userData.user.role);        return (
+        return (
             <ul className="toolbar-list">
-                <li onClick={handleProfileClick} className="clickable">Profile</li>                {(userData.user.role === 'Patient' || userData.user.role === 'Family Patient') && (
+                <li onClick={handleProfileClick} className="clickable">Profile</li>{(userData.user.role === 'Patient' || userData.user.role === 'Family Patient') && (
                     <>
                         <li onClick={handleServiceDemandsClick} className="clickable">Service Requests</li>
                         <li onClick={handleScheduleClick} className="clickable">Schedule</li>
