@@ -140,10 +140,11 @@
     "illness": "Illness",
     "criticalInformation": "Critical Information",
     "status": "Status",
-    "notes": "Notes",
-    "patientCreated": "Patient created successfully",
+    "notes": "Notes",    "patientCreated": "Patient created successfully",
     "patientUpdated": "Patient updated successfully",
-    "patientDeleted": "Patient deleted successfully"
+    "patientDeleted": "Patient deleted successfully",
+    "bloodType": "Blood Type",
+    "tryAdjustingSearch": "Try adjusting your search criteria"
   },  "servicedemands": {
     "title": "Service Demands",
     "requestNewService": "Request New Service",

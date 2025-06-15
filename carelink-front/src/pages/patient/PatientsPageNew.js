@@ -399,80 +399,79 @@ const PatientsPageNew = () => {
                                                                 <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
                                                                 <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
                                                                 <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
-                                                            </svg>
-                                                            Birth: {patient.birth_date}
-                                                        </small>
-                                                    </div>
-                                                    <div className="col-5">
+                                                            </svg>                                                        Birth: {patient.birth_date}
+                                                    </small>
+                                                </div>
+                                                <div className="col-5">
+                                                    <small className="text-muted d-flex align-items-center">
+                                                        <svg className="me-1" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                            <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" strokeWidth="2"/>
+                                                        </svg>
+                                                        {patient.gender || 'N/A'}
+                                                    </small>
+                                                </div>
+                                                {patient.blood_type && (
+                                                    <div className="col-6">
                                                         <small className="text-muted d-flex align-items-center">
                                                             <svg className="me-1" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                                <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" strokeWidth="2"/>
+                                                                <path d="M7 3V21L12 18L17 21V3H7Z" stroke="currentColor" strokeWidth="2"/>
                                                             </svg>
-                                                            {patient.gender || 'N/A'}
+                                                            {patientsT('bloodType')}: {patient.blood_type}
                                                         </small>
                                                     </div>
-                                                    {patient.blood_type && (
-                                                        <div className="col-6">
-                                                            <small className="text-muted d-flex align-items-center">
-                                                                <svg className="me-1" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                                    <path d="M7 3V21L12 18L17 21V3H7Z" stroke="currentColor" strokeWidth="2"/>
-                                                                </svg>
-                                                                Blood: {patient.blood_type}
-                                                            </small>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="card-footer bg-transparent border-0 pt-0">
-                                                <div className="btn-group w-100" role="group">
-                                                    <button 
-                                                        className="btn btn-outline-info btn-sm text-light" 
-                                                        onClick={() => handleShowDetails(patient)}
-                                                        title="Patient Information"
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                            <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2"/>
-                                                        </svg>
-                                                        Info
-                                                    </button>
-                                                    <button 
-                                                        className="btn btn-outline-warning btn-sm text-light" 
-                                                        onClick={() => handleShowMedicalFolder(patient.id)}
-                                                        title="Medical Folder"
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                            <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>
-                                                        </svg>
-                                                        Folder
-                                                    </button>
-                                                    <button 
-                                                        className="btn btn-outline-success btn-sm text-light" 
-                                                        onClick={() => handleAddEntry(patient)}
-                                                        title="Add Entry"
-                                                    >
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2"/>
-                                                        </svg>
-                                                        Add
-                                                    </button>
-                                                </div>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>                                ))}
-                            </div>
-                            </div>
-                        ) : (
-                            <div className="text-center py-5">
-                                <svg className="text-muted mb-3" width="64" height="64" viewBox="0 0 24 24" fill="none">
-                                    <path d="M16 21V19C16 16.7909 14.2091 15 12 15H5C2.79086 15 1 16.7909 1 19V21M20.5 11.5L22 13L20.5 14.5M18 13H22M12.5 7C12.5 9.20914 10.7091 11 8.5 11C6.29086 11 4.5 9.20914 4.5 7C4.5 4.79086 6.29086 3 8.5 3C10.7091 3 12.5 4.79086 12.5 7Z" stroke="currentColor" strokeWidth="2"/>
-                                </svg>
-                                <h4 className="text-muted">No patients found</h4>
-                                <p className="text-muted">Try adjusting your search criteria</p>
-                            </div>
-                        )}
-                    </div>
+                                        <div className="card-footer bg-transparent border-0 pt-0">
+                                            <div className="btn-group w-100" role="group">
+                                                <button 
+                                                    className="btn btn-outline-info btn-sm text-light" 
+                                                    onClick={() => handleShowDetails(patient)}
+                                                    title={patientsT('patientDetails')}
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2"/>
+                                                    </svg>
+                                                    {common('details')}
+                                                </button>
+                                                <button 
+                                                    className="btn btn-outline-warning btn-sm text-light" 
+                                                    onClick={() => handleShowMedicalFolder(patient.id)}
+                                                    title={patientsT('medicalFolder')}
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>
+                                                    </svg>
+                                                    {patientsT('medicalFolder')}
+                                                </button>
+                                                <button 
+                                                    className="btn btn-outline-success btn-sm text-light" 
+                                                    onClick={() => handleAddEntry(patient)}
+                                                    title={patientsT('addEntry')}
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2"/>
+                                                    </svg>
+                                                    {common('add')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>                                ))}
+                        </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-5">
+                            <svg className="text-muted mb-3" width="64" height="64" viewBox="0 0 24 24" fill="none">
+                                <path d="M16 21V19C16 16.7909 14.2091 15 12 15H5C2.79086 15 1 16.7909 1 19V21M20.5 11.5L22 13L20.5 14.5M18 13H22M12.5 7C12.5 9.20914 10.7091 11 8.5 11C6.29086 11 4.5 9.20914 4.5 7C4.5 4.79086 6.29086 3 8.5 3C10.7091 3 12.5 4.79086 12.5 7Z" stroke="currentColor" strokeWidth="2"/>
+                            </svg>
+                            <h4 className="text-muted">{patientsT('noPatients')}</h4>
+                            <p className="text-muted">{patientsT('tryAdjustingSearch')}</p>
+                        </div>
+                    )}
                 </div>
-            </PatientLayout>{/* DEBUG: Visible modal state indicator */}              {/* Patient Edit Modal */}
+            </div>
+        </PatientLayout>{/* DEBUG: Visible modal state indicator */}              {/* Patient Edit Modal */}
             {showEditPatientModal && selectedPatient && (
                 <div className="patient-page-modal-overlay">
                     <div className="modal-dialog modal-lg">
