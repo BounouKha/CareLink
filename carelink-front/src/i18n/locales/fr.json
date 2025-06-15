@@ -141,7 +141,15 @@
     "notes": "Notes",
     "patientCreated": "Patient créé avec succès",
     "patientUpdated": "Patient mis à jour avec succès",
-    "patientDeleted": "Patient supprimé avec succès"
+    "patientDeleted": "Patient supprimé avec succès",
+    "bloodType": "Groupe sanguin",
+    "birth": "Naissance",
+    "birthDate": "Date de naissance",
+    "nationalNumber": "Numéro national",
+    "emergencyContact": "Contact d'urgence",
+    "medication": "Médicament",
+    "socialPriceEligible": "Éligible au tarif social",
+    "activePatient": "Patient actif"
   },
   "servicedemands": {
     "timeline": "Chronologie des demandes de services",
@@ -204,7 +212,16 @@
       "sms": "SMS"
     },    "demandCreated": "Demande de service créée avec succès",
     "demandUpdated": "Demande de service mise à jour avec succès",
-    "statusUpdated": "Statut mis à jour avec succès"
+    "statusUpdated": "Statut mis à jour avec succès",
+    "totalDemands": "Total des demandes",
+    "pending": "En attente",
+    "urgent": "Urgent", 
+    "inProgress": "En cours",
+    "created": "Créé",
+    "daysAgo": "jours passés",
+    "dayAgo": "jour passé",
+    "managedBy": "Géré par",
+    "submitServiceRequest": "Soumettre la demande de service"
   },
   "admin": {
     "title": "Panneau d'administration",
