@@ -148,7 +148,7 @@ const ManageUsers = () => {
         updateDisplayedUsers(filteredUsers, page);
     }, [page]);    useEffect(() => {
         fetchAllUsers();
-    }, [get]); // Use get dependency so it refetches if authentication changes
+    }, []); // Remove get dependency to prevent infinite re-fetching
 
     const handleEdit = (user) => {
         setEditingUser(user);

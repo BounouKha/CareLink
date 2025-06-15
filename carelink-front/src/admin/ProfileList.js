@@ -49,7 +49,7 @@ const ProfileList = () => {
         }
     };    useEffect(() => {
         fetchProfiles();
-    }, [get]);
+    }, []); // Remove get dependency to prevent infinite re-fetching
 
     // Handle search functionality
     useEffect(() => {
