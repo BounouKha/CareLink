@@ -9,6 +9,7 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
   const [fontSize, setFontSize] = useState(() => {
     return localStorage.getItem('carelink-font-size') || 'normal';
   });
+  const [isScrollable, setIsScrollable] = useState(false);
   const dropdownRef = useRef(null);
 
   const contrastModes = [
@@ -99,6 +100,75 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
     }
   }, [isOpen]);
 
+  // Check if dropdown content is scrollable
+  useEffect(() => {
+    const checkScrollable = () => {
+      if (dropdownRef.current && isOpen) {
+        const dropdown = dropdownRef.current.querySelector('.accessibility-dropdown');
+        if (dropdown) {
+          const hasVerticalScrollbar = dropdown.scrollHeight > dropdown.clientHeight;
+          setIsScrollable(hasVerticalScrollbar);
+        }
+      }
+    };
+
+    if (isOpen) {
+      // Small delay to ensure DOM is updated
+      setTimeout(checkScrollable, 100);
+      window.addEventListener('resize', checkScrollable);
+      
+      return () => {
+        window.removeEventListener('resize', checkScrollable);
+      };
+    }
+  }, [isOpen]);
+
+  // Enhanced position detection for mobile
+  const adjustDropdownPosition = () => {
+    if (dropdownRef.current && isOpen) {
+      const dropdown = dropdownRef.current.querySelector('.accessibility-dropdown');
+      const button = dropdownRef.current.querySelector('.accessibility-btn');
+      
+      if (dropdown && button) {
+        const buttonRect = button.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = dropdown.offsetHeight;
+        
+        // Check if dropdown would go below viewport
+        const spaceBelow = viewportHeight - buttonRect.bottom;
+        const spaceAbove = buttonRect.top;
+        
+        if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+          // Position above the button
+          dropdown.style.top = 'auto';
+          dropdown.style.bottom = '100%';
+          dropdown.style.marginBottom = '4px';
+          dropdown.style.marginTop = '0';
+        } else {
+          // Position below the button (default)
+          dropdown.style.bottom = 'auto';
+          dropdown.style.top = '100%';
+          dropdown.style.marginTop = '4px';
+          dropdown.style.marginBottom = '0';
+        }
+      }
+    }
+  };
+
+  // Adjust position when opening
+  useEffect(() => {
+    if (isOpen) {
+      adjustDropdownPosition();
+      window.addEventListener('resize', adjustDropdownPosition);
+      window.addEventListener('scroll', adjustDropdownPosition, true);
+      
+      return () => {
+        window.removeEventListener('resize', adjustDropdownPosition);
+        window.removeEventListener('scroll', adjustDropdownPosition, true);
+      };
+    }
+  }, [isOpen]);
+
   const getCurrentContrastLabel = () => {
     const mode = contrastModes.find(m => m.value === contrastMode);
     return mode ? mode.label : 'Normal';
@@ -124,7 +194,7 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
         <span className="accessibility-text">A11y</span>
       </button>
       
-      <div className={`dropdown-menu accessibility-dropdown ${isOpen ? 'show' : ''}`}>
+      <div className={`dropdown-menu accessibility-dropdown ${isOpen ? 'show' : ''} ${isScrollable ? 'scrollable' : ''}`}>
         <h6 className="dropdown-header">
           <i className="bi bi-universal-access me-2"></i>
           Accessibility Settings
@@ -191,6 +261,16 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
           <span className="option-icon me-2">🔄</span>
           <span className="option-label">Reset to Default</span>
         </button>
+        
+        {/* Scroll indicator for small screens */}
+        {isScrollable && (
+          <div className="scroll-indicator">
+            <small className="text-muted text-center d-block p-2">
+              <i className="bi bi-arrows-vertical me-1"></i>
+              Scroll for more options
+            </small>
+          </div>
+        )}
       </div>
     </div>
   );

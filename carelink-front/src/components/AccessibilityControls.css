@@ -57,6 +57,8 @@
   right: 0;
   z-index: 1050;
   min-width: 280px;
+  max-width: 320px;
+  max-height: 80vh; /* Limit height to 80% of viewport */
   padding: 12px 0;
   margin: 4px 0 0;
   background: white;
@@ -67,6 +69,8 @@
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.2s ease;
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden; /* Hide horizontal scrollbar */
 }
 
 .accessibility-dropdown.show {
@@ -284,6 +288,31 @@
   border-color: var(--border-color) !important;
 }
 
+/* Custom scrollbar for accessibility dropdown */
+.accessibility-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.accessibility-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.accessibility-dropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.accessibility-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* For Firefox */
+.accessibility-dropdown {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .accessibility-btn {
@@ -299,10 +328,47 @@
   .accessibility-dropdown {
     right: -20px;
     min-width: 250px;
+    max-width: 280px;
+    max-height: 70vh; /* Smaller max height on mobile */
+    border-radius: 12px;
+  }
+  
+  .accessibility-section {
+    padding: 6px 0;
+  }
+  
+  .accessibility-option {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .section-title {
+    font-size: 12px;
+    padding: 6px 16px;
+  }
+  
+  .section-subtitle {
+    font-size: 11px;
+    padding: 0 16px;
+    margin-bottom: 6px;
   }
 }
 
-/* Hamburger menu styles */
+/* Very small screens */
+@media (max-height: 600px) {
+  .accessibility-dropdown {
+    max-height: 60vh; /* Even smaller on very short screens */
+  }
+}
+
+/* Landscape phones */
+@media (max-width: 768px) and (orientation: landscape) {
+  .accessibility-dropdown {
+    max-height: 50vh; /* Smaller height in landscape mode */
+  }
+}
+
+/* Hamburger menu styles - Enhanced scrolling */
 .homepage-buttons.open .accessibility-controls-dropdown {
   width: 100%;
   margin: 10px 0;
@@ -321,10 +387,12 @@
 .homepage-buttons.open .accessibility-dropdown {
   position: static;
   width: 100%;
+  max-height: 40vh; /* Limit height in hamburger menu */
   margin: 8px 0 0;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
   background: #f8f9fa;
   border: 1px solid #e9ecef;
+  overflow-y: auto; /* Ensure scrolling works in hamburger menu too */
 }
 
 /* Focus improvements for accessibility */
@@ -348,4 +416,81 @@
 
 .accessibility-dropdown.show {
   animation: accessibilityDropdownSlide 0.2s ease-out;
+}
+
+/* Smooth scroll behavior */
+.accessibility-dropdown {
+  scroll-behavior: smooth;
+}
+
+/* Ensure sections have proper spacing for scrolling */
+.accessibility-section:first-of-type {
+  padding-top: 8px;
+}
+
+.accessibility-section:last-of-type {
+  padding-bottom: 8px;
+}
+
+/* Add visual indicator when content is scrollable */
+.accessibility-dropdown::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(34,199,238,0.3), transparent);
+  z-index: 1;
+  display: none;
+}
+
+.accessibility-dropdown:hover::before {
+  display: block;
+}
+
+/* Add visual indicator at bottom when scrollable */
+.accessibility-dropdown::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(34,199,238,0.3), transparent);
+  z-index: 1;
+  display: none;
+}
+
+.accessibility-dropdown:hover::after {
+  display: block;
+}
+
+/* Improve touch scrolling on mobile */
+.accessibility-dropdown {
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Better focus handling during scroll */
+.accessibility-option:focus {
+  outline: 2px solid #007bff;
+  outline-offset: -2px;
+  background: #e3f2fd;
+  z-index: 2;
+  position: relative;
+}
+
+/* Ensure keyboard navigation works well with scrolling */
+.accessibility-option:focus-visible {
+  scroll-margin-top: 10px;
+  scroll-margin-bottom: 10px;
+}
+
+/* Add padding for better scroll experience */
+.accessibility-dropdown .dropdown-header:first-child {
+  margin-top: 4px;
+}
+
+.accessibility-reset {
+  margin-bottom: 4px;
 }

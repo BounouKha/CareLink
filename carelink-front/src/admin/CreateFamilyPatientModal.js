@@ -73,13 +73,27 @@ const CreateFamilyPatientModal = ({ userId, onClose, onProfileCreated }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Submitting form data:', formData);
+        console.log('Form submitted with data:', formData);
+        
+        // Validate form data
+        if (!formData.patient_id || !formData.link) {
+            alert('Please fill in all required fields');
+            return;
+        }
         
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
-            }            const response = await fetch(`http://localhost:8000/account/familypatient/`, {
+            }
+
+            console.log('Sending request to backend...', {
+                user: userId,
+                patient: formData.patient_id,
+                link: formData.link
+            });
+
+            const response = await fetch(`http://localhost:8000/account/familypatient/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -92,18 +106,30 @@ const CreateFamilyPatientModal = ({ userId, onClose, onProfileCreated }) => {
                 }),
             });
 
+            console.log('Response status:', response.status);
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+
             if (!response.ok) {
-                throw new Error('Failed to create family patient profile.');
+                let errorMessage = 'Failed to create family patient profile.';
+                try {
+                    const errorData = JSON.parse(responseText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // Response is not JSON
+                    errorMessage = responseText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
-            const data = await response.json();
+            const data = JSON.parse(responseText);
             console.log('Profile created successfully:', data);
             onProfileCreated(data);
             alert('Family Patient profile created successfully!');
             onClose();
         } catch (err) {
             console.error('Error creating profile:', err);
-            alert(err.message);
+            alert(`Error: ${err.message}`);
         }
     };
 
