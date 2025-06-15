@@ -250,8 +250,7 @@ const PatientSchedule = () => {
       day: 'numeric'
     });
     return `${formattedDate} ${timeString}`;
-  };
-  // Get status class for styling
+  };  // Get status class for styling
   const getStatusClass = (status) => {
     if (!status) return 'status-scheduled'; // Default fallback
     
@@ -271,6 +270,30 @@ const PatientSchedule = () => {
     }
     
     return 'status-scheduled'; // Default fallback
+  };
+
+  // Helper function to translate status values
+  const getTranslatedStatus = (status) => {
+    if (!status) return schedule('statusOptions.scheduled');
+    
+    const normalizedStatus = status.toLowerCase().replace(/\s+/g, '');
+    
+    // Map database status values to translation keys
+    const statusMap = {
+      'scheduled': 'statusOptions.scheduled',
+      'confirmed': 'statusOptions.confirmed',
+      'inprogress': 'statusOptions.inProgress',
+      'in_progress': 'statusOptions.inProgress',
+      'completed': 'statusOptions.completed',
+      'cancelled': 'statusOptions.cancelled',
+      'canceled': 'statusOptions.cancelled', // Handle both spellings
+      'noshow': 'statusOptions.noShow',
+      'no_show': 'statusOptions.noShow',
+      'pending': 'statusOptions.scheduled' // Legacy fallback
+    };
+    
+    const translationKey = statusMap[normalizedStatus];
+    return translationKey ? schedule(translationKey) : status; // Fallback to original if no translation found
   };
   useEffect(() => {
     console.log('=== useEffect for fetchAppointments ===');
@@ -352,7 +375,7 @@ const PatientSchedule = () => {
                         day: 'numeric'
                       })}
                     </span>                    <span className={`appointment-status ${getStatusClass(appointment.appointments?.[0]?.status || 'scheduled')}`}>
-                      {appointment.appointments?.[0]?.status || 'scheduled'}
+                      {getTranslatedStatus(appointment.appointments?.[0]?.status || 'scheduled')}
                     </span>
                   </div>                  <div className="appointment-details">
                     <p><strong>{schedule('provider')}:</strong> {appointment.provider?.name || 'Provider TBD'}</p>
@@ -394,7 +417,7 @@ const PatientSchedule = () => {
                     {appointmentDetails.appointments[0].description && (
                       <p><strong>{common('description')}:</strong> {appointmentDetails.appointments[0].description}</p>
                     )}
-                    <p><strong>{common('status')}:</strong> <span className={getStatusClass(appointmentDetails.appointments[0].status || 'scheduled')}>{appointmentDetails.appointments[0].status || 'scheduled'}</span></p>
+                    <p><strong>{common('status')}:</strong> <span className={getStatusClass(appointmentDetails.appointments[0].status || 'scheduled')}>{getTranslatedStatus(appointmentDetails.appointments[0].status || 'scheduled')}</span></p>
                   </>
                 )}
                 <p><strong>{schedule('provider')}:</strong> {appointmentDetails.provider?.name || 'Provider TBD'}</p>

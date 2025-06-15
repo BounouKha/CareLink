@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, date
 from django.db.models import Q, Count, Avg
 from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog
 from account.serializers.user import UserSerializer
+from .conflict_manager import ConflictManager
 import calendar
 
 def log_schedule_action(user, action_type, target_model, target_id, schedule=None, description=None, additional_data=None):
@@ -266,18 +267,22 @@ class QuickScheduleView(APIView):
             service = None
             if service_id:
                 service = Service.objects.get(id=service_id)
-            
-            # Check for conflicts
-            existing_schedules = Schedule.objects.filter(
-                provider=provider,
+              # Check for conflicts using ConflictManager
+            conflict_result = ConflictManager.check_scheduling_conflicts(
+                provider_id=provider_id,
+                patient_id=patient_id,
                 date=schedule_date,
-                time_slots__start_time__lt=end_time,
-                time_slots__end_time__gt=start_time
+                start_time=start_time,
+                end_time=end_time
             )
             
-            if existing_schedules.exists():
+            # If there are conflicts and force_schedule is not set, return conflict details
+            force_schedule = data.get('force_schedule', False)
+            if conflict_result['has_conflicts'] and not force_schedule:
                 return Response({
-                    'error': 'Time conflict detected. Provider already has an appointment during this time.'
+                    'error': 'Scheduling conflicts detected',
+                    'conflict_details': conflict_result,
+                    'requires_confirmation': True
                 }, status=409)
               # Create schedule
             schedule = Schedule.objects.create(
@@ -472,7 +477,7 @@ class AppointmentManagementView(APIView):
             status = data.get('status')
             if start_time_str or end_time_str or service_id or description or status:
                 # Get the first timeslot (assuming one timeslot per appointment for now)
-                timeslot = schedule.time_slots.first()
+                timeslot = schedule.time_slots.first()                
                 if timeslot:
                     if start_time_str:
                         timeslot.start_time = datetime.strptime(start_time_str, '%H:%M').time()
@@ -485,20 +490,25 @@ class AppointmentManagementView(APIView):
                         timeslot.service = service
                     if status:
                         # Update the status field if provided
-                        timeslot.status = status
-                    
-                    # Check for conflicts before saving
+                        timeslot.status = status                      # Check for conflicts before saving using ConflictManager
                     if start_time_str or end_time_str or date_str or provider_id:
-                        existing_schedules = Schedule.objects.filter(
-                            provider=schedule.provider,
+                        conflict_result = ConflictManager.check_scheduling_conflicts(
+                            provider_id=schedule.provider.id,
+                            patient_id=schedule.patient.id,
                             date=schedule.date,
-                            time_slots__start_time__lt=timeslot.end_time,
-                            time_slots__end_time__gt=timeslot.start_time
-                        ).exclude(id=schedule.id)
+                            start_time=timeslot.start_time,
+                            end_time=timeslot.end_time,
+                            exclude_schedule_id=schedule.id,
+                            exclude_timeslot_id=timeslot.id
+                        )
                         
-                        if existing_schedules.exists():
+                        # If there are conflicts and force_update is not set, return conflict details
+                        force_update = data.get('force_update', False)
+                        if conflict_result['has_conflicts'] and not force_update:
                             return Response({
-                                'error': 'Time conflict detected. Provider already has an appointment during this time.'
+                                'error': 'Scheduling conflicts detected',
+                                'conflict_details': conflict_result,
+                                'requires_confirmation': True
                             }, status=409)
                     
                     timeslot.save()
@@ -828,7 +838,7 @@ class PatientScheduleView(APIView):
                     recent.append({
                         'date': schedule.date,
                         'time': timeslot.start_time,
-                        'provider': f"Dr. {schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
+                        'provider': f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
                         'service': timeslot.service.name if timeslot.service else 'General Consultation'
                     })
             
@@ -892,7 +902,7 @@ class PatientAppointmentDetailView(APIView):
                 'date': schedule.date,
                 'provider': {
                     'id': schedule.provider.id if schedule.provider else None,
-                    'name': f"Dr. {schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
+                    'name': f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
                     'email': schedule.provider.user.email if schedule.provider and schedule.provider.user else None,
                     'service_type': schedule.provider.service.name if schedule.provider and schedule.provider.service else 'General Care',
                     'is_internal': schedule.provider.is_internal if schedule.provider else True
@@ -1193,7 +1203,7 @@ class FamilyPatientAppointmentDetailView(APIView):
                 'date': schedule.date,
                 'provider': {
                     'id': schedule.provider.id if schedule.provider else None,
-                    'name': f"Dr. {schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
+                    'name': f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else 'Provider TBD',
                     'email': schedule.provider.user.email if schedule.provider and schedule.provider.user else None,
                     'service_type': schedule.provider.service.name if schedule.provider and schedule.provider.service else 'General Care',
                     'is_internal': schedule.provider.is_internal if schedule.provider else True
@@ -1312,12 +1322,38 @@ class RecurringScheduleView(APIView):
             created_schedules = []
             created_timeslots = []
             errors = []
+              # Check for force scheduling parameter
+            force_schedule = data.get('force_schedule', False)
             
             # Create schedules for each date
             for date_str in dates:
                 try:
                     # Parse date
                     schedule_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    
+                    # Check for conflicts using ConflictManager
+                    conflict_result = ConflictManager.check_scheduling_conflicts(
+                        provider_id=provider_id,
+                        patient_id=patient_id,
+                        date=schedule_date,
+                        start_time=start_time_obj,
+                        end_time=end_time_obj
+                    )
+                    
+                    if conflict_result['has_conflicts'] and not force_schedule:
+                        # Record detailed conflict information
+                        conflict_details = []
+                        for conflict in conflict_result['conflicts']:
+                            conflict_details.append(conflict['message'])
+                        
+                        errors.append({
+                            "date": date_str,
+                            "status": "skipped",
+                            "reason": "conflict",
+                            "details": conflict_details,
+                            "severity": conflict_result['severity']
+                        })
+                        continue
                     
                     # Check if schedule already exists for this date/provider/patient
                     existing_schedule = Schedule.objects.filter(
@@ -1327,19 +1363,10 @@ class RecurringScheduleView(APIView):
                     ).first()
                     
                     if existing_schedule:
-                        # Check for time conflicts
-                        conflicting_timeslots = TimeSlot.objects.filter(
-                            schedule=existing_schedule,
-                            start_time__lt=end_time_obj,
-                            end_time__gt=start_time_obj
-                        )
-                        
-                        if conflicting_timeslots.exists():
-                            errors.append(f"Time conflict on {schedule_date}: overlapping appointment exists")
-                            continue
-                          # Use existing schedule
+                        # Use existing schedule
                         schedule = existing_schedule
-                    else:                        # Create new schedule
+                    else:                        
+                        # Create new schedule
                         schedule = Schedule.objects.create(
                             date=schedule_date,
                             provider=provider,
@@ -1363,43 +1390,225 @@ class RecurringScheduleView(APIView):
                     # Link timeslot to schedule
                     schedule.time_slots.add(timeslot)
                     created_timeslots.append(timeslot)
-                    
+                      
                 except ValueError as e:
-                    errors.append(f"Invalid date format for {date_str}: {str(e)}")
+                    errors.append({
+                        "date": date_str,
+                        "status": "skipped",
+                        "reason": "invalid_format", 
+                        "details": [f"Invalid date format: {str(e)}"]
+                    })
                 except Exception as e:
-                    errors.append(f"Error creating schedule for {date_str}: {str(e)}")
+                    errors.append({
+                        "date": date_str,
+                        "status": "skipped",
+                        "reason": "error",
+                        "details": [f"Error: {str(e)}"]
+                    })
+              # Prepare response with detailed results
+            created_details = []
+            skipped_details = []
             
-            # Prepare response
-            response_data = {
-                "success": True,
-                "created_schedules": len(created_schedules),
-                "created_timeslots": len(created_timeslots),
-                "total_appointments": len(created_timeslots),
-                "errors": errors
-            }
-            
-            # Add details of created appointments
-            appointment_details = []
-            for schedule in created_schedules:
-                for timeslot in schedule.time_slots.all():
-                    appointment_details.append({
-                        "date": schedule.date,
-                        "start_time": timeslot.start_time,
-                        "end_time": timeslot.end_time,
-                        "provider": f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}",
-                        "patient": f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}",
+            # Process created appointments
+            for timeslot in created_timeslots:
+                # Find the schedule this timeslot belongs to
+                schedule = Schedule.objects.filter(time_slots=timeslot).first()
+                if schedule:
+                    created_details.append({
+                        "id": timeslot.id,
+                        "schedule_id": schedule.id,
+                        "date": schedule.date.strftime('%Y-%m-%d'),
+                        "start_time": timeslot.start_time.strftime('%H:%M'),
+                        "end_time": timeslot.end_time.strftime('%H:%M'),
+                        "provider": f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider and schedule.provider.user else "Unknown Provider",
+                        "patient": f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}" if schedule.patient and schedule.patient.user else "Unknown Patient",
                         "service": timeslot.service.name if timeslot.service else None,
                         "status": timeslot.status
                     })
+              # Compile response with clear stats
+            response_data = {
+                "success": True,
+                "results": {
+                    "created": created_details,
+                    "skipped": errors,  # The errors list now contains detailed information about skipped dates
+                    "summary": {
+                        "total_requested": len(dates),
+                        "total_created": len(created_timeslots),
+                        "total_skipped": len(errors),
+                        "success_rate": f"{len(created_timeslots) / len(dates) * 100:.1f}%" if dates else "0%"
+                    }
+                }
+            }
             
-            response_data["appointments"] = appointment_details
+            # Check if we should return conflict status
+            if errors and len(created_timeslots) == 0 and not force_schedule:
+                # No appointments were created due to conflicts, return conflict status
+                # Get provider and patient names for conflict dialog
+                try:
+                    provider = Provider.objects.get(id=provider_id)
+                    provider_name = f"{provider.user.firstname} {provider.user.lastname}" if provider.user else f"Provider {provider_id}"
+                except Provider.DoesNotExist:
+                    provider_name = f"Provider {provider_id}"
+                
+                try:
+                    patient = Patient.objects.get(id=patient_id)
+                    patient_name = f"{patient.user.firstname} {patient.user.lastname}" if patient.user else f"Patient {patient_id}"
+                except Patient.DoesNotExist:
+                    patient_name = f"Patient {patient_id}"
+                
+                # Find conflicts with highest severity
+                conflicts_list = []
+                for error in errors:
+                    if error.get("reason") == "conflict":
+                        for detail in error.get("details", []):
+                            conflicts_list.append({
+                                "type": "recurring",
+                                "severity": error.get("severity", "medium"),
+                                "message": detail,
+                                "date": error.get("date")
+                            })
+                
+                return Response({
+                    'error': 'Scheduling conflicts detected for recurring appointments',
+                    'has_conflicts': True,
+                    'conflicts': conflicts_list,
+                    'severity': 'high' if any(e.get("severity") == "high" for e in errors) else 'medium',
+                    'conflict_count': len(conflicts_list),
+                    'scheduling_data': {
+                        'provider_id': provider_id,
+                        'provider_name': provider_name,
+                        'patient_id': patient_id,
+                        'patient_name': patient_name,
+                        'date': dates[0] if dates else '',
+                        'start_time': start_time,
+                        'end_time': end_time,
+                        'recurring_dates': dates,
+                        'total_dates': len(dates)
+                    },
+                    'requires_confirmation': True
+                }, status=409)
             
+            # Add warning if some appointments couldn't be created
             if errors:
-                response_data["warning"] = f"Some appointments could not be created: {len(errors)} errors"
+                response_data["warning"] = f"Some appointments could not be created ({len(errors)}/{len(dates)} skipped)"
             
             return Response(response_data, status=201)
             
         except Exception as e:
             return Response({
                 "error": f"Server error: {str(e)}"
+            }, status=500)
+
+
+class ConflictCheckView(APIView):
+    """
+    Check for scheduling conflicts before creating or updating appointments
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Check for conflicts in proposed scheduling"""
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        try:
+            data = request.data
+            
+            # Extract scheduling data
+            provider_id = data.get('provider_id')
+            patient_id = data.get('patient_id')
+            date_str = data.get('date')
+            start_time_str = data.get('start_time')
+            end_time_str = data.get('end_time')
+            exclude_schedule_id = data.get('exclude_schedule_id')  # For updates
+            exclude_timeslot_id = data.get('exclude_timeslot_id')  # For updates
+            
+            # Validate required fields
+            if not all([provider_id, patient_id, date_str, start_time_str, end_time_str]):
+                return Response({
+                    'error': 'Missing required fields: provider_id, patient_id, date, start_time, end_time'
+                }, status=400)
+            
+            # Check for conflicts using ConflictManager
+            conflict_result = ConflictManager.check_scheduling_conflicts(
+                provider_id=provider_id,
+                patient_id=patient_id,
+                date=date_str,
+                start_time=start_time_str,
+                end_time=end_time_str,
+                exclude_schedule_id=exclude_schedule_id,
+                exclude_timeslot_id=exclude_timeslot_id
+            )
+            
+            # Get provider and patient names for response
+            try:
+                provider = Provider.objects.get(id=provider_id)
+                provider_name = f"{provider.user.firstname} {provider.user.lastname}" if provider.user else f"Provider {provider_id}"
+            except Provider.DoesNotExist:
+                provider_name = f"Provider {provider_id}"
+            
+            try:
+                patient = Patient.objects.get(id=patient_id)
+                patient_name = f"{patient.user.firstname} {patient.user.lastname}" if patient.user else f"Patient {patient_id}"
+            except Patient.DoesNotExist:
+                patient_name = f"Patient {patient_id}"
+            
+            # Calculate duration for attempted schedule info
+            try:
+                start_time_obj = datetime.strptime(start_time_str, '%H:%M').time()
+                end_time_obj = datetime.strptime(end_time_str, '%H:%M').time()
+                start_datetime = datetime.combine(datetime.today().date(), start_time_obj)
+                end_datetime = datetime.combine(datetime.today().date(), end_time_obj)
+                duration_minutes = int((end_datetime - start_datetime).total_seconds() / 60)
+                duration_text = f"{duration_minutes // 60}h {duration_minutes % 60}min" if duration_minutes >= 60 else f"{duration_minutes}min"
+            except:
+                duration_text = "Unknown"
+            
+            # Enhance conflicts with attempted schedule information
+            enhanced_conflicts = []
+            for conflict in conflict_result['conflicts']:
+                enhanced_conflict = {
+                    **conflict,
+                    'attempted_schedule': {
+                        'date': date_str,
+                        'start_time': start_time_str,
+                        'end_time': end_time_str,
+                        'provider_name': provider_name,
+                        'patient_name': patient_name,
+                        'duration': duration_text
+                    }
+                }
+                enhanced_conflicts.append(enhanced_conflict)
+            
+            # Get suggested alternative time slots if there are conflicts
+            suggestions = []
+            if conflict_result['has_conflicts']:
+                suggestions = ConflictManager.get_suggested_time_slots(
+                    provider_id=provider_id,
+                    date=date_str,
+                    duration_minutes=duration_minutes if 'duration_minutes' in locals() else 60,
+                    exclude_schedule_id=exclude_schedule_id
+                )
+            
+            return Response({
+                'has_conflicts': conflict_result['has_conflicts'],
+                'conflicts': enhanced_conflicts,
+                'severity': conflict_result['severity'],
+                'conflict_count': conflict_result['conflict_count'],
+                'scheduling_data': {
+                    'provider_id': provider_id,
+                    'provider_name': provider_name,
+                    'patient_id': patient_id,
+                    'patient_name': patient_name,
+                    'date': date_str,
+                    'start_time': start_time_str,
+                    'end_time': end_time_str,
+                    'duration': duration_text
+                },
+                'suggested_alternatives': suggestions
+            }, status=200)
+            
+        except Exception as e:
+            return Response({
+                'error': f'Failed to check conflicts: {str(e)}'
             }, status=500)

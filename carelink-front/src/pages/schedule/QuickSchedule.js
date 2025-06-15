@@ -4,6 +4,8 @@ import { useLoading } from '../../hooks/useLoading';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import { useConflictManager } from '../../hooks/useConflictManager';
+import ConflictManager from '../../components/ConflictManager';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -39,12 +41,21 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
 
   // Use modern authentication API
   const { get, post } = useAuthenticatedApi();
-  
-  // Search states
+    // Search states
   const [providerSearch, setProviderSearch] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
   const [showProviderDropdown, setShowProviderDropdown] = useState(false);
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+
+  // Conflict management
+  const {
+    isCheckingConflicts,
+    conflicts,
+    showConflictDialog,
+    checkConflicts,
+    handleConflictResolution,
+    resetConflicts
+  } = useConflictManager();
   // Helper function to calculate end time (1 hour after start time)
   const calculateEndTime = (startTime) => {
     if (!startTime) return '';
@@ -203,7 +214,8 @@ const fetchPatients = async () => {
     }
     
     await performSubmit();
-  };  const performSubmit = async () => {    // Frontend validation
+  };  const performSubmit = async (forceSchedule = false) => {
+    // Frontend validation
     const requiredFields = ['provider_id', 'patient_id', 'date', 'start_time', 'end_time'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
@@ -211,23 +223,58 @@ const fetchPatients = async () => {
       setError(schedule('errors.fillRequiredFields', { fields: missingFields.join(', ') }));
       console.error('Missing form data:', formData);
       return;
-    }await executeWithLoading(async () => {
+    }
+
+    await executeWithLoading(async () => {
       setError('');
 
       if (!tokenManager.isAuthenticated()) {
         throw new Error('User not authenticated. Please log in.');
       }
       
-      // Debug log the form data being sent
-      console.log('Submitting form data:', formData);
+      // If not forcing, check for conflicts first
+      if (!forceSchedule) {
+        try {
+          const result = await checkConflicts(formData);
+          if (result.hasConflicts) {
+            // Conflicts detected, dialog will be shown by the hook
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking conflicts:', error);
+          // Continue with scheduling if conflict check fails
+        }
+      }
       
-      const data = await post('http://localhost:8000/schedule/quick-schedule/', formData);
+      // Prepare submission data (include force_schedule if needed)
+      const submitData = forceSchedule 
+        ? { ...formData, force_schedule: true } 
+        : formData;
+      
+      // Debug log the form data being sent
+      console.log('Submitting form data:', submitData);
+      
+      const data = await post('http://localhost:8000/schedule/quick-schedule/', submitData);
       onScheduleCreated(data);
       onClose();
       resetForm();
+      resetConflicts();
     }, '', 'modal');
   };
 
+  // Handle conflict resolution
+  const handleConflictAction = (action) => {
+    const resolution = handleConflictResolution(action);
+    
+    if (resolution.action === 'proceed') {
+      // User wants to proceed with scheduling despite conflicts
+      performSubmit(true);
+    } else if (resolution.action === 'modify') {
+      // User wants to modify the time - just close the dialog
+      // They can then adjust the form and try again
+    }
+    // If action is 'cancel', the dialog is already closed
+  };
   const resetForm = () => {
     setFormData({
       provider_id: '',
@@ -239,6 +286,7 @@ const fetchPatients = async () => {
       description: ''
     });
     setError('');
+    resetConflicts();
   };
 
   const handleClose = () => {
@@ -325,7 +373,7 @@ const fetchPatients = async () => {
                       ))                    ) : (
                       <div className="dropdown-item disabled">
                         {patients.length === 0 ? schedule('noPatientsAvailable') : schedule('noPatientsFound')}
-                        {patients.length > 0 && <span className="patient-count">({schedule('totalPatients', { count: patients.length })})</span>}
+                        {patients.length > 0 && <span className="patient-count">({patients.length} total patients)</span>}
                       </div>
                     )}
                   </div>
@@ -436,8 +484,14 @@ const fetchPatients = async () => {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>      )}      {/* Conflict Management Dialog */}
+      <ConflictManager
+        isOpen={showConflictDialog}
+        conflicts={conflicts?.conflicts || []}
+        onConfirm={() => handleConflictAction('confirm')}
+        onCancel={() => handleConflictAction('cancel')}
+        schedulingData={conflicts?.schedulingData || formData}
+      />
     </div>
   );
 };

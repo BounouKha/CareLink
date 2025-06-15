@@ -70,7 +70,7 @@ const ProfilePage = () => {
                 }
             }
         };        fetchProfile();
-    }, [get]); // Now safe to use [get] as dependency since it's memoized
+    }, []); // Remove get dependency to prevent infinite re-fetching
 
     useEffect(() => {
         const profileElement = profileRef.current;
