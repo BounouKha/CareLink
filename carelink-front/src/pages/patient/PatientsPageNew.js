@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PatientLayout from '../../layouts/PatientLayout';
 import AddEntryForm from '../../components/AddEntryForm';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './PatientsPageNew.css';
 
@@ -20,6 +21,9 @@ const PatientsPageNew = () => {
     const [servicesLoaded, setServicesLoaded] = useState(false);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('newest');
+
+    // Use translation hooks
+    const { patients: patientsT, common, placeholders, errors, success } = useCareTranslation();
 
     // Debug effect to track modal state changes
     useEffect(() => {
@@ -344,9 +348,8 @@ const PatientsPageNew = () => {
     );    return (
         <>
             <PatientLayout>
-                <div className="patient-page-container">
-                    <div className="patient-page-content">
-                        <h1 className="patient-page-title">Patients</h1>                        {/* Search Section */}
+                <div className="patient-page-container">                    <div className="patient-page-content">
+                        <h1 className="patient-page-title">{patientsT('title')}</h1>{/* Search Section */}
                         <div className="patient-page-search-container mb-4">
                             <div className="input-group">
                                 <span className="input-group-text bg-light border-end-0">
@@ -354,11 +357,10 @@ const PatientsPageNew = () => {
                                         <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
                                         <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2"/>
                                     </svg>
-                                </span>
-                                <input
+                                </span>                                <input
                                     type="text"
                                     className="form-control border-start-0"
-                                    placeholder="Search patients by name, ID, or birth date..."
+                                    placeholder={placeholders('searchPatients')}
                                     value={searchTerm}
                                     onChange={handleSearchChange}
                                 />

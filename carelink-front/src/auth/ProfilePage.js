@@ -3,6 +3,7 @@ import './profile/ProfilePage.css';  // Keep profile-specific styles
 import BaseLayout from './layout/BaseLayout';
 import { useAuthenticatedApi } from '../hooks/useAuth';
 import tokenManager from '../utils/tokenManager';
+import { formatBirthdateWithAge, getAgeDisplay, calculateAge } from '../utils/ageUtils';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
