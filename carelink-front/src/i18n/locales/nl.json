@@ -129,7 +129,10 @@
     "noFamilyRelationships": "Geen familierelaties beschikbaar.",
     "noMedicalFolder": "Geen medische dossiergegevens beschikbaar.",
     "noContactInfo": "Geen contactinformatie beschikbaar.",
-    "notAvailable": "Niet beschikbaar"
+    "notAvailable": "Niet beschikbaar",
+    "roleAssignmentRequired": "Roltoewijzing Vereist",
+    "roleAssignmentMessage": "Uw account heeft een roltoewijzing nodig om toegang te krijgen tot extra functies. Neem contact op met uw systeembeheerder om een rol aan uw account toe te wijzen.",
+    "noRoleAssigned": "Geen rol toegewezen"
   },
   "patients": {
     "title": "Patiënten",
@@ -471,7 +474,7 @@
     }
   },
   "admin": {
-    "title": "Beheerderspaneel",
+    "title": "Admin",
     "users": "Gebruikers",
     "manageUsers": "Gebruikers beheren",
     "createUser": "Gebruiker aanmaken",

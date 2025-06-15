@@ -43,28 +43,28 @@ function App() {
                 <Router>
                     <div className="App">
                         <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/register" element={<RegisterPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-                        <Route path="/patients" element={<PatientsPageNew />} />
-                        <Route path="/service-demands" element={<ServiceDemandPage />} />
-                        {/* New unified schedule route that stays in BaseLayout */}
-                        <Route path="/schedule" element={<SchedulePage />} />
-                        
-                        {/* Keep the old routes for backward compatibility */}
-                        <Route path="/schedule/router" element={<ScheduleRouter />} />
-                        <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
-                        <Route path="/schedule/patient" element={<PatientSchedule />} />                        <Route path="/schedule/family" element={<PatientSchedule />} />
-                        <Route path="/test-auth" element={<TestUserAuth />} />
-                        <Route path="/test-tokens" element={<TokenTestPage />} />
-                        <Route path="/translation-demo" element={<TranslationDemo />} />
-                    </Routes>
-                </div>
-            </Router>
-        </AdminProvider>
-    </Suspense>
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/register" element={<RegisterPage />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                            <Route path="/patients" element={<PatientsPageNew />} />
+                            <Route path="/service-demands" element={<ServiceDemandPage />} />
+                            <Route path="/schedule" element={<SchedulePage />} />
+                            
+                            {/* Keep the old routes for backward compatibility */}
+                            <Route path="/schedule/router" element={<ScheduleRouter />} />
+                            <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
+                            <Route path="/schedule/patient" element={<PatientSchedule />} />
+                            <Route path="/schedule/family" element={<PatientSchedule />} />
+                            <Route path="/test-auth" element={<TestUserAuth />} />
+                            <Route path="/test-tokens" element={<TokenTestPage />} />
+                            <Route path="/translation-demo" element={<TranslationDemo />} />
+                        </Routes>
+                    </div>
+                </Router>
+            </AdminProvider>
+        </Suspense>
     );
 }
 

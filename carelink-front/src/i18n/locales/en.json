@@ -126,7 +126,10 @@
     "noFamilyRelationships": "No family relationships available.",
     "noMedicalFolder": "No medical folder data available.",
     "noContactInfo": "No contact information available.",
-    "notAvailable": "Not Available"
+    "notAvailable": "Not Available",
+    "roleAssignmentRequired": "Role Assignment Required",
+    "roleAssignmentMessage": "Your account needs a role assignment to access additional features. Please contact your system administrator to have a role assigned to your account.",
+    "noRoleAssigned": "No role assigned"
   },
   "patients": {
     "title": "Patients",
@@ -466,7 +469,7 @@
     }
   },
   "admin": {
-    "title": "Admin Panel",
+    "title": "Admin",
     "users": "Users",
     "manageUsers": "Manage Users",
     "createUser": "Create User",

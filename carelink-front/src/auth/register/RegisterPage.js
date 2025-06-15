@@ -1,504 +1,270 @@
-import React, { useEffect, useState, useRef } from 'react';
-// CSS is now handled by UnifiedBaseLayout.css
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import BaseLayout from '../layout/BaseLayout';
-import { useAuthenticatedApi } from '../../hooks/useAuth';
-import tokenManager from '../../utils/tokenManager';
-import { formatBirthdateWithAge, getAgeDisplay, calculateAge } from '../../utils/ageUtils';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import './RegisterPage.css';
 
-const ProfilePage = () => {
-    const [userData, setUserData] = useState(null);
-    const [error, setError] = useState(null);    
-    const [selectedTab, setSelectedTab] = useState('user');
-    const [linkedPatients, setLinkedPatients] = useState([]);
-    const profileRef = useRef(null);
-    
+const RegisterPage = () => {
+    const [formData, setFormData] = useState({
+        email: '',
+        firstname: '',
+        lastname: '',
+        password: '',
+        confirmPassword: '',
+        birthdate: '',
+        address: '',
+        national_number: '',
+        role: 'Patient' // Default role
+    });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
     // Use translation hooks
-    const { profile, common, auth } = useCareTranslation();
-    
-    // Use modern authentication API
-    const { get, loading, error: apiError } = useAuthenticatedApi();
-    
-    useEffect(() => {
-        const fetchProfile = async () => {
-            console.log('[DEBUG] Starting profile data fetch');
-            try {
-                // Check authentication first
-                if (!tokenManager.isAuthenticated()) {
-                    console.log('[DEBUG] User not authenticated, redirecting to login');
-                    window.location.href = '/login';
-                    return;
-                }
+    const { auth, common, placeholders, errors } = useCareTranslation();
 
-                console.log('[DEBUG] Fetching profile data...');
-                const data = await get('http://localhost:8000/account/profile/');
-                console.log('[DEBUG] Fetched Profile Data:', data);
-                setUserData(data);
-                  
-                // If user is a Family Patient, fetch linked patient info
-                if (data.user.role === 'Family Patient') {
-                    console.log('[DEBUG] User is Family Patient, fetching linked patients...');
-                    try {
-                        const linkedData = await get('http://localhost:8000/account/family-patient/linked-patient/');
-                        console.log('[DEBUG] Linked Patients Data:', linkedData);
-                        
-                        // Handle both old (linked_patient) and new (linked_patients) API format
-                        if (linkedData.linked_patients && Array.isArray(linkedData.linked_patients)) {
-                            console.log('[DEBUG] Using linked_patients array format');
-                            setLinkedPatients(linkedData.linked_patients);
-                        } else if (linkedData.linked_patient) {
-                            console.log('[DEBUG] Using legacy linked_patient format');
-                            // Fallback for old API format
-                            setLinkedPatients([linkedData.linked_patient]);
-                        } else {
-                            console.log('[DEBUG] No linked patients found in response');
-                            setLinkedPatients([]);
-                        }
-                    } catch (err) {
-                        console.error('[DEBUG] Error fetching linked patients:', err);
-                        // Don't fail the entire profile load if linked patients fail
-                    }
-                } else {
-                    console.log('[DEBUG] User is not Family Patient, role:', data.user.role);
-                }
-            } catch (err) {
-                console.error('[DEBUG] Error fetching profile:', err);
-                setError('Failed to fetch profile data. Please try again.');
-                
-                // If it's an authentication error, redirect to login
-                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-                    console.log('[DEBUG] Authentication error, redirecting to login');
-                    tokenManager.handleLogout();
-                }
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        // Basic validation
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        if (formData.password.length < 6) {
+            setError('Password must be at least 6 characters long');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const response = await fetch('http://localhost:8000/account/register/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    firstname: formData.firstname,
+                    lastname: formData.lastname,
+                    password: formData.password,
+                    birthdate: formData.birthdate,
+                    address: formData.address,
+                    national_number: formData.national_number,
+                    role: formData.role
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Registration failed');
             }
-        };
-          fetchProfile();
-    }, []); // Remove get dependency to prevent infinite re-fetching
 
-    useEffect(() => {
-        const profileElement = profileRef.current;
-        if (!profileElement) return; // Add null check
-
-        let isDragging = false;
-        let startX, startY, initialX, initialY;
-
-        const onMouseDown = (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            const rect = profileElement.getBoundingClientRect();
-            initialX = rect.left;
-            initialY = rect.top;
-            profileElement.classList.add('dragging');
-        };
-
-        const onMouseMove = (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            profileElement.style.left = `${initialX + dx}px`;
-            profileElement.style.top = `${initialY + dy}px`;
-        };
-
-        const onMouseUp = () => {
-            isDragging = false;
-            profileElement.classList.remove('dragging');
-        };
-
-        profileElement.addEventListener('mousedown', onMouseDown);
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
-
-        // Cleanup function
-        return () => {
-            profileElement.removeEventListener('mousedown', onMouseDown);
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
-        };
-    }, []);
-
-    const renderContent = () => {
-        switch (selectedTab) {
-            case 'user':
-                return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-primary bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
-                                <i className="fas fa-user me-2 text-primary"></i>
-                                {profile('personalInfo')}
-                            </h5>
-                        </div>
-                        <div className="card-body">
-                            <div className="row g-3">
-                                <div className="col-md-6">
-                                    <label className="form-label text-muted">Email:</label>
-                                    <p className="fs-6 fw-medium">{userData.user.email}</p>
-                                </div>
-                                <div className="col-md-6">
-                                    <label className="form-label text-muted">First Name:</label>
-                                    <p className="fs-6 fw-medium">{userData.user.firstname}</p>
-                                </div>
-                                <div className="col-md-6">
-                                    <label className="form-label text-muted">Last Name:</label>
-                                    <p className="fs-6 fw-medium">{userData.user.lastname}</p>
-                                </div>
-                                <div className="col-md-6">
-                                    <label className="form-label text-muted">Birthdate:</label>
-                                    <p className="fs-6 fw-medium">{formatBirthdateWithAge(userData.user.birthdate)}</p>
-                                </div>
-                                <div className="col-12">
-                                    <label className="form-label text-muted">Address:</label>
-                                    <p className="fs-6 fw-medium">{userData.user.address}</p>
-                                </div>
-                                {userData.user.national_number && userData.user.national_number !== "null" && (
-                                    <div className="col-md-6">
-                                        <label className="form-label text-muted">National Number:</label>
-                                        <p className="fs-6 fw-medium">{userData.user.national_number}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            case 'patient':
-                return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-success bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
-                                <i className="fas fa-user-injured me-2 text-success"></i>
-                                {userData.user.role === 'Family Patient' ? "Linked Patient Information" : "Patient Information"}
-                            </h5>
-                        </div>
-                        <div className="card-body">
-                            {userData.user.role === 'Family Patient' ? (
-                                linkedPatients && linkedPatients.length > 0 ? (
-                                    <div className="row g-3">
-                                        {linkedPatients.map((patient, index) => (
-                                            <div key={index} className="col-12">
-                                                <div className="card bg-light border-0">
-                                                    <div className="card-body">
-                                                        <div className="d-flex justify-content-between align-items-center mb-3">
-                                                            <h6 className="card-title mb-0">{patient.firstname} {patient.lastname}</h6>
-                                                            <span className="badge bg-primary">{patient.relationship || 'Family Member'}</span>
-                                                        </div>
-                                                        <div className="row g-2">
-                                                            <div className="col-md-6">
-                                                                <label className="form-label text-muted">Gender:</label>
-                                                                <p className="fs-6 fw-medium mb-0">{patient.gender}</p>
-                                                            </div>
-                                                            <div className="col-md-6">
-                                                                <label className="form-label text-muted">Blood Type:</label>
-                                                                <p className="fs-6 fw-medium mb-0">{patient.blood_type}</p>
-                                                            </div>
-                                                            <div className="col-md-6">
-                                                                <label className="form-label text-muted">Birth Date:</label>
-                                                                <p className="fs-6 fw-medium mb-0">{formatBirthdateWithAge(patient.birth_date)}</p>
-                                                            </div>
-                                                            <div className="col-md-6">
-                                                                <label className="form-label text-muted">Emergency Contact:</label>
-                                                                <p className="fs-6 fw-medium mb-0">{patient.emergency_contact}</p>
-                                                            </div>
-                                                            <div className="col-12">
-                                                                <label className="form-label text-muted">Illness:</label>
-                                                                <p className="fs-6 fw-medium mb-0">{patient.illness}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-4">
-                                        <i className="fas fa-info-circle text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                        <p className="text-muted mb-0">No linked patient information available.</p>
-                                    </div>
-                                )
-                            ) : userData.patient ? (
-                                <div className="row g-3">
-                                    <div className="col-md-6">
-                                        <label className="form-label text-muted">Gender:</label>
-                                        <p className="fs-6 fw-medium">{userData.patient.gender}</p>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label text-muted">Blood Type:</label>
-                                        <p className="fs-6 fw-medium">{userData.patient.blood_type}</p>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label text-muted">Emergency Contact:</label>
-                                        <p className="fs-6 fw-medium">{userData.patient.emergency_contact}</p>
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label text-muted">Illness:</label>
-                                        <p className="fs-6 fw-medium">{userData.patient.illness}</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <i className="fas fa-info-circle text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No patient information available.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-
-            case 'family':
-                return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-info bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
-                                <i className="fas fa-users me-2 text-info"></i>
-                                Family Relationships
-                            </h5>
-                        </div>
-                        <div className="card-body">
-                            {userData.family_relationships && userData.family_relationships.length > 0 ? (
-                                <div className="row g-3">
-                                    {userData.family_relationships.map((relation, index) => (
-                                        <div key={index} className="col-12">
-                                            <div className="card bg-light border-0">
-                                                <div className="card-body py-3">
-                                                    <div className="row">
-                                                        <div className="col-md-6">
-                                                            <label className="form-label text-muted">Relation:</label>
-                                                            <p className="fs-6 fw-medium mb-0">{relation.link}</p>
-                                                        </div>
-                                                        <div className="col-md-6">
-                                                            <label className="form-label text-muted">Family Member:</label>
-                                                            {relation.user ? (
-                                                                <p className="fs-6 fw-medium mb-0">{relation.user.full_name} ({relation.user.email})</p>
-                                                            ) : (
-                                                                <p className="fs-6 text-muted mb-0">Not Available</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <i className="fas fa-users text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No family relationships available.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-
-            case 'medical':
-                return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-warning bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
-                                <i className="fas fa-folder-medical me-2 text-warning"></i>
-                                Medical Folder
-                            </h5>
-                        </div>
-                        <div className="card-body">
-                            {userData.medical_folder && userData.medical_folder.length > 0 ? (
-                                <div className="row g-3">
-                                    {userData.medical_folder.map((record, index) => (
-                                        <div key={index} className="col-12">
-                                            <div className="card bg-light border-0">
-                                                <div className="card-body py-3">
-                                                    <div className="row">
-                                                        <div className="col-md-4">
-                                                            <label className="form-label text-muted">Date:</label>
-                                                            <p className="fs-6 fw-medium mb-0">{record.created_at}</p>
-                                                        </div>
-                                                        <div className="col-md-8">
-                                                            <label className="form-label text-muted">Notes:</label>
-                                                            <p className="fs-6 fw-medium mb-0">{record.note || 'N/A'}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <i className="fas fa-folder-open text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No medical folder data available.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-
-            case 'contact':
-                return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-secondary bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
-                                <i className="fas fa-phone me-2 text-secondary"></i>
-                                Contact Information
-                            </h5>
-                        </div>
-                        <div className="card-body">
-                            {userData.phone_numbers && userData.phone_numbers.length > 0 ? (
-                                <div className="row g-3">
-                                    {userData.phone_numbers.map((phone, index) => (
-                                        <div key={index} className="col-md-6">
-                                            <div className="card bg-light border-0">
-                                                <div className="card-body py-3">
-                                                    <label className="form-label text-muted">{phone.name}:</label>
-                                                    <p className="fs-6 fw-medium mb-0">{phone.phone_number}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <i className="fas fa-phone-slash text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No contact information available.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-
-            default:
-                return null;
+            const data = await response.json();
+            
+            // Registration successful
+            alert('Registration successful! Please login with your credentials.');
+            navigate('/login');
+            
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (error) {
-        return (
-            <BaseLayout>
-                <div className="container-fluid py-4">
-                    <div className="row justify-content-center">
-                        <div className="col-lg-6">
-                            <div className="alert alert-danger d-flex align-items-center" role="alert">
-                                <i className="fas fa-exclamation-triangle me-2"></i>
-                                <div>{error}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </BaseLayout>
-        );
-    }
-
-    if (!userData) {
-        return (
-            <BaseLayout>
-                <div className="container-fluid py-4">
-                    <div className="row justify-content-center">
-                        <div className="col-lg-6">
-                            <div className="card shadow-sm border-0">
-                                <div className="card-body text-center py-5">
-                                    <div className="spinner-border text-primary mb-3" role="status">
-                                        <span className="visually-hidden">Loading...</span>
-                                    </div>
-                                    <h5 className="text-muted">Loading Profile Information</h5>
-                                    <p className="text-muted mb-0">Please wait while we fetch your data...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </BaseLayout>
-        );
-    }
-
     return (
         <BaseLayout>
-            <div className="container-fluid py-4">
-                <div className="row justify-content-center">
-                    <div className="col-lg-10 col-xl-8">
-                        {/* Fixed Profile Header Card */}
-                        <div className="card shadow-sm border-0 mb-4">
-                            <div className="card-header bg-primary bg-opacity-10 border-0">
-                                <div className="d-flex align-items-center">
-                                    <i className="fas fa-user-circle me-3 text-primary" style={{fontSize: '2rem'}}></i>
-                                    <div>
-                                        <h4 className="card-title mb-0">{profile('title')}</h4>
-                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1 text-light">
-                                            <i className="fas fa-user-tag me-1"></i>
-                                            {profile('role')}: {userData.user.role}
-                                        </div>
-                                    </div>
-                                </div>
+            <div className="register-page">
+                <div className="register-container">
+                    <div className="register-header">
+                        <h2>{auth('createAccount')}</h2>
+                        <p className="register-subtitle">Join the CareLink community</p>
+                    </div>
+                    
+                    <form onSubmit={handleSubmit} className="register-form">
+                        <div className="form-row">
+                            <div className="form-group half-width">
+                                <label htmlFor="firstname">
+                                    <i className="fas fa-user"></i>
+                                    First Name
+                                </label>
+                                <input
+                                    id="firstname"
+                                    name="firstname"
+                                    type="text"
+                                    placeholder="Enter your first name"
+                                    value={formData.firstname}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            
+                            <div className="form-group half-width">
+                                <label htmlFor="lastname">
+                                    <i className="fas fa-user"></i>
+                                    Last Name
+                                </label>
+                                <input
+                                    id="lastname"
+                                    name="lastname"
+                                    type="text"
+                                    placeholder="Enter your last name"
+                                    value={formData.lastname}
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
                         </div>
 
-                        {/* Draggable Content Area */}
-                        <div ref={profileRef} style={{cursor: 'move'}}>
-                            {/* Navigation Tabs */}
-                            <div className="card shadow-sm border-0 mb-4">
-                                <div className="card-body p-0">
-                                    <nav className="nav nav-pills nav-justified">
-                                        <button 
-                                            className={`nav-link ${selectedTab === 'user' ? 'active' : ''}`}
-                                            onClick={() => setSelectedTab('user')}
-                                        >
-                                            <i className="fas fa-user me-2"></i>
-                                            {profile('personalInfo')}
-                                        </button>
-                                        {userData.user.role === 'Family Patient' ? (
-                                            <>
-                                                <button 
-                                                    className={`nav-link ${selectedTab === 'patient' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('patient')}
-                                                >
-                                                    <i className="fas fa-user-injured me-2"></i>
-                                                    {profile('linkedPatients')}
-                                                </button>
-                                                <button 
-                                                    className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('contact')}
-                                                >
-                                                    <i className="fas fa-phone me-2"></i>
-                                                    {profile('contactInfo')}
-                                                </button>
-                                            </>
-                                        ) : userData.user.role !== 'Coordinator' && (
-                                            <>
-                                                <button 
-                                                    className={`nav-link ${selectedTab === 'patient' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('patient')}
-                                                >
-                                                    <i className="fas fa-user-injured me-2"></i>
-                                                    {profile('medicalInfo')}
-                                                </button>
-                                                <button 
-                                                    className={`nav-link ${selectedTab === 'family' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('family')}
-                                                >
-                                                    <i className="fas fa-users me-2"></i>
-                                                    {common('family')}
-                                                </button>
-                                                <button 
-                                                    className={`nav-link ${selectedTab === 'medical' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('medical')}
-                                                >
-                                                    <i className="fas fa-folder-medical me-2"></i>
-                                                    Medical Folder
-                                                </button>
-                                                <button 
-                                                    className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('contact')}
-                                                >
-                                                    <i className="fas fa-phone me-2"></i>
-                                                    Contact
-                                                </button>
-                                            </>
-                                        )}
-                                    </nav>
-                                </div>
-                            </div>
+                        <div className="form-group">
+                            <label htmlFor="email">
+                                <i className="fas fa-envelope"></i>
+                                {auth('emailAddress')}
+                            </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder={placeholders('email')}
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                            {/* Content Area */}
-                            <div className="profile-content">
-                                {renderContent()}
+                        <div className="form-row">
+                            <div className="form-group half-width">
+                                <label htmlFor="password">
+                                    <i className="fas fa-lock"></i>
+                                    {auth('password')}
+                                </label>
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    placeholder={placeholders('password')}
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    minLength="6"
+                                />
+                            </div>
+                            
+                            <div className="form-group half-width">
+                                <label htmlFor="confirmPassword">
+                                    <i className="fas fa-lock"></i>
+                                    {auth('confirmPassword')}
+                                </label>
+                                <input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type="password"
+                                    placeholder="Confirm your password"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    required
+                                    minLength="6"
+                                />
                             </div>
                         </div>
+
+                        <div className="form-group">
+                            <label htmlFor="birthdate">
+                                <i className="fas fa-calendar"></i>
+                                Birth Date
+                            </label>
+                            <input
+                                id="birthdate"
+                                name="birthdate"
+                                type="date"
+                                value={formData.birthdate}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="address">
+                                <i className="fas fa-home"></i>
+                                Address
+                            </label>
+                            <input
+                                id="address"
+                                name="address"
+                                type="text"
+                                placeholder="Enter your address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="national_number">
+                                <i className="fas fa-id-card"></i>
+                                National Number (Optional)
+                            </label>
+                            <input
+                                id="national_number"
+                                name="national_number"
+                                type="text"
+                                placeholder="Enter your national number"
+                                value={formData.national_number}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="role">
+                                <i className="fas fa-user-tag"></i>
+                                Role
+                            </label>
+                            <select
+                                id="role"
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="Patient">Patient</option>
+                                <option value="Family Patient">Family Patient</option>
+                                <option value="Provider">Healthcare Provider</option>
+                            </select>
+                        </div>
+                        
+                        {error && (
+                            <div className="error-message">
+                                <i className="fas fa-exclamation-triangle"></i>
+                                {error}
+                            </div>
+                        )}
+                        
+                        <button type="submit" className="btn btn-primary" disabled={loading}>
+                            <i className="fas fa-user-plus"></i>
+                            {loading ? 'Creating Account...' : auth('createAccount')}
+                        </button>
+                    </form>
+                    
+                    <div className="register-footer">
+                        <div className="divider">
+                            <span>Already have an account?</span>
+                        </div>
+                        <Link to="/login" className="btn btn-secondary">
+                            <i className="fas fa-sign-in-alt"></i>
+                            {auth('signIn')}
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -506,4 +272,145 @@ const ProfilePage = () => {
     );
 };
 
-export default ProfilePage;
+const ProfilePage = () => {
+    const [userData, setUserData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedTab, setSelectedTab] = useState('user');
+
+    // Fetch user data on component mount
+    React.useEffect(() => {
+        const fetchUserData = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch('http://localhost:8000/account/profile/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Include auth token or credentials if required
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user data');
+                }
+
+                const data = await response.json();
+                setUserData(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
+    const renderContent = () => {
+        switch (selectedTab) {
+            case 'user':
+                return (
+                    <div className="tab-content" id="user">
+                        <h3>User Information</h3>
+                        <p>Email: {userData.user.email}</p>
+                        <p>First Name: {userData.user.firstname}</p>
+                        <p>Last Name: {userData.user.lastname}</p>
+                        <p>Role: {userData.user.role}</p>
+                        {/* Add more fields as necessary */}
+                    </div>
+                );
+            case 'medical':
+                return (
+                    <div className="tab-content" id="medical">
+                        <h3>Medical Information</h3>
+                        {/* Render medical information fields */}
+                    </div>
+                );
+            case 'folder':
+                return (
+                    <div className="tab-content" id="folder">
+                        <h3>Medical Folder</h3>
+                        {/* Render medical folder content */}
+                    </div>
+                );
+            case 'contact':
+                return (
+                    <div className="tab-content" id="contact">
+                        <h3>Contact Information</h3>
+                        {/* Render contact information fields */}
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>Error: {error}</div>;
+    }
+
+    return (
+        <BaseLayout>
+            <div className="profile-page">
+                <div className="profile-container">
+                    <div className="profile-header">
+                        <h2>Welcome, {userData.user.firstname}!</h2>
+                        <p className="profile-subtitle">Manage your account and settings</p>
+                    </div>
+                    
+                    <div className="profile-tabs">
+                        <button
+                            onClick={() => setSelectedTab('user')}
+                            className={`profile-tab ${selectedTab === 'user' ? 'active' : ''}`}
+                        >
+                            <span className="tab-icon">👤</span>
+                            <span className="tab-label">User Information</span>
+                        </button>
+                        
+                        {/* Only show other tabs if user has a role */}
+                        {userData?.user?.role && userData.user.role !== 'null' && userData.user.role !== 'undefined' && (
+                            <>
+                                <button
+                                    onClick={() => setSelectedTab('medical')}
+                                    className={`profile-tab ${selectedTab === 'medical' ? 'active' : ''}`}
+                                >
+                                    <span className="tab-icon">🏥</span>
+                                    <span className="tab-label">Medical Information</span>
+                                </button>
+                                
+                                <button
+                                    onClick={() => setSelectedTab('folder')}
+                                    className={`profile-tab ${selectedTab === 'folder' ? 'active' : ''}`}
+                                >
+                                    <span className="tab-icon">📁</span>
+                                    <span className="tab-label">Medical Folder</span>
+                                </button>
+                                
+                                <button
+                                    onClick={() => setSelectedTab('contact')}
+                                    className={`profile-tab ${selectedTab === 'contact' ? 'active' : ''}`}
+                                >
+                                    <span className="tab-icon">📞</span>
+                                    <span className="tab-label">Contact Information</span>
+                                </button>
+                            </>
+                        )}
+                    </div>
+                    
+                    <div className="profile-content">
+                        {renderContent()}
+                    </div>
+                </div>
+            </div>
+        </BaseLayout>
+    );
+};
+
+export default RegisterPage;
