@@ -184,10 +184,8 @@
   color: #721c24;
 }
 
-/* Global Contrast Themes */
-.contrast-normal {
-  /* Default theme - no changes needed */
-}
+
+
 
 .contrast-high {
   --bg-primary: #ffffff;
