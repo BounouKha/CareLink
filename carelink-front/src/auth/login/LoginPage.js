@@ -32,7 +32,15 @@ const LoginPage = () => {
             tokenManager.setTokens(access, refresh);
             
             console.log('✅ Login successful, tokens stored securely');
-            navigate('/profile');
+            
+            // Dispatch custom event to notify other components of login
+            window.dispatchEvent(new CustomEvent('user-login'));
+            
+            // Small delay to ensure admin status is fetched before navigation
+            setTimeout(() => {
+                navigate('/profile');
+            }, 100);
+            
         } catch (err) {
             setError(err.message);
         }    };    return (
