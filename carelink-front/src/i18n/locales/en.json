@@ -1,4 +1,6 @@
 {  "common": {
+    "status": "Status",
+    "description": "Description",
     "welcome": "Welcome",
     "home": "Home",
     "login": "Login",
@@ -45,7 +47,8 @@
     "address": "Address",
     "title": "Title",
     "basicInformation": "Basic Information",
-    "weeks": "weeks"
+    "weeks": "weeks",
+    "memberArea": "Member Zone"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -141,10 +144,11 @@
     "criticalInformation": "Critical Information",
     "status": "Status",
     "notes": "Notes",    "patientCreated": "Patient created successfully",
-    "patientUpdated": "Patient updated successfully",
-    "patientDeleted": "Patient deleted successfully",
+    "patientUpdated": "Patient updated successfully",    "patientDeleted": "Patient deleted successfully",
     "bloodType": "Blood Type",
-    "tryAdjustingSearch": "Try adjusting your search criteria"
+    "tryAdjustingSearch": "Try adjusting your search criteria",
+    "newestToOldest": "Newest to Oldest",
+    "oldestToNewest": "Oldest to Newest"
   },  "servicedemands": {
     "title": "Service Demands",
     "requestNewService": "Request New Service",
@@ -244,6 +248,7 @@
     "statusUpdated": "Status updated successfully",
     "addCommentPlaceholder": "Add a comment or note about this demand..."
   },"schedule": {
+    "providerService": "Provider Service",
     "title": "Schedule",
     "calendar": "Calendar",
     "appointments": "Appointments",
@@ -270,10 +275,39 @@
       "day": "Day",
       "week": "Week",
       "month": "Month"
-    },
-    "appointmentCreated": "Appointment created successfully",
+    },    "appointmentCreated": "Appointment created successfully",
     "appointmentUpdated": "Appointment updated successfully",
-    "appointmentDeleted": "Appointment deleted successfully"
+    "appointmentDeleted": "Appointment deleted successfully",
+    "updateAppointment": "Update Appointment",
+    "deleteAppointment": "Delete Appointment",
+    "confirmDeletion": "Confirm Deletion",
+    "deleteConfirmationMessage": "Are you sure you want to delete this appointment? This action cannot be undone.",
+    "yesDelete": "Yes, Delete",
+    "deletionStrategy": "Deletion Strategy",
+    "deleteStrategies": {
+      "smart": "Smart Delete (Delete schedule when no timeslots remain)",
+      "aggressive": "Aggressive Delete (Always delete schedule)",
+      "conservative": "Conservative Delete (Keep schedule)",
+      "smartDescription": "Deletes the schedule only when the last timeslot is removed. Preserves provider associations if other timeslots exist.",
+      "aggressiveDescription": "Immediately deletes the entire schedule and all provider associations when any timeslot is deleted.",
+      "conservativeDescription": "Only deletes the timeslot, preserving the schedule and provider information even if no timeslots remain."
+    },
+    "createdBy": "Created By",
+    "createdAt": "Created At",
+    "statusOptions": {
+      "scheduled": "Scheduled",
+      "confirmed": "Confirmed",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "noShow": "No Show"
+    },
+    "pastDateConfirmation": {
+      "title": "Attention: Date in the Past",
+      "message": "You are trying to schedule an appointment for a past date ({date}). Are you sure you want to continue?",
+      "editMessage": "You are trying to edit an appointment for a past date ({date}). Are you sure you want to continue?",
+      "yesContinue": "Yes, Continue"
+    }
   },
   "admin": {
     "title": "Admin Panel",
@@ -321,7 +355,11 @@
     "required": "This field is required",
     "registrationFailed": "Registration failed",
     "futureBirthdate": "Birthdate cannot be in the future",
-    "ageRestriction": "You must be at least 18 years old"
+    "ageRestriction": "You must be at least 18 years old",
+    "networkError": "Network error occurred",
+    "unableToDetermineUserRole": "Unable to determine user role",
+    "scheduleNotAvailableForRole": "Schedule not available for your role: {role}",
+    "scheduleAccessError": "Schedule Access Error"
   },
   "success": {
     "saved": "Saved successfully",
@@ -355,9 +393,15 @@
     "selectDate": "Select date",
     "selectTime": "Select time",
     "morningAfternoonEvening": "e.g., Morning, Afternoon, Evening...",
-    "specialInstructions": "Any special instructions or requirements...",
-    "searchPatients": "Search patients by name, ID, or birth date...",
-    "searchProviders": "Search and select a provider..."
+    "specialInstructions": "Any special instructions or requirements...",    "searchPatients": "Search patients by name, ID, or birth date...",
+    "searchProviders": "Search and select a provider...",
+    "noServiceSpecified": "No service specified",
+    "noProvidersFound": "No providers found",
+    "noPatientsAvailable": "No patients available",
+    "noPatientsFound": "No patients found",
+    "unknownUser": "Unknown User",
+    "unknownDate": "Unknown Date",
+    "addNotesOrInstructions": "Add any notes or special instructions..."
   },
   "tooltips": {
     "edit": "Edit this item",
