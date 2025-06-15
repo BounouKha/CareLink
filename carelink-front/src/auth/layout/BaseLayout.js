@@ -5,6 +5,7 @@ import LeftToolbar from './LeftToolbar';
 import { AdminContext } from '../login/AdminContext';
 import { SpinnerOnly } from '../../components/LoadingComponents';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
+import ZoomControl from '../../components/ZoomControl';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import tokenManager from '../../utils/tokenManager';
 
@@ -128,19 +129,7 @@ const BaseLayout = ({ children }) => {
         setIsMenuOpen(false);
     };
 
-    const increaseZoom = () => {
-        const currentZoom = parseFloat(localStorage.getItem('zoomLevel')) || 1;
-        const newZoom = Math.min(currentZoom + 0.1, 2); // Max zoom level: 200%
-        document.body.style.zoom = newZoom.toString();
-        localStorage.setItem('zoomLevel', newZoom);
-    };
-
-    const decreaseZoom = () => {
-        const currentZoom = parseFloat(localStorage.getItem('zoomLevel')) || 1;
-        const newZoom = Math.max(currentZoom - 0.1, 0.5); // Min zoom level: 50%
-        document.body.style.zoom = newZoom.toString();
-        localStorage.setItem('zoomLevel', newZoom);
-    };    const handleMemberAreaClick = () => {
+    const handleMemberAreaClick = () => {
         if (tokenManager.isAuthenticated()) {
             window.location.href = '/profile';
         } else {
@@ -164,6 +153,9 @@ const BaseLayout = ({ children }) => {
         window.location.pathname.startsWith(path)
     ); // Include all member area routes
 
+    // Remove any automatic authentication redirects for public pages
+    // The register page should be accessible without authentication
+    
     if (loading) {
         return (
             <div style={{
@@ -234,9 +226,8 @@ const BaseLayout = ({ children }) => {
                     {isSuperuser && (
                         <button className="btn btn-secondary" onClick={() => navigateWithLoading('/admin')}>{admin('title')}</button>
                     )}
-                    <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
-                    <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
                     
+                    <ZoomControl />
                     <LanguageSwitcher />
                 </div>
             </header>
