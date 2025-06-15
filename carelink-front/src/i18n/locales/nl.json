@@ -51,7 +51,8 @@
     "title": "Titel",
     "basicInformation": "Basisinformatie",
     "weeks": "weken",
-    "memberArea": "Ledenzone"
+    "memberArea": "Ledenzone",
+    "sort": "Sorteren"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -354,7 +355,8 @@
     "recurringSchedule": "Terugkerende planning",
     "createSchedule": "Planning aanmaken",
     "searchProviders": "Zoek zorgverleners...",
-    "searchPatientsSchedule": "Zoek patiënten...",
+    "searchPatientsSchedule": "Patiënten zoeken...",
+    "searchPatients": "Patiënten zoeken...",
     "noProvidersFound": "Geen zorgverleners gevonden",
     "noPatientsAvailable": "Geen patiënten beschikbaar",
     "noPatientsFound": "Geen patiënten gevonden",
@@ -471,7 +473,8 @@
       "endDateAfterStart": "Einddatum moet na startdatum zijn",
       "fixErrorsBeforeSubmitting": "Los alle fouten op voordat u indient",
       "noValidDatesFound": "Geen geldige datums gevonden. Controleer uw terugkerende instellingen."
-    }
+    },
+    "generating": "Afspraken genereren..."
   },
   "admin": {
     "title": "Admin",

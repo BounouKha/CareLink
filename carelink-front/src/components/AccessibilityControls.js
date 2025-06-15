@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './AccessibilityControls.css';
 
 const AccessibilityControls = ({ className = '', style = {} }) => {
@@ -26,7 +26,7 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
     { value: 'extra-large', label: 'Extra Large', multiplier: 1.5 }
   ];
 
-  const applyContrastMode = (mode) => {
+  const applyContrastMode = useCallback((mode) => {
     const body = document.body;
     
     // Remove existing contrast classes
@@ -38,9 +38,9 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
     setContrastMode(mode);
     localStorage.setItem('carelink-contrast-mode', mode);
     setIsOpen(false);
-  };
+  }, []);
 
-  const applyFontSize = (size) => {
+  const applyFontSize = useCallback((size) => {
     const fontData = fontSizes.find(f => f.value === size);
     if (fontData) {
       document.documentElement.style.fontSize = `${fontData.multiplier * 16}px`;
@@ -48,7 +48,7 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
       localStorage.setItem('carelink-font-size', size);
       setIsOpen(false);
     }
-  };
+  }, []);
 
   const resetAccessibility = () => {
     document.body.classList.remove('contrast-normal', 'contrast-high', 'contrast-yellow-black', 'contrast-white-blue');
@@ -68,7 +68,7 @@ const AccessibilityControls = ({ className = '', style = {} }) => {
     if (fontData) {
       document.documentElement.style.fontSize = `${fontData.multiplier * 16}px`;
     }
-  }, []);
+  }, []); // Empty dependency array to run only on mount
 
   // Close dropdown when clicking outside
   useEffect(() => {
