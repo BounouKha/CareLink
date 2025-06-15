@@ -9,9 +9,25 @@ class MedicalFolderSimpleView(APIView):
 
     def get(self, request, patient_id):
         print(f"[DEBUG] User: {request.user}, Permissions: {request.user.get_all_permissions()}")
-        if not request.user.has_perm('CareLink.view_medicalfolder'):
-            print(f"[DEBUG] Permission denied for user: {request.user}")
-            return Response({"error": "Permission denied."}, status=403)
+        
+        # Check if user has coordinator permissions
+        if request.user.has_perm('CareLink.view_medicalfolder'):
+            print(f"[DEBUG] User has coordinator permissions")
+        else:
+            # Check if user is a patient viewing their own medical folder
+            try:
+                from CareLink.models import Patient
+                patient = Patient.objects.get(user=request.user, id=patient_id)
+                print(f"[DEBUG] User is viewing their own medical folder")
+            except Patient.DoesNotExist:
+                # Check if user is a family member with access to this patient
+                try:
+                    from CareLink.models import FamilyPatient
+                    family_patient = FamilyPatient.objects.get(user=request.user, patient_id=patient_id)
+                    print(f"[DEBUG] User is family member viewing patient medical folder")
+                except FamilyPatient.DoesNotExist:
+                    print(f"[DEBUG] Permission denied for user: {request.user}")
+                    return Response({"error": "Permission denied."}, status=403)
 
         medical_folders = MedicalFolder.objects.filter(patient_id=patient_id)
         print(f"[DEBUG] Medical folders fetched for patient_id {patient_id}: {medical_folders}")
@@ -22,16 +38,18 @@ class MedicalFolderSimpleView(APIView):
                 "created_at": folder.created_at,
                 "updated_at": folder.updated_at,
                 "note": folder.note,
-                "service": folder.service.name if folder.service else None,            }
+                "service": folder.service.name if folder.service else None,
+            }
             for folder in medical_folders
         ]
 
         print(f"[DEBUG] Folder data prepared: {folder_data}")
-        return Response(folder_data, status=200)
-
+        return Response(folder_data, status=200)    
     def post(self, request, patient_id):
+        # Only allow coordinators to add medical entries, not patients or family members
         if not request.user.has_perm('CareLink.add_medicalfolder'):
-            return Response({"error": "Permission denied."}, status=403)
+            print(f"[DEBUG] Permission denied for adding entry - user: {request.user}")
+            return Response({"error": "Permission denied. Only coordinators can add medical entries."}, status=403)
 
         note = request.data.get("note")
         service_id = request.data.get("service_id")
@@ -40,7 +58,9 @@ class MedicalFolderSimpleView(APIView):
         print(f"[DEBUG] Note: {note}, Service ID: {service_id}")
         
         if not note:
-            return Response({"error": "Note is required."}, status=400)        # Create medical folder with service_id if provided
+            return Response({"error": "Note is required."}, status=400)
+
+        # Create medical folder with service_id if provided
         create_data = {"patient_id": patient_id, "note": note}
         if service_id:
             create_data["service_id"] = service_id
@@ -52,8 +72,6 @@ class MedicalFolderSimpleView(APIView):
             "updated_at": medical_folder.updated_at,
             "note": medical_folder.note,
             "service": medical_folder.service.name if medical_folder.service else None,
-            
-            
         }, status=201)
 
     def put(self, request, patient_id):

@@ -487,7 +487,9 @@
       "endTimeAfterStart": "L'heure de fin doit être après l'heure de début",
       "endDateAfterStart": "La date de fin doit être après la date de début",
       "fixErrorsBeforeSubmitting": "Veuillez corriger toutes les erreurs avant de soumettre",      "noValidDatesFound": "Aucune date valide trouvée. Veuillez vérifier vos paramètres récurrents."
-    }
+    },
+    "generating": "Génération des rendez-vous...",
+    "searchPatients": "Rechercher des patients..."
   },
   "tooltips": {
     "edit": "Modifier cet élément",

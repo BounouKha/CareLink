@@ -191,9 +191,7 @@ const PatientsPageNew = () => {
             console.error('[DEBUG] Error updating patient:', err);
             alert('Failed to save changes. Please try again.');
         }
-    };
-
-    const fetchMedicalFolder = async (patientId) => {
+    };    const fetchMedicalFolder = async (patientId) => {
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
@@ -208,6 +206,12 @@ const PatientsPageNew = () => {
             });
 
             if (!response.ok) {
+                if (response.status === 404) {
+                    // Patient has no medical folder yet, set empty array
+                    console.log('[DEBUG] Patient has no medical folder yet (404), setting empty array');
+                    setMedicalFolder([]);
+                    return;
+                }
                 console.error('[DEBUG] Failed response:', response);
                 throw new Error('Failed to fetch medical folder.');
             }
@@ -217,9 +221,12 @@ const PatientsPageNew = () => {
             setMedicalFolder(data);
         } catch (err) {
             console.error('[DEBUG] Error fetching medical folder:', err);
-            alert('Failed to fetch medical folder.');
+            if (!err.message.includes('404')) {
+                alert('Failed to fetch medical folder.');
+            }
+            setMedicalFolder([]);
         }
-    };    const handleShowMedicalFolder = (patientId) => {
+    };const handleShowMedicalFolder = (patientId) => {
         console.log('[DEBUG] handleShowMedicalFolder called with patientId:', patientId);
         console.log('[DEBUG] Current modal states before:', {
             showEditPatientModal,
@@ -257,16 +264,13 @@ const PatientsPageNew = () => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    };
-
-    const handleAddMedicalFolderEntry = async (newEntry) => {
+    };    const handleAddMedicalFolderEntry = async (newEntry) => {
         try {
-            if (!selectedPatient || medicalFolder.length === 0) {
-                throw new Error('No patient or medical folder selected. Please select a patient and ensure the medical folder is loaded.');
+            if (!selectedPatient) {
+                throw new Error('No patient selected. Please select a patient.');
             }
 
-            const folderId = medicalFolder[0].id;
-            console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, folderId, newEntry, selectedService });
+            console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, newEntry, selectedService });
 
             const token = localStorage.getItem('accessToken');
             if (!token) {
@@ -275,10 +279,9 @@ const PatientsPageNew = () => {
 
             const requestBody = { 
                 note: newEntry, 
-                folder_id: folderId,
-                service_id: selectedService
-            };
-
+                service_id: selectedService,
+                patient_id: selectedPatient.id // Explicitly include patient ID
+            };            // Use the existing backend endpoint (underscore format, no /add/)
             const response = await fetch(`http://localhost:8000/account/medical_folder/${selectedPatient.id}/`, {
                 method: 'POST',
                 headers: {
@@ -292,7 +295,7 @@ const PatientsPageNew = () => {
                 throw new Error('Failed to add new entry to medical folder.');
             }
 
-            console.log('[DEBUG] Added new entry to medical folder:', { folderId, newEntry, selectedService });
+            console.log('[DEBUG] Added new entry to medical folder:', { newEntry, selectedService });
             fetchMedicalFolder(selectedPatient.id);
 
             setNewNote('');
@@ -302,7 +305,7 @@ const PatientsPageNew = () => {
             console.error('[DEBUG] Error adding new entry to medical folder:', err);
             alert(err.message);
         }
-    };    const handleAddEntry = async (patient) => {
+    };const handleAddEntry = async (patient) => {
         console.log('[DEBUG] handleAddEntry called with patient:', patient);
         console.log('[DEBUG] Current modal states before:', {
             showEditPatientModal,
@@ -327,17 +330,23 @@ const PatientsPageNew = () => {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
-            });
-
-            if (!response.ok) {
+            });            if (!response.ok) {
+                if (response.status === 404) {
+                    // Patient has no medical folder yet, set empty array
+                    console.log('[DEBUG] Patient has no medical folder yet (404), setting empty array');
+                    setMedicalFolder([]);
+                    return;
+                }
                 throw new Error('Failed to fetch medical folder.');
             }
 
             const data = await response.json();
-            setMedicalFolder(data);
-        } catch (err) {
+            setMedicalFolder(data);        } catch (err) {
             console.error('[DEBUG] Error fetching medical folder:', err);
-            alert('Failed to fetch medical folder.');
+            if (!err.message.includes('404')) {
+                alert('Failed to fetch medical folder.');
+            }
+            setMedicalFolder([]);
         }
     };
 
@@ -433,26 +442,24 @@ const PatientsPageNew = () => {
                                                         <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2"/>
                                                     </svg>
                                                     {common('details')}
-                                                </button>
-                                                <button 
+                                                </button>                                                <button 
                                                     className="btn btn-outline-warning btn-sm text-light" 
                                                     onClick={() => handleShowMedicalFolder(patient.id)}
                                                     title={patientsT('medicalFolder')}
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                        <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>
-                                                    </svg>
+                                                        <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>                                                    </svg>
                                                     {patientsT('medicalFolder')}
                                                 </button>
                                                 <button 
                                                     className="btn btn-outline-success btn-sm text-light" 
                                                     onClick={() => handleAddEntry(patient)}
-                                                    title={patientsT('addEntry')}
+                                                    title="Add medical entry"
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2"/>
+                                                        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                     </svg>
-                                                    {common('add')}
+                                                    Add Note
                                                 </button>
                                             </div>
                                         </div>

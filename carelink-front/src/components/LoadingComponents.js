@@ -82,15 +82,37 @@ export const LoadingSpinner = ({
  * Spinner Only - just the spinning animation, no text, no container
  */
 export const SpinnerOnly = ({ 
-  size = 'default', 
-  type = 'default', 
-  className = '' 
+  size = 'medium', 
+  className = '', 
+  style = {}, 
+  ...otherProps 
 }) => {
-  const sizeClass = size === 'small' ? 'small' : size === 'large' ? 'large' : '';
-  const typeClass = type === 'dots' ? 'dots' : type === 'pulse' ? 'pulse' : '';
+  // Remove loadingText from props that go to DOM element
+  const { loadingText, ...domProps } = otherProps;
   
+  const sizeClasses = {
+    small: 'spinner-border-sm',
+    medium: '',
+    large: 'spinner-border spinner-border-lg'
+  };
+
   return (
-    <div className={`spinner ${sizeClass} ${typeClass} ${className}`}></div>
+    <div 
+      className={`d-flex align-items-center justify-content-center ${className}`} 
+      style={style}
+      {...domProps}
+    >
+      <div 
+        className={`spinner-border text-primary ${sizeClasses[size]}`} 
+        role="status"
+        aria-label="Loading"
+      >
+        <span className="visually-hidden">Loading...</span>
+      </div>
+      {loadingText && (
+        <span className="ms-2 text-muted">{loadingText}</span>
+      )}
+    </div>
   );
 };
 

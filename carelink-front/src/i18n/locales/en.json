@@ -48,7 +48,9 @@
     "title": "Title",
     "basicInformation": "Basic Information",
     "weeks": "weeks",
-    "memberArea": "Member Zone"
+    "memberArea": "Member Zone",
+    "sort": "Sort",
+    "name": "Name"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -161,7 +163,9 @@
     "emergencyContact": "Emergency Contact",
     "medication": "Medication",
     "socialPriceEligible": "Social Price Eligible",
-    "activePatient": "Active Patient"
+    "activePatient": "Active Patient",
+    "addPatientsFirst": "Please add patients before creating medical entries.",
+    "selectPatientFirst": "Please select a patient first"
   },  "servicedemands": {
     "title": "Service Demands",
     "requestNewService": "Request New Service",
