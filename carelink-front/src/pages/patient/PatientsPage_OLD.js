@@ -4,6 +4,7 @@ import BaseLayout from '../../auth/layout/BaseLayout';
 import AddEntryForm from '../../components/AddEntryForm';
 // Import page-specific CSS for components not covered by unified styles
 import './PatientsPage.css';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 
 const PatientsPage = () => {
     const [patients, setPatients] = useState([]);
@@ -432,7 +433,7 @@ const PatientsPage = () => {
                                                             <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
                                                             <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
                                                         </svg>
-                                                        Birth Date
+                                                        {patientsT('birth')}
                                                     </div>
                                                     <div className="patient-detail-value">{patient.birth_date}</div>
                                                 </div>
@@ -441,7 +442,7 @@ const PatientsPage = () => {
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                             <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" strokeWidth="2"/>
                                                         </svg>
-                                                        Gender
+                                                        {patientsT('gender')}
                                                     </div>
                                                     <div className="patient-detail-value">{patient.gender || 'N/A'}</div>
                                                 </div>
@@ -450,7 +451,7 @@ const PatientsPage = () => {
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                             <path d="M7 3V21L12 18L17 21V3H7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                         </svg>
-                                                        Blood Type
+                                                        {patientsT('bloodType')}
                                                     </div>
                                                     <div className="patient-detail-value">{patient.blood_type || 'N/A'}</div>
                                                 </div>

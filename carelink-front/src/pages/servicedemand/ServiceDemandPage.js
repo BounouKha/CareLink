@@ -430,7 +430,8 @@ const ServiceDemandPage = () => {
                 {/* Scrollable Content */}
                 <div className="service-demand-container">
                     {error && <div className="error-message">{error}</div>}                    {/* Stats Dashboard (for coordinators/admin) */}
-                    {stats && (                        <div className="stats-dashboard row row-cols-1 row-cols-md-4 g-3 mb-4 bg-light p-3 rounded-3 shadow-sm">
+                    {stats && (
+                        <div className="stats-dashboard row row-cols-1 row-cols-md-4 g-3 mb-4 bg-light p-3 rounded-3 shadow-sm">
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
                                     <div className="card-body bg-white">
@@ -552,12 +553,14 @@ const ServiceDemandPage = () => {
                                     </div>
                                     <div className="card-footer bg-white d-flex justify-content-between align-items-center">
                                         <div className="text-muted">
-                                            <small className="me-2">Created: {new Date(demand.created_at).toLocaleDateString()}</small>
+                                            <small className="me-2">{servicedemands('created')}: {new Date(demand.created_at).toLocaleDateString()}</small>
                                             {demand.days_since_created > 0 && (
-                                                <small className="me-2">{demand.days_since_created} days ago</small>
+                                                <small className="me-2">
+                                                    {demand.days_since_created} {demand.days_since_created === 1 ? servicedemands('dayAgo') : servicedemands('daysAgo')}
+                                                </small>
                                             )}
                                             {demand.managed_by_info && (
-                                                <small>Managed by: {demand.managed_by_info.firstname} {demand.managed_by_info.lastname}</small>
+                                                <small>{servicedemands('managedBy')}: {demand.managed_by_info.firstname} {demand.managed_by_info.lastname}</small>
                                             )}
                                         </div>
                                         {/* Show More Info button for all users to see coordinator notes */}                                        <div>
@@ -1018,7 +1021,8 @@ const ServiceDemandPage = () => {
                                                     }}
                                                 >
                                                     <i className="bi bi-send-fill me-2"></i>
-                                                    Submit Service Request                                                </button>
+                                                    {servicedemands('submitServiceRequest')}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

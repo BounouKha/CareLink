@@ -4,6 +4,7 @@ import BaseLayout from '../../auth/layout/BaseLayout';
 import AddEntryForm from '../../components/AddEntryForm';
 // Import page-specific CSS for components not covered by unified styles
 import './PatientsPage.css';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 
 const PatientsPage = () => {
     const [patients, setPatients] = useState([]);
@@ -354,6 +355,9 @@ const PatientsPage = () => {
         patient.birth_date?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Add translation hooks
+    const { patients: patientsT, common, placeholders, errors, success } = useCareTranslation();
+
     return (
         <>
             <BaseLayout>
@@ -379,23 +383,23 @@ const PatientsPage = () => {
                                         <div className="patient-info">
                                             <div className="patient-details">
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">Name</div>
+                                                    <div className="patient-detail-label">{patientsT('name')}</div>
                                                     <div className="patient-detail-value">{patient.firstname} {patient.lastname}</div>
                                                 </div>
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">ID</div>
+                                                    <div className="patient-detail-label">{patientsT('nationalNumber')}</div>
                                                     <div className="patient-detail-value">{patient.national_number}</div>
                                                 </div>
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">Birth Date</div>
+                                                    <div className="patient-detail-label">{patientsT('birthDate')}</div>
                                                     <div className="patient-detail-value">{patient.birth_date}</div>
                                                 </div>
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">Gender</div>
+                                                    <div className="patient-detail-label">{patientsT('gender')}</div>
                                                     <div className="patient-detail-value">{patient.gender || 'N/A'}</div>
                                                 </div>
                                                 <div className="patient-detail-item">
-                                                    <div className="patient-detail-label">Blood Type</div>
+                                                    <div className="patient-detail-label">{patientsT('bloodType')}</div>
                                                     <div className="patient-detail-value">{patient.blood_type || 'N/A'}</div>
                                                 </div>
                                             </div>

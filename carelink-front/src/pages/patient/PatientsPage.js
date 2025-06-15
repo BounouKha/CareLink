@@ -4,6 +4,7 @@ import BaseLayout from '../../auth/layout/BaseLayout';
 import AddEntryForm from '../../components/AddEntryForm';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
+import { useCareTranslation } from '../../hooks/useTranslation';
 // Import page-specific CSS for components not covered by unified styles
 import './PatientsPage.css';
 
@@ -23,8 +24,12 @@ const PatientsPage = () => {
     const [servicesLoaded, setServicesLoaded] = useState(false);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('newest'); // New state for sorting
-      // Use modern authentication API
+
+    // Use modern authentication API
     const { get, put, post, delete: del } = useAuthenticatedApi();
+
+    // Import translation hooks
+    const { patients: patientsT, common, placeholders, errors, success } = useCareTranslation();
 
     // Debug effect to track modal state changes
     useEffect(() => {
@@ -356,7 +361,7 @@ const PatientsPage = () => {
                                                             <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
                                                             <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
                                                         </svg>
-                                                        Birth Date
+                                                        {patientsT('birthDate')}
                                                     </div>
                                                     <div className="patient-detail-value">{patient.birth_date}</div>
                                                 </div>
@@ -365,7 +370,7 @@ const PatientsPage = () => {
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                             <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" strokeWidth="2"/>
                                                         </svg>
-                                                        Gender
+                                                        {patientsT('gender')}
                                                     </div>
                                                     <div className="patient-detail-value">{patient.gender || 'N/A'}</div>
                                                 </div>
@@ -374,7 +379,7 @@ const PatientsPage = () => {
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                             <path d="M7 3V21L12 18L17 21V3H7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                         </svg>
-                                                        Blood Type
+                                                        {patientsT('bloodType')}
                                                     </div>
                                                     <div className="patient-detail-value">{patient.blood_type || 'N/A'}</div>
                                                 </div>
@@ -471,7 +476,7 @@ const PatientsPage = () => {
                                         />
                                     </label>
                                     <label>
-                                        National Number:
+                                        {patientsT('nationalNumber')}:
                                         <input
                                             type="text"
                                             value={selectedPatient.national_number}
@@ -479,7 +484,7 @@ const PatientsPage = () => {
                                         />
                                     </label>
                                     <label>
-                                        Birthdate:
+                                        {patientsT('birthDate')}:
                                         <input
                                             type="date"
                                             value={selectedPatient.birth_date}
@@ -487,7 +492,7 @@ const PatientsPage = () => {
                                         />
                                     </label>
                                     <label>
-                                        Gender:
+                                        {patientsT('gender')}:
                                         <input
                                             type="text"
                                             value={selectedPatient.gender}
@@ -502,7 +507,7 @@ const PatientsPage = () => {
                                 <h3>Medical Information</h3>
                                 <div className="patient-form-grid">
                                     <label>
-                                        Blood Type:
+                                        {patientsT('bloodType')}:
                                         <input
                                             type="text"
                                             value={selectedPatient.blood_type}
@@ -510,7 +515,7 @@ const PatientsPage = () => {
                                         />
                                     </label>
                                     <label>
-                                        Emergency Contact:
+                                        {patientsT('emergencyContact')}:
                                         <input
                                             type="text"
                                             value={selectedPatient.emergency_contact}
@@ -519,7 +524,7 @@ const PatientsPage = () => {
                                     </label>
                                 </div>
                                 <label>
-                                    Illness:
+                                    {patientsT('illness')}:
                                     <input
                                         type="text"
                                         value={selectedPatient.illness}
@@ -527,7 +532,7 @@ const PatientsPage = () => {
                                     />
                                 </label>
                                 <label>
-                                    Critical Information:
+                                    {patientsT('criticalInformation')}:
                                     <input
                                         type="text"
                                         value={selectedPatient.critical_information}
@@ -535,7 +540,7 @@ const PatientsPage = () => {
                                     />
                                 </label>
                                 <label>
-                                    Medication:
+                                    {patientsT('medication')}:
                                     <input
                                         type="text"
                                         value={selectedPatient.medication}
@@ -549,7 +554,7 @@ const PatientsPage = () => {
                                 <h3>Status Information</h3>
                                 <div className="patient-form-grid">
                                     <label>
-                                        Social Price:
+                                        {patientsT('socialPriceEligible')}:
                                         <input
                                             type="checkbox"
                                             checked={selectedPatient.social_price}
@@ -557,7 +562,7 @@ const PatientsPage = () => {
                                         />
                                     </label>
                                     <label>
-                                        Alive:
+                                        {patientsT('activePatient')}:
                                         <input
                                             type="checkbox"
                                             checked={selectedPatient.is_alive}
