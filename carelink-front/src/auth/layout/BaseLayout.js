@@ -197,15 +197,14 @@ const BaseLayout = ({ children }) => {
                         </button>                    )}                    <button className="btn btn-primary" onClick={() => navigateWithLoading('/')}>{common('home')}</button>
                     {!isConnected && (
                         <button className="btn btn-primary" onClick={() => navigateWithLoading('/register')}>{auth('register')}</button>
-                    )}
-                    {isConnected && (
-                        <button className="btn btn-primary" onClick={handleLogout}>{auth('logout')}</button>                    )}
+                    )}                    {isConnected && (
+                        <button className="btn btn-primary" onClick={handleLogout}>{common('logout')}</button>                    )}
                     <button className="btn btn-primary" onClick={() => {
                         if (tokenManager.isAuthenticated()) {
                             navigateWithLoading('/profile');
                         } else {
                             navigateWithLoading('/login');
-                        }                    }}>Member Area</button>
+                        }                    }}>{common('memberArea')}</button>
                     {isSuperuser && (
                         <button className="btn btn-secondary" onClick={() => navigateWithLoading('/admin')}>{admin('title')}</button>
                     )}                    <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>

@@ -317,11 +317,11 @@ const ManageUsers = () => {
                 tokenManager.handleLogout();
             }
         }
-    };return (
+    };    return (
         <div className="admin-users-container">
             <div className="admin-users-header">
-                <h1>Manage Users</h1>
-                <p className="admin-users-subtitle">Manage user accounts, roles, and profiles</p>
+                <h1>{admin('manageUsers')}</h1>
+                <p className="admin-users-subtitle">{admin('manageUsersSubtitle')}</p>
             </div>
 
             {error && <div className="alert alert-error">{error}</div>}
@@ -335,15 +335,15 @@ const ManageUsers = () => {
                             onChange={(e) => setSearchField(e.target.value)}
                             className="search-filter"
                         >
-                            <option value="all">All Fields</option>
-                            <option value="email">Email</option>
-                            <option value="name">Name</option>
-                            <option value="national_number">National Number</option>
+                            <option value="all">{admin('allFields')}</option>
+                            <option value="email">{common('email')}</option>
+                            <option value="name">{common('name')}</option>
+                            <option value="national_number">{admin('nationalNumber')}</option>
                         </select>
                         <div className="search-input-container">
                             <input
                                 type="text"
-                                placeholder={`Search users by ${searchField === 'all' ? 'email, name, or national number' : searchField}...`}
+                                placeholder={placeholders('searchUsers')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="search-input"
@@ -351,7 +351,7 @@ const ManageUsers = () => {
                             <div className="search-icon">🔍</div>
                         </div>
                     </div>                    <div className="results-info">
-                        {loading ? 'Loading...' : `Showing ${displayedUsers.length} of ${filteredUsers.length} users (Total: ${allUsers.length})`}
+                        {loading ? common('loading') : `${admin('showing')} ${displayedUsers.length} ${common('of')} ${filteredUsers.length} ${admin('users')} (${admin('total')}: ${allUsers.length})`}
                     </div>
                 </div>
 
@@ -359,9 +359,9 @@ const ManageUsers = () => {
                     className="btn btn-primary btn-create"
                     onClick={() => setIsCreateModalOpen(true)}
                 >
-                    + Create New User
+                    + {admin('createUser')}
                 </button>
-            </div>            <div className="users-grid">
+            </div><div className="users-grid">
                 {loading ? (
                     <div className="loading-container">
                         <div className="loading-spinner">⟳</div>

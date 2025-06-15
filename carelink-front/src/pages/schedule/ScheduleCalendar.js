@@ -4,6 +4,7 @@ import QuickSchedule from './QuickSchedule';
 import EditAppointment from './EditAppointment';
 import RecurringSchedule from './features/RecurringSchedule';
 import { useLoading } from '../../hooks/useLoading';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 import { 
   PageLoadingOverlay, 
   ComponentLoadingOverlay,
@@ -12,7 +13,11 @@ import {
   SpinnerOnly
 } from '../../components/LoadingComponents';
 
-const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useState([]);
+const ScheduleCalendar = () => {
+  // Translation hooks
+  const { schedule, common, errors: errorsT } = useCareTranslation();
+  
+  const [calendarData, setCalendarData] = useState([]);
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState('');
   const [selectedStatus, setSelectedStatus] = useState(''); // Add status filter
@@ -461,19 +466,17 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
       weekDays.push(date);
-    }
-
-    return (
+    }    return (
       <div className="week-view">
         <div className="week-header">
-          <div className="time-column-header">Time</div>
+          <div className="time-column-header">{schedule('time')}</div>
           {weekDays.map(date => (
             <div key={date.toISOString()} className="day-header">
               <div className="day-name">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
               <div className="day-number">{date.getDate()}</div>
             </div>
           ))}
-        </div>        <div className="week-grid">
+        </div><div className="week-grid">
           {timeSlots.map(time => (
             <div key={time} className="time-row">              <div className="time-label">{formatTime(time + ':00')}</div>
               {weekDays.map(date => {
@@ -585,9 +588,8 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
                           {timeslots.length === 1 && <div className="drag-handle">⋮⋮</div>}
                         </div>
                       ))}
-                    </div>
-                  ) : (
-                    <div className="slot-placeholder">Click to schedule</div>
+                    </div>                  ) : (
+                    <div className="slot-placeholder">{schedule('clickToSchedule')}</div>
                   )}
                 </div>
               </div>
@@ -746,11 +748,10 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
     );
 
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="enhanced-recap-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-overlay" onClick={onClose}>        <div className="enhanced-recap-modal" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
             <div className="header-content">
-              <h2>📊 Schedule Analytics Dashboard</h2>
+              <h2>📊 {schedule('scheduleAnalyticsDashboard')}</h2>
               <p className="period-info">{getViewTitle()}</p>
             </div>
             <div className="header-actions">
@@ -759,110 +760,106 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
                   className="export-btn "
                   onClick={() => setShowExportOptions(!showExportOptions)}
                 >
-                  📥 Export
+                  📥 {schedule('export')}
                 </button>
                 {showExportOptions && (
                   <div className="export-menu bg-white shadow-lg">
-                    <button onClick={() => exportData('csv')}>📄 Export as CSV</button>
+                    <button onClick={() => exportData('csv')}>📄 {schedule('exportAsCSV')}</button>
                   </div>
                 )}
               </div>
               <button className="close-btn" onClick={onClose}>×</button>
             </div>
-          </div>
-
-          <div className="recap-tabs">
+          </div>          <div className="recap-tabs">
             <button 
               className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
-              📈 Overview
+              📈 {schedule('overview')}
             </button>
             <button 
               className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
               onClick={() => setActiveTab('analytics')}
             >
-              🔍 Analytics
+              🔍 {schedule('analytics')}
             </button>
             <button 
               className={`tab-btn ${activeTab === 'byDay' ? 'active' : ''}`}
               onClick={() => setActiveTab('byDay')}
             >
-              📅 By Day
+              📅 {schedule('byDay')}
             </button>
             <button 
               className={`tab-btn ${activeTab === 'byProvider' ? 'active' : ''}`}
               onClick={() => setActiveTab('byProvider')}
             >
-              👩‍⚕️ By Provider
+              👩‍⚕️ {schedule('byProvider')}
             </button>
             <button 
               className={`tab-btn ${activeTab === 'byPatient' ? 'active' : ''}`}
               onClick={() => setActiveTab('byPatient')}
             >
-              👤 By Patient
+              👤 {schedule('byPatient')}
             </button>
           </div>
 
           <div className="recap-content">
             {activeTab === 'overview' && (
-              <div className="overview-tab">
-                <div className="stats-grid">
+              <div className="overview-tab">                <div className="stats-grid">
                   <div className="stat-card primary">
                     <div className="stat-icon">📅</div>
                     <div className="stat-content">
                       <h3>{recapData.totals.totalAppointments}</h3>
-                      <p>Total Appointments</p>
-                      <span className="stat-trend">↗️ Active</span>
+                      <p>{schedule('totalAppointments')}</p>
+                      <span className="stat-trend">↗️ {schedule('active')}</span>
                     </div>
                   </div>
                   <div className="stat-card secondary">
                     <div className="stat-icon">⏰</div>
                     <div className="stat-content">
                       <h3>{recapData.totals.totalTimeslots}</h3>
-                      <p>Total Timeslots</p>
-                      <span className="stat-trend">📊 {analytics.avgTimeslotsPerAppointment} avg/appointment</span>
+                      <p>{schedule('totalTimeslots')}</p>
+                      <span className="stat-trend">📊 {analytics.avgTimeslotsPerAppointment} {schedule('avgPerAppointment')}</span>
                     </div>
                   </div>
                   <div className="stat-card success">
                     <div className="stat-icon">👩‍⚕️</div>
                     <div className="stat-content">
                       <h3>{recapData.totals.totalProviders}</h3>
-                      <p>Active Providers</p>
-                      <span className="stat-trend">👥 {analytics.avgPatientsPerProvider} patients/provider</span>
+                      <p>{schedule('activeProviders')}</p>
+                      <span className="stat-trend">👥 {analytics.avgPatientsPerProvider} {schedule('patientsPerProvider')}</span>
                     </div>
                   </div>
                   <div className="stat-card warning">
                     <div className="stat-icon">👤</div>
                     <div className="stat-content">
                       <h3>{recapData.totals.totalPatients}</h3>
-                      <p>Total Patients</p>
-                      <span className="stat-trend">📈 {analytics.avgAppointmentsPerDay} appointments/day</span>
+                      <p>{schedule('totalPatients')}</p>
+                      <span className="stat-trend">📈 {analytics.avgAppointmentsPerDay} {schedule('appointmentsPerDay')}</span>
                     </div>
                   </div>
                 </div>
-                
-                <div className="quick-insights">
-                  <h3>🚀 Quick Insights</h3>
+                  <div className="quick-insights">
+                  <h3>🚀 {schedule('quickInsights')}</h3>
                   <div className="insights-grid">
                     <div className="insight-card">
                       <div className="insight-header">
                         <span className="insight-icon">📈</span>
-                        <span className="insight-title">Busiest Day</span>
+                        <span className="insight-title">{schedule('busiestDay')}</span>
                       </div>
                       <div className="insight-content">
-                        <strong>{analytics.busiesDay.date ? formatShortDate(analytics.busiesDay.date) : 'N/A'}</strong>
-                        <p>{analytics.busiesDay.count || 0} appointments</p>
+                        <strong>{analytics.busiesDay.date ? formatShortDate(analytics.busiesDay.date) : schedule('notAvailable')}</strong>
+                        <p>{analytics.busiesDay.count || 0} {schedule('appointments')}</p>
                       </div>
                     </div>
                     <div className="insight-card">
                       <div className="insight-header">
                         <span className="insight-icon">⭐</span>
-                        <span className="insight-title">Top Provider</span>
+                        <span className="insight-title">{schedule('topProvider')}</span>
                       </div>
                       <div className="insight-content">
-                        <strong>{analytics.mostActiveProvider.name || 'N/A'}</strong>
-                        <p>{analytics.mostActiveProvider.count || 0} appointments</p>
+                        <strong>{analytics.mostActiveProvider.name || schedule('notAvailable')}</strong>
+                        <p>{analytics.mostActiveProvider.count || 0} {schedule('appointments')}</p>
                       </div>
                     </div>
                     <div className="insight-card">
@@ -918,10 +915,9 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
                   <div key={date} className="enhanced-day-summary">
                     <div className="day-header">
                       <div className="day-info">
-                        <h3>{formatDate(date)}</h3>
-                        <div className="day-stats">
-                          <span className="stat-badge appointments">📅 {dayData.appointments.length} appointments</span>
-                          <span className="stat-badge timeslots">⏰ {dayData.timeslotCount} timeslots</span>
+                        <h3>{formatDate(date)}</h3>                        <div className="day-stats">
+                          <span className="stat-badge appointments">📅 {dayData.appointments.length} {schedule('appointments')}</span>
+                          <span className="stat-badge timeslots">⏰ {dayData.timeslotCount} {schedule('timeslots')}</span>
                         </div>
                       </div>
                       <div className="day-progress">
@@ -962,14 +958,13 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
                   <div key={providerName} className="enhanced-provider-summary">
                     <div className="provider-header">
                       <div className="provider-info">
-                        <h3>👩‍⚕️ {providerName}</h3>
-                        <div className="provider-stats">
-                          <span className="stat-badge appointments">📅 {providerData.appointments.length} appointments</span>
-                          <span className="stat-badge patients">👥 {providerData.patients.length} patients</span>
-                          <span className="stat-badge timeslots">⏰ {providerData.timeslotCount} timeslots</span>
+                        <h3>👩‍⚕️ {providerName}</h3>                        <div className="provider-stats">
+                          <span className="stat-badge appointments">📅 {providerData.appointments.length} {schedule('appointments')}</span>
+                          <span className="stat-badge patients">👥 {providerData.patients.length} {schedule('patients')}</span>
+                          <span className="stat-badge timeslots">⏰ {providerData.timeslotCount} {schedule('timeslots')}</span>
                         </div>
                         <div className="patients-list">
-                          <strong>Patients:</strong> {providerData.patients.join(', ')}
+                          <strong>{schedule('patients')}:</strong> {providerData.patients.join(', ')}
                         </div>
                       </div>
                     </div>
@@ -1002,14 +997,13 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
                   <div key={patientName} className="enhanced-patient-summary">
                     <div className="patient-header">
                       <div className="patient-info">
-                        <h3>👤 {patientName}</h3>
-                        <div className="patient-stats">
-                          <span className="stat-badge appointments">📅 {patientData.appointments.length} appointments</span>
-                          <span className="stat-badge providers">👩‍⚕️ {patientData.providers.length} providers</span>
-                          <span className="stat-badge timeslots">⏰ {patientData.timeslotCount} timeslots</span>
+                        <h3>👤 {patientName}</h3>                        <div className="patient-stats">
+                          <span className="stat-badge appointments">📅 {patientData.appointments.length} {schedule('appointments')}</span>
+                          <span className="stat-badge providers">👩‍⚕️ {patientData.providers.length} {schedule('providers')}</span>
+                          <span className="stat-badge timeslots">⏰ {patientData.timeslotCount} {schedule('timeslots')}</span>
                         </div>
                         <div className="providers-list">
-                          <strong>Providers:</strong> {patientData.providers.join(', ')}
+                          <strong>{schedule('providers')}:</strong> {patientData.providers.join(', ')}
                         </div>
                       </div>
                     </div>
@@ -1065,32 +1059,30 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
           <SpinnerOnly size="large" />
         </div>
       )}
-      
-      <div className="calendar-header">
+        <div className="calendar-header">
         <div className="calendar-title">
-          <h1>Schedule Calendar</h1>
-          <p>Coordinator Dashboard</p>
+          <h1>{schedule('scheduleCalendar')}</h1>
+          <p>{schedule('coordinatorDashboard')}</p>
         </div>
         
-        <div className="calendar-controls">
-          <div className="view-controls">
+        <div className="calendar-controls">          <div className="view-controls">
             <button
               className={viewType === 'day' ? 'active' : ''}
               onClick={() => setViewType('day')}
             >
-              Day
+              {schedule('viewTypes.day')}
             </button>
             <button
               className={viewType === 'week' ? 'active' : ''}
               onClick={() => setViewType('week')}
             >
-              Week
+              {schedule('viewTypes.week')}
             </button>
             <button
               className={viewType === 'month' ? 'active' : ''}
               onClick={() => setViewType('month')}
             >
-              Month
+              {schedule('viewTypes.month')}
             </button>
           </div>
 
@@ -1102,7 +1094,7 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
             className="quick-schedule-btn"
             onClick={() => setShowQuickSchedule(true)}
           >
-            + Quick Schedule
+            + {schedule('quickSchedule')}
           </button>
             <button 
             className="recurring-schedule-btn"
@@ -1120,27 +1112,25 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
               marginLeft: '8px'
             }}
           >
-            🔄 Recurring Schedule
+            🔄 {schedule('recurringSchedule')}
           </button>
           
           <button 
             className="recap-btn"
             onClick={() => setShowRecapModal(true)}
           >
-            📊 View Summary
+            📊 {schedule('viewSummary')}
           </button>
         </div>
-      </div>
-
-      <div className="calendar-filters">
+      </div>      <div className="calendar-filters">
         <div className="provider-filter">
-          <label htmlFor="provider-select">Filter by Provider:</label>
+          <label htmlFor="provider-select">{schedule('filterByProvider')}:</label>
           <select
             id="provider-select"
             value={selectedProvider}
             onChange={(e) => setSelectedProvider(e.target.value)}
           >
-            <option value="">All Providers</option>
+            <option value="">{schedule('allProviders')}</option>
             {providers.map(provider => (
               <option key={provider.id} value={provider.id}>
                 {provider.name} - {provider.service}
@@ -1150,39 +1140,37 @@ const ScheduleCalendar = () => {  const [calendarData, setCalendarData] = useSta
         </div>
 
         <div className="status-filter">
-          <label htmlFor="status-select">Filter by Status:</label>
+          <label htmlFor="status-select">{schedule('filterByStatus')}:</label>
           <select
             id="status-select"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
           >
-            <option value="">All Statuses</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="no_show">No Show</option>
+            <option value="">{schedule('allStatuses')}</option>
+            <option value="scheduled">{schedule('scheduled')}</option>
+            <option value="confirmed">{schedule('confirmed')}</option>
+            <option value="in_progress">{schedule('inProgress')}</option>
+            <option value="completed">{schedule('completed')}</option>
+            <option value="cancelled">{schedule('cancelled')}</option>
+            <option value="no_show">{schedule('noShow')}</option>
           </select>        </div>
-      </div>
-
-      {stats && Object.keys(stats).length > 0 && (
+      </div>      {stats && Object.keys(stats).length > 0 && (
         <div className="calendar-stats">
           <div className="stat-card">
             <h3>{stats.total_schedules}</h3>
-            <p>Total Schedules</p>
+            <p>{schedule('totalSchedules')}</p>
           </div>
           <div className="stat-card">
             <h3>{stats.total_timeslots}</h3>
-            <p>Time Slots</p>
+            <p>{schedule('timeSlots')}</p>
           </div>
           <div className="stat-card">
             <h3>{stats.pending_demands}</h3>
-            <p>Pending Demands</p>
+            <p>{schedule('pendingDemands')}</p>
           </div>
           <div className="stat-card">
             <h3>{stats.utilization_rate}%</h3>
-            <p>Utilization Rate</p>
+            <p>{schedule('utilizationRate')}</p>
           </div>
         </div>      )}
 
