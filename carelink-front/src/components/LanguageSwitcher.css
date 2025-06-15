@@ -358,11 +358,97 @@
   .language-btn {
     border-width: 2px;
     border-color: #000;
+    background: #ffffff;
+    color: #000000;
+    font-weight: 700;
+  }
+  
+  .language-btn:hover {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
   }
   
   .language-dropdown {
     border-width: 2px;
     border-color: #000;
+    background: #ffffff;
+  }
+  
+  .language-option {
+    color: #000000;
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: 600;
+  }
+  
+  .language-option:hover {
+    background: #000000;
+    color: #ffffff;
+  }
+  
+  .language-option.active {
+    background: #000000;
+    color: #ffffff;
+    font-weight: 700;
+  }
+}
+
+/* Enhanced accessibility colors for language switcher */
+@media (prefers-color-scheme: dark) and (prefers-contrast: high) {
+  .language-btn {
+    background: #000000;
+    border-color: #ffffff;
+    color: #ffffff;
+    border-width: 2px;
+  }
+  
+  .language-btn:hover {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+  }
+  
+  .language-dropdown {
+    background: #000000;
+    border-color: #ffffff;
+    border-width: 2px;
+  }
+  
+  .language-option {
+    color: #ffffff;
+    border-bottom: 1px solid #666666;
+  }
+  
+  .language-option:hover {
+    background: #ffffff;
+    color: #000000;
+  }
+}
+
+/* Alternative high contrast theme */
+@media (prefers-contrast: high) {
+  .language-switcher-dropdown.high-contrast {
+    --contrast-bg: #ffff00;
+    --contrast-text: #000000;
+    --contrast-border: #000000;
+    --contrast-hover-bg: #000000;
+    --contrast-hover-text: #ffff00;
+  }
+  
+  .language-switcher-dropdown.high-contrast .language-btn {
+    background: var(--contrast-bg);
+    color: var(--contrast-text);
+    border-color: var(--contrast-border);
+    border-width: 3px;
+    font-weight: 900;
+    box-shadow: 0 0 0 2px var(--contrast-border);
+  }
+  
+  .language-switcher-dropdown.high-contrast .language-btn:hover {
+    background: var(--contrast-hover-bg);
+    color: var(--contrast-hover-text);
+    border-color: var(--contrast-hover-text);
+    box-shadow: 0 0 0 2px var(--contrast-hover-text);
   }
 }
 
