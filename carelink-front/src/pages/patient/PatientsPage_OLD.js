@@ -187,9 +187,7 @@ const PatientsPage = () => {
             console.error('[DEBUG] Error updating patient:', err);
             alert('Failed to save changes. Please try again.');
         }
-    };
-
-    const fetchMedicalFolder = async (patientId) => {
+    };    const fetchMedicalFolder = async (patientId) => {
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
@@ -212,6 +210,12 @@ const PatientsPage = () => {
             });
 
             if (!response.ok) {
+                if (response.status === 404) {
+                    // Patient has no medical folder yet, set empty array
+                    console.log('[DEBUG] Patient has no medical folder yet (404), setting empty array');
+                    setMedicalFolder([]);
+                    return;
+                }
                 console.error('[DEBUG] Failed response:', response);
                 throw new Error('Failed to fetch medical folder.');
             }
@@ -221,7 +225,10 @@ const PatientsPage = () => {
             setMedicalFolder(data);
         } catch (err) {
             console.error('[DEBUG] Error fetching medical folder:', err);
-            alert('Failed to fetch medical folder.');
+            if (!err.message.includes('404')) {
+                alert('Failed to fetch medical folder.');
+            }
+            setMedicalFolder([]);
         }
     };
 
@@ -261,16 +268,13 @@ const PatientsPage = () => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    };
-
-    const handleAddMedicalFolderEntry = async (newEntry) => {
+    };    const handleAddMedicalFolderEntry = async (newEntry) => {
         try {
-            if (!selectedPatient || medicalFolder.length === 0) {
-                throw new Error('No patient or medical folder selected. Please select a patient and ensure the medical folder is loaded.');
+            if (!selectedPatient) {
+                throw new Error('No patient selected. Please select a patient.');
             }
 
-            const folderId = medicalFolder[0].id; // Assuming the first folder entry contains the folder ID
-            console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, folderId, newEntry, selectedService });
+            console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, newEntry, selectedService });
 
             const token = localStorage.getItem('accessToken');
             if (!token) {
@@ -279,13 +283,14 @@ const PatientsPage = () => {
 
             const requestBody = { 
                 note: newEntry, 
-                folder_id: folderId,
-                service_id: selectedService // Include the service ID
+                service_id: selectedService,
+                patient_id: selectedPatient.id // Explicitly include patient ID
             };
             console.log('[DEBUG] Request body:', requestBody);
             console.log('[DEBUG] About to send POST request with body:', JSON.stringify(requestBody, null, 2));
 
-            const response = await fetch(`http://localhost:8000/account/medical_folder/${selectedPatient.id}/`, {
+            // Use the modern /add/ endpoint that doesn't require folder_id
+            const response = await fetch(`http://localhost:8000/account/medical-folder/${selectedPatient.id}/add/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -298,7 +303,7 @@ const PatientsPage = () => {
                 throw new Error('Failed to add new entry to medical folder.');
             }
 
-            console.log('[DEBUG] Added new entry to medical folder:', { folderId, newEntry, selectedService });
+            console.log('[DEBUG] Added new entry to medical folder:', { newEntry, selectedService });
             fetchMedicalFolder(selectedPatient.id); // Refresh the medical folder entries
 
             // Clear the form fields

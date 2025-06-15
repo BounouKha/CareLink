@@ -142,8 +142,7 @@ class FetchProfileView(APIView):
             return Response({"error": "Profile not found."}, status=404)
 
 class EditProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-
+    
     def put(self, request, profile_id, role):
         role_tables = {
             "Patient": Patient,
@@ -175,45 +174,40 @@ class EditProfileView(APIView):
                     if original_value != value:
                         changes_made.append(field)
                         original_values[field] = str(original_value) if original_value is not None else None
-                    
-                    setattr(profile, field, value)
-            
-            profile.save()
-            
-            # Enhanced logging with detailed change tracking
+                        setattr(profile, field, value)
+
+            # Save the profile if changes were made
             if changes_made:
-                profile_name = f"{profile.user.firstname} {profile.user.lastname}" if profile.user else f"{role} Profile"
-                description = f"Updated {role.lower()} profile for {profile_name}. Modified fields: {', '.join(changes_made)}"
+                profile.save()
                 
-                additional_data = {
-                    'fields_changed': changes_made,
-                    'original_values': original_values,
-                    'new_values': {field: str(request.data.get(field)) for field in changes_made},
-                    'total_changes': len(changes_made)
-                }
-                
+                # Log the profile edit action
+                from account.views.create_profile import log_profile_action
                 log_profile_action(
                     user=request.user,
                     action_type="EDIT_PROFILE",
+                    target_model=model._meta.model_name,
+                    target_id=profile.id,
                     profile=profile,
-                    role=role,
-                    description=description,
-                    additional_data=additional_data
+                    target_user=profile.user if hasattr(profile, 'user') else None,
+                    description=f"Updated {role.lower()} profile fields: {', '.join(changes_made)}",
+                    additional_data={
+                        "fields_changed": changes_made,
+                        "original_values": original_values,
+                        "new_values": {field: str(getattr(profile, field)) for field in changes_made}
+                    }
                 )
+                
+                return Response({
+                    "message": "Profile updated successfully.",
+                    "changes_made": changes_made
+                }, status=200)
             else:
-                # Log even if no changes were made
-                profile_name = f"{profile.user.firstname} {profile.user.lastname}" if profile.user else f"{role} Profile"
-                description = f"Attempted to update {role.lower()} profile for {profile_name} but no changes were detected"
-                
-                log_profile_action(
-                    user=request.user,
-                    action_type="EDIT_PROFILE",
-                    profile=profile,
-                    role=role,
-                    description=description,
-                    additional_data={'changes_detected': False}
-                )
-            
-            return Response({"message": "Profile updated successfully."}, status=200)
+                return Response({
+                    "message": "No changes detected.",
+                    "changes_made": []
+                }, status=200)
+
         except model.DoesNotExist:
-            return Response({"error": "Profile not found."}, status=404)
+            return Response({"error": f"{role} profile not found."}, status=404)
+        except Exception as e:
+            return Response({"error": f"Failed to update profile: {str(e)}"}, status=500)

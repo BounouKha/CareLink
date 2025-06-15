@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../../auth/layout/BaseLayout';
-import AddEntryForm from '../../components/AddEntryForm';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
 import { useCareTranslation } from '../../hooks/useTranslation';
@@ -15,13 +14,6 @@ const PatientsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [medicalFolder, setMedicalFolder] = useState([]);
     const [showMedicalFolderModal, setShowMedicalFolderModal] = useState(false);
-    const [newNote, setNewNote] = useState('');
-    const [newEntry, setNewEntry] = useState('');
-    const [showAddEntryModal, setShowAddEntryModal] = useState(false);
-    const [services, setServices] = useState([]);
-    const [selectedService, setSelectedService] = useState('');
-    const [isLoadingServices, setIsLoadingServices] = useState(false);
-    const [servicesLoaded, setServicesLoaded] = useState(false);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('newest'); // New state for sorting
 
@@ -167,8 +159,13 @@ const PatientsPage = () => {
             console.error('[DEBUG] Error fetching medical folder:', err);
             if (err.message.includes('401') || err.message.includes('Unauthorized')) {
                 tokenManager.handleLogout();
+            } else if (err.message.includes('404')) {
+                // Handle 404 - patient has no medical folder yet, set empty array
+                console.log('[DEBUG] Patient has no medical folder yet (404), setting empty array');
+                setMedicalFolder([]);
             } else {
                 alert('Failed to fetch medical folder.');
+                setMedicalFolder([]);
             }
         }
     };
@@ -208,74 +205,7 @@ const PatientsPage = () => {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        });
-    };    const handleAddMedicalFolderEntry = async (newEntry) => {
-        try {
-            if (!selectedPatient || medicalFolder.length === 0) {
-                throw new Error('No patient or medical folder selected. Please select a patient and ensure the medical folder is loaded.');
-            }
-
-            if (!tokenManager.isAuthenticated()) {
-                throw new Error('User not authenticated. Please log in.');
-            }
-
-            const folderId = medicalFolder[0].id; // Assuming the first folder entry contains the folder ID
-            console.log('[DEBUG] Add Entry button clicked:', { patientId: selectedPatient.id, folderId, newEntry, selectedService });
-
-            const requestBody = { 
-                note: newEntry, 
-                folder_id: folderId,
-                service_id: selectedService // Include the service ID
-            };
-            console.log('[DEBUG] Request body:', requestBody);
-            console.log('[DEBUG] About to send POST request with body:', JSON.stringify(requestBody, null, 2));
-
-            await post(`http://localhost:8000/account/medical_folder/${selectedPatient.id}/`, requestBody);
-
-            console.log('[DEBUG] Added new entry to medical folder:', { folderId, newEntry, selectedService });
-            fetchMedicalFolder(selectedPatient.id); // Refresh the medical folder entries
-
-            // Clear the form fields
-            setNewNote('');
-            setSelectedService('');
-
-            // Display success message
-            alert('Successful');
-        } catch (err) {
-            console.error('[DEBUG] Error adding new entry to medical folder:', err);
-            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-                tokenManager.handleLogout();
-            } else {
-                alert(err.message);
-            }
-        }
-    };    const handleAddEntry = async (patient) => {
-        console.log('[DEBUG] handleAddEntry called with patient:', patient);
-        console.log('[DEBUG] Services available when opening modal:', services);
-        setShowAddEntryModal(true);
-        console.log('[DEBUG] setShowAddEntryModal(true) called');
-        setSelectedPatient(patient); // Ensure the full patient object is set
-        setNewNote('');
-        setSelectedService('');
-
-        console.log('[DEBUG] Patient passed to handleAddEntry:', patient); // Debug log
-
-        try {
-            if (!tokenManager.isAuthenticated()) {
-                throw new Error('User not authenticated. Please log in.');
-            }
-
-            const data = await get(`http://localhost:8000/account/medical_folder/${patient.id}/`);
-            setMedicalFolder(data);
-        } catch (err) {
-            console.error('[DEBUG] Error fetching medical folder:', err);
-            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-                tokenManager.handleLogout();
-            } else {
-                alert('Failed to fetch medical folder.');
-            }
-        }
-    };
+        });    };
 
     const filteredPatients = patients.filter(patient =>
         `${patient.firstname} ${patient.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -406,17 +336,6 @@ const PatientsPage = () => {
                                                     <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
                                                 Medical Records
-                                            </button>
-
-                                            <button 
-                                                className="btn-sm btn-success" 
-                                                onClick={() => handleAddEntry(patient)}
-                                                title="Add new medical entry"
-                                            >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                </svg>
-                                                Add Entry
                                             </button>
                                         </div>
                                     </div>
@@ -629,64 +548,7 @@ const PatientsPage = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Add Entry Modal */}
-            {showAddEntryModal && services.length > 0 && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <AddEntryForm
-                            newNote={newNote}
-                            setNewNote={setNewNote}
-                            selectedService={selectedService}
-                            setSelectedService={setSelectedService}
-                            services={services}
-                            onSubmit={() => {
-                                console.log('[DEBUG] Submit clicked - selectedService:', selectedService);
-                                console.log('[DEBUG] Submit clicked - selectedService type:', typeof selectedService);
-                                console.log('[DEBUG] Submit clicked - newNote:', newNote);
-                                console.log('[DEBUG] Submit clicked - services array:', services);
-                                
-                                // Find the selected service object
-                                const selectedServiceObj = services.find(service => service.id == selectedService);
-                                console.log('[DEBUG] Selected service object:', selectedServiceObj);
-                                
-                                if (!selectedService) {
-                                    alert('Please select a service before submitting.');
-                                    return;
-                                }
-                                handleAddMedicalFolderEntry(newNote);
-                                setShowAddEntryModal(false); // Close modal after successful submission
-                            }}
-                            onCancel={() => setShowAddEntryModal(false)}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Add Entry Modal - Loading State */}
-            {showAddEntryModal && services.length === 0 && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <div className="modal-header">
-                            <h2>Add Entry</h2>
-                            <button 
-                                className="close" 
-                                onClick={() => setShowAddEntryModal(false)}
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <p>Loading services...</p>
-                            <div className="modal-actions">
-                                <button className="cancel-btn" onClick={() => setShowAddEntryModal(false)}>Cancel</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                </div>            )}
         </>
     );
 };
