@@ -64,7 +64,7 @@ const CreatePatientModal = ({ userId, onClose, onProfileCreated }) => {
                         <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
                     <div className="modal-body">
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit} id="patientForm">
                             <div className="card border-0 shadow-sm mb-4">
                                 <div className="card-header bg-success bg-opacity-10 border-0">
                                     <h5 className="card-title mb-0">
