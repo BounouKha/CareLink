@@ -4,6 +4,8 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import LeftToolbar from './LeftToolbar';
 import { AdminContext } from '../login/AdminContext';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 import tokenManager from '../../utils/tokenManager'; // Import the new token manager
 
 const BaseLayout = ({ children }) => {
@@ -19,6 +21,7 @@ const BaseLayout = ({ children }) => {
     });
 
     const { isSuperUser } = useContext(AdminContext);
+    const { common, auth, admin } = useCareTranslation();
 
     // Listen for toolbar visibility changes
     useEffect(() => {
@@ -191,28 +194,27 @@ const BaseLayout = ({ children }) => {
                     {isMenuOpen && (
                         <button className="btn btn-secondary close-menu" onClick={closeMenu}>
                             <i className="bi bi-x"></i>
-                        </button>
-                    )}                    <button className="btn btn-primary" onClick={() => navigateWithLoading('/')}>Home</button>
+                        </button>                    )}                    <button className="btn btn-primary" onClick={() => navigateWithLoading('/')}>{common('home')}</button>
                     {!isConnected && (
-                        <button className="btn btn-primary" onClick={() => navigateWithLoading('/register')}>Register</button>
+                        <button className="btn btn-primary" onClick={() => navigateWithLoading('/register')}>{auth('register')}</button>
                     )}
                     {isConnected && (
-                        <button className="btn btn-primary" onClick={handleLogout}>Logout</button>
-                    )}                    <button className="btn btn-primary" onClick={() => {
+                        <button className="btn btn-primary" onClick={handleLogout}>{auth('logout')}</button>                    )}
+                    <button className="btn btn-primary" onClick={() => {
                         if (tokenManager.isAuthenticated()) {
                             navigateWithLoading('/profile');
                         } else {
                             navigateWithLoading('/login');
-                        }
-                    }}>Member Area</button>
+                        }                    }}>Member Area</button>
                     {isSuperuser && (
-                        <button className="btn btn-secondary" onClick={() => navigateWithLoading('/admin')}>Admin</button>
-                    )}
-                    <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
+                        <button className="btn btn-secondary" onClick={() => navigateWithLoading('/admin')}>{admin('title')}</button>
+                    )}                    <button className="btn btn-secondary" onClick={increaseZoom}>[+]</button>
                     <button className="btn btn-secondary" onClick={decreaseZoom}>[-]</button>
+                    
+                    {/* Language Switcher in header */}
+                    <LanguageSwitcher />
                 </div>
-            </header>
-            {isMemberArea && <LeftToolbar userData={userData} />}
+            </header>            {isMemberArea && <LeftToolbar userData={userData} />}
             <main className="homepage-main">
                 {children}
             </main>

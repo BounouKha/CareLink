@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import ServiceDemandMoreInfo from './ServiceDemandMoreInfo';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 
 const ServiceDemandPage = () => {
     const [demands, setDemands] = useState([]);
@@ -19,7 +20,8 @@ const ServiceDemandPage = () => {
     const [error, setError] = useState('');
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedDemand, setSelectedDemand] = useState(null);
-    const [newComment, setNewComment] = useState('');
+    const [newComment, setNewComment] = useState('');    // Use translation hooks
+    const { servicedemands, common, placeholders, errors, success, confirmations } = useCareTranslation();
 
     const [newDemand, setNewDemand] = useState({
         service: '',
@@ -412,28 +414,27 @@ const ServiceDemandPage = () => {
         </BaseLayout>
         );
     }    return (
-        <BaseLayout>
-            <div className="service-demand-page">
+        <BaseLayout>            <div className="service-demand-page">
                 {/* Fixed Header */}
                 <div className="page-header">
-                    <h1>Service Demands</h1>                    <button 
+                    <h1>{servicedemands('title')}</h1>
+                    <button 
                         className="btn btn-primary"
                         style={{ backgroundColor: '#22C7EE', borderColor: '#22C7EE' }}
                         onClick={() => setShowCreateForm(true)}
                     >
-                        <i className="bi bi-plus-circle me-1"></i> Request New Service
+                        <i className="bi bi-plus-circle me-1"></i> {servicedemands('requestNewService')}
                     </button>
                 </div>
                 
                 {/* Scrollable Content */}
                 <div className="service-demand-container">
                     {error && <div className="error-message">{error}</div>}                    {/* Stats Dashboard (for coordinators/admin) */}
-                    {stats && (
-                        <div className="stats-dashboard row row-cols-1 row-cols-md-4 g-3 mb-4 bg-light p-3 rounded-3 shadow-sm">
+                    {stats && (                        <div className="stats-dashboard row row-cols-1 row-cols-md-4 g-3 mb-4 bg-light p-3 rounded-3 shadow-sm">
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
                                     <div className="card-body bg-white">
-                                        <h5 className="card-title">Total Demands</h5>
+                                        <h5 className="card-title">{servicedemands('totalDemands')}</h5>
                                         <p className="card-text fs-1 fw-bold">{stats.total}</p>
                                     </div>
                                 </div>
@@ -441,7 +442,7 @@ const ServiceDemandPage = () => {
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
                                     <div className="card-body bg-white">
-                                        <h5 className="card-title">Pending</h5>
+                                        <h5 className="card-title">{servicedemands('pending')}</h5>
                                         <p className="card-text fs-1 fw-bold text-warning">{stats.pending}</p>
                                     </div>
                                 </div>
@@ -449,7 +450,7 @@ const ServiceDemandPage = () => {
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
                                     <div className="card-body bg-white">
-                                        <h5 className="card-title">In Progress</h5>
+                                        <h5 className="card-title">{servicedemands('inProgress')}</h5>
                                         <p className="card-text fs-1 fw-bold text-primary">{stats.in_progress}</p>
                                     </div>
                                 </div>
@@ -457,18 +458,17 @@ const ServiceDemandPage = () => {
                             <div className="col">
                                 <div className="card text-center h-100 border-0 shadow-sm">
                                     <div className="card-body bg-white">
-                                        <h5 className="card-title">Urgent</h5>
+                                        <h5 className="card-title">{servicedemands('urgent')}</h5>
                                         <p className="card-text fs-1 fw-bold text-danger">{stats.urgent}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    )}                    {/* Filters */}
-                    <div className="filters d-flex gap-2 mb-3 bg-light p-3 rounded-3 shadow-sm bg-">
+                    )}                    {/* Filters */}                    <div className="filters d-flex gap-2 mb-3 bg-light p-3 rounded-3 shadow-sm bg-">
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="🔍 Search all fields"
+                            placeholder={placeholders('searchAll')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{ maxWidth: '300px', borderColor: '#22C7EE', borderRadius: '12px' }}
@@ -480,14 +480,14 @@ const ServiceDemandPage = () => {
                             className="form-select"
                             style={{ maxWidth: '200px', borderColor: '#22C7EE', borderRadius: '12px' }}
                         >
-                            <option value="">All Statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Under Review">Under Review</option>
-                            <option value="Approved">Approved</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Cancelled">Cancelled</option>
+                            <option value="">{servicedemands('allStatuses')}</option>
+                            <option value="Pending">{servicedemands('statusOptions.pending')}</option>
+                            <option value="Under Review">{servicedemands('statusOptions.underReview')}</option>
+                            <option value="Approved">{servicedemands('statusOptions.approved')}</option>
+                            <option value="In Progress">{servicedemands('statusOptions.inProgress')}</option>
+                            <option value="Completed">{servicedemands('statusOptions.completed')}</option>
+                            <option value="Rejected">{servicedemands('statusOptions.rejected')}</option>
+                            <option value="Cancelled">{servicedemands('statusOptions.cancelled')}</option>
                         </select>
 
                         <select 
@@ -496,23 +496,22 @@ const ServiceDemandPage = () => {
                             className="form-select"
                             style={{ maxWidth: '200px', borderColor: '#22C7EE', borderRadius: '12px' }}
                         >
-                            <option value="">All Priorities</option>
-                            <option value="Low">Low</option>
-                            <option value="Normal">Normal</option>
-                            <option value="High">High</option>
-                            <option value="Urgent">Urgent</option>
+                            <option value="">{servicedemands('allPriorities')}</option>
+                            <option value="Low">{servicedemands('priorityOptions.low')}</option>
+                            <option value="Normal">{servicedemands('priorityOptions.normal')}</option>
+                            <option value="High">{servicedemands('priorityOptions.high')}</option>
+                            <option value="Urgent">{servicedemands('priorityOptions.urgent')}</option>
                         </select>
                     </div>{/* Service Demands List */}
-                    <div className="demands-list">
-                        {demands.length === 0 ? (
+                    <div className="demands-list">                        {demands.length === 0 ? (
                             <div className="text-center p-5 bg-light rounded-3 my-4">
-                                <p className="fs-5 mb-3">No service demands found.</p>
+                                <p className="fs-5 mb-3">{servicedemands('noServiceDemands')}</p>
                                 <button 
                                     className="btn btn-primary"
                                     style={{ backgroundColor: '#22C7EE', borderColor: '#22C7EE' }}
                                     onClick={() => setShowCreateForm(true)}
                                 >
-                                    <i className="bi bi-plus-circle me-1"></i> Create Your First Service Request
+                                    <i className="bi bi-plus-circle me-1"></i> {servicedemands('createFirstServiceRequest')}
                                 </button>
                             </div>
                         ) : (
@@ -534,21 +533,20 @@ const ServiceDemandPage = () => {
                                         </div>
                                     </div>
                                     <div className="card-body pt-2 bg-white">
-                                        <div className="row mb-2">
-                                            <div className="col-md-6">
-                                                <p className="mb-1"><strong>Service:</strong> {demand.service_info?.name || 'N/A'}</p>
+                                        <div className="row mb-2">                                            <div className="col-md-6">
+                                                <p className="mb-1"><strong>{servicedemands('service')}:</strong> {demand.service_info?.name || 'N/A'}</p>
                                                 {demand.patient_info && (
-                                                    <p className="mb-1"><strong>Patient:</strong> {demand.patient_info.firstname} {demand.patient_info.lastname} - {demand.patient_info.birthdate || 'DOB not available'}</p>
+                                                    <p className="mb-1"><strong>{servicedemands('patient')}:</strong> {demand.patient_info.firstname} {demand.patient_info.lastname} - {demand.patient_info.birthdate || 'DOB not available'}</p>
                                                 )}
-                                                <p className="mb-1"><strong>Description:</strong> {demand.description}</p>
+                                                <p className="mb-1"><strong>{servicedemands('description')}:</strong> {demand.description}</p>
                                             </div>
                                             <div className="col-md-6">
-                                                <p className="mb-1"><strong>Reason:</strong> {demand.reason}</p>
+                                                <p className="mb-1"><strong>{servicedemands('reason')}:</strong> {demand.reason}</p>
                                                 {demand.preferred_start_date && (
-                                                    <p className="mb-1"><strong>Preferred Start Date:</strong> {demand.preferred_start_date}</p>
+                                                    <p className="mb-1"><strong>{servicedemands('preferredStartDate')}:</strong> {demand.preferred_start_date}</p>
                                                 )}
-                                                <p className="mb-1"><strong>Frequency:</strong> {demand.frequency}</p>
-                                                <p className="mb-1"><strong>Contact Method:</strong> {demand.contact_method}</p>
+                                                <p className="mb-1"><strong>{servicedemands('frequency')}:</strong> {demand.frequency}</p>
+                                                <p className="mb-1"><strong>{servicedemands('contactMethod')}:</strong> {demand.contact_method}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -562,14 +560,13 @@ const ServiceDemandPage = () => {
                                                 <small>Managed by: {demand.managed_by_info.firstname} {demand.managed_by_info.lastname}</small>
                                             )}
                                         </div>
-                                        {/* Show More Info button for all users to see coordinator notes */}
-                                        <div>
+                                        {/* Show More Info button for all users to see coordinator notes */}                                        <div>
                                             <button 
                                                 className="btn btn-sm btn-outline-primary"
                                                 style={{ borderColor: '#22C7EE', color: '#FFF' }}
                                                 onClick={() => handleShowDetails(demand)}
                                             >
-                                                More Info
+                                                {servicedemands('moreInfo')}
                                             </button>
                                         </div>
                                     </div>
@@ -583,10 +580,9 @@ const ServiceDemandPage = () => {
                                 <div className="modal-content shadow-lg border-0 bg-white" style={{borderRadius: '20px', overflow: 'hidden',}}>
                                         <div className="modal-header bg-gradient text-white border-0 p-4" style={{background: 'linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%)'}}>
                                             <div className="d-flex align-items-center">
-                                                
-                                                <div>
-                                                    <h4 className="modal-title mb-0 fw-bold text-muted">Request New Service</h4>
-                                                    <small className="opacity-90  text-muted">Complete the form below to submit your service request</small>
+                                                  <div>
+                                                    <h4 className="modal-title mb-0 fw-bold text-muted">{servicedemands('requestNewService')}</h4>
+                                                    <small className="opacity-90 text-muted">{servicedemands('completeFormBelow')}</small>
                                                 </div>
                                             </div>
                                             <button 
@@ -606,14 +602,14 @@ const ServiceDemandPage = () => {
                                                                 <div className="d-flex align-items-center mb-3">
                                                                     <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
                                                                         <i className="bi bi-gear-fill text-primary"></i>
-                                                                    </div>
-                                                                    <h5 className="mb-0 text-primary fw-bold">Service Details</h5>
+                                                                    </div>                                                                    <h5 className="mb-0 text-primary fw-bold">{servicedemands('serviceDetails')}</h5>
                                                                 </div>
                                                                 <div className="row">
-                                                                    <div className="col-md-8">                                                                        <div className="mb-3">
+                                                                    <div className="col-md-8">
+                                                                        <div className="mb-3">
                                                                             <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-collection me-2" style={{color: '#22C7EE'}}></i>
-                                                                                Service Type <span className="text-danger">*</span>
+                                                                                {servicedemands('selectService')} <span className="text-danger">*</span>
                                                                             </label>
                                                                             <select
                                                                                 className="form-select form-select-lg border-2 shadow-sm bg-light"
@@ -622,7 +618,7 @@ const ServiceDemandPage = () => {
                                                                                 onChange={(e) => setNewDemand({...newDemand, service: e.target.value})}
                                                                                 required
                                                                             >
-                                                                                <option value="">Choose a service...</option>
+                                                                                <option value="">{servicedemands('chooseService')}</option>
                                                                                 {services.map(service => (
                                                                                     <option key={service.id} value={service.id}>
                                                                                         {service.name} - €{service.price}
@@ -631,20 +627,20 @@ const ServiceDemandPage = () => {
                                                                             </select>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="col-md-4">                                                                        <div className="mb-3">
-                                                                            <label className="form-label fw-semibold text-muted">
+                                                                    <div className="col-md-4">                                                                        <div className="mb-3">                                                                            <label className="form-label fw-semibold text-muted">
                                                                                 <i className="bi bi-exclamation-triangle me-2" style={{color: '#ff9800'}}></i>
-                                                                                Priority Level
-                                                                            </label>                                                                            <select
+                                                                                {servicedemands('priorityLevel')}
+                                                                            </label>
+                                                                            <select
                                                                                 className="form-select form-select-lg border-2 shadow-sm bg-light"
                                                                                 style={{borderColor: '#e3f2fd', borderRadius: '12px'}}
                                                                                 value={newDemand.priority}
                                                                                 onChange={(e) => setNewDemand({...newDemand, priority: e.target.value})}
                                                                             >
-                                                                                <option value="Low">🟢 Low Priority</option>
-                                                                                <option value="Normal">🟡 Normal Priority</option>
-                                                                                <option value="High">🟠 High Priority</option>
-                                                                                <option value="Urgent">🔴 Urgent</option>
+                                                                                <option value="Low">🟢 {servicedemands('priorityOptions.low')}</option>
+                                                                                <option value="Normal">🟡 {servicedemands('priorityOptions.normal')}</option>
+                                                                                <option value="High">🟠 {servicedemands('priorityOptions.high')}</option>
+                                                                                <option value="Urgent">🔴 {servicedemands('priorityOptions.urgent')}</option>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -661,12 +657,12 @@ const ServiceDemandPage = () => {
                                                                     <div className="d-flex align-items-center mb-3">
                                                                         <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
                                                                             <i className="bi bi-person-check-fill text-warning"></i>
-                                                                        </div>
-                                                                        <h5 className="mb-0 text-warning fw-bold">Patient Selection</h5>
-                                                                    </div>                                                                    <div className="mb-3">
+                                                                        </div>                                                                        <h5 className="mb-0 text-warning fw-bold">{servicedemands('patientSelection')}</h5>
+                                                                    </div>
+                                                                    <div className="mb-3">
                                                                         <label className="form-label fw-semibold text-muted">
                                                                             <i className="bi bi-search me-2" style={{color: '#22C7EE'}}></i>
-                                                                            Search Patients
+                                                                            {servicedemands('searchPatients')}
                                                                         </label>
                                                                         <input
                                                                             type="text"
@@ -676,10 +672,9 @@ const ServiceDemandPage = () => {
                                                                             value={patientSearch}
                                                                             onChange={(e) => setPatientSearch(e.target.value)}
                                                                         />
-                                                                    </div>                                                                    <div className="mb-3">
-                                                                        <label className="form-label fw-semibold text-muted">
+                                                                    </div>                                                                    <div className="mb-3">                                                                        <label className="form-label fw-semibold text-muted">
                                                                             <i className="bi bi-person-fill me-2" style={{color: '#22C7EE'}}></i>
-                                                                            Select Patient <span className="text-danger">*</span>
+                                                                            {servicedemands('selectPatient')} <span className="text-danger">*</span>
                                                                         </label>
                                                                         <select
                                                                             className="form-select form-select-lg border-2 shadow-sm bg-light"
@@ -688,7 +683,7 @@ const ServiceDemandPage = () => {
                                                                             onChange={(e) => setNewDemand({...newDemand, selected_patient: e.target.value})}
                                                                             required
                                                                         >
-                                                                            <option value="">Choose a patient...</option>
+                                                                            <option value="">{servicedemands('chooseService')}</option>
                                                                             {Array.isArray(patients) && patients
                                                                                 .filter(patient => {
                                                                                     if (!patientSearch) return true;
@@ -749,10 +744,9 @@ const ServiceDemandPage = () => {
                                                                                     <p className="mb-1 text-muted">Born: {linkedPatients[0].birth_date}</p>
                                                                                     <span className="badge bg-info text-white">
                                                                                         {linkedPatients[0].relationship || 'Family Member'}
-                                                                                    </span>
-                                                                                    <small className="d-block mt-2 text-secondary">
+                                                                                    </span>                                                                                    <small className="d-block mt-2 text-secondary">
                                                                                         <i className="bi bi-info-circle me-1"></i>
-                                                                                        This service request will be created for your linked patient
+                                                                                        {servicedemands('oneTimeServiceRequest')}
                                                                                     </small>
                                                                                 </div>
                                                                             </div>
