@@ -5,6 +5,7 @@ import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
 import { formatBirthdateWithAge, getAgeDisplay, calculateAge } from '../../utils/ageUtils';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import MedicalFolder from '../../components/MedicalFolder'; // Import MedicalFolder component
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
@@ -284,42 +285,59 @@ const ProfilePage = () => {
                     </div>
                 );
             case 'medical':
+                // Get the correct patient ID based on user role
+                let medicalPatientId = null;
+                
+                if (userRole === 'Patient') {
+                    // For regular patients, use their own patient profile ID
+                    medicalPatientId = userData?.patient?.id || userData?.user?.id;
+                } else if (userRole === 'Family Patient') {
+                    // For family patients, use the linked patient ID
+                    const linkedPatient = userData?.linked_patients?.[0] || userData?.linked_patient;
+                    medicalPatientId = linkedPatient?.id;
+                } else if (userRole === 'Coordinator') {
+                    // Coordinators shouldn't see medical folder tab, but if they do, handle gracefully
+                    return (
+                        <div className="alert alert-warning">
+                            <h4>Access Restricted</h4>
+                            <p>Medical folder access is not available for coordinators.</p>
+                        </div>
+                    );
+                }
+
+                console.log('Medical Folder Debug:', {
+                    userRole,
+                    userData,
+                    medicalPatientId,
+                    patientId: userData?.patient?.id,
+                    linkedPatient: userData?.linked_patient,
+                    linkedPatients: userData?.linked_patients
+                });
+
+                if (!medicalPatientId) {
+                    return (
+                        <div className="alert alert-warning">
+                            <h4>Medical Folder</h4>
+                            <p>Unable to load medical folder. Patient information not found.</p>
+                            <p><strong>Debug Info:</strong></p>
+                            <ul>
+                                <li>User Role: {userRole}</li>
+                                <li>User ID: {userData?.user?.id}</li>
+                                <li>Patient ID: {userData?.patient?.id}</li>
+                                <li>Linked Patient: {JSON.stringify(userData?.linked_patient || userData?.linked_patients?.[0])}</li>
+                            </ul>
+                        </div>
+                    );
+                }
+
                 return (
-                    <div className="card shadow-sm border-0">                        <div className="card-header bg-warning bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
-                                <i className="fas fa-folder-medical me-2 text-warning"></i>
-                                {profile('medicalFolder')}
-                            </h5>
-                        </div>
-                        <div className="card-body">
-                            {userData.medical_folder && userData.medical_folder.length > 0 ? (
-                                <div className="row g-3">
-                                    {userData.medical_folder.map((record, index) => (
-                                        <div key={index} className="col-12">
-                                            <div className="card bg-light border-0">
-                                                <div className="card-body py-3">
-                                                    <div className="row">                                                        <div className="col-md-4">
-                                                            <label className="form-label text-muted">{profile('date')}:</label>
-                                                            <p className="fs-6 fw-medium mb-0">{record.created_at}</p>
-                                                        </div>
-                                                        <div className="col-md-8">
-                                                            <label className="form-label text-muted">{profile('notes')}:</label>
-                                                            <p className="fs-6 fw-medium mb-0">{record.note || 'N/A'}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (                                <div className="text-center py-4">
-                                    <i className="fas fa-folder-open text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">{profile('noMedicalFolder')}</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );            case 'contact':
+                    <MedicalFolder 
+                        patientId={medicalPatientId}
+                        userData={userData}
+                        userRole={userRole}
+                    />
+                );
+            case 'contact':
                 return (
                     <div className="card shadow-sm border-0">                        <div className="card-header bg-secondary bg-opacity-10 border-0">
                             <h5 className="card-title mb-0">
