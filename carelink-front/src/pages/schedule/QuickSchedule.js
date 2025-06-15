@@ -3,6 +3,7 @@ import './QuickSchedule.css';
 import { useLoading } from '../../hooks/useLoading';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -12,6 +13,9 @@ import {
 } from '../../components/LoadingComponents';
 
 const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
+  // Translation hook
+  const { schedule, common, placeholders, errors: errorsT } = useCareTranslation();
+
   const [formData, setFormData] = useState({
     provider_id: '',
     patient_id: '',
@@ -199,16 +203,15 @@ const fetchPatients = async () => {
     }
     
     await performSubmit();
-  };  const performSubmit = async () => {
-    // Frontend validation
+  };  const performSubmit = async () => {    // Frontend validation
     const requiredFields = ['provider_id', 'patient_id', 'date', 'start_time', 'end_time'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
     if (missingFields.length > 0) {
-      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      setError(schedule('errors.fillRequiredFields', { fields: missingFields.join(', ') }));
       console.error('Missing form data:', formData);
       return;
-    }    await executeWithLoading(async () => {
+    }await executeWithLoading(async () => {
       setError('');
 
       if (!tokenManager.isAuthenticated()) {
@@ -245,12 +248,11 @@ const fetchPatients = async () => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
-      <div className="quick-schedule-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={handleClose}>      <div className="quick-schedule-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Quick Schedule</h2>
+          <h2>{schedule('quickSchedule')}</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
-        </div>        <form onSubmit={handleSubmit} className="quick-schedule-form">
+        </div><form onSubmit={handleSubmit} className="quick-schedule-form">
           {/* Simple loading - same as other pages */}
           {(isDataLoading || isModalLoading) && (
             <div className="simple-loading-container">
@@ -262,19 +264,19 @@ const fetchPatients = async () => {
             <div className="error-message">
               {error}
             </div>
-          )}<div className="form-row">
+          )}          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="provider_search">Provider * {formData.provider_id ? '✅' : '❌'}</label>
+              <label htmlFor="provider_search">{schedule('provider')} * {formData.provider_id ? '✅' : '❌'}</label>
               <div className="searchable-dropdown">
                 <input
                   type="text"
                   id="provider_search"
-                  placeholder="Search providers..."
+                  placeholder={schedule('searchProviders')}
                   value={providerSearch}
                   onChange={(e) => setProviderSearch(e.target.value)}
                   onFocus={() => setShowProviderDropdown(true)}
                   onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}
-                />                {showProviderDropdown && (
+                />{showProviderDropdown && (
                   <div className="dropdown-list">                    {isSearchLoading ? (
                       <div style={{ padding: '8px', textAlign: 'center' }}>
                         <SpinnerOnly size="small" />
@@ -289,22 +291,19 @@ const fetchPatients = async () => {
                           <strong>{provider.name}</strong>
                           <span className="provider-service">{provider.service}</span>
                         </div>
-                      ))
-                    ) : (
-                      <div className="dropdown-item disabled">No providers found</div>
+                      ))                    ) : (
+                      <div className="dropdown-item disabled">{schedule('noProvidersFound')}</div>
                     )}
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="patient_search">Patient * {formData.patient_id ? '✅' : '❌'}</label>
+            </div>            <div className="form-group">
+              <label htmlFor="patient_search">{schedule('patient')} * {formData.patient_id ? '✅' : '❌'}</label>
               <div className="searchable-dropdown">
                 <input
                   type="text"
                   id="patient_search"
-                  placeholder="Search patients..."
+                  placeholder={schedule('searchPatientsSchedule')}
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
                   onFocus={() => setShowPatientDropdown(true)}
@@ -323,22 +322,19 @@ const fetchPatients = async () => {
                           <strong>{patient.firstname} {patient.lastname}</strong>
                           <span className="patient-info">ID: {patient.national_number}</span>
                         </div>
-                      ))
-                    ) : (
+                      ))                    ) : (
                       <div className="dropdown-item disabled">
-                        {patients.length === 0 ? 'No patients available' : 'No patients found'}
-                        {patients.length > 0 && <span className="patient-count">({patients.length} total patients)</span>}
+                        {patients.length === 0 ? schedule('noPatientsAvailable') : schedule('noPatientsFound')}
+                        {patients.length > 0 && <span className="patient-count">({schedule('totalPatients', { count: patients.length })})</span>}
                       </div>
                     )}
                   </div>
                 )}
               </div>
             </div>
-          </div>
-
-          <div className="form-row">
+          </div>          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="date">Date *</label>
+              <label htmlFor="date">{schedule('date')} *</label>
               <input
                 type="date"
                 id="date"
@@ -350,14 +346,14 @@ const fetchPatients = async () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="service_id">Service</label>
+              <label htmlFor="service_id">{schedule('service')}</label>
               <select
                 id="service_id"
                 name="service_id"
                 value={formData.service_id}
                 onChange={handleInputChange}
               >
-                <option value="">Select Service (Optional)</option>
+                <option value="">{schedule('selectServiceOptional')}</option>
                 {services.map(service => (
                   <option key={service.id} value={service.id}>
                     {service.name} - ${service.price}
@@ -365,11 +361,9 @@ const fetchPatients = async () => {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="form-row">
+          </div>          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="start_time">Start Time *</label>
+              <label htmlFor="start_time">{schedule('startTime')} *</label>
               <input
                 type="time"
                 id="start_time"
@@ -381,7 +375,7 @@ const fetchPatients = async () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="end_time">End Time *</label>
+              <label htmlFor="end_time">{schedule('endTime')} *</label>
               <input
                 type="time"
                 id="end_time"
@@ -394,18 +388,18 @@ const fetchPatients = async () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="description">Description</label>
+            <label htmlFor="description">{placeholders('enterDescription')}</label>
             <textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Enter appointment details or notes..."
+              placeholder={schedule('enterAppointmentDetails')}
               rows="3"
             />
           </div>          <div className="form-actions">
             <button type="button" onClick={handleClose} className="cancel-btn">
-              Cancel
+              {common('cancel')}
             </button>
             <ButtonLoading 
               type="submit" 
@@ -413,26 +407,23 @@ const fetchPatients = async () => {
               isLoading={isModalLoading}
               className="submit-btn"
             >
-              Create Schedule
+              {schedule('createSchedule')}
             </ButtonLoading>
           </div></form>
-      </div>
-
-      {/* Past Date Confirmation Dialog */}
+      </div>      {/* Past Date Confirmation Dialog */}
       {showPastDateConfirm && (
         <div className="modal-overlay">
           <div className="confirm-modal">
-            <h3>⚠️ Attention: Date in the Past</h3>
+            <h3>{schedule('pastDateConfirmation.title')}</h3>
             <p>
-              You are trying to schedule an appointment for a past date ({formData.date}). 
-              Are you sure you want to continue?
+              {schedule('pastDateConfirmation.message', { date: formData.date })}
             </p>
             <div className="confirm-actions">
               <button 
                 onClick={() => setShowPastDateConfirm(false)} 
                 className="cancel-btn"
               >
-                Cancel
+                {common('cancel')}
               </button>
               <button 
                 onClick={() => {
@@ -441,7 +432,7 @@ const fetchPatients = async () => {
                 }} 
                 className="confirm-btn"
               >
-                Yes, Continue
+                {schedule('pastDateConfirmation.yesContinue')}
               </button>
             </div>
           </div>

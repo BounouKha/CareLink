@@ -1,5 +1,10 @@
 {
   "common": {
+    "name": "Naam",
+    "status": "Status",
+    "active": "Actief",
+    "priority": "Prioriteit",
+    "description": "Beschrijving",
     "welcome": "Welkom",
     "home": "Home",
     "login": "Inloggen",
@@ -45,7 +50,8 @@
     "address": "Adres",
     "title": "Titel",
     "basicInformation": "Basisinformatie",
-    "weeks": "weken"
+    "weeks": "weken",
+    "memberArea": "Ledenzone"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -141,10 +147,11 @@
     "criticalInformation": "Kritieke informatie",
     "status": "Status",
     "notes": "Notities",    "patientCreated": "Patiënt succesvol aangemaakt",
-    "patientUpdated": "Patiënt succesvol bijgewerkt",
-    "patientDeleted": "Patiënt succesvol verwijderd",
+    "patientUpdated": "Patiënt succesvol bijgewerkt",    "patientDeleted": "Patiënt succesvol verwijderd",
     "bloodType": "Bloedgroep",
-    "tryAdjustingSearch": "Pas uw zoekcriteria aan"
+    "tryAdjustingSearch": "Pas uw zoekcriteria aan",
+    "newestToOldest": "Nieuwste naar Oudste",
+    "oldestToNewest": "Oudste naar Nieuwste"
   },  "servicedemands": {
     "title": "Zorgvragen",
     "requestNewService": "Nieuwe Zorgvraag",
@@ -244,6 +251,7 @@
     "statusUpdated": "Status succesvol bijgewerkt",
     "addCommentPlaceholder": "Voeg een opmerking of notitie toe over deze vraag..."
   },  "schedule": {
+    "providerService": "Zorgverlener Dienst",
     "title": "Schema",
     "calendar": "Kalender",
     "appointments": "Afspraken",
@@ -270,10 +278,39 @@
       "day": "Dag",
       "week": "Week",
       "month": "Maand"
-    },
-    "appointmentCreated": "Afspraak succesvol aangemaakt",
+    },    "appointmentCreated": "Afspraak succesvol aangemaakt",
     "appointmentUpdated": "Afspraak succesvol bijgewerkt",
-    "appointmentDeleted": "Afspraak succesvol verwijderd"
+    "appointmentDeleted": "Afspraak succesvol verwijderd",
+    "updateAppointment": "Afspraak bijwerken",
+    "deleteAppointment": "Afspraak verwijderen",
+    "confirmDeletion": "Verwijdering bevestigen",
+    "deleteConfirmationMessage": "Weet je zeker dat je deze afspraak wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "yesDelete": "Ja, verwijderen",
+    "deletionStrategy": "Verwijderingsstrategie",
+    "deleteStrategies": {
+      "smart": "Slim verwijderen (Verwijder planning wanneer geen tijdsloten meer over zijn)",
+      "aggressive": "Agressief verwijderen (Altijd planning verwijderen)",
+      "conservative": "Voorzichtig verwijderen (Planning behouden)",
+      "smartDescription": "Verwijdert de planning alleen wanneer het laatste tijdslot wordt weggenomen. Behoudt zorgverlener associaties als andere tijdsloten bestaan.",
+      "aggressiveDescription": "Verwijdert onmiddellijk de gehele planning en alle zorgverlener associaties wanneer een tijdslot wordt verwijderd.",
+      "conservativeDescription": "Verwijdert alleen het tijdslot, behoudt de planning en zorgverlener informatie zelfs als er geen tijdsloten meer zijn."
+    },
+    "createdBy": "Aangemaakt door",
+    "createdAt": "Aangemaakt op",
+    "statusOptions": {
+      "scheduled": "Ingepland",
+      "confirmed": "Bevestigd",
+      "inProgress": "Bezig",
+      "completed": "Voltooid",
+      "cancelled": "Geannuleerd",
+      "noShow": "Niet verschenen"
+    },
+    "pastDateConfirmation": {
+      "title": "Attentie: Datum in het verleden",
+      "message": "Je probeert een afspraak in te plannen voor een datum in het verleden ({date}). Weet je zeker dat je wilt doorgaan?",
+      "editMessage": "Je probeert een afspraak te bewerken voor een datum in het verleden ({date}). Weet je zeker dat je wilt doorgaan?",
+      "yesContinue": "Ja, doorgaan"
+    }
   },
   "admin": {
     "title": "Beheerderspaneel",
@@ -321,7 +358,11 @@
     "required": "Dit veld is verplicht",
     "registrationFailed": "Registratie mislukt",
     "futureBirthdate": "Geboortedatum kan niet in de toekomst liggen",
-    "ageRestriction": "U moet minimaal 18 jaar oud zijn"
+    "ageRestriction": "U moet minimaal 18 jaar oud zijn",
+    "networkError": "Netwerkfout opgetreden",
+    "unableToDetermineUserRole": "Kan gebruikersrol niet bepalen",
+    "scheduleNotAvailableForRole": "Planning niet beschikbaar voor uw rol: {role}",
+    "scheduleAccessError": "Planning toegang fout"
   },
   "success": {
     "saved": "Succesvol opgeslagen",
@@ -355,9 +396,15 @@
     "selectDate": "Selecteer datum",
     "selectTime": "Selecteer tijd",
     "morningAfternoonEvening": "bijv., Ochtend, Middag, Avond...",
-    "specialInstructions": "Eventuele speciale instructies of vereisten...",
-    "searchPatients": "Zoek patiënten op naam, ID of geboortedatum...",
-    "searchProviders": "Zoek en selecteer een zorgverlener..."
+    "specialInstructions": "Eventuele speciale instructies of vereisten...",    "searchPatients": "Zoek patiënten op naam, ID of geboortedatum...",
+    "searchProviders": "Zoek en selecteer een zorgverlener...",
+    "noServiceSpecified": "Geen service gespecificeerd",
+    "noProvidersFound": "Geen zorgverleners gevonden",
+    "noPatientsAvailable": "Geen patiënten beschikbaar",
+    "noPatientsFound": "Geen patiënten gevonden",
+    "unknownUser": "Onbekende gebruiker",
+    "unknownDate": "Onbekende datum",
+    "addNotesOrInstructions": "Voeg notities of speciale instructies toe..."
   },
   "tooltips": {
     "edit": "Dit item bewerken",

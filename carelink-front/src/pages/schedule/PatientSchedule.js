@@ -355,54 +355,54 @@ const PatientSchedule = () => {
                       {appointment.appointments?.[0]?.status || 'scheduled'}
                     </span>
                   </div>                  <div className="appointment-details">
-                    <p><strong>Provider:</strong> {appointment.provider?.name || 'Provider TBD'}</p>
+                    <p><strong>{schedule('provider')}:</strong> {appointment.provider?.name || 'Provider TBD'}</p>
                     {appointment.appointments && appointment.appointments.length > 0 && (
-                      <p><strong>Time:</strong> {appointment.appointments[0].start_time} - {appointment.appointments[0].end_time}</p>
+                      <p><strong>{schedule('time')}:</strong> {appointment.appointments[0].start_time} - {appointment.appointments[0].end_time}</p>
                     )}
-                    {isFamilyView && <p><strong>Patient:</strong> {appointment.patient_name}</p>}
+                    {isFamilyView && <p><strong>{schedule('patient')}:</strong> {appointment.patient_name}</p>}
                     {appointment.appointments && appointment.appointments.length > 0 && appointment.appointments[0].service && (
-                      <p><strong>Service:</strong> {appointment.appointments[0].service.name}</p>
+                      <p><strong>{schedule('service')}:</strong> {appointment.appointments[0].service.name}</p>
                     )}
                   </div>
                 </div>
               ))
             ) : (
               <div className="no-appointments">
-                No appointments found for the selected date range
+                {schedule('noAppointments')}
               </div>
             )}
           </div>          {appointmentDetails && (
             <div className="appointment-detail-view">
               <div className="appointment-detail-header">
-                <h2>Appointment Details</h2>
+                <h2>{schedule('appointmentDetails')}</h2>
                 <button 
                   className="close-button"
                   onClick={() => setAppointmentDetails(null)}
-                  title="Close"
+                  title={common('close')}
                 >
                   ×
                 </button>
               </div>
               <div className="appointment-detail-content">
-                <p><strong>Date:</strong> {new Date(appointmentDetails.date).toLocaleDateString('en-US')}</p>
+                <p><strong>{schedule('date')}:</strong> {new Date(appointmentDetails.date).toLocaleDateString('en-US')}</p>
                 {appointmentDetails.appointments && appointmentDetails.appointments.length > 0 && (
                   <>
-                    <p><strong>Time:</strong> {appointmentDetails.appointments[0].start_time} - {appointmentDetails.appointments[0].end_time}</p>
+                    <p><strong>{schedule('time')}:</strong> {appointmentDetails.appointments[0].start_time} - {appointmentDetails.appointments[0].end_time}</p>
                     {appointmentDetails.appointments[0].service && (
-                      <p><strong>Service:</strong> {appointmentDetails.appointments[0].service.name}</p>
+                      <p><strong>{schedule('service')}:</strong> {appointmentDetails.appointments[0].service.name}</p>
                     )}
                     {appointmentDetails.appointments[0].description && (
-                      <p><strong>Description:</strong> {appointmentDetails.appointments[0].description}</p>
+                      <p><strong>{common('description')}:</strong> {appointmentDetails.appointments[0].description}</p>
                     )}
-                    <p><strong>Status:</strong> <span className={getStatusClass(appointmentDetails.appointments[0].status || 'scheduled')}>{appointmentDetails.appointments[0].status || 'scheduled'}</span></p>
+                    <p><strong>{common('status')}:</strong> <span className={getStatusClass(appointmentDetails.appointments[0].status || 'scheduled')}>{appointmentDetails.appointments[0].status || 'scheduled'}</span></p>
                   </>
                 )}
-                <p><strong>Provider:</strong> {appointmentDetails.provider?.name || 'Provider TBD'}</p>
+                <p><strong>{schedule('provider')}:</strong> {appointmentDetails.provider?.name || 'Provider TBD'}</p>
                 {appointmentDetails.provider?.service_type && (
-                  <p><strong>Provider Service:</strong> {appointmentDetails.provider.service_type}</p>
+                  <p><strong>{schedule('providerService')}:</strong> {appointmentDetails.provider.service_type}</p>
                 )}
                 {isFamilyView && appointmentDetails.patient_name && (
-                  <p><strong>Patient:</strong> {appointmentDetails.patient_name}</p>
+                  <p><strong>{schedule('patient')}:</strong> {appointmentDetails.patient_name}</p>
                 )}
               </div>
             </div>

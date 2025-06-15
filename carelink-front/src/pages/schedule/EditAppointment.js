@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './EditAppointment.css'; // Modal-specific styles using UnifiedBaseLayout.css
 import { useLoading } from '../../hooks/useLoading';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 import tokenManager from '../../utils/tokenManager';
 import { 
   ModalLoadingOverlay, 
@@ -19,6 +20,9 @@ const EditAppointment = ({
   onAppointmentDeleted, 
   providers = [] 
 }) => {
+  // Translation hook
+  const { schedule, common, placeholders, errors: errorsT } = useCareTranslation();
+  
   const [formData, setFormData] = useState({
     provider_id: '',
     patient_id: '',
@@ -256,11 +260,10 @@ const EditAppointment = ({
 
   return (
     <div className="modal-overlay" onClick={handleClose}>
-      <div className="edit-appointment-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Edit Appointment</h2>
+      <div className="edit-appointment-modal" onClick={(e) => e.stopPropagation()}>        <div className="modal-header">
+          <h2>{schedule('editAppointment')}</h2>
           <button className="close-btn" onClick={handleClose}>×</button>
-        </div>        <div className="edit-appointment-form">
+        </div><div className="edit-appointment-form">
           {/* Simple loading - same as other pages */}
           {(isDataLoading || isModalLoading) && (
             <div className="simple-loading-container">
@@ -275,12 +278,12 @@ const EditAppointment = ({
           )}
 
           <form onSubmit={handleUpdate}>            <div className="form-row">              <div className="form-group">
-                <label htmlFor="provider_search">Provider *</label>
+                <label htmlFor="provider_search">{schedule('provider')} *</label>
                 <div className="searchable-dropdown">
                   <input
                     type="text"
                     id="provider_search"
-                    placeholder="Search providers..."
+                    placeholder={schedule('searchProviders')}
                     value={providerSearch}
                     onChange={(e) => setProviderSearch(e.target.value)}
                     onFocus={() => setShowProviderDropdown(true)}
@@ -298,29 +301,27 @@ const EditAppointment = ({
                             onClick={() => selectProvider(provider)}
                           >
                             <strong>{provider.name}</strong>
-                            <span className="provider-service">{provider.service || 'No service specified'}</span>
+                            <span className="provider-service">{provider.service || placeholders('noServiceSpecified')}</span>
                           </div>
                         ))
                       ) : (
-                        <div className="dropdown-item disabled">No providers found</div>
+                        <div className="dropdown-item disabled">{placeholders('noProvidersFound')}</div>
                       )}
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="patient_search">Patient *</label>
+              </div>              <div className="form-group">
+                <label htmlFor="patient_search">{schedule('patient')} *</label>
                 <div className="searchable-dropdown">
                   <input
                     type="text"
                     id="patient_search"
-                    placeholder="Search patients..."
+                    placeholder={schedule('searchPatients')}
                     value={patientSearch}
                     onChange={(e) => setPatientSearch(e.target.value)}
                     onFocus={() => setShowPatientDropdown(true)}
                     onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}
-                  />                  {showPatientDropdown && (
+                  />{showPatientDropdown && (
                     <div className="dropdown-list">                      {isDataLoading ? (
                         <div style={{ padding: '8px', textAlign: 'center' }}>
                           <SpinnerOnly size="small" />
@@ -340,30 +341,29 @@ const EditAppointment = ({
                             )}
                           </div>
                         ))
-                      ) : (
-                        <div className="dropdown-item disabled">
-                          {patients.length === 0 ? 'No patients available' : 'No patients found'}
+                      ) : (                        <div className="dropdown-item disabled">
+                          {patients.length === 0 ? placeholders('noPatientsAvailable') : placeholders('noPatientsFound')}
                         </div>
                       )}
                     </div>
                   )}
                 </div>
               </div>
-            </div>{/* Created By and Created At Information - Non-editable */}
+            </div>            {/* Created By and Created At Information - Non-editable */}
             {appointment && (
               <div className="form-row">
                 <div className="form-group">
-                  <label>Created By</label>
+                  <label>{schedule('createdBy')}</label>
                   <div className="read-only-field">
                     <span className="created-by-info">
-                      {appointment.created_by?.name || 'Unknown User'}
+                      {appointment.created_by?.name || placeholders('unknownUser')}
                       {appointment.created_by?.email && (
                         <span className="creator-email"> ({appointment.created_by.email})</span>
                       )}
                     </span>
                   </div>
                 </div>                <div className="form-group">
-                  <label>Created At</label>
+                  <label>{schedule('createdAt')}</label>
                   <div className="read-only-field">
                     <span className="created-at-info">
                       {appointment.created_at ? 
@@ -374,17 +374,15 @@ const EditAppointment = ({
                           hour: '2-digit',
                           minute: '2-digit',
                           hour12: false
-                        }) : 'Unknown Date'
+                        }) : placeholders('unknownDate')
                       }
                     </span>
                   </div>
                 </div>
               </div>
-            )}
-
-            <div className="form-row">
+            )}            <div className="form-row">
               <div className="form-group">
-                <label>Date *</label>
+                <label>{schedule('date')} *</label>
                 <input
                   type="date"
                   name="date"
@@ -395,13 +393,13 @@ const EditAppointment = ({
               </div>
 
               <div className="form-group">
-                <label>Service</label>
+                <label>{schedule('service')}</label>
                 <select
                   name="service_id"
                   value={formData.service_id}
                   onChange={handleInputChange}
                 >
-                  <option value="">Select Service</option>
+                  <option value="">{schedule('selectService')}</option>
                   {services.map(service => (
                     <option key={service.id} value={service.id}>
                       {service.name} - €{service.price}
@@ -409,11 +407,9 @@ const EditAppointment = ({
                   ))}
                 </select>
               </div>
-            </div>
-
-            <div className="form-row">
+            </div>            <div className="form-row">
               <div className="form-group">
-                <label>Start Time *</label>
+                <label>{schedule('startTime')} *</label>
                 <input
                   type="time"
                   name="start_time"
@@ -424,7 +420,7 @@ const EditAppointment = ({
               </div>
 
               <div className="form-group">
-                <label>End Time *</label>
+                <label>{schedule('endTime')} *</label>
                 <input
                   type="time"
                   name="end_time"
@@ -437,35 +433,33 @@ const EditAppointment = ({
 
             <div className="form-row">
               <div className="form-group">
-                <label>Status</label>
+                <label>{common('status')}</label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
                 >
-                  <option value="scheduled">Scheduled</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="no_show">No Show</option>
+                  <option value="scheduled">{schedule('statusOptions.scheduled')}</option>
+                  <option value="confirmed">{schedule('statusOptions.confirmed')}</option>
+                  <option value="in_progress">{schedule('statusOptions.inProgress')}</option>
+                  <option value="completed">{schedule('statusOptions.completed')}</option>
+                  <option value="cancelled">{schedule('statusOptions.cancelled')}</option>
+                  <option value="no_show">{schedule('statusOptions.noShow')}</option>
                 </select>
               </div>
-            </div>
-
-            <div className="form-group">
-              <label>Notes</label>
+            </div>            <div className="form-group">
+              <label>{schedule('notes')}</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 rows="3"
-                placeholder="Add any notes or special instructions..."
+                placeholder={placeholders('addNotesOrInstructions')}
               />
             </div>            <div className="form-actions">
               <div className="primary-actions">
                 <button type="button" onClick={onClose} className="cancel-btn">
-                  Cancel
+                  {common('cancel')}
                 </button>
                 <ButtonLoading 
                   type="submit" 
@@ -473,7 +467,7 @@ const EditAppointment = ({
                   isLoading={isModalLoading}
                   className="update-btn"
                 >
-                  Update Appointment
+                  {schedule('updateAppointment')}
                 </ButtonLoading>
               </div>
               
@@ -484,7 +478,7 @@ const EditAppointment = ({
                   className="delete-btn"
                   disabled={isModalLoading || isDataLoading}
                 >
-                  Delete Appointment
+                  {schedule('deleteAppointment')}
                 </button>
               </div>
             </div>
@@ -492,17 +486,16 @@ const EditAppointment = ({
         {showPastDateConfirm && (
           <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
             <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
-              <h3>⚠️ Attention: Date in the Past</h3>
+              <h3>⚠️ {schedule('pastDateConfirmation.title')}</h3>
               <p>
-                You are trying to schedule an appointment for a past date ({formData.date}). 
-                Are you sure you want to continue?
+                {schedule('pastDateConfirmation.editMessage', { date: formData.date })} 
               </p>
               <div className="confirm-actions">
                 <button 
                   onClick={() => setShowPastDateConfirm(false)} 
                   className="cancel-btn"
                 >
-                  Cancel
+                  {common('cancel')}
                 </button>
                 <button 
                   onClick={() => {
@@ -511,39 +504,37 @@ const EditAppointment = ({
                   }} 
                   className="confirm-delete-btn"
                 >
-                  Yes, Continue
+                  {schedule('pastDateConfirmation.yesContinue')}
                 </button>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
+        )}        {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
             <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
-              <h3>Confirm Deletion</h3>
-              <p>Are you sure you want to delete this appointment? This action cannot be undone.</p>
+              <h3>{schedule('confirmDeletion')}</h3>
+              <p>{schedule('deleteConfirmationMessage')}</p>
                 <div className="form-group">
-                <label>Deletion Strategy</label>
+                <label>{schedule('deletionStrategy')}</label>
                 <select
                   value={deleteStrategy}
                   onChange={(e) => setDeleteStrategy(e.target.value)}
                   className="strategy-select"
                 >
-                  <option value="smart">Smart Delete (Delete schedule when no timeslots remain)</option>
-                  <option value="aggressive">Aggressive Delete (Always delete schedule)</option>
-                  <option value="conservative">Conservative Delete (Keep schedule)</option>
+                  <option value="smart">{schedule('deleteStrategies.smart')}</option>
+                  <option value="aggressive">{schedule('deleteStrategies.aggressive')}</option>
+                  <option value="conservative">{schedule('deleteStrategies.conservative')}</option>
                 </select>
                 <div className="strategy-explanation">
                   {deleteStrategy === 'smart' && (
-                    <small>Deletes the schedule only when the last timeslot is removed. Preserves provider associations if other timeslots exist.</small>
+                    <small>{schedule('deleteStrategies.smartDescription')}</small>
                   )}
                   {deleteStrategy === 'aggressive' && (
-                    <small>Immediately deletes the entire schedule and all provider associations when any timeslot is deleted.</small>
+                    <small>{schedule('deleteStrategies.aggressiveDescription')}</small>
                   )}
                   {deleteStrategy === 'conservative' && (
-                    <small>Only deletes the timeslot, preserving the schedule and provider information even if no timeslots remain.</small>
+                    <small>{schedule('deleteStrategies.conservativeDescription')}</small>
                   )}
                 </div>
               </div>              <div className="confirm-actions">
@@ -551,7 +542,7 @@ const EditAppointment = ({
                   onClick={() => setShowDeleteConfirm(false)} 
                   className="cancel-btn"
                 >
-                  Cancel
+                  {common('cancel')}
                 </button>
                 <ButtonLoading 
                   onClick={handleDelete} 
@@ -559,7 +550,7 @@ const EditAppointment = ({
                   disabled={isDeleteLoading || isModalLoading}
                   isLoading={isDeleteLoading}
                 >
-                  Yes, Delete
+                  {schedule('yesDelete')}
                 </ButtonLoading>
               </div>
             </div>
