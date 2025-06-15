@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import BaseLayout from '../layout/BaseLayout';
 import tokenManager from '../../utils/tokenManager';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -9,6 +10,9 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    // Use translation hooks
+    const { auth, common, placeholders, errors } = useCareTranslation();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -19,11 +23,9 @@ const LoginPage = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ email, password }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Invalid email or password.');
-            }            const data = await response.json();
+            });            if (!response.ok) {
+                throw new Error(errors('invalidCredentials') || 'Invalid email or password.');
+            }const data = await response.json();
             const { access, refresh } = data;
             
             // Use TokenManager to securely store tokens
@@ -35,23 +37,22 @@ const LoginPage = () => {
             setError(err.message);
         }    };    return (
         <BaseLayout>
-            <div className="login-page">
-                <div className="login-container">
+            <div className="login-page">                <div className="login-container">
                     <div className="login-header">
-                        <h2>Welcome Back</h2>
-                        <p className="login-subtitle">Sign in to your CareLink account</p>
+                        <h2>{auth('welcomeBack')}</h2>
+                        <p className="login-subtitle">{auth('signInSubtitle')}</p>
                     </div>
                     
                     <form onSubmit={handleLogin} className="login-form">
                         <div className="form-group">
                             <label htmlFor="email">
                                 <i className="fas fa-envelope"></i>
-                                Email Address
+                                {auth('emailAddress')}
                             </label>
                             <input
                                 id="email"
                                 type="email"
-                                placeholder="Enter your email address"
+                                placeholder={placeholders('email')}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -62,12 +63,12 @@ const LoginPage = () => {
                         <div className="form-group">
                             <label htmlFor="password">
                                 <i className="fas fa-lock"></i>
-                                Password
+                                {auth('password')}
                             </label>
                             <input
                                 id="password"
                                 type="password"
-                                placeholder="Enter your password"
+                                placeholder={placeholders('password')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -81,26 +82,25 @@ const LoginPage = () => {
                                 {error}
                             </div>
                         )}
-                        
-                        <button type="submit" className="btn btn-primary">
+                          <button type="submit" className="btn btn-primary">
                             <i className="fas fa-sign-in-alt"></i>
-                            Sign In
+                            {auth('signIn')}
                         </button>
                     </form>
                     
                     <div className="login-footer">
                         <div className="divider">
-                            <span>New to CareLink?</span>
+                            <span>{auth('newToCareLink')}</span>
                         </div>
                         <Link to="/register" className="btn btn-secondary">
                             <i className="fas fa-user-plus"></i>
-                            Create Account
+                            {auth('createAccount')}
                         </Link>
                         
                         <div className="forgot-password">
                             <Link to="/forgot-password">
                                 <i className="fas fa-key"></i>
-                                Forgot your password?
+                                {auth('forgotPassword')}
                             </Link>
                         </div>
                     </div>

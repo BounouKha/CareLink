@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './auth/layout/HomePage';
 import RegisterPage from './auth/register/RegisterPage';
@@ -13,16 +13,36 @@ import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
 import TestUserAuth from './auth/test/TestUserAuth';
 import TokenTestPage from './pages/test/TokenTestPage';
+import TranslationDemo from './components/TranslationDemo';
 import './auth/layout/UnifiedBaseLayout.css';
 import ProtectedRoute from './auth/login/ProtectedRoute';
 import { AdminProvider } from './auth/login/AdminContext';
+import { SpinnerOnly } from './components/LoadingComponents';
+import './i18n'; // Initialize i18n
 
 function App() {
     return (
-        <AdminProvider>
-            <Router>
-                <div className="App">
-                    <Routes>
+        <Suspense fallback={
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 9999
+            }}>
+                <SpinnerOnly size="large" />
+            </div>
+        }>
+            <AdminProvider>
+                <Router>
+                    <div className="App">
+                        <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
@@ -39,10 +59,12 @@ function App() {
                         <Route path="/schedule/patient" element={<PatientSchedule />} />                        <Route path="/schedule/family" element={<PatientSchedule />} />
                         <Route path="/test-auth" element={<TestUserAuth />} />
                         <Route path="/test-tokens" element={<TokenTestPage />} />
+                        <Route path="/translation-demo" element={<TranslationDemo />} />
                     </Routes>
                 </div>
             </Router>
         </AdminProvider>
+    </Suspense>
     );
 }
 

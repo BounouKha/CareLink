@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import BaseLayout from '../layout/BaseLayout';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
+import { formatBirthdateWithAge, getAgeDisplay, calculateAge } from '../../utils/ageUtils';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
@@ -10,6 +12,9 @@ const ProfilePage = () => {
     const [selectedTab, setSelectedTab] = useState('user');
     const [linkedPatients, setLinkedPatients] = useState([]);
     const profileRef = useRef(null);
+    
+    // Use translation hooks
+    const { profile, common, auth } = useCareTranslation();
     
     // Use modern authentication API
     const { get, loading, error: apiError } = useAuthenticatedApi();    useEffect(() => {
@@ -111,37 +116,33 @@ const ProfilePage = () => {
             case 'user':
                 return (
                     <div className="card shadow-sm border-0">
-                        <div className="card-header bg-primary bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
+                        <div className="card-header bg-primary bg-opacity-10 border-0">                            <h5 className="card-title mb-0">
                                 <i className="fas fa-user me-2 text-primary"></i>
-                                User Information
+                                {profile('personalInfo')}
                             </h5>
                         </div>
                         <div className="card-body">
-                            <div className="row g-3">
-                                <div className="col-md-6">
-                                    <label className="form-label text-muted">Email:</label>
+                            <div className="row g-3">                                <div className="col-md-6">
+                                    <label className="form-label text-muted">{auth('emailAddress')}:</label>
                                     <p className="fs-6 fw-medium">{userData.user.email}</p>
                                 </div>
                                 <div className="col-md-6">
-                                    <label className="form-label text-muted">First Name:</label>
+                                    <label className="form-label text-muted">{profile('firstName')}:</label>
                                     <p className="fs-6 fw-medium">{userData.user.firstname}</p>
                                 </div>
                                 <div className="col-md-6">
-                                    <label className="form-label text-muted">Last Name:</label>
+                                    <label className="form-label text-muted">{profile('lastName')}:</label>
                                     <p className="fs-6 fw-medium">{userData.user.lastname}</p>
-                                </div>
-                                <div className="col-md-6">
-                                    <label className="form-label text-muted">Birthdate:</label>
-                                    <p className="fs-6 fw-medium">{userData.user.birthdate}</p>
-                                </div>
-                                <div className="col-12">
-                                    <label className="form-label text-muted">Address:</label>
+                                </div>                                <div className="col-md-6">
+                                    <label className="form-label text-muted">{profile('birthdate')}:</label>
+                                    <p className="fs-6 fw-medium">{formatBirthdateWithAge(userData.user.birthdate)}</p>
+                                </div>                                <div className="col-12">
+                                    <label className="form-label text-muted">{common('address')}:</label>
                                     <p className="fs-6 fw-medium">{userData.user.address}</p>
                                 </div>
                                 {userData.user.national_number && userData.user.national_number !== "null" && (
                                     <div className="col-md-6">
-                                        <label className="form-label text-muted">National Number:</label>
+                                        <label className="form-label text-muted">{profile('nationalNumber')}:</label>
                                         <p className="fs-6 fw-medium">{userData.user.national_number}</p>
                                     </div>
                                 )}
@@ -150,11 +151,10 @@ const ProfilePage = () => {
                     </div>
                 );            case 'patient':
                 return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-success bg-opacity-10 border-0">
+                    <div className="card shadow-sm border-0">                        <div className="card-header bg-success bg-opacity-10 border-0">
                             <h5 className="card-title mb-0">
                                 <i className="fas fa-user-injured me-2 text-success"></i>
-                                {userData.user.role === 'Family Patient' ? "Linked Patient Information" : "Patient Information"}
+                                {userData.user.role === 'Family Patient' ? profile('linkedPatientInfo') : profile('patientInfo')}
                             </h5>
                         </div>
                         <div className="card-body">
@@ -167,27 +167,25 @@ const ProfilePage = () => {
                                                     <div className="card-body">
                                                         <div className="d-flex justify-content-between align-items-center mb-3">
                                                             <h6 className="card-title mb-0">{patient.firstname} {patient.lastname}</h6>
-                                                            <span className="badge bg-primary">{patient.relationship || 'Family Member'}</span>
+                                                            <span className="badge bg-primary">{patient.relationship || profile('familyMember')}</span>
                                                         </div>
-                                                        <div className="row g-2">
-                                                            <div className="col-md-6">
-                                                                <label className="form-label text-muted">Gender:</label>
+                                                        <div className="row g-2">                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">{profile('gender')}:</label>
                                                                 <p className="fs-6 fw-medium mb-0">{patient.gender}</p>
                                                             </div>
                                                             <div className="col-md-6">
-                                                                <label className="form-label text-muted">Blood Type:</label>
+                                                                <label className="form-label text-muted">{profile('bloodType')}:</label>
                                                                 <p className="fs-6 fw-medium mb-0">{patient.blood_type}</p>
+                                                            </div>                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">{profile('birthdate')}:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{formatBirthdateWithAge(patient.birth_date)}</p>
                                                             </div>
                                                             <div className="col-md-6">
-                                                                <label className="form-label text-muted">Birth Date:</label>
-                                                                <p className="fs-6 fw-medium mb-0">{patient.birth_date}</p>
-                                                            </div>
-                                                            <div className="col-md-6">
-                                                                <label className="form-label text-muted">Emergency Contact:</label>
+                                                                <label className="form-label text-muted">{profile('emergencyContact')}:</label>
                                                                 <p className="fs-6 fw-medium mb-0">{patient.emergency_contact}</p>
                                                             </div>
                                                             <div className="col-12">
-                                                                <label className="form-label text-muted">Illness:</label>
+                                                                <label className="form-label text-muted">{profile('illness')}:</label>
                                                                 <p className="fs-6 fw-medium mb-0">{patient.illness}</p>
                                                             </div>
                                                         </div>
@@ -196,46 +194,42 @@ const ProfilePage = () => {
                                             </div>
                                         ))}
                                     </div>
-                                ) : (
-                                    <div className="text-center py-4">
+                                ) : (                                    <div className="text-center py-4">
                                         <i className="fas fa-info-circle text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                        <p className="text-muted mb-0">No linked patient information available.</p>
+                                        <p className="text-muted mb-0">{profile('noLinkedPatients')}</p>
                                     </div>
                                 )
-                            ) : userData.patient ? (
-                                <div className="row g-3">
+                            ) : userData.patient ? (                                <div className="row g-3">
                                     <div className="col-md-6">
-                                        <label className="form-label text-muted">Gender:</label>
+                                        <label className="form-label text-muted">{profile('gender')}:</label>
                                         <p className="fs-6 fw-medium">{userData.patient.gender}</p>
                                     </div>
                                     <div className="col-md-6">
-                                        <label className="form-label text-muted">Blood Type:</label>
+                                        <label className="form-label text-muted">{profile('bloodType')}:</label>
                                         <p className="fs-6 fw-medium">{userData.patient.blood_type}</p>
                                     </div>
                                     <div className="col-md-6">
-                                        <label className="form-label text-muted">Emergency Contact:</label>
+                                        <label className="form-label text-muted">{profile('emergencyContact')}:</label>
                                         <p className="fs-6 fw-medium">{userData.patient.emergency_contact}</p>
                                     </div>
                                     <div className="col-12">
-                                        <label className="form-label text-muted">Illness:</label>
+                                        <label className="form-label text-muted">{profile('illness')}:</label>
                                         <p className="fs-6 fw-medium">{userData.patient.illness}</p>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="text-center py-4">
+                            ) : (                                <div className="text-center py-4">
                                     <i className="fas fa-info-circle text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No patient information available.</p>
+                                    <p className="text-muted mb-0">{profile('noPatientInfo')}</p>
                                 </div>
                             )}
                         </div>
                     </div>
                 );            case 'family':
                 return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-info bg-opacity-10 border-0">
+                    <div className="card shadow-sm border-0">                        <div className="card-header bg-info bg-opacity-10 border-0">
                             <h5 className="card-title mb-0">
                                 <i className="fas fa-users me-2 text-info"></i>
-                                Family Relationships
+                                {profile('familyRelationships')}
                             </h5>
                         </div>
                         <div className="card-body">
@@ -245,17 +239,16 @@ const ProfilePage = () => {
                                         <div key={index} className="col-12">
                                             <div className="card bg-light border-0">
                                                 <div className="card-body py-3">
-                                                    <div className="row">
-                                                        <div className="col-md-6">
-                                                            <label className="form-label text-muted">Relation:</label>
+                                                    <div className="row">                                                        <div className="col-md-6">
+                                                            <label className="form-label text-muted">{profile('relation')}:</label>
                                                             <p className="fs-6 fw-medium mb-0">{relation.link}</p>
                                                         </div>
                                                         <div className="col-md-6">
-                                                            <label className="form-label text-muted">Family Member:</label>
+                                                            <label className="form-label text-muted">{profile('familyMember')}:</label>
                                                             {relation.user ? (
                                                                 <p className="fs-6 fw-medium mb-0">{relation.user.full_name} ({relation.user.email})</p>
                                                             ) : (
-                                                                <p className="fs-6 text-muted mb-0">Not Available</p>
+                                                                <p className="fs-6 text-muted mb-0">{profile('notAvailable')}</p>
                                                             )}
                                                         </div>
                                                     </div>
@@ -264,10 +257,9 @@ const ProfilePage = () => {
                                         </div>
                                     ))}
                                 </div>
-                            ) : (
-                                <div className="text-center py-4">
+                            ) : (                                <div className="text-center py-4">
                                     <i className="fas fa-users text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No family relationships available.</p>
+                                    <p className="text-muted mb-0">{profile('noFamilyRelationships')}</p>
                                 </div>
                             )}
                         </div>
@@ -275,11 +267,10 @@ const ProfilePage = () => {
                 );
             case 'medical':
                 return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-warning bg-opacity-10 border-0">
+                    <div className="card shadow-sm border-0">                        <div className="card-header bg-warning bg-opacity-10 border-0">
                             <h5 className="card-title mb-0">
                                 <i className="fas fa-folder-medical me-2 text-warning"></i>
-                                Medical Folder
+                                {profile('medicalFolder')}
                             </h5>
                         </div>
                         <div className="card-body">
@@ -289,13 +280,12 @@ const ProfilePage = () => {
                                         <div key={index} className="col-12">
                                             <div className="card bg-light border-0">
                                                 <div className="card-body py-3">
-                                                    <div className="row">
-                                                        <div className="col-md-4">
-                                                            <label className="form-label text-muted">Date:</label>
+                                                    <div className="row">                                                        <div className="col-md-4">
+                                                            <label className="form-label text-muted">{profile('date')}:</label>
                                                             <p className="fs-6 fw-medium mb-0">{record.created_at}</p>
                                                         </div>
                                                         <div className="col-md-8">
-                                                            <label className="form-label text-muted">Notes:</label>
+                                                            <label className="form-label text-muted">{profile('notes')}:</label>
                                                             <p className="fs-6 fw-medium mb-0">{record.note || 'N/A'}</p>
                                                         </div>
                                                     </div>
@@ -304,21 +294,19 @@ const ProfilePage = () => {
                                         </div>
                                     ))}
                                 </div>
-                            ) : (
-                                <div className="text-center py-4">
+                            ) : (                                <div className="text-center py-4">
                                     <i className="fas fa-folder-open text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No medical folder data available.</p>
+                                    <p className="text-muted mb-0">{profile('noMedicalFolder')}</p>
                                 </div>
                             )}
                         </div>
                     </div>
                 );            case 'contact':
                 return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-secondary bg-opacity-10 border-0">
+                    <div className="card shadow-sm border-0">                        <div className="card-header bg-secondary bg-opacity-10 border-0">
                             <h5 className="card-title mb-0">
                                 <i className="fas fa-phone me-2 text-secondary"></i>
-                                Contact Information
+                                {profile('contactInfo')}
                             </h5>
                         </div>
                         <div className="card-body">
@@ -335,10 +323,9 @@ const ProfilePage = () => {
                                         </div>
                                     ))}
                                 </div>
-                            ) : (
-                                <div className="text-center py-4">
+                            ) : (                                <div className="text-center py-4">
                                     <i className="fas fa-phone-slash text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No contact information available.</p>
+                                    <p className="text-muted mb-0">{profile('noContactInfo')}</p>
                                 </div>
                             )}
                         </div>
@@ -371,14 +358,13 @@ const ProfilePage = () => {
                 <div className="container-fluid py-4">
                     <div className="row justify-content-center">
                         <div className="col-lg-6">
-                            <div className="card shadow-sm border-0">
-                                <div className="card-body text-center py-5">
-                                    <div className="spinner-border text-primary mb-3" role="status">
-                                        <span className="visually-hidden">Loading...</span>
+                            <div className="card shadow-sm border-0">                                    <div className="card-body text-center py-5">
+                                        <div className="spinner-border text-primary mb-3" role="status">
+                                            <span className="visually-hidden">{common('loading')}</span>
+                                        </div>
+                                        <h5 className="text-muted">{profile('loadingProfile')}</h5>
+                                        <p className="text-muted mb-0">{profile('fetchingData')}</p>
                                     </div>
-                                    <h5 className="text-muted">Loading Profile Information</h5>
-                                    <p className="text-muted mb-0">Please wait while we fetch your data...</p>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -394,11 +380,10 @@ const ProfilePage = () => {
                         <div className="card shadow-sm border-0 mb-4">
                             <div className="card-header bg-primary bg-opacity-10 border-0">
                                 <div className="d-flex align-items-center">
-                                    <i className="fas fa-user-circle me-3 text-primary" style={{fontSize: '2rem'}}></i>
-                                    <div>
-                                        <h4 className="card-title mb-0">Profile Information</h4>                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1 text-light">
+                                    <i className="fas fa-user-circle me-3 text-primary" style={{fontSize: '2rem'}}></i>                                    <div>
+                                        <h4 className="card-title mb-0">{profile('title')}</h4>                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1 text-light">
                                             <i className="fas fa-user-tag me-1"></i>
-                                            Role: {userData.user.role}
+                                            {profile('role')}: {userData.user.role}
                                         </div>
                                     </div>
                                 </div>
@@ -414,9 +399,8 @@ const ProfilePage = () => {
                                         <button 
                                             className={`nav-link ${selectedTab === 'user' ? 'active' : ''}`}
                                             onClick={() => setSelectedTab('user')}
-                                        >
-                                            <i className="fas fa-user me-2"></i>
-                                            User Info
+                                        >                                            <i className="fas fa-user me-2"></i>
+                                            {profile('personalInfo')}
                                         </button>
                                         {userData.user.role === 'Family Patient' ? (
                                             <>
@@ -425,45 +409,43 @@ const ProfilePage = () => {
                                                     onClick={() => setSelectedTab('patient')}
                                                 >
                                                     <i className="fas fa-user-injured me-2"></i>
-                                                    Linked Patients
+                                                    {profile('linkedPatients')}
                                                 </button>
                                                 <button 
                                                     className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
                                                     onClick={() => setSelectedTab('contact')}
                                                 >
                                                     <i className="fas fa-phone me-2"></i>
-                                                    Contact
+                                                    {profile('contactInfo')}
                                                 </button>
                                             </>
                                         ) : userData.user.role !== 'Coordinator' && (
                                             <>
                                                 <button 
                                                     className={`nav-link ${selectedTab === 'patient' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('patient')}
-                                                >
+                                                    onClick={() => setSelectedTab('patient')}                                                >
                                                     <i className="fas fa-user-injured me-2"></i>
-                                                    Patient Info
+                                                    {profile('medicalInfo')}
                                                 </button>
                                                 <button 
                                                     className={`nav-link ${selectedTab === 'family' ? 'active' : ''}`}
                                                     onClick={() => setSelectedTab('family')}
                                                 >
                                                     <i className="fas fa-users me-2"></i>
-                                                    Family
-                                                </button>
-                                                <button 
+                                                    {common('family')}
+                                                </button>                                                <button 
                                                     className={`nav-link ${selectedTab === 'medical' ? 'active' : ''}`}
                                                     onClick={() => setSelectedTab('medical')}
                                                 >
                                                     <i className="fas fa-folder-medical me-2"></i>
-                                                    Medical Folder
+                                                    {profile('medicalFolder')}
                                                 </button>
                                                 <button 
                                                     className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
                                                     onClick={() => setSelectedTab('contact')}
                                                 >
                                                     <i className="fas fa-phone me-2"></i>
-                                                    Contact
+                                                    {profile('contact')}
                                                 </button>
                                             </>
                                         )}

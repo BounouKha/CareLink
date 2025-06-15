@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 
 const ServiceDemandMoreInfo = ({ 
     selectedDemand, 
@@ -11,6 +11,9 @@ const ServiceDemandMoreInfo = ({
     newComment,
     setNewComment 
 }) => {
+    // Use translation hooks
+    const { servicedemands, common } = useCareTranslation();
+
     const getStatusBadgeClass = (status) => {
         switch (status?.toLowerCase()) {
             case 'pending': return 'bg-warning text-dark';
@@ -42,8 +45,8 @@ const ServiceDemandMoreInfo = ({
                     <div className="modal-header bg-gradient text-muted border-2 p-4" style={{background: 'linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%)'}}>
                         <div className="d-flex align-items-center">
                             <div>
-                                <h4 className="modal-title mb-0 fw-bold">Service Demand Details</h4>
-                                <small className="opacity-100 fw-bold">Title : {selectedDemand.title}</small>
+                                <h4 className="modal-title mb-0 fw-bold">{servicedemands('serviceDemandDetails')}</h4>
+                                <small className="opacity-100 fw-bold">{common('title')}: {selectedDemand.title}</small>
                             </div>
                         </div>
                         <button 
@@ -67,14 +70,14 @@ const ServiceDemandMoreInfo = ({
                                             <div className="bg-info bg-opacity-10 rounded-circle p-2 me-3">
                                                 <i className="bi bi-clipboard-data-fill text-info"></i>
                                             </div>
-                                            <h5 className="mb-0 text-dark fw-bold">Basic Information</h5>
+                                            <h5 className="mb-0 text-dark fw-bold">{common('basicInformation')}</h5>
                                         </div>
                                         <div className="row">
                                             <div className="col-md-6">
                                                 <div className="mb-3">
                                                     <label className="form-label fw-semibold text-muted">
                                                         <i className="bi bi-collection me-2" style={{color: '#22C7EE'}}></i>
-                                                        Service
+                                                        {servicedemands('service')}
                                                     </label>
                                                     <div className="form-control-static p-3 bg-light rounded border">
                                                         {selectedDemand.service_info?.name || 'N/A'}
@@ -85,7 +88,7 @@ const ServiceDemandMoreInfo = ({
                                                 <div className="mb-3">
                                                     <label className="form-label fw-semibold text-muted">
                                                         <i className="bi bi-person-fill me-2" style={{color: '#22C7EE'}}></i>
-                                                        Patient
+                                                        {servicedemands('patient')}
                                                     </label>
                                                     <div className="form-control-static p-3 bg-light rounded border">
                                                         {selectedDemand.patient_info?.firstname} {selectedDemand.patient_info?.lastname}
@@ -96,10 +99,10 @@ const ServiceDemandMoreInfo = ({
                                                 <div className="mb-3">
                                                     <label className="form-label fw-semibold text-muted">
                                                         <i className="bi bi-exclamation-triangle me-2" style={{color: '#ff9800'}}></i>
-                                                        Priority
+                                                        {servicedemands('priority')}
                                                     </label>
                                                     <div className="form-control-static p-3">
-                                                        <span className={`badge ${getPriorityBadgeClass(selectedDemand.priority)} fs-6`}>
+                                                        <span className={`badge ${getPriorityBadgeClass(selectedDemand.priority)} px-3 py-2 rounded-pill`}>
                                                             {selectedDemand.priority}
                                                         </span>
                                                     </div>
@@ -108,11 +111,11 @@ const ServiceDemandMoreInfo = ({
                                             <div className="col-md-6">
                                                 <div className="mb-3">
                                                     <label className="form-label fw-semibold text-muted">
-                                                        <i className="bi bi-flag-fill me-2" style={{color: '#4caf50'}}></i>
-                                                        Current Status
+                                                        <i className="bi bi-info-circle me-2" style={{color: '#2196f3'}}></i>
+                                                        {servicedemands('status')}
                                                     </label>
                                                     <div className="form-control-static p-3">
-                                                        <span className={`badge ${getStatusBadgeClass(selectedDemand.status)} fs-6`}>
+                                                        <span className={`badge ${getStatusBadgeClass(selectedDemand.status)} px-3 py-2 rounded-pill`}>
                                                             {selectedDemand.status}
                                                         </span>
                                                     </div>
@@ -124,49 +127,49 @@ const ServiceDemandMoreInfo = ({
                             </div>
                         </div>
 
-                        {/* Description & Requirements */}
+                        {/* Service Details */}
                         <div className="row mb-4">
                             <div className="col-12">
                                 <div className="card border shadow-sm bg-white">
                                     <div className="card-body p-4 bg-white">
                                         <div className="d-flex align-items-center mb-3">
                                             <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i className="bi bi-file-text-fill text-primary"></i>
+                                                <i className="bi bi-card-text text-primary"></i>
                                             </div>
-                                            <h5 className="mb-0 text-dark fw-bold">Description & Requirements</h5>
+                                            <h5 className="mb-0 text-dark fw-bold">{servicedemands('serviceDetails')}</h5>
                                         </div>
                                         <div className="row">
-                                            <div className="col-md-6">
+                                            <div className="col-12">
                                                 <div className="mb-3">
                                                     <label className="form-label fw-semibold text-muted">
-                                                        <i className="bi bi-file-text me-2" style={{color: '#22C7EE'}}></i>
-                                                        Description
+                                                        <i className="bi bi-card-heading me-2" style={{color: '#22C7EE'}}></i>
+                                                        {servicedemands('requestTitle')}
                                                     </label>
-                                                    <div className="form-control-static p-3 bg-light rounded border" style={{minHeight: '80px'}}>
+                                                    <div className="form-control-static p-3 bg-light rounded border">
+                                                        {selectedDemand.title}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-12">
+                                                <div className="mb-3">
+                                                    <label className="form-label fw-semibold text-muted">
+                                                        <i className="bi bi-card-text me-2" style={{color: '#22C7EE'}}></i>
+                                                        {servicedemands('description')}
+                                                    </label>
+                                                    <div className="form-control-static p-3 bg-light rounded border">
                                                         {selectedDemand.description}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label fw-semibold text-muted">
-                                                        <i className="bi bi-heart-pulse me-2" style={{color: '#e91e63'}}></i>
-                                                        Medical Reason
-                                                    </label>
-                                                    <div className="form-control-static p-3 bg-light rounded border" style={{minHeight: '80px'}}>
-                                                        {selectedDemand.reason}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {selectedDemand.special_instructions && (
+                                            {selectedDemand.reason && (
                                                 <div className="col-12">
                                                     <div className="mb-3">
                                                         <label className="form-label fw-semibold text-muted">
-                                                            <i className="bi bi-chat-dots me-2" style={{color: '#22C7EE'}}></i>
-                                                            Special Instructions
+                                                            <i className="bi bi-heart-pulse me-2" style={{color: '#f44336'}}></i>
+                                                            {servicedemands('reason')}
                                                         </label>
                                                         <div className="form-control-static p-3 bg-light rounded border">
-                                                            {selectedDemand.special_instructions}
+                                                            {selectedDemand.reason}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -183,21 +186,21 @@ const ServiceDemandMoreInfo = ({
                                 <div className="card border shadow-sm bg-white">
                                     <div className="card-body p-4 bg-white">
                                         <div className="d-flex align-items-center mb-3">
-                                            <div className="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i className="bi bi-calendar-event-fill text-danger"></i>
+                                            <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                                <i className="bi bi-calendar-check text-warning"></i>
                                             </div>
-                                            <h5 className="mb-0 text-dark fw-bold">Scheduling Information</h5>
+                                            <h5 className="mb-0 text-dark fw-bold">{servicedemands('schedulingInformation')}</h5>
                                         </div>
                                         <div className="row">
                                             {selectedDemand.preferred_start_date && (
                                                 <div className="col-md-4">
                                                     <div className="mb-3">
                                                         <label className="form-label fw-semibold text-muted">
-                                                            <i className="bi bi-calendar-date me-2" style={{color: '#22C7EE'}}></i>
-                                                            Preferred Start Date
+                                                            <i className="bi bi-calendar-event me-2" style={{color: '#4caf50'}}></i>
+                                                            {servicedemands('preferredStartDate')}
                                                         </label>
                                                         <div className="form-control-static p-3 bg-light rounded border">
-                                                            {selectedDemand.preferred_start_date}
+                                                            {new Date(selectedDemand.preferred_start_date).toLocaleDateString()}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -206,7 +209,7 @@ const ServiceDemandMoreInfo = ({
                                                 <div className="mb-3">
                                                     <label className="form-label fw-semibold text-muted">
                                                         <i className="bi bi-arrow-repeat me-2" style={{color: '#9c27b0'}}></i>
-                                                        Frequency
+                                                        {servicedemands('frequency')}
                                                     </label>
                                                     <div className="form-control-static p-3 bg-light rounded border">
                                                         {selectedDemand.frequency}
@@ -218,10 +221,10 @@ const ServiceDemandMoreInfo = ({
                                                     <div className="mb-3">
                                                         <label className="form-label fw-semibold text-muted">
                                                             <i className="bi bi-hourglass-split me-2" style={{color: '#ff9800'}}></i>
-                                                            Duration
+                                                            {servicedemands('duration')}
                                                         </label>
                                                         <div className="form-control-static p-3 bg-light rounded border">
-                                                            {selectedDemand.duration_weeks} weeks
+                                                            {selectedDemand.duration_weeks} {common('weeks')}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -231,7 +234,7 @@ const ServiceDemandMoreInfo = ({
                                                     <div className="mb-3">
                                                         <label className="form-label fw-semibold text-muted">
                                                             <i className="bi bi-clock me-2" style={{color: '#4caf50'}}></i>
-                                                            Preferred Time
+                                                            {servicedemands('preferredTime')}
                                                         </label>
                                                         <div className="form-control-static p-3 bg-light rounded border">
                                                             {selectedDemand.preferred_time}
@@ -243,7 +246,7 @@ const ServiceDemandMoreInfo = ({
                                                 <div className="mb-3">
                                                     <label className="form-label fw-semibold text-muted">
                                                         <i className="bi bi-telephone me-2" style={{color: '#2196f3'}}></i>
-                                                        Contact Method
+                                                        {servicedemands('contactMethod')}
                                                     </label>
                                                     <div className="form-control-static p-3 bg-light rounded border">
                                                         {selectedDemand.contact_method}
@@ -266,12 +269,12 @@ const ServiceDemandMoreInfo = ({
                                                 <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
                                                     <i className="bi bi-telephone-fill text-warning"></i>
                                                 </div>
-                                                <h5 className="mb-0 text-dark fw-bold">Contact Information</h5>
+                                                <h5 className="mb-0 text-dark fw-bold">{servicedemands('contactInfo')}</h5>
                                             </div>
                                             <div className="mb-3">
                                                 <label className="form-label fw-semibold text-muted">
                                                     <i className="bi bi-telephone-fill me-2" style={{color: '#f44336'}}></i>
-                                                    Emergency Contact
+                                                    {servicedemands('emergencyContact')}
                                                 </label>
                                                 <div className="form-control-static p-3 bg-light rounded border">
                                                     {selectedDemand.emergency_contact}
@@ -294,7 +297,7 @@ const ServiceDemandMoreInfo = ({
                                                     <i className="bi bi-chat-square-text-fill text-success"></i>
                                                 </div>
                                                 <h5 className="mb-0 text-dark fw-bold">
-                                                    {userData?.user?.role === 'Patient' ? 'Updates from Care Team' : 'Coordinator Notes'}
+                                                    {userData?.user?.role === 'Patient' ? servicedemands('updatesFromCareTeam') : servicedemands('coordinatorNotes')}
                                                 </h5>
                                             </div>
                                             <div className="bg-light p-3 rounded border">
