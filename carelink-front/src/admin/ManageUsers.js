@@ -7,6 +7,7 @@ import CreateProfileModal from './CreateProfileModal';
 import AddRelationModal from './AddRelationModal';
 import NewEntryModal from './NewEntryModal';
 import { useAuthenticatedApi } from '../hooks/useAuth';
+import { useCareTranslation } from '../hooks/useCareTranslation';
 import tokenManager from '../utils/tokenManager';
 
 const ManageUsers = () => {
@@ -31,6 +32,9 @@ const ManageUsers = () => {
     const [searchField, setSearchField] = useState('all');    
     const [loading, setLoading] = useState(false);
     const USERS_PER_PAGE = 50;
+    
+    // Use translation hooks
+    const { admin, common, placeholders, errors, success } = useCareTranslation();
     
     // Use modern authentication API
     const { get, post, delete: del } = useAuthenticatedApi();

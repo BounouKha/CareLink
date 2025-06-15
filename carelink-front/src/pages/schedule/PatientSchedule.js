@@ -4,6 +4,7 @@ import './ScheduleCalendar.css';
 import './PatientSchedule.css';
 import { SpinnerOnly } from '../../components/LoadingComponents';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
+import { useCareTranslation } from '../../hooks/useCareTranslation';
 import tokenManager from '../../utils/tokenManager';
 
 const PatientSchedule = () => {
@@ -19,6 +20,9 @@ const PatientSchedule = () => {
   const [selectedFamilyMember, setSelectedFamilyMember] = useState(null);
   const [roleChecked, setRoleChecked] = useState(false); // Add this to track if role check is complete
   const navigate = useNavigate();
+
+  // Use translation hooks
+  const { schedule, common, placeholders } = useCareTranslation();
 
   // Use modern authentication API
   const { get } = useAuthenticatedApi();
@@ -281,23 +285,21 @@ const PatientSchedule = () => {
       console.log('⏳ Waiting for role check to complete...');
     }
   }, [startDate, endDate, selectedFamilyMember, isFamilyView, roleChecked]);
-
   return (
     <div className="patient-schedule-container">
-      <h1>{isFamilyView ? 'Family Member Schedule' : 'My Appointments'}</h1>
+      <h1>{isFamilyView ? schedule('familySchedule') : schedule('myAppointments')}</h1>
       
       <div className="schedule-controls">
         <form onSubmit={handleFilterChange} className="filter-form">
           <div className="date-filter">
-            <label htmlFor="start-date">From:</label>
+            <label htmlFor="start-date">{common('from')}:</label>
             <input
               type="date"
               id="start-date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
-            
-            <label htmlFor="end-date">To:</label>
+              <label htmlFor="end-date">{common('to')}:</label>
             <input
               type="date"
               id="end-date"
@@ -308,13 +310,13 @@ const PatientSchedule = () => {
           
           {isFamilyView && familyMembers.length > 0 && (
             <div className="family-filter">
-              <label htmlFor="family-member">Family Member:</label>
+              <label htmlFor="family-member">{schedule('familyMember')}:</label>
               <select
                 id="family-member"
                 value={selectedFamilyMember || ''}
                 onChange={handleFamilyMemberChange}
               >
-                <option value="">All Family Members</option>                {familyMembers.map(member => (
+                <option value="">{schedule('allFamilyMembers')}</option>                {familyMembers.map(member => (
                   <option key={member.id} value={member.id}>
                     {member.firstname} {member.lastname}
                   </option>
@@ -323,7 +325,7 @@ const PatientSchedule = () => {
             </div>
           )}
           
-          <button type="submit">Filter</button>
+          <button type="submit">{common('filter')}</button>
         </form>
       </div>
 
