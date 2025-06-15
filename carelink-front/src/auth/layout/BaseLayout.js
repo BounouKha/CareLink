@@ -6,6 +6,7 @@ import { AdminContext } from '../login/AdminContext';
 import { SpinnerOnly } from '../../components/LoadingComponents';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import ZoomControl from '../../components/ZoomControl';
+import AccessibilityControls from '../../components/AccessibilityControls';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import tokenManager from '../../utils/tokenManager';
 
@@ -227,6 +228,7 @@ const BaseLayout = ({ children }) => {
                         <button className="btn btn-secondary" onClick={() => navigateWithLoading('/admin')}>{admin('title')}</button>
                     )}
                     
+                    <AccessibilityControls />
                     <ZoomControl />
                     <LanguageSwitcher />
                 </div>
