@@ -4,6 +4,7 @@ import BaseLayout from './layout/BaseLayout';
 import { useAuthenticatedApi } from '../hooks/useAuth';
 import tokenManager from '../utils/tokenManager';
 import { formatBirthdateWithAge, getAgeDisplay, calculateAge } from '../utils/ageUtils';
+import { useCareTranslation } from '../hooks/useTranslation';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
@@ -12,7 +13,10 @@ const ProfilePage = () => {
     const profileRef = useRef(null);
     
     // Use modern authentication API
-    const { get, loading, error: apiError } = useAuthenticatedApi();    useEffect(() => {
+    const { get, loading, error: apiError } = useAuthenticatedApi();
+    const { profile, common, auth } = useCareTranslation();
+    
+    useEffect(() => {
         const fetchProfile = async () => {
             try {
                 // Check authentication first
@@ -79,7 +83,59 @@ const ProfilePage = () => {
             window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('mouseup', onMouseUp);
         };
-    }, [profileRef]);    const renderContent = () => {
+    }, [profileRef]);    // Filter tabs based on user role
+    const getAvailableTabs = () => {
+        const userRole = userData?.user?.role;
+        
+        // Base tabs that all authenticated users can see
+        const baseTabs = [
+            { id: 'user', label: 'User Information', icon: '👤' }
+        ];
+        
+        // If user has no role or role is null/undefined, only show user information
+        if (!userRole || userRole === 'null' || userRole === 'undefined') {
+            return baseTabs;
+        }
+        
+        // Additional tabs for users with roles
+        const additionalTabs = [];
+        
+        // Medical information for patients and healthcare providers
+        if (['Patient', 'Provider', 'Family Patient'].includes(userRole)) {
+            additionalTabs.push({ id: 'medical', label: 'Medical Information', icon: '🏥' });
+        }
+        
+        // Family information for family patients
+        if (userRole === 'Family Patient') {
+            additionalTabs.push({ id: 'family', label: 'Family Information', icon: '👨‍👩‍👧‍👦' });
+        }
+        
+        // Medical folder for patients
+        if (['Patient', 'Family Patient'].includes(userRole)) {
+            additionalTabs.push({ id: 'folder', label: 'Medical Folder', icon: '📁' });
+        }
+        
+        // Contact information for all users with roles
+        if (userRole) {
+            additionalTabs.push({ id: 'contact', label: 'Contact Information', icon: '📞' });
+        }
+        
+        return [...baseTabs, ...additionalTabs];
+    };
+
+    const availableTabs = getAvailableTabs();
+
+    // Ensure selected tab is valid for current user
+    useEffect(() => {
+        const validTabIds = availableTabs.map(tab => tab.id);
+        if (!validTabIds.includes(selectedTab)) {
+            setSelectedTab('user');
+        }
+    }, [userData?.user?.role, selectedTab, availableTabs]);
+
+    const renderContent = () => {
+        const userRole = userData?.user?.role;
+        
         switch (selectedTab) {
             case 'user':
                 return (
@@ -118,7 +174,77 @@ const ProfilePage = () => {
                                         <p className="fs-6 fw-medium">{userData.user.national_number}</p>
                                     </div>
                                 )}
+                                <div className="col-md-6">
+                                    <label className="form-label text-muted">Role:</label>
+                                    <p className="fs-6 fw-medium">
+                                        {userRole && userRole !== 'null' && userRole !== 'undefined' ? userRole : (
+                                            <span className="text-muted fst-italic">
+                                                {profile('noRoleAssigned')}
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
                             </div>
+                            
+                            {/* Show translatable message for users without roles */}
+                            {(!userRole || userRole === 'null' || userRole === 'undefined') && (
+                                <div className="alert alert-info mt-3" role="alert">
+                                    <div className="d-flex align-items-start">
+                                        <i className="fas fa-info-circle me-2 mt-1" style={{color: '#0dcaf0'}}></i>
+                                        <div>
+                                            <h6 className="alert-heading mb-1">{profile('roleAssignmentRequired')}</h6>
+                                            <p className="mb-0">
+                                                {profile('roleAssignmentMessage')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            
+            // Only show other cases if user has proper role
+            case 'medical':
+                if (!userRole || !['Patient', 'Provider', 'Family Patient'].includes(userRole)) {
+                    return <div className="alert alert-warning">Access denied - Role required</div>;
+                }
+                return (
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-warning bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
+                                <i className="fas fa-folder-medical me-2 text-warning"></i>
+                                Medical Folder
+                            </h5>
+                        </div>
+                        <div className="card-body">
+                            {userData.medical_folder && userData.medical_folder.length > 0 ? (
+                                <div className="row g-3">
+                                    {userData.medical_folder.map((record, index) => (
+                                        <div key={index} className="col-12">
+                                            <div className="card bg-light border-0">
+                                                <div className="card-body py-3">
+                                                    <div className="row">
+                                                        <div className="col-md-4">
+                                                            <label className="form-label text-muted">Date:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{record.created_at}</p>
+                                                        </div>
+                                                        <div className="col-md-8">
+                                                            <label className="form-label text-muted">Notes:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{record.note || 'N/A'}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <i className="fas fa-folder-open text-muted mb-2" style={{fontSize: '2rem'}}></i>
+                                    <p className="text-muted mb-0">No medical folder data available.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -204,46 +330,6 @@ const ProfilePage = () => {
                         </div>
                     </div>
                 );
-            case 'medical':
-                return (
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-warning bg-opacity-10 border-0">
-                            <h5 className="card-title mb-0">
-                                <i className="fas fa-folder-medical me-2 text-warning"></i>
-                                Medical Folder
-                            </h5>
-                        </div>
-                        <div className="card-body">
-                            {userData.medical_folder && userData.medical_folder.length > 0 ? (
-                                <div className="row g-3">
-                                    {userData.medical_folder.map((record, index) => (
-                                        <div key={index} className="col-12">
-                                            <div className="card bg-light border-0">
-                                                <div className="card-body py-3">
-                                                    <div className="row">
-                                                        <div className="col-md-4">
-                                                            <label className="form-label text-muted">Date:</label>
-                                                            <p className="fs-6 fw-medium mb-0">{record.created_at}</p>
-                                                        </div>
-                                                        <div className="col-md-8">
-                                                            <label className="form-label text-muted">Notes:</label>
-                                                            <p className="fs-6 fw-medium mb-0">{record.note || 'N/A'}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-4">
-                                    <i className="fas fa-folder-open text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No medical folder data available.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
             case 'contact':
                 return (
                     <div className="card shadow-sm border-0">
@@ -277,9 +363,15 @@ const ProfilePage = () => {
                     </div>
                 );
             default:
-                return null;
+                return (
+                    <div className="alert alert-info">
+                        <h4>Profile Information</h4>
+                        <p>Select a tab to view your profile information.</p>
+                    </div>
+                );
         }
     };
+
     if (error) {
         return (
             <BaseLayout>
@@ -319,70 +411,47 @@ const ProfilePage = () => {
         );
     }return (
         <BaseLayout>
-            <div className="container-fluid py-4">
-                <div className="row justify-content-center">
-                    <div className="col-lg-10 col-xl-8">
-                        {/* Profile Header Card */}
-                        <div className="card shadow-sm border-0 mb-4" ref={profileRef} style={{cursor: 'move'}}>
-                            <div className="card-header bg-primary bg-opacity-10 border-0">
-                                <div className="d-flex align-items-center">
-                                    <i className="fas fa-user-circle me-3 text-primary" style={{fontSize: '2rem'}}></i>
-                                    <div>
-                                        <h4 className="card-title mb-0">Profile Information</h4>                                        <div className="badge bg-primary bg-opacity-20 text-primary mt-1">
-                                            <i className="fas fa-user-tag me-1"></i>
-                                            Role: {userData.user.role === 'Family Patient' ? 'Patient' : userData.user.role}
+            <div className="profile-page">
+                <div className="container-fluid py-4">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-10 col-xl-8">
+                            {/* Profile Header Card */}
+                            <div className="card shadow-sm border-0 mb-4" ref={profileRef} style={{cursor: 'move'}}>
+                                <div className="card-header bg-primary bg-opacity-10 border-0">
+                                    <div className="d-flex align-items-center">
+                                        <i className="fas fa-user-circle me-3 text-primary" style={{fontSize: '2rem'}}></i>
+                                        <div>
+                                            <h4 className="card-title mb-0">Profile Information</h4>                                            <div className="badge bg-primary bg-opacity-20 text-primary mt-1">
+                                                <i className="fas fa-user-tag me-1"></i>
+                                                Role: {userData.user.role === 'Family Patient' ? 'Patient' : userData.user.role}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Navigation Tabs */}
-                        <div className="card shadow-sm border-0 mb-4">
-                            <div className="card-body p-0">
-                                <nav className="nav nav-pills nav-justified">
-                                    <button 
-                                        className={`nav-link ${selectedTab === 'user' ? 'active' : ''}`}
-                                        onClick={() => setSelectedTab('user')}
-                                    >
-                                        <i className="fas fa-user me-2"></i>
-                                        User Info
-                                    </button>
-                                    <button 
-                                        className={`nav-link ${selectedTab === 'patient' ? 'active' : ''}`}
-                                        onClick={() => setSelectedTab('patient')}
-                                    >
-                                        <i className="fas fa-user-injured me-2"></i>
-                                        Patient Info
-                                    </button>
-                                    <button 
-                                        className={`nav-link ${selectedTab === 'family' ? 'active' : ''}`}
-                                        onClick={() => setSelectedTab('family')}
-                                    >
-                                        <i className="fas fa-users me-2"></i>
-                                        Family
-                                    </button>
-                                    <button 
-                                        className={`nav-link ${selectedTab === 'medical' ? 'active' : ''}`}
-                                        onClick={() => setSelectedTab('medical')}
-                                    >
-                                        <i className="fas fa-folder-medical me-2"></i>
-                                        Medical Folder
-                                    </button>
-                                    <button 
-                                        className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
-                                        onClick={() => setSelectedTab('contact')}
-                                    >
-                                        <i className="fas fa-phone me-2"></i>
-                                        Contact
-                                    </button>
-                                </nav>
+                            {/* Navigation Tabs */}
+                            <div className="card shadow-sm border-0 mb-4">
+                                <div className="card-body p-0">
+                                    <nav className="nav nav-pills nav-justified">
+                                        {availableTabs.map((tab) => (
+                                            <button 
+                                                key={tab.id}
+                                                className={`nav-link ${selectedTab === tab.id ? 'active' : ''}`}
+                                                onClick={() => setSelectedTab(tab.id)}
+                                            >
+                                                <i className={`fas fa-${tab.icon} me-2`}></i>
+                                                {tab.label}
+                                            </button>
+                                        ))}
+                                    </nav>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Content Area */}
-                        <div className="profile-content">
-                            {renderContent()}
+                            {/* Content Area */}
+                            <div className="profile-content">
+                                {renderContent()}
+                            </div>
                         </div>
                     </div>
                 </div>

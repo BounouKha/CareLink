@@ -118,7 +118,10 @@
     "relationship": "Relation",
     "profileUpdated": "Profil mis à jour avec succès",
     "profileError": "Erreur lors de la mise à jour du profil",
-    "familyRelationships": "Relations familiales"
+    "familyRelationships": "Relations familiales",
+    "roleAssignmentRequired": "Attribution de Rôle Requise",
+    "roleAssignmentMessage": "Votre compte nécessite une attribution de rôle pour accéder aux fonctionnalités supplémentaires. Veuillez contacter votre administrateur système pour qu'un rôle soit attribué à votre compte.",
+    "noRoleAssigned": "Aucun rôle attribué"
   },
   "patients": {
     "newestToOldest": "Nouveau à l'ancien",
@@ -224,7 +227,7 @@
     "submitServiceRequest": "Soumettre la demande de service"
   },
   "admin": {
-    "title": "Panneau d'administration",
+    "title": "Admin",
     "users": "Utilisateurs",
     "manageUsers": "Gérer les utilisateurs",
     "createUser": "Créer un utilisateur",

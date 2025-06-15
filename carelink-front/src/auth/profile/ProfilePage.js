@@ -112,13 +112,16 @@ const ProfilePage = () => {
             window.removeEventListener('mouseup', onMouseUp);
         };
     }, [profileRef]);    const renderContent = () => {
+        const userRole = userData?.user?.role;
+        
         switch (selectedTab) {
             case 'user':
                 return (
                     <div className="card shadow-sm border-0">
-                        <div className="card-header bg-primary bg-opacity-10 border-0">                            <h5 className="card-title mb-0">
+                        <div className="card-header bg-primary bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
                                 <i className="fas fa-user me-2 text-primary"></i>
-                                {profile('personalInfo')}
+                                User Information
                             </h5>
                         </div>
                         <div className="card-body">
@@ -147,6 +150,21 @@ const ProfilePage = () => {
                                     </div>
                                 )}
                             </div>
+                            
+                            {/* Show translatable message for users without roles */}
+                            {(!userRole || userRole === 'null' || userRole === 'undefined') && (
+                                <div className="alert alert-info mt-3" role="alert">
+                                    <div className="d-flex align-items-start">
+                                        <i className="fas fa-info-circle me-2 mt-1" style={{color: '#0dcaf0'}}></i>
+                                        <div>
+                                            <h6 className="alert-heading mb-1">{profile('roleAssignmentRequired')}</h6>
+                                            <p className="mb-0">
+                                                {profile('roleAssignmentMessage')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );            case 'patient':
@@ -419,11 +437,12 @@ const ProfilePage = () => {
                                                     {profile('contactInfo')}
                                                 </button>
                                             </>
-                                        ) : userData.user.role !== 'Coordinator' && (
+                                        ) : userData.user.role !== 'Coordinator' && userData.user.role && userData.user.role !== 'null' && userData.user.role !== 'undefined' && (
                                             <>
                                                 <button 
                                                     className={`nav-link ${selectedTab === 'patient' ? 'active' : ''}`}
-                                                    onClick={() => setSelectedTab('patient')}                                                >
+                                                    onClick={() => setSelectedTab('patient')}
+                                                >
                                                     <i className="fas fa-user-injured me-2"></i>
                                                     {profile('medicalInfo')}
                                                 </button>
@@ -433,7 +452,8 @@ const ProfilePage = () => {
                                                 >
                                                     <i className="fas fa-users me-2"></i>
                                                     {common('family')}
-                                                </button>                                                <button 
+                                                </button>
+                                                <button 
                                                     className={`nav-link ${selectedTab === 'medical' ? 'active' : ''}`}
                                                     onClick={() => setSelectedTab('medical')}
                                                 >
