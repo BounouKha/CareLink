@@ -471,19 +471,19 @@ const PatientsPageNew = () => {
                     )}
                 </div>
             </div>
-        </PatientLayout>{/* DEBUG: Visible modal state indicator */}              {/* Patient Edit Modal */}
+        </PatientLayout>{/* DEBUG: Visible modal state indicator */}            {/* Patient Edit Modal */}
             {showEditPatientModal && selectedPatient && (
                 <div className="patient-page-modal-overlay">
                     <div className="modal-dialog modal-lg">
                         <div className="modal-content bg-white">
                             {/* Modal Header */}
                             <div className="modal-header border-bottom">
-                                <h5 className="modal-title fw-semibold text-dark">Edit Patient Details</h5>
+                                <h5 className="modal-title fw-semibold text-dark">{patientsT('editPatient')}</h5>
                                 <button 
                                     type="button" 
                                     className="btn-close" 
                                     onClick={handleCloseEditPatientModal}
-                                    aria-label="Close"
+                                    aria-label={common('close')}
                                 ></button>
                             </div>
                             
@@ -492,10 +492,10 @@ const PatientsPageNew = () => {
                                 <form>
                                     {/* Basic Information Section */}
                                     <div className="mb-4">
-                                        <h6 className="text-muted mb-3 text-uppercase fw-bold small">Basic Information</h6>
+                                        <h6 className="text-muted mb-3 text-uppercase fw-bold small">{common('basicInformation')}</h6>
                                         <div className="row g-3">
                                             <div className="col-md-6">
-                                                <label className="form-label small fw-medium text-dark">Full Name</label>
+                                                <label className="form-label small fw-medium text-dark">{common('name')}</label>
                                                 <input
                                                     type="text"
                                                     className="form-control bg-light"
@@ -645,21 +645,20 @@ const PatientsPageNew = () => {
                                 </form>
                             </div>
                             
-                            {/* Modal Footer */}
-                            <div className="modal-footer border-top bg-white">
+                            {/* Modal Footer */}                                            <div className="modal-footer border-top bg-white">
                                 <button 
                                     type="button" 
                                     className="btn btn-light me-2" 
                                     onClick={handleCloseEditPatientModal}
                                 >
-                                    Cancel
+                                    {common('cancel')}
                                 </button>
                                 <button 
                                     type="button" 
                                     className="btn btn-primary" 
                                     onClick={handleSaveChanges}
                                 >
-                                    Save Changes
+                                    {common('save')}
                                 </button>
                             </div>
                         </div>
@@ -672,12 +671,12 @@ const PatientsPageNew = () => {
                         <div className="modal-content">
                             {/* Modal Header */}
                             <div className="modal-header border-bottom bg-white">
-                                <h5 className="modal-title fw-semibold text-dark">Medical Folder</h5>
+                                <h5 className="modal-title fw-semibold text-dark">{patientsT('medicalFolder')}</h5>
                                 <button 
                                     type="button" 
                                     className="btn-close btn-close-dark"
                                     onClick={handleCloseMedicalFolderModal}
-                                    aria-label="Close"
+                                    aria-label={common('close')}
                                 ></button>
                             </div>
                             
@@ -687,15 +686,15 @@ const PatientsPageNew = () => {
                                 <div className="mb-4">
                                     <div className="row align-items-center">
                                         <div className="col-auto">
-                                            <label className="form-label small fw-medium text-muted mb-0">Sort by:</label>
+                                            <label className="form-label small fw-medium text-muted mb-0">{common('sort')}:</label>
                                         </div>                                        <div className="col-auto">
                                             <select 
                                                 className="form-select form-select-sm border-light patient-page-sort-select"
                                                 value={sortOrder} 
                                                 onChange={handleSortOrderChange}
                                             >
-                                                <option value="newest">Newest to Oldest</option>
-                                                <option value="oldest">Oldest to Newest</option>
+                                                <option value="newest">{patientsT('newestToOldest')}</option>
+                                                <option value="oldest">{patientsT('oldestToNewest')}</option>
                                             </select>
                                         </div>
                                     </div>

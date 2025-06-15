@@ -3,6 +3,7 @@ import './RecurringSchedule.css';
 import { useLoading } from '../../../hooks/useLoading';
 import { useAuthenticatedApi } from '../../../hooks/useAuth';
 import tokenManager from '../../../utils/tokenManager';
+import { useCareTranslation } from '../../../hooks/useCareTranslation';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -13,6 +14,9 @@ import {
 } from '../../../components/LoadingComponents';
 
 const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
+  // Translation hook
+  const { schedule, common, placeholders, errors: errorsT } = useCareTranslation();
+
   const [formData, setFormData] = useState({
     provider_id: '',
     patient_id: '',
@@ -61,16 +65,15 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
 
   // Use modern authentication API
   const { get, post } = useAuthenticatedApi();
-
-  // Enhanced days of week for selection with better display
+  // Enhanced days of week for selection with better display - using translations
   const daysOfWeek = [
-    { value: 1, label: 'Monday', short: 'Mon', initial: 'M', color: '#3b82f6' },
-    { value: 2, label: 'Tuesday', short: 'Tue', initial: 'T', color: '#8b5cf6' },
-    { value: 3, label: 'Wednesday', short: 'Wed', initial: 'W', color: '#06b6d4' },
-    { value: 4, label: 'Thursday', short: 'Thu', initial: 'T', color: '#10b981' },
-    { value: 5, label: 'Friday', short: 'Fri', initial: 'F', color: '#f59e0b' },
-    { value: 6, label: 'Saturday', short: 'Sat', initial: 'S', color: '#ef4444' },
-    { value: 0, label: 'Sunday', short: 'Sun', initial: 'S', color: '#ec4899' }
+    { value: 1, label: schedule('dayLabels.monday'), short: schedule('dayShort.mon'), initial: 'M', color: '#3b82f6' },
+    { value: 2, label: schedule('dayLabels.tuesday'), short: schedule('dayShort.tue'), initial: 'T', color: '#8b5cf6' },
+    { value: 3, label: schedule('dayLabels.wednesday'), short: schedule('dayShort.wed'), initial: 'W', color: '#06b6d4' },
+    { value: 4, label: schedule('dayLabels.thursday'), short: schedule('dayShort.thu'), initial: 'T', color: '#10b981' },
+    { value: 5, label: schedule('dayLabels.friday'), short: schedule('dayShort.fri'), initial: 'F', color: '#f59e0b' },
+    { value: 6, label: schedule('dayLabels.saturday'), short: schedule('dayShort.sat'), initial: 'S', color: '#ef4444' },
+    { value: 0, label: schedule('dayLabels.sunday'), short: schedule('dayShort.sun'), initial: 'S', color: '#ec4899' }
   ];
 
   // Helper function to calculate duration between times
@@ -165,24 +168,22 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     const end = new Date(start);
     end.setDate(end.getDate() + 28); // 4 weeks
     return formatDateToString(end);
-  };
-  // Enhanced validation function
+  };  // Enhanced validation function
   const validateForm = () => {
     const errors = {};
     
-    if (!formData.provider_id) errors.provider_id = 'Provider is required';
-    if (!formData.patient_id) errors.patient_id = 'Patient is required';
-    if (!formData.start_date) errors.start_date = 'Start date is required';
-    if (!formData.start_time) errors.start_time = 'Start time is required';
-    if (!formData.end_time) errors.end_time = 'End time is required';
-    if (recurringData.weekdays.length === 0) errors.weekdays = 'At least one day must be selected';
-    
-    // Validate time logic
+    if (!formData.provider_id) errors.provider_id = schedule('errors.providerRequired');
+    if (!formData.patient_id) errors.patient_id = schedule('errors.patientRequired');
+    if (!formData.start_date) errors.start_date = schedule('errors.startDateRequired');
+    if (!formData.start_time) errors.start_time = schedule('errors.startTimeRequired');
+    if (!formData.end_time) errors.end_time = schedule('errors.endTimeRequired');
+    if (recurringData.weekdays.length === 0) errors.weekdays = schedule('errors.atLeastOneDayRequired');
+      // Validate time logic
     if (formData.start_time && formData.end_time) {
       const start = new Date(`2000-01-01T${formData.start_time}`);
       const end = new Date(`2000-01-01T${formData.end_time}`);
       if (end <= start) {
-        errors.end_time = 'End time must be after start time';
+        errors.end_time = schedule('errors.endTimeAfterStart');
       }
     }
     
@@ -191,7 +192,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
       const start = new Date(formData.start_date);
       const end = new Date(recurringData.end_date);
       if (end <= start) {
-        errors.end_date = 'End date must be after start date';
+        errors.end_date = schedule('errors.endDateAfterStart');
       }
     }
     
@@ -543,14 +544,14 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     
     // Validate form before submission
     if (!validateForm()) {
-      setError('Please fix the errors above before submitting.');
+      setError(schedule('errors.fixErrorsBeforeSubmitting'));
       return;
     }
     
     if (previewDates.length === 0) {
-      setError('No valid dates found. Please check your recurring settings.');
+      setError(schedule('errors.noValidDatesFound'));
       return;
-    }    await executeWithLoading(async () => {
+    }await executeWithLoading(async () => {
       setError('');
       
       if (!tokenManager.isAuthenticated()) {
@@ -607,12 +608,11 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
 
   if (!isOpen) return null;
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="quick-schedule-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose}>      <div className="quick-schedule-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Recurring Schedule</h2>
+          <h2>{schedule('recurringSchedule')}</h2>
           <button className="close-btn" onClick={onClose}>×</button>
-        </div>        <form onSubmit={handleSubmit} className="quick-schedule-form">
+        </div><form onSubmit={handleSubmit} className="quick-schedule-form">
           {/* Simple loading - same as other pages */}
           {(isDataLoading || isModalLoading) && (
             <div className="simple-loading-container">
@@ -626,14 +626,14 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
               {error}
             </div>
           )}
-          
-          {/* Basic Schedule Information */}
+            {/* Basic Schedule Information */}
           <div className="form-section">
-            <h3>📝 Basic Information</h3>
+            <h3>📝 {schedule('basicInformation')}</h3>
             
             {/* Provider Selection */}
-            <div className="form-row">              <div className="form-group">
-                <label htmlFor="provider-search">Provider *</label>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="provider-search">{schedule('provider')} *</label>
                 <div className="searchable-dropdown">
                   <input
                     type="text"
@@ -644,7 +644,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                       setShowProviderDropdown(e.target.value.length > 0);
                     }}
                     onBlur={() => setTimeout(() => setShowProviderDropdown(false), 150)}
-                    placeholder="Search providers..."
+                    placeholder={schedule('searchProviders')}
                     className={validationErrors.provider_id ? 'error' : ''}
                     required
                   />
@@ -662,13 +662,12 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                         >
                           <strong>{provider.name}</strong>
                           <span className="provider-service"> - {provider.service}</span>
-                        </div>
-                      )) : (
-                        <div className="dropdown-item no-results">No providers found</div>
+                        </div>                      )) : (
+                        <div className="dropdown-item no-results">{schedule('noProvidersFound')}</div>
                       )}
                       {filteredProviders.length > 8 && (
                         <div className="dropdown-item more-results">
-                          ... and {filteredProviders.length - 8} more results
+                          {schedule('andMoreResults', { count: filteredProviders.length - 8 })}
                         </div>
                       )}
                     </div>
@@ -676,7 +675,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                 </div>
               </div>              {/* Patient Selection */}
               <div className="form-group">
-                <label htmlFor="patient-search">Patient *</label>
+                <label htmlFor="patient-search">{schedule('patient')} *</label>
                 <div className="searchable-dropdown">
                   <input
                     type="text"
@@ -687,7 +686,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                       setShowPatientDropdown(e.target.value.length > 0);
                     }}
                     onBlur={() => setTimeout(() => setShowPatientDropdown(false), 150)}
-                    placeholder="Search patients..."
+                    placeholder={schedule('searchPatientsSchedule')}
                     className={validationErrors.patient_id ? 'error' : ''}
                     required
                   />
@@ -707,13 +706,12 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                           {patient.national_number && (
                             <span className="patient-info">ID: {patient.national_number}</span>
                           )}
-                        </div>
-                      )) : (
-                        <div className="dropdown-item no-results">No patients found</div>
+                        </div>                      )) : (
+                        <div className="dropdown-item no-results">{schedule('noPatientsFound')}</div>
                       )}
                       {filteredPatients.length > 8 && (
                         <div className="dropdown-item more-results">
-                          ... and {filteredPatients.length - 8} more results
+                          {schedule('andMoreResults', { count: filteredPatients.length - 8 })}
                         </div>
                       )}
                     </div>
@@ -723,7 +721,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             </div>            {/* Time and Service */}
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="start_time">Start Time *</label>
+                <label htmlFor="start_time">{schedule('startTime')} *</label>
                 <input
                   type="time"
                   id="start_time"
@@ -739,7 +737,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
               </div>
 
               <div className="form-group">
-                <label htmlFor="end_time">End Time *</label>
+                <label htmlFor="end_time">{schedule('endTime')} *</label>
                 <input
                   type="time"
                   id="end_time"
@@ -751,23 +749,22 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                 />
                 {validationErrors.end_time && (
                   <span className="validation-error">{validationErrors.end_time}</span>
-                )}
-                {formData.start_time && formData.end_time && (
+                )}                {formData.start_time && formData.end_time && (
                   <span className="time-duration">
-                    Duration: {calculateDuration(formData.start_time, formData.end_time)}
+                    {schedule('duration')}: {calculateDuration(formData.start_time, formData.end_time)}
                   </span>
                 )}
               </div>
 
               <div className="form-group">
-                <label htmlFor="service_id">Service</label>
+                <label htmlFor="service_id">{schedule('service')}</label>
                 <select
                   id="service_id"
                   name="service_id"
                   value={formData.service_id}
                   onChange={handleInputChange}
                 >
-                  <option value="">Select Service (Optional)</option>
+                  <option value="">{schedule('selectServiceOptional')}</option>
                   {services.map(service => (
                     <option key={service.id} value={service.id}>
                       {service.name} - ${service.price}
@@ -775,16 +772,14 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   ))}
                 </select>
               </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="description">Description</label>
+            </div>            <div className="form-group">
+              <label htmlFor="description">{placeholders('enterDescription')}</label>
               <textarea
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="Additional notes or description..."
+                placeholder={schedule('additionalNotes')}
                 rows="2"
               />
             </div>
@@ -792,11 +787,10 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
 
           {/* Recurring Settings */}
           <div className="form-section">
-            <h3>🔄 Recurring Pattern</h3>
-            
-            <div className="form-row">
+            <h3>🔄 {schedule('recurringPattern')}</h3>
+              <div className="form-row">
               <div className="form-group">
-                <label htmlFor="start_date">Start Date *</label>
+                <label htmlFor="start_date">{schedule('date')} *</label>
                 <input
                   type="date"
                   id="start_date"
@@ -813,7 +807,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
               </div>
 
               <div className="form-group">
-                <label htmlFor="frequency">Frequency *</label>
+                <label htmlFor="frequency">{schedule('frequency')} *</label>
                 <select
                   id="frequency"
                   name="frequency"
@@ -821,15 +815,13 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   onChange={handleRecurringChange}
                   required
                 >
-                  <option value="weekly">Weekly</option>
-                  <option value="bi-weekly">Bi-weekly (Every 2 weeks)</option>
-                  <option value="monthly">Monthly</option>
+                  <option value="weekly">{schedule('weekly')}</option>
+                  <option value="bi-weekly">{schedule('biWeekly')}</option>
+                  <option value="monthly">{schedule('monthly')}</option>
                 </select>
-              </div>
-
-              {recurringData.frequency !== 'monthly' && (
+              </div>              {recurringData.frequency !== 'monthly' && (
                 <div className="form-group">
-                  <label htmlFor="interval">Every</label>
+                  <label htmlFor="interval">{schedule('everyWeeks')}</label>
                   <div className="interval-input">
                     <input
                       type="number"
@@ -840,13 +832,13 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                       min="1"
                       max="4"
                     />
-                    <span>week(s)</span>
+                    <span>{schedule('weekS')}</span>
                   </div>
                 </div>
               )}
             </div>            {/* Days of Week Selection */}
             <div className="form-group">
-              <label>Days of Week *</label>
+              <label>{schedule('daysOfWeek')} *</label>
               <div className={`weekdays-selector ${validationErrors.weekdays ? 'error' : ''}`}>
                 {daysOfWeek.map(day => (
                   <label key={day.value} className="weekday-checkbox">
@@ -865,13 +857,12 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
               </div>
               {validationErrors.weekdays && (
                 <span className="validation-error">{validationErrors.weekdays}</span>
-              )}
-              <div className="weekdays-helper">
-                Selected days: {recurringData.weekdays.length > 0 
+              )}              <div className="weekdays-helper">
+                {schedule('selectedDays')}: {recurringData.weekdays.length > 0 
                   ? recurringData.weekdays
                       .map(day => daysOfWeek.find(d => d.value === day)?.label)
                       .join(', ')
-                  : 'None selected'
+                  : schedule('noneSelected')
                 }
               </div>
             </div>
@@ -879,7 +870,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             {/* End Date or Occurrences */}
             <div className="form-row">
               <div className="form-group">
-                <label>End Pattern</label>
+                <label>{schedule('endPattern')}</label>
                 <div className="radio-group">
                   <label className="radio-option">
                     <input
@@ -889,9 +880,8 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                       checked={recurringData.end_type === 'date'}
                       onChange={handleRecurringChange}
                     />
-                    <span className="radio-label">
-                      <span className="radio-icon">📅</span>
-                      End by date
+                    <span className="radio-label">                      <span className="radio-icon">📅</span>
+                      {schedule('endByDate')}
                     </span>
                   </label>
                   <label className="radio-option">
@@ -904,15 +894,13 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                     />
                     <span className="radio-label">
                       <span className="radio-icon">🔢</span>
-                      After number of occurrences
+                      {schedule('afterOccurrences')}
                     </span>
                   </label>
                 </div>
-              </div>
-
-              {recurringData.end_type === 'date' ? (
+              </div>              {recurringData.end_type === 'date' ? (
                 <div className="form-group">
-                  <label htmlFor="end_date">End Date *</label>
+                  <label htmlFor="end_date">{schedule('endDate')} *</label>
                   <input
                     type="date"
                     id="end_date"
@@ -929,7 +917,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                 </div>
               ) : (
                 <div className="form-group">
-                  <label htmlFor="occurrences">Number of Occurrences *</label>
+                  <label htmlFor="occurrences">{schedule('numberOfOccurrences')} *</label>
                   <input
                     type="number"
                     id="occurrences"
@@ -945,25 +933,24 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                     <span className="validation-error">{validationErrors.occurrences}</span>
                   )}
                   <div className="input-helper">
-                    Estimated duration: {Math.ceil(recurringData.occurrences / recurringData.weekdays.length)} weeks
+                    {schedule('estimatedDuration')}: {Math.ceil(recurringData.occurrences / recurringData.weekdays.length)} {schedule('weeks')}
                   </div>
                 </div>
               )}
             </div>
           </div>          {/* Enhanced Preview Section */}
-          <div className="form-section">
-            <div className="enhanced-preview-header">
+          <div className="form-section">            <div className="enhanced-preview-header">
               <div className="preview-title">
-                <h3>📅 Schedule Preview</h3>
+                <h3>📅 {schedule('schedulePreview')}</h3>
                 <div className="preview-badge">
-                  {previewDates.length} appointment{previewDates.length !== 1 ? 's' : ''}
+                  {previewDates.length} {schedule('appointment')}{previewDates.length !== 1 ? 's' : ''}
                 </div>
               </div>
               <div className="preview-controls">
                 {isGeneratingPreview && (
                   <div className="preview-loading">
                     <div className="loading-spinner small"></div>
-                    <span>Generating...</span>
+                    <span>{schedule('generating')}</span>
                   </div>
                 )}
                 <button
@@ -972,42 +959,41 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   onClick={() => setShowPreview(!showPreview)}
                 >
                   <span className="toggle-icon">{showPreview ? '🙈' : '👁️'}</span>
-                  {showPreview ? 'Hide Preview' : 'Show Preview'}
+                  {showPreview ? schedule('hidePreview') : schedule('showPreview')}
                 </button>
               </div>
             </div>
             
             {previewDates.length > 0 && (
-              <div className="preview-stats-grid">
-                <div className="stat-card pattern">
+              <div className="preview-stats-grid">                <div className="stat-card pattern">
                   <div className="stat-icon">🔄</div>
                   <div className="stat-content">
-                    <div className="stat-label">Pattern</div>
+                    <div className="stat-label">{schedule('pattern')}</div>
                     <div className="stat-value">{generatePatternSummary()}</div>
                   </div>
                 </div>
                 <div className="stat-card duration">
                   <div className="stat-icon">⏱️</div>
                   <div className="stat-content">
-                    <div className="stat-label">Total Duration</div>
-                    <div className="stat-value">{calculateTotalDuration()} hours</div>
+                    <div className="stat-label">{schedule('totalDuration')}</div>
+                    <div className="stat-value">{calculateTotalDuration()} {schedule('hours')}</div>
                   </div>
                 </div>
                 <div className="stat-card frequency">
                   <div className="stat-icon">📊</div>
                   <div className="stat-content">
-                    <div className="stat-label">Frequency</div>
+                    <div className="stat-label">{schedule('frequency')}</div>
                     <div className="stat-value">
-                      {recurringData.frequency === 'weekly' ? `Every ${recurringData.interval} week${recurringData.interval > 1 ? 's' : ''}` :
-                       recurringData.frequency === 'bi-weekly' ? 'Every 2 weeks' :
-                       `Every ${recurringData.interval} month${recurringData.interval > 1 ? 's' : ''}`}
+                      {recurringData.frequency === 'weekly' ? `${schedule('everyWeeks')} ${recurringData.interval} ${schedule('weekS').slice(0, -3)}${recurringData.interval > 1 ? 's' : ''}` :
+                       recurringData.frequency === 'bi-weekly' ? schedule('biWeekly').replace(' (Every 2 weeks)', '') :
+                       `${schedule('everyWeeks')} ${recurringData.interval} month${recurringData.interval > 1 ? 's' : ''}`}
                     </div>
                   </div>
                 </div>
                 <div className="stat-card timeline">
                   <div className="stat-icon">📅</div>
                   <div className="stat-content">
-                    <div className="stat-label">Timeline</div>
+                    <div className="stat-label">{schedule('timeline')}</div>
                     <div className="stat-value">
                       {previewDates.length > 0 && 
                         `${previewDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
@@ -1022,9 +1008,8 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             {showPreview && (
               <div className="preview-container">
                 {previewDates.length > 0 ? (
-                  <div className="enhanced-preview-list">
-                    <div className="preview-list-header">
-                      <h4>Upcoming Appointments</h4>
+                  <div className="enhanced-preview-list">                    <div className="preview-list-header">
+                      <h4>{schedule('upcomingAppointments')}</h4>
                       <div className="list-controls">
                         {previewDates.length > 6 && (
                           <button
@@ -1032,7 +1017,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                             className="expand-toggle"
                             onClick={() => setShowAllPreviews(!showAllPreviews)}
                           >
-                            {showAllPreviews ? 'Show Less' : `Show All ${previewDates.length}`}
+                            {showAllPreviews ? schedule('showLess') : `${schedule('showAll')} ${previewDates.length}`}
                           </button>
                         )}
                       </div>
@@ -1100,11 +1085,10 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                                 </div>
                               )}
                             </div>
-                            
-                            {(isToday || isPast) && (
+                              {(isToday || isPast) && (
                               <div className="card-status">
-                                {isToday && <span className="status-badge today">Today</span>}
-                                {isPast && <span className="status-badge past">Past Date</span>}
+                                {isToday && <span className="status-badge today">{schedule('today')}</span>}
+                                {isPast && <span className="status-badge past">{schedule('pastDate')}</span>}
                               </div>
                             )}
                           </div>
@@ -1112,17 +1096,16 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                       })}
                     </div>
                     
-                    {!showAllPreviews && previewDates.length > 6 && (
-                      <div className="preview-footer">
+                    {!showAllPreviews && previewDates.length > 6 && (                      <div className="preview-footer">
                         <div className="remaining-count">
-                          +{previewDates.length - 6} more appointments
+                          +{previewDates.length - 6} {schedule('moreAppointments')}
                         </div>
                         <button
                           type="button"
                           className="view-all-btn"
                           onClick={() => setShowAllPreviews(true)}
                         >
-                          View All Appointments
+                          {schedule('viewAllAppointments')}
                         </button>
                       </div>
                     )}
@@ -1136,34 +1119,32 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                         <span></span>
                         <span></span>
                       </div>
-                    </div>
-                    <div className="empty-content">
-                      <h4>No appointments scheduled</h4>
-                      <p>Adjust your settings to generate appointments:</p>
+                    </div>                    <div className="empty-content">
+                      <h4>{schedule('noAppointmentsScheduled')}</h4>
+                      <p>{schedule('adjustSettings')}</p>
                       <ul className="empty-suggestions">
-                        <li>Select at least one day of the week</li>
-                        <li>Set a valid date range</li>
-                        <li>Check your recurrence pattern</li>
+                        <li>{schedule('selectAtLeastOneDay')}</li>
+                        <li>{schedule('setValidDateRange')}</li>
+                        <li>{schedule('checkRecurrencePattern')}</li>
                       </ul>
                     </div>
                   </div>
                 )}
               </div>
             )}
-          </div>          {/* Enhanced Form Actions */}
-          <div className="form-actions">
+          </div>          {/* Enhanced Form Actions */}          <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={isModalLoading}>
-              Cancel
+              {common('cancel')}
             </button>
             <ButtonLoading 
               type="submit"
               className="btn-primary"
               isLoading={isModalLoading}
               disabled={previewDates.length === 0 || isGeneratingPreview}
-              loadingText={`Creating ${previewDates.length} appointments...`}
+              loadingText={`${schedule('creatingAppointments').replace('{{count}}', previewDates.length)}...`}
             >
               <span className="btn-icon">🚀</span>
-              Create {previewDates.length} Appointment{previewDates.length !== 1 ? 's' : ''}
+              {schedule('createAppointments').replace('{{count}}', previewDates.length).replace('{{plural}}', previewDates.length !== 1 ? 's' : '')}
             </ButtonLoading>
           </div>
         </form>

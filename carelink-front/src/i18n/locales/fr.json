@@ -1,5 +1,12 @@
 {
   "common": {
+    "sort": "Trier",
+    "name": "Nom",
+    "status": "Statut",
+    "description": "Description",
+    "gender": "Genre",
+    "address": "Adresse",
+    "basicInformation": "Informations de base",
     "welcome": "Bienvenue",
     "home": "Accueil",
     "login": "Connexion",
@@ -40,7 +47,8 @@
     "upload": "Téléverser",
     "family": "Famille",
     "from": "De",
-    "to": "À"
+    "to": "À",
+    "memberArea": "Zone membre"
   },
   "navigation": {
     "dashboard": "Tableau de bord",
@@ -79,6 +87,14 @@
     "checkingPermissions": "Vérification des permissions administrateur..."
   },
   "profile": {
+    "familyMember": "Membre de la famille",
+    "familyMembers": "Membres de la famille",
+    "illness": "Maladie",   
+    "criticalInformation": "Informations critiques",
+    "status": "Statut",
+    "gender": "Genre",
+    "medicalFolder": "Dossier médical",
+    "patientInfo": "Information du patient",
     "title": "Informations du profil",
     "personalInfo": "Informations personnelles",
     "contactInfo": "Informations de contact",
@@ -101,9 +117,13 @@
     "linkedPatients": "Patients liés",
     "relationship": "Relation",
     "profileUpdated": "Profil mis à jour avec succès",
-    "profileError": "Erreur lors de la mise à jour du profil"
+    "profileError": "Erreur lors de la mise à jour du profil",
+    "familyRelationships": "Relations familiales"
   },
   "patients": {
+    "newestToOldest": "Nouveau à l'ancien",
+    "oldestToNewest": "Ancien au nouveau",
+    "gender":"Genre",
     "title": "Patients",
     "patientList": "Liste des patients",
     "addPatient": "Ajouter un patient",
@@ -124,6 +144,18 @@
     "patientDeleted": "Patient supprimé avec succès"
   },
   "servicedemands": {
+    "timeline": "Chronologie des demandes de services",
+    "comments": "Commentaires",
+    "noComments": "Aucun commentaire trouvé",
+    "updatesFromCareTeam": "Mises à jour de l'équipe de soins",
+    "schedulingInformation": "Informations de planification",
+    "additionalInformation": "Informations supplémentaires",
+    "serviceDetails": "Détails du service",
+    "requestTitle": "Titre de la demande de service",
+    "chooseService": "Choisir un service...",
+    "allStatuses": "Tous les statuts",
+    "allPriorities": "Toutes les priorités",
+    "requestNewService": "Demander un nouveau service",
     "title": "Demandes de services",
     "newDemand": "Nouvelle demande de service",
     "demandDetails": "Détails de la demande de service",
@@ -176,6 +208,7 @@
     "statusUpdated": "Statut mis à jour avec succès"
   },
   "schedule": {
+    "providerService": "Service du prestataire",
     "title": "Planning",
     "calendar": "Calendrier",
     "appointments": "Rendez-vous",

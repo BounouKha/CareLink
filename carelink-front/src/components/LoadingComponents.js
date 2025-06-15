@@ -1,17 +1,20 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCareTranslation } from '../hooks/useCareTranslation';
 
 /**
  * Page Loading Overlay - for full page loading
  */
-export const PageLoadingOverlay = ({ message = 'Loading...', isVisible = true, silent = false }) => {
+export const PageLoadingOverlay = ({ message = null, isVisible = true, silent = false }) => {
+  const { common } = useCareTranslation();
+  const defaultMessage = message || common('loading');
+  
   if (!isVisible) return null;
 
   return (
     <div className="page-loading-overlay">
       <div className="loading-spinner">
         <div className="spinner large"></div>
-        {!silent && <p className="loading-text primary">{message}</p>}
+        {!silent && <p className="loading-text primary">{defaultMessage}</p>}
       </div>
     </div>
   );
@@ -20,14 +23,17 @@ export const PageLoadingOverlay = ({ message = 'Loading...', isVisible = true, s
 /**
  * Modal Loading Overlay - for modal content loading
  */
-export const ModalLoadingOverlay = ({ message = 'Loading...', isVisible = true, silent = false }) => {
+export const ModalLoadingOverlay = ({ message = null, isVisible = true, silent = false }) => {
+  const { common } = useCareTranslation();
+  const defaultMessage = message || common('loading');
+  
   if (!isVisible) return null;
 
   return (
     <div className="modal-loading-overlay">
       <div className="loading-spinner inline">
         <div className="spinner"></div>
-        {!silent && <span className="loading-text">{message}</span>}
+        {!silent && <span className="loading-text">{defaultMessage}</span>}
       </div>
     </div>
   );
@@ -36,14 +42,17 @@ export const ModalLoadingOverlay = ({ message = 'Loading...', isVisible = true, 
 /**
  * Component Loading Overlay - for individual component loading
  */
-export const ComponentLoadingOverlay = ({ message = 'Loading...', isVisible = true, silent = false }) => {
+export const ComponentLoadingOverlay = ({ message = null, isVisible = true, silent = false }) => {
+  const { common } = useCareTranslation();
+  const defaultMessage = message || common('loading');
+  
   if (!isVisible) return null;
 
   return (
     <div className="component-loading-overlay">
       <div className="loading-spinner inline">
         <div className="spinner small"></div>
-        {!silent && <span className="loading-text">{message}</span>}
+        {!silent && <span className="loading-text">{defaultMessage}</span>}
       </div>
     </div>
   );
