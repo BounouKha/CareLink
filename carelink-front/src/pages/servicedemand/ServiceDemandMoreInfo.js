@@ -368,7 +368,7 @@ const ServiceDemandMoreInfo = ({
                                                     disabled={!newComment.trim()}
                                                 >
                                                     <i className="bi bi-send-fill me-2"></i>
-                                                    Add Comment
+                                                    {servicedemands('addComment')}
                                                 </button>
                                             </div>
                                         )}
@@ -395,35 +395,35 @@ const ServiceDemandMoreInfo = ({
                                                     onClick={() => onStatusUpdate(selectedDemand.id, 'Under Review')}
                                                     disabled={selectedDemand.status === 'Under Review'}
                                                 >
-                                                    Under Review
+                                                    {servicedemands('statusOptions.underReview')}
                                                 </button>
                                                 <button 
                                                     className="btn btn-success btn-sm"
                                                     onClick={() => onStatusUpdate(selectedDemand.id, 'Approved')}
                                                     disabled={selectedDemand.status === 'Approved'}
                                                 >
-                                                    Approve
+                                                    {servicedemands('statusOptions.approved')}
                                                 </button>
                                                 <button 
                                                     className="btn btn-primary btn-sm"
                                                     onClick={() => onStatusUpdate(selectedDemand.id, 'In Progress')}
                                                     disabled={selectedDemand.status === 'In Progress'}
                                                 >
-                                                    In Progress
+                                                    {servicedemands('statusOptions.inProgress')}
                                                 </button>
                                                 <button 
                                                     className="btn btn-success btn-sm"
                                                     onClick={() => onStatusUpdate(selectedDemand.id, 'Completed')}
                                                     disabled={selectedDemand.status === 'Completed'}
                                                 >
-                                                    Complete
+                                                    {servicedemands('statusOptions.completed')}
                                                 </button>
                                                 <button 
                                                     className="btn btn-danger btn-sm"
                                                     onClick={() => onStatusUpdate(selectedDemand.id, 'Rejected')}
                                                     disabled={selectedDemand.status === 'Rejected'}
                                                 >
-                                                    Reject
+                                                    {servicedemands('statusOptions.rejected')}
                                                 </button>
                                             </div>
                                         </div>
@@ -441,28 +441,28 @@ const ServiceDemandMoreInfo = ({
                                             <div className="bg-dark bg-opacity-10 rounded-circle p-2 me-3">
                                                 <i className="bi bi-clock-history text-dark"></i>
                                             </div>
-                                            <h5 className="mb-0 text-dark fw-bold">Timeline</h5>
+                                            <h5 className="mb-0 text-dark fw-bold">{servicedemands('timeline')}</h5>
                                         </div>
                                         <div className="timeline">
                                             <div className="d-flex align-items-center mb-2">
-                                                <span className="badge bg-primary me-3">Created</span>
+                                                <span className="badge bg-primary me-3">{servicedemands('created')}</span>
                                                 <span>{new Date(selectedDemand.created_at).toLocaleString()}</span>
                                             </div>
                                             {selectedDemand.reviewed_at && (
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <span className="badge bg-info me-3">Reviewed</span>
+                                                    <span className="badge bg-info me-3">{servicedemands('statusOptions.underReview')}</span>
                                                     <span>{new Date(selectedDemand.reviewed_at).toLocaleString()}</span>
                                                 </div>
                                             )}
                                             {selectedDemand.completed_at && (
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <span className="badge bg-success me-3">Completed</span>
+                                                    <span className="badge bg-success me-3">{servicedemands('statusOptions.completed')}</span>
                                                     <span>{new Date(selectedDemand.completed_at).toLocaleString()}</span>
                                                 </div>
                                             )}
                                             {selectedDemand.managed_by_info && (
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <span className="badge bg-secondary me-3">Managed by</span>
+                                                    <span className="badge bg-secondary me-3">{servicedemands('managedBy')}</span>
                                                     <span>{selectedDemand.managed_by_info.firstname} {selectedDemand.managed_by_info.lastname}</span>
                                                 </div>
                                             )}
@@ -482,7 +482,7 @@ const ServiceDemandMoreInfo = ({
                             onClick={onClose}
                         >
                             <i className="bi bi-x-circle me-2"></i>
-                            Close
+                            {common('close')}
                         </button>
                     </div>
                 </div>

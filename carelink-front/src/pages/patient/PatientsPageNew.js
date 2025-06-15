@@ -399,7 +399,7 @@ const PatientsPageNew = () => {
                                                                 <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2"/>
                                                                 <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2"/>
                                                                 <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
-                                                            </svg>                                                        Birth: {patient.birth_date}
+                                                            </svg>                                                        {patientsT('birth')}: {patient.birth_date}
                                                     </small>
                                                 </div>
                                                 <div className="col-5">
@@ -505,7 +505,7 @@ const PatientsPageNew = () => {
                                                 />
                                             </div>
                                             <div className="col-md-6">
-                                                <label className="form-label small fw-medium text-dark">National Number</label>
+                                                <label className="form-label small fw-medium text-dark">{patientsT('nationalNumber')}</label>
                                                 <input
                                                     type="text"
                                                     className="form-control bg-light"
@@ -515,7 +515,7 @@ const PatientsPageNew = () => {
                                                 />
                                             </div>
                                             <div className="col-md-6">
-                                                <label className="form-label small fw-medium text-dark">Birth Date</label>
+                                                <label className="form-label small fw-medium text-dark">{patientsT('birthDate')}</label>
                                                 <input
                                                     type="date"
                                                     className="form-control bg-light"
@@ -525,7 +525,7 @@ const PatientsPageNew = () => {
                                                 />
                                             </div>
                                             <div className="col-md-6">
-                                                <label className="form-label small fw-medium text-dark">Gender</label>                                                <select
+                                                <label className="form-label small fw-medium text-dark">{patientsT('gender')}</label>                                                <select
                                                     className="form-select"
                                                     value={selectedPatient.gender || ''}
                                                     onChange={(e) => handleInputChange('gender', e.target.value)}
@@ -546,7 +546,7 @@ const PatientsPageNew = () => {
                                         <h6 className="text-muted mb-3 text-uppercase fw-bold small">Medical Information</h6>
                                         <div className="row g-3">
                                             <div className="col-md-6">
-                                                <label className="form-label small fw-medium text-dark">Blood Type</label>
+                                                <label className="form-label small fw-medium text-dark">{patientsT('bloodType')}</label>
                                                 <select
                                                     className="form-select"
                                                     value={selectedPatient.blood_type || ''}
@@ -564,7 +564,7 @@ const PatientsPageNew = () => {
                                                 </select>
                                             </div>
                                             <div className="col-md-6">
-                                                <label className="form-label small fw-medium text-dark">Emergency Contact</label>
+                                                <label className="form-label small fw-medium text-dark">{patientsT('emergencyContact')}</label>
                                                 <input
                                                     type="text"
                                                     className="form-control"
@@ -574,7 +574,7 @@ const PatientsPageNew = () => {
                                                 />
                                             </div>
                                             <div className="col-12">
-                                                <label className="form-label small fw-medium text-dark">Illness</label>
+                                                <label className="form-label small fw-medium text-dark">{patientsT('illness')}</label>
                                                 <textarea
                                                     className="form-control"
                                                     rows="2"
@@ -584,7 +584,7 @@ const PatientsPageNew = () => {
                                                 />
                                             </div>
                                             <div className="col-12">
-                                                <label className="form-label small fw-medium text-dark">Critical Information</label>
+                                                <label className="form-label small fw-medium text-dark">{patientsT('criticalInformation')}</label>
                                                 <textarea
                                                     className="form-control"
                                                     rows="2"
@@ -594,7 +594,7 @@ const PatientsPageNew = () => {
                                                 />
                                             </div>
                                             <div className="col-12">
-                                                <label className="form-label small fw-medium text-dark">Medication</label>
+                                                <label className="form-label small fw-medium text-dark">{patientsT('medication')}</label>
                                                 <textarea
                                                     className="form-control"
                                                     rows="2"
@@ -622,7 +622,7 @@ const PatientsPageNew = () => {
                                                         onChange={(e) => handleInputChange('social_price', e.target.checked)}
                                                     />
                                                     <label className="form-check-label small fw-medium text-dark" htmlFor="socialPrice">
-                                                        Social Price Eligible
+                                                        {patientsT('socialPriceEligible')}
                                                     </label>
                                                 </div>
                                             </div>
@@ -636,7 +636,7 @@ const PatientsPageNew = () => {
                                                         onChange={(e) => handleInputChange('is_alive', e.target.checked)}
                                                     />
                                                     <label className="form-check-label small fw-medium text-dark" htmlFor="isAlive">
-                                                        Active Patient
+                                                        {patientsT('activePatient')}
                                                     </label>
                                                 </div>
                                             </div>

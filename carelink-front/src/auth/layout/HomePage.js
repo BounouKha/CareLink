@@ -28,6 +28,10 @@ const HomePage = () => {
             const { access, refresh, is_superuser } = data;
             localStorage.setItem('accessToken', access);
             localStorage.setItem('refreshToken', refresh);
+            
+            // Dispatch login event
+            window.dispatchEvent(new CustomEvent('user-login'));
+            
             alert('Login successful!');
             navigate('/profile'); // Redirect to profile page
         } catch (err) {
