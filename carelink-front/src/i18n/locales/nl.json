@@ -140,10 +140,11 @@
     "illness": "Ziekte",
     "criticalInformation": "Kritieke informatie",
     "status": "Status",
-    "notes": "Notities",
-    "patientCreated": "Patiënt succesvol aangemaakt",
+    "notes": "Notities",    "patientCreated": "Patiënt succesvol aangemaakt",
     "patientUpdated": "Patiënt succesvol bijgewerkt",
-    "patientDeleted": "Patiënt succesvol verwijderd"
+    "patientDeleted": "Patiënt succesvol verwijderd",
+    "bloodType": "Bloedgroep",
+    "tryAdjustingSearch": "Pas uw zoekcriteria aan"
   },  "servicedemands": {
     "title": "Zorgvragen",
     "requestNewService": "Nieuwe Zorgvraag",
