@@ -55,7 +55,7 @@ const CreateAdministrativeModal = ({ userId, onClose, onProfileCreated }) => {
                         </h4>
                         <button type="button" className="btn-close" onClick={onClose}></button>
                     </div>
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} id="administrativeForm">
                         <div className="modal-body">
                             <div className="card border-0 shadow-sm">
                                 <div className="card-header bg-warning bg-opacity-10 border-0">
@@ -89,7 +89,7 @@ const CreateAdministrativeModal = ({ userId, onClose, onProfileCreated }) => {
                                 <i className="fas fa-times me-2"></i>
                                 Cancel
                             </button>
-                            <button type="submit" className="btn btn-primary">
+                            <button type="submit" className="btn btn-primary" form="administrativeForm">
                                 <i className="fas fa-save me-2"></i>
                                 Create Profile
                             </button>
