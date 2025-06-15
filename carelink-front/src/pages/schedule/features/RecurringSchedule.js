@@ -4,6 +4,8 @@ import { useLoading } from '../../../hooks/useLoading';
 import { useAuthenticatedApi } from '../../../hooks/useAuth';
 import tokenManager from '../../../utils/tokenManager';
 import { useCareTranslation } from '../../../hooks/useCareTranslation';
+import { useConflictManager } from '../../../hooks/useConflictManager';
+import ConflictManager from '../../../components/ConflictManager';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -13,9 +15,34 @@ import {
   SpinnerOnly
 } from '../../../components/LoadingComponents';
 
-const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {
-  // Translation hook
-  const { schedule, common, placeholders, errors: errorsT } = useCareTranslation();
+const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], preselectedDate, preselectedTime }) => {  // Translation hook
+  const { schedule, common, placeholders, errors: errorsT, getCurrentLanguage } = useCareTranslation();
+  // Helper function to get correct plural form based on language
+  const getPluralForm = (count, type = 'week') => {
+    const currentLanguage = getCurrentLanguage();
+    if (count <= 1) return '';
+    
+    switch (currentLanguage) {
+      case 'nl':
+        return type === 'week' ? 'en' : 'en'; // wek -> weken, maand -> maanden
+      case 'fr':
+        return 's'; // semaine -> semaines, mois -> mois (but template handles this)
+      case 'en':
+      default:
+        return 's'; // week -> weeks, month -> months
+    }
+  };  // Conflict management
+  const {
+    isCheckingConflicts,
+    conflicts,
+    showConflictDialog,
+    checkConflicts,
+    handleConflictResolution,
+    resetConflicts
+  } = useConflictManager();
+  // Add state for conflicts
+  const [conflictData, setConflictData] = useState(null);
+  const [showRecurringConflictDialog, setShowRecurringConflictDialog] = useState(false);
 
   const [formData, setFormData] = useState({
     provider_id: '',
@@ -551,38 +578,152 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     if (previewDates.length === 0) {
       setError(schedule('errors.noValidDatesFound'));
       return;
-    }await executeWithLoading(async () => {
+    }
+    
+    // Prepare recurring schedule data
+    const recurringScheduleData = {
+      ...formData,
+      date: formData.start_date, // Add date field for conflict checking
+      recurring_settings: {
+        ...recurringData,
+        dates: previewDates.map(date => date.toISOString().split('T')[0]),
+        total_appointments: previewDates.length
+      },
+      metadata: {
+        created_at: new Date().toISOString(),
+        pattern_summary: generatePatternSummary()
+      }
+    };
+
+    await executeWithLoading(async () => {
       setError('');
       
       if (!tokenManager.isAuthenticated()) {
         throw new Error('User not authenticated. Please log in.');
       }
       
-      // Prepare enhanced recurring schedule data
-      const recurringScheduleData = {
-        ...formData,
-        recurring_settings: {
-          ...recurringData,
-          dates: previewDates.map(date => date.toISOString().split('T')[0]),
-          total_appointments: previewDates.length
-        },
-        metadata: {
-          created_at: new Date().toISOString(),
-          pattern_summary: generatePatternSummary()
+      // Check for conflicts with all dates in the recurring schedule
+      try {
+        let hasAnyConflicts = false;
+        let allConflicts = [];
+        
+        // Check conflicts for each date in the recurring schedule
+        for (const date of previewDates) {
+          const dateString = date.toISOString().split('T')[0];
+          const conflictCheckData = {
+            provider_id: formData.provider_id,
+            patient_id: formData.patient_id,
+            date: dateString,
+            start_time: formData.start_time,
+            end_time: formData.end_time
+          };
+          
+          const conflictResult = await post('http://localhost:8000/schedule/check-conflicts/', conflictCheckData);
+          
+          if (conflictResult.has_conflicts) {
+            hasAnyConflicts = true;
+            // Add date context to each conflict
+            conflictResult.conflicts.forEach(conflict => {
+              allConflicts.push({
+                ...conflict,
+                conflictDate: dateString,
+                conflictDateFormatted: date.toLocaleDateString(),
+                attempted_schedule: {
+                  date: dateString,
+                  start_time: formData.start_time,
+                  end_time: formData.end_time,
+                  provider_name: providerSearch,
+                  patient_name: patientSearch,
+                  duration: calculateDuration(formData.start_time, formData.end_time)
+                }
+              });
+            });
+          }
         }
-      };
-      
-      const data = await post('http://localhost:8000/schedule/recurring-schedule/', recurringScheduleData);
-      
-      // Show success message with details
-      const successMessage = `Successfully created ${previewDates.length} recurring appointments!`;
-      
-      onScheduleCreated({
-        ...data,
-        successMessage,
-        appointmentCount: previewDates.length
-      });
-      onClose();
+        
+        // If conflicts found, show the conflict dialog with proper data structure
+        if (hasAnyConflicts) {
+          setConflictData({
+            has_conflicts: true,
+            conflicts: allConflicts,
+            scheduling_data: {
+              provider_id: formData.provider_id,
+              provider_name: providerSearch,
+              patient_id: formData.patient_id,
+              patient_name: patientSearch,
+              date: formData.start_date,
+              start_time: formData.start_time,
+              end_time: formData.end_time,
+              recurring_dates: previewDates.map(date => date.toISOString().split('T')[0]),
+              total_dates: previewDates.length,
+              pattern_summary: generatePatternSummary(),
+              duration: calculateDuration(formData.start_time, formData.end_time)
+            },
+            severity: allConflicts.some(c => c.severity === 'high') ? 'high' : 
+                     allConflicts.some(c => c.severity === 'medium') ? 'medium' : 'low',
+            conflict_count: allConflicts.length
+          });
+          setShowRecurringConflictDialog(true);
+          return; // Stop here and wait for user decision
+        }
+        
+      } catch (error) {
+        console.error('Error checking conflicts:', error);
+        // Don't block scheduling if conflict check fails
+        setError('Warning: Could not check for conflicts. Proceeding with scheduling...');
+      }
+
+      // If no conflicts or conflict check failed, proceed with submission
+      try {
+        const data = await post('http://localhost:8000/schedule/recurring-schedule/', recurringScheduleData);
+        
+        // Show success message with details
+        const successMessage = `Successfully created ${previewDates.length} recurring appointments!`;
+        
+        onScheduleCreated({
+          ...data,
+          successMessage,
+          appointmentCount: previewDates.length
+        });
+        resetConflicts();
+        onClose();
+        
+      } catch (error) {
+        if (error.status === 409) {
+          // Handle conflict response from backend
+          const conflictData = error.response || error.data;
+          if (conflictData && conflictData.has_conflicts) {
+            // Format backend conflicts for display
+            const formattedConflicts = conflictData.conflicts.map(conflict => ({
+              ...conflict,
+              attempted_schedule: {
+                date: formData.start_date,
+                start_time: formData.start_time,
+                end_time: formData.end_time,
+                provider_name: providerSearch,
+                patient_name: patientSearch,
+                duration: calculateDuration(formData.start_time, formData.end_time)
+              }
+            }));
+            
+            setConflictData({
+              ...conflictData,
+              conflicts: formattedConflicts,
+              scheduling_data: {
+                ...conflictData.scheduling_data,
+                provider_name: providerSearch,
+                patient_name: patientSearch,
+                duration: calculateDuration(formData.start_time, formData.end_time),
+                pattern_summary: generatePatternSummary()
+              }
+            });
+            setShowRecurringConflictDialog(true);
+            return; // Don't proceed until user resolves conflicts
+          }
+        }
+        // Re-throw other errors
+        throw error;
+      }
     }, `Creating ${previewDates.length} appointments...`, 'form');
   };
 
@@ -605,8 +746,57 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     
     return `${frequencyText} on ${days}, ${endText}`;
   };
+    // Handle conflict resolution for recurring schedules
+  const onRecurringConflictResolution = (resolution) => {
+    setShowRecurringConflictDialog(false);
+    
+    if (resolution === 'confirm' || resolution === 'force') {
+      // User wants to proceed despite conflicts, so submit with force_schedule flag
+      executeWithLoading(async () => {
+        setError('');
+        
+        // Prepare recurring schedule data with force_schedule flag
+        const recurringScheduleData = {
+          ...formData,
+          date: formData.start_date,
+          recurring_settings: {
+            ...recurringData,
+            dates: previewDates.map(date => date.toISOString().split('T')[0]),
+            total_appointments: previewDates.length
+          },
+          metadata: {
+            created_at: new Date().toISOString(),
+            pattern_summary: generatePatternSummary()
+          },
+          force_schedule: true // Add this flag
+        };
+        
+        try {
+          const data = await post('http://localhost:8000/schedule/recurring-schedule/', recurringScheduleData);
+          
+          // Show success message
+          const successMessage = `Successfully created ${previewDates.length} recurring appointments (conflicts overridden)!`;
+          
+          onScheduleCreated({
+            ...data,
+            successMessage,
+            appointmentCount: previewDates.length
+          });
+          setConflictData(null);
+          onClose();
+        } catch (error) {
+          console.error('Error creating recurring schedule with force:', error);
+          setError('Failed to create appointments. Please try again.');
+        }
+      }, 'Creating appointments (overriding conflicts)...', 'form');
+    } else {
+      // For cancel, just clear the conflict data
+      setConflictData(null);
+    }
+  };
 
-  if (!isOpen) return null;
+  if (!isOpen) 
+    return null;
   return (
     <div className="modal-overlay" onClick={onClose}>      <div className="quick-schedule-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -821,7 +1011,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                 </select>
               </div>              {recurringData.frequency !== 'monthly' && (
                 <div className="form-group">
-                  <label htmlFor="interval">{schedule('everyWeeks')}</label>
+                  <label htmlFor="interval">{schedule('interval')}</label>
                   <div className="interval-input">
                     <input
                       type="number"
@@ -982,11 +1172,18 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                 <div className="stat-card frequency">
                   <div className="stat-icon">📊</div>
                   <div className="stat-content">
-                    <div className="stat-label">{schedule('frequency')}</div>
-                    <div className="stat-value">
-                      {recurringData.frequency === 'weekly' ? `${schedule('everyWeeks')} ${recurringData.interval} ${schedule('weekS').slice(0, -3)}${recurringData.interval > 1 ? 's' : ''}` :
-                       recurringData.frequency === 'bi-weekly' ? schedule('biWeekly').replace(' (Every 2 weeks)', '') :
-                       `${schedule('everyWeeks')} ${recurringData.interval} month${recurringData.interval > 1 ? 's' : ''}`}
+                    <div className="stat-label">{schedule('frequency')}</div>                    <div className="stat-value">
+                      {recurringData.frequency === 'weekly' ? 
+                        schedule('everyWeeks', { 
+                          count: recurringData.interval, 
+                          plural: getPluralForm(recurringData.interval, 'week')
+                        }) :
+                       recurringData.frequency === 'bi-weekly' ? 
+                        schedule('biWeekly') :
+                       schedule('everyMonths', { 
+                         count: recurringData.interval, 
+                         plural: getPluralForm(recurringData.interval, 'month')
+                       })}
                     </div>
                   </div>
                 </div>
@@ -1145,9 +1342,23 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             >
               <span className="btn-icon">🚀</span>
               {schedule('createAppointments').replace('{{count}}', previewDates.length).replace('{{plural}}', previewDates.length !== 1 ? 's' : '')}
-            </ButtonLoading>
-          </div>
-        </form>
+            </ButtonLoading>          </div>
+        </form>        {/* Conflict Management Dialog */}
+        <ConflictManager
+          isOpen={showRecurringConflictDialog}
+          conflicts={conflictData?.conflicts || []}
+          onConfirm={(force) => onRecurringConflictResolution('confirm')}
+          onCancel={() => onRecurringConflictResolution('cancel')}
+          schedulingData={conflictData?.scheduling_data}
+          conflictSeverity={conflictData?.severity}
+          conflictCount={conflictData?.conflict_count}
+          isRecurring={true}
+          recurringInfo={{
+            totalDates: conflictData?.scheduling_data?.total_dates || previewDates.length,
+            patternSummary: conflictData?.scheduling_data?.pattern_summary || generatePatternSummary(),
+            conflictedDates: conflictData?.conflicts?.map(c => c.conflictDate).filter((date, index, self) => self.indexOf(date) === index) || []
+          }}
+        />
       </div>
     </div>
   );

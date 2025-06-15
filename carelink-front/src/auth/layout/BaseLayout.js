@@ -10,7 +10,6 @@ import tokenManager from '../../utils/tokenManager'; // Import the new token man
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isSuperuser, setIsSuperuser] = useState(false);
     const [loading, setLoading] = useState(true); // Add loading state
     const [userData, setUserData] = useState(null); // Add userData state
     const [isNavigating, setIsNavigating] = useState(false); // Add navigation loading state
@@ -20,7 +19,10 @@ const BaseLayout = ({ children }) => {
         return saved !== null ? JSON.parse(saved) : true;
     });
 
+    // Get superuser status from AdminContext instead of managing it locally
     const { isSuperUser } = useContext(AdminContext);
+    const isSuperuser = isSuperUser; // Alias for consistency
+
     const { common, auth, admin } = useCareTranslation();
 
     // Listen for toolbar visibility changes
@@ -59,27 +61,14 @@ const BaseLayout = ({ children }) => {
         // Remove old manual token refresh logic - now handled by TokenManager
         // TokenManager automatically monitors and refreshes tokens
         
-        const preloadAdminStatus = async () => {
+        const preloadUserData = async () => {
             if (!tokenManager.isAuthenticated()) {
                 setLoading(false);
                 return;
             }
 
             try {
-                // Use authenticated fetch for admin status check
-                const response = await tokenManager.authenticatedFetch('http://localhost:8000/account/check-admin/', {
-                    method: 'GET',
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setIsSuperuser(data.is_superuser);
-                    console.log('Admin status preloaded:', data.is_superuser);
-                } else {
-                    console.error('Failed to preload admin status');
-                }
-
-                // Fetch user profile data with authenticated request
+                // Only fetch user profile data - AdminContext handles admin status
                 const profileResponse = await tokenManager.authenticatedFetch('http://localhost:8000/account/profile/', {
                     method: 'GET',
                 });
@@ -92,13 +81,13 @@ const BaseLayout = ({ children }) => {
                     console.error('Failed to load user profile');
                 }
             } catch (error) {
-                console.error('Error preloading data:', error);
+                console.error('Error preloading user data:', error);
                 // Error is handled by TokenManager (logout if needed)
             }
             setLoading(false);
         };
 
-        preloadAdminStatus();
+        preloadUserData();
     }, []);
 
     const toggleMenu = () => {

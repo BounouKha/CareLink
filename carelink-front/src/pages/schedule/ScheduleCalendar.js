@@ -647,7 +647,7 @@ const ScheduleCalendar = () => {
                   )}
                 </div>
                 <div className="appointments-preview">                  {appointments.slice(0, 2).map((appointment, index) => (
-                    <div key={index} className={`appointment-dot ${getStatusClass(appointment.status)}`} title={`${appointment.patient.name} - ${appointment.status || 'scheduled'}`}>
+                    <div key={index} className={`appointment-dot ${getStatusClass(appointment.status)}`} title={`${appointment.patient.name} - ${getTranslatedStatus(appointment.status || 'scheduled')}`}>
                       {appointment.patient.name.charAt(0)}
                     </div>
                   ))}
@@ -832,9 +832,8 @@ const ScheduleCalendar = () => {
                   </div>
                   <div className="stat-card warning">
                     <div className="stat-icon">👤</div>
-                    <div className="stat-content">
-                      <h3>{recapData.totals.totalPatients}</h3>
-                      <p>{schedule('totalPatients')}</p>
+                    <div className="stat-content">                      <h3>{recapData.totals.totalPatients}</h3>
+                      <p>{schedule('totalPatientsInsights')}</p>
                       <span className="stat-trend">📈 {analytics.avgAppointmentsPerDay} {schedule('appointmentsPerDay')}</span>
                     </div>
                   </div>
@@ -1034,7 +1033,6 @@ const ScheduleCalendar = () => {
       </div>
     );
   };
-
   // Helper function to get status-based CSS class
   const getStatusClass = (status) => {
     if (!status) return 'status-scheduled'; // Default fallback
@@ -1050,6 +1048,30 @@ const ScheduleCalendar = () => {
     }
     
     return 'status-scheduled'; // Default fallback
+  };
+
+  // Helper function to translate status values
+  const getTranslatedStatus = (status) => {
+    if (!status) return schedule('statusOptions.scheduled');
+    
+    const normalizedStatus = status.toLowerCase().replace(/\s+/g, '');
+    
+    // Map database status values to translation keys
+    const statusMap = {
+      'scheduled': 'statusOptions.scheduled',
+      'confirmed': 'statusOptions.confirmed',
+      'inprogress': 'statusOptions.inProgress',
+      'in_progress': 'statusOptions.inProgress',
+      'completed': 'statusOptions.completed',
+      'cancelled': 'statusOptions.cancelled',
+      'canceled': 'statusOptions.cancelled', // Handle both spellings
+      'noshow': 'statusOptions.noShow',
+      'no_show': 'statusOptions.noShow',
+      'pending': 'statusOptions.scheduled' // Legacy fallback
+    };
+    
+    const translationKey = statusMap[normalizedStatus];
+    return translationKey ? schedule(translationKey) : status; // Fallback to original if no translation found
   };
   return (
     <div className="schedule-calendar">
@@ -1145,14 +1167,13 @@ const ScheduleCalendar = () => {
             id="status-select"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-          >
-            <option value="">{schedule('allStatuses')}</option>
-            <option value="scheduled">{schedule('scheduled')}</option>
-            <option value="confirmed">{schedule('confirmed')}</option>
-            <option value="in_progress">{schedule('inProgress')}</option>
-            <option value="completed">{schedule('completed')}</option>
-            <option value="cancelled">{schedule('cancelled')}</option>
-            <option value="no_show">{schedule('noShow')}</option>
+          >            <option value="">{schedule('allStatuses')}</option>
+            <option value="scheduled">{schedule('statusOptions.scheduled')}</option>
+            <option value="confirmed">{schedule('statusOptions.confirmed')}</option>
+            <option value="in_progress">{schedule('statusOptions.inProgress')}</option>
+            <option value="completed">{schedule('statusOptions.completed')}</option>
+            <option value="cancelled">{schedule('statusOptions.cancelled')}</option>
+            <option value="no_show">{schedule('statusOptions.noShow')}</option>
           </select>        </div>
       </div>      {stats && Object.keys(stats).length > 0 && (
         <div className="calendar-stats">

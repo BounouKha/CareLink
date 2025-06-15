@@ -3,6 +3,8 @@ import './EditAppointment.css'; // Modal-specific styles using UnifiedBaseLayout
 import { useLoading } from '../../hooks/useLoading';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import { useConflictManager } from '../../hooks/useConflictManager';
+import ConflictManager from '../../components/ConflictManager';
 import tokenManager from '../../utils/tokenManager';
 import { 
   ModalLoadingOverlay, 
@@ -46,12 +48,21 @@ const EditAppointment = ({
   } = useLoading();
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
-  
-  // Search states - same as QuickSchedule
+    // Search states - same as QuickSchedule
   const [providerSearch, setProviderSearch] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
   const [showProviderDropdown, setShowProviderDropdown] = useState(false);
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  
+  // Conflict management
+  const {
+    isCheckingConflicts,
+    conflicts,
+    showConflictDialog,
+    checkConflicts,
+    handleConflictResolution,
+    resetConflicts
+  } = useConflictManager();
   
   // Use modern authentication API
   const { get, put, delete: del } = useAuthenticatedApi();
@@ -145,8 +156,7 @@ const EditAppointment = ({
     today.setHours(0, 0, 0, 0); // Reset time to start of day
     selectedDate.setHours(0, 0, 0, 0); // Reset time to start of day
     return selectedDate < today;
-  };
-  const handleUpdate = async (e) => {
+  };  const handleUpdate = async (e) => {
     e.preventDefault();
     
     // Check if date is in the past
@@ -155,8 +165,10 @@ const EditAppointment = ({
       return;
     }
     
-    await performUpdate();
-  };  const performUpdate = async () => {
+    await performUpdate(false); // false = don't force update
+  };
+
+  const performUpdate = async (forceUpdate = false) => {
     await executeWithLoading(async () => {
       setError('');
 
@@ -174,10 +186,27 @@ const EditAppointment = ({
         ...formData,
         start_time: formatTimeForSubmit(formData.start_time),
         end_time: formatTimeForSubmit(formData.end_time)
-      };
+      };      // Check for conflicts first (unless forcing update)
+      if (!forceUpdate) {
+        // Add exclude IDs to exclude current appointment from conflict check
+        const timeslot = appointment.timeslots[0]; // Get first timeslot
+        const excludeIds = {
+          exclude_schedule_id: appointment.id, // Exclude current appointment
+          exclude_timeslot_id: timeslot?.id // Exclude current timeslot
+        };
+        
+        const result = await checkConflicts(submitData, excludeIds);
+        if (result.hasConflicts) {
+          return; // Conflict dialog will be shown by useConflictManager
+        }
+      }
+
+      // Add force_update parameter if needed
+      const finalSubmitData = forceUpdate ? { ...submitData, force_update: true } : submitData;
       
-      const data = await put(`http://localhost:8000/schedule/appointment/${appointment.id}/`, submitData);
+      const data = await put(`http://localhost:8000/schedule/appointment/${appointment.id}/`, finalSubmitData);
       onAppointmentUpdated(data);
+      resetConflicts();
       onClose();
     }, '', 'modal');
   };const handleDelete = async () => {
@@ -220,8 +249,19 @@ const EditAppointment = ({
       setIsDeleteLoading(false);
       setShowDeleteConfirm(false);
     }
-  };const handleClose = () => {
+  };  const handleClose = () => {
+    resetConflicts(); // Reset conflicts when closing
     onClose();
+  };  // Handle conflict resolution
+  const onConflictResolution = (resolution, force = false) => {
+    // Handle resolution types and force flag
+    const result = handleConflictResolution(resolution, force);
+    
+    if (resolution === 'confirm' || force === true) {
+      // Force update when confirmed or force is true
+      performUpdate(true); // Force update
+    }
+    // For 'cancel', the dialog just closes
   };
   // Search and filter functions - handle actual data structure
   const filteredProviders = providers.filter(provider =>
@@ -552,10 +592,16 @@ const EditAppointment = ({
                 >
                   {schedule('yesDelete')}
                 </ButtonLoading>
-              </div>
-            </div>
+              </div>            </div>
           </div>
-        )}
+        )}        {/* Conflict Management Dialog */}
+        <ConflictManager
+          isOpen={showConflictDialog}
+          conflicts={conflicts?.conflicts}
+          onConfirm={(force) => onConflictResolution('confirm', force)}
+          onCancel={(action) => onConflictResolution(action || 'cancel')}
+          schedulingData={conflicts?.scheduling_data}
+        />
       </div>
     </div>
   );
