@@ -34,8 +34,13 @@ export const AdminProvider = ({ children }) => {
             }
         };
 
-        fetchAdminStatus();
-    }, [get]);
+        // Only fetch once on mount if authenticated
+        if (tokenManager.isAuthenticated()) {
+            fetchAdminStatus();
+        } else {
+            setIsSuperUser(false);
+        }
+    }, []); // Remove get dependency to prevent re-fetching
 
     useEffect(() => {
         console.log('AdminProvider mounted');
