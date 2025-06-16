@@ -1,36 +1,25 @@
 import React, { useEffect, useState } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../../auth/layout/BaseLayout';
+import MedicalFolderEnhanced from '../patients/MedicalFolderEnhanced';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
 import { useCareTranslation } from '../../hooks/useTranslation';
 // Import page-specific CSS for components not covered by unified styles
 import './PatientsPage.css';
 
-const PatientsPage = () => {
-    const [patients, setPatients] = useState([]);
+const PatientsPage = () => {    const [patients, setPatients] = useState([]);
     const [error, setError] = useState(null);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [medicalFolder, setMedicalFolder] = useState([]);
     const [showMedicalFolderModal, setShowMedicalFolderModal] = useState(false);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
-    const [sortOrder, setSortOrder] = useState('newest'); // New state for sorting
 
     // Use modern authentication API
-    const { get, put, post, delete: del } = useAuthenticatedApi();
-
-    // Import translation hooks
+    const { get, put, post, delete: del } = useAuthenticatedApi();    // Import translation hooks
     const { patients: patientsT, common, placeholders, errors, success } = useCareTranslation();
 
-    // Debug effect to track modal state changes
     useEffect(() => {
-        console.log('[DEBUG] Modal states changed:', {
-            showEditPatientModal,
-            showMedicalFolderModal,
-            showAddEntryModal
-        });
-    }, [showEditPatientModal, showMedicalFolderModal, showAddEntryModal]);    useEffect(() => {
         const fetchPatients = async () => {
             try {
                 if (!tokenManager.isAuthenticated()) {
@@ -46,39 +35,9 @@ const PatientsPage = () => {
                 if (err.message.includes('401') || err.message.includes('Unauthorized')) {
                     tokenManager.handleLogout();
                 }
-            }
-        };
-
-        const fetchServices = async () => {
-            try {
-                setIsLoadingServices(true);
-                if (!tokenManager.isAuthenticated()) {
-                    throw new Error('User not authenticated. Please log in.');
-                }
-
-                console.log('[DEBUG] Fetching services from backend...');
-                const data = await get('http://localhost:8000/account/services/');
-                console.log('[DEBUG] Fetched service data:', data);
-                console.log('[DEBUG] typeof data:', typeof data);
-                console.log('[DEBUG] Array.isArray(data):', Array.isArray(data));
-                
-                // The services API returns a direct array
-                setServices(data);
-                setServicesLoaded(true);
-                console.log('[DEBUG] Services set successfully:', data);
-            } catch (err) {
-                console.error('[DEBUG] Error fetching services:', err);
-                setError(err.message);
-                if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-                    tokenManager.handleLogout();
-                }
-            } finally {
-                setIsLoadingServices(false);
-            }
-        };
+            }        };
 
         fetchPatients();
-        fetchServices();
     }, [get]);
 
     const handleShowDetails = (patient) => {
@@ -140,72 +99,17 @@ const PatientsPage = () => {
             } else {
                 alert('Failed to save changes. Please try again.');
             }
-        }
-    };    const fetchMedicalFolder = async (patientId) => {
-        try {
-            if (!tokenManager.isAuthenticated()) {
-                throw new Error('User not authenticated. Please log in.');
-            }
+        }    };
 
-            console.log('[DEBUG] Request sent to fetch medical folder:', {
-                url: `http://localhost:8000/account/medical_folder/${patientId}/`,
-                method: 'GET'
-            });
-
-            const data = await get(`http://localhost:8000/account/medical_folder/${patientId}/`);
-            console.log('[DEBUG] Fetched medical folder data:', data);
-            setMedicalFolder(data);
-        } catch (err) {
-            console.error('[DEBUG] Error fetching medical folder:', err);
-            if (err.message.includes('401') || err.message.includes('Unauthorized')) {
-                tokenManager.handleLogout();
-            } else if (err.message.includes('404')) {
-                // Handle 404 - patient has no medical folder yet, set empty array
-                console.log('[DEBUG] Patient has no medical folder yet (404), setting empty array');
-                setMedicalFolder([]);
-            } else {
-                alert('Failed to fetch medical folder.');
-                setMedicalFolder([]);
-            }
-        }
-    };
-
-    const handleShowMedicalFolder = (patientId) => {
-        console.log('[DEBUG] handleShowMedicalFolder called with patientId:', patientId);
-        console.log('[DEBUG] Medical Folder button clicked for patientId:', patientId);
-        fetchMedicalFolder(patientId);
+    const handleShowMedicalFolder = (patient) => {
+        console.log('[DEBUG] handleShowMedicalFolder called with patient:', patient);
+        console.log('[DEBUG] Medical Folder button clicked for patient:', patient.id);
+        setSelectedPatient(patient);
         setShowMedicalFolderModal(true);
         console.log('[DEBUG] setShowMedicalFolderModal(true) called');
-    };
-
-    const handleCloseMedicalFolderModal = () => {
+    };    const handleCloseMedicalFolderModal = () => {
         setShowMedicalFolderModal(false);
     };
-
-    // Function to sort medical folder entries
-    const getSortedMedicalFolder = () => {
-        const sortedEntries = [...medicalFolder];
-        if (sortOrder === 'newest') {
-            return sortedEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        } else {
-            return sortedEntries.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        }
-    };
-
-    const handleSortOrderChange = (e) => {
-        setSortOrder(e.target.value);
-    };
-
-    // Function to format date for better readability
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });    };
 
     const filteredPatients = patients.filter(patient =>
         `${patient.firstname} ${patient.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -325,11 +229,9 @@ const PatientsPage = () => {
                                                     <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
                                                 Patient Info
-                                            </button>
-
-                                            <button 
+                                            </button>                                            <button 
                                                 className="btn-sm btn-warning" 
-                                                onClick={() => handleShowMedicalFolder(patient.id)}
+                                                onClick={() => handleShowMedicalFolder(patient)}
                                                 title="View medical history and records"
                                             >
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -498,57 +400,14 @@ const PatientsPage = () => {
                         </div>
                     </div>
                 </div>
+            )}            {/* Medical Folder Modal - Enhanced with Internal Notes */}
+            {showMedicalFolderModal && selectedPatient && (
+                <MedicalFolderEnhanced
+                    patient={selectedPatient}
+                    isOpen={showMedicalFolderModal}
+                    onClose={handleCloseMedicalFolderModal}
+                />
             )}
-
-            {/* Medical Folder Modal */}
-            {showMedicalFolderModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <div className="modal-header">
-                            <h2>Medical Folder</h2>
-                            <button 
-                                className="close" 
-                                onClick={handleCloseMedicalFolderModal}
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            {/* Sorting dropdown */}
-                            <div className="medical-folder-sort">
-                                <label htmlFor="sortOrder">
-                                    Sort by:
-                                </label>
-                                <select 
-                                    id="sortOrder"
-                                    value={sortOrder} 
-                                    onChange={handleSortOrderChange}
-                                >
-                                    <option value="newest">Newest to Oldest</option>
-                                    <option value="oldest">Oldest to Newest</option>
-                                </select>
-                            </div>
-
-                            {medicalFolder.length > 0 ? (
-                                <ul>
-                                    {getSortedMedicalFolder().map((entry, index) => (
-                                        <li key={index}>
-                                            <p><strong>Date:</strong> {formatDate(entry.created_at)}</p>
-                                            <p><strong>Note:</strong> {entry.note}</p>
-                                            <p><strong>Service:</strong> {entry.service || 'N/A'}</p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p>No medical folder entries found.</p>
-                            )}
-                            
-                            <div className="modal-actions">
-                                <button className="btn" onClick={handleCloseMedicalFolderModal}>Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>            )}
         </>
     );
 };

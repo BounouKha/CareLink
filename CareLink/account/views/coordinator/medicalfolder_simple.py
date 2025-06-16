@@ -8,10 +8,10 @@ class MedicalFolderSimpleView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, patient_id):
-        print(f"[DEBUG] User: {request.user}, Permissions: {request.user.get_all_permissions()}")
+        print(f"[DEBUG] User: {request.user}, Role: {getattr(request.user, 'role', 'No role')}")
         
-        # Check if user has coordinator permissions
-        if request.user.has_perm('CareLink.view_medicalfolder'):
+        # Check if user has coordinator role
+        if request.user.role in ['Coordinator', 'Administrative', 'Social Assistant', 'Administrator']:
             print(f"[DEBUG] User has coordinator permissions")
         else:
             # Check if user is a patient viewing their own medical folder
@@ -41,14 +41,14 @@ class MedicalFolderSimpleView(APIView):
                 "service": folder.service.name if folder.service else None,
             }
             for folder in medical_folders
-        ]
-
+        ]           
         print(f"[DEBUG] Folder data prepared: {folder_data}")
-        return Response(folder_data, status=200)    
+        return Response(folder_data, status=200)
+        
     def post(self, request, patient_id):
         # Only allow coordinators to add medical entries, not patients or family members
-        if not request.user.has_perm('CareLink.add_medicalfolder'):
-            print(f"[DEBUG] Permission denied for adding entry - user: {request.user}")
+        if request.user.role not in ['Coordinator', 'Administrative', 'Social Assistant', 'Administrator']:
+            print(f"[DEBUG] Permission denied for adding entry - user: {request.user}, role: {getattr(request.user, 'role', 'No role')}")
             return Response({"error": "Permission denied. Only coordinators can add medical entries."}, status=403)
 
         note = request.data.get("note")

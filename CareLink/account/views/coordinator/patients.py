@@ -11,7 +11,8 @@ class ViewsPatient(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.has_perm('CareLink.view_patient'):
+        # Check if user has permission to view patients (role-based)
+        if request.user.role not in ['Coordinator', 'Administrative', 'Social Assistant', 'Administrator']:
             return Response({"error": "Permission denied."}, status=403)
 
         # Filter out patients with inactive or null users
@@ -41,8 +42,8 @@ class ViewsPatient(APIView):
 
         page_number = request.query_params.get('page', 1)
         paginator = Paginator(patient_data, 50)  # 50 patients per page
-        page_obj = paginator.get_page(page_number)
-
+        page_obj = paginator.get_page(page_number)        
+        
         return Response({
             "results": list(page_obj),
             "next": page_obj.has_next(),
@@ -50,7 +51,8 @@ class ViewsPatient(APIView):
         }, status=200)
 
     def post(self, request):
-        if not request.user.has_perm('CareLink.change_patient'):
+        # Check if user has permission to create/modify patients (role-based)
+        if request.user.role not in ['Coordinator', 'Administrative', 'Social Assistant', 'Administrator']:
             return Response({"error": "Permission denied."}, status=403)
 
         # Handle patient creation logic here
