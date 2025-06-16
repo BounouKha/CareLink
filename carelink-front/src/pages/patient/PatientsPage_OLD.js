@@ -484,17 +484,6 @@ const PatientsPage = () => {
                                                 </svg>
                                                 Medical Records
                                             </button>
-
-                                            <button 
-                                                className="btn-sm btn-success" 
-                                                onClick={() => handleAddEntry(patient)}
-                                                title="Add new medical entry"
-                                            >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                </svg>
-                                                Add Entry
-                                            </button>
                                         </div>
                                     </div>
                                 ))}
