@@ -167,7 +167,15 @@
     "emergencyContact": "Noodcontact",
     "medication": "Medicatie",
     "socialPriceEligible": "Sociaal tarief geschikt",
-    "activePatient": "Actieve patiënt"
+    "activePatient": "Actieve patiënt",
+    "addPatientsFirst": "Voeg eerst patiënten toe voordat u medische invoer maakt.",
+    "selectPatientFirst": "Selecteer eerst een patiënt",
+    "viewMedicalFolder": "Patiëntendossiers",
+    "patientRecords": "Patiëntendossiers",
+    "addMedicalEntry": "Medische invoer toevoegen",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "created": "Aangemaakt"
   },  "servicedemands": {
     "title": "Zorgvragen",
     "requestNewService": "Nieuwe Zorgvraag",
@@ -582,5 +590,36 @@
     "export": "Gegevens exporteren",
     "print": "Afdrukken",
     "help": "Hulp krijgen"
+  },
+  "internalNotes": {
+    "title": "Interne notities",
+    "internalNotes": "Interne notities",
+    "staffOnly": "(Alleen personeel)",
+    "internalNotesStaffOnly": "Interne notities (Alleen personeel)",
+    "saveNote": "Notitie opslaan",
+    "noteContent": "Notitie-inhoud",
+    "serviceOptional": "Service (Optioneel)",
+    "criticalUrgentNote": "Kritieke/urgente notitie",
+    "addInternalNote": "Interne notitie toevoegen",
+    "editInternalNote": "Interne notitie bewerken",
+    "internalEntry": "Interne invoer",
+    "createdBy": "door",
+    "loadingInternalNotes": "Interne notities laden...",
+    "failedToLoadInternalNotes": "Kan interne notities niet laden",
+    "noteContentRequired": "Notitie-inhoud is verplicht",
+    "confirmDeleteNote": "Weet u zeker dat u deze interne notitie wilt verwijderen?",
+    "addNewInternalNote": "Nieuwe interne notitie toevoegen",
+    "updateNote": "Notitie bijwerken",
+    "critical": "Kritiek",
+    "updated": "Bijgewerkt",
+    "editNote": "Notitie bewerken",
+    "deleteNote": "Notitie verwijderen",
+    "selectService": "Service selecteren",
+    "noInternalNotes": "Geen interne notities",
+    "noInternalNotesManage": "Er zijn nog geen interne notities aangemaakt voor deze patiënt. Voeg de eerste notitie toe met de knop hierboven.",
+    "noInternalNotesView": "Er zijn geen interne notities beschikbaar voor deze patiënt.",
+    "enterInternalNoteContent": "Voer interne notitie-inhoud in (alleen zichtbaar voor personeel)",
+    "service": "Service",
+    "charactersLimit": "tekens"
   }
 }
