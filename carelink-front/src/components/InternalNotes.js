@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { internalNotesService } from '../services/internalNotesService';
 import './InternalNotes.css';
 
 const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountChange, triggerAdd }) => {
+    const { t } = useTranslation();
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -43,7 +45,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
             setError('');
         } catch (err) {
             console.error('Error fetching internal notes:', err);
-            setError('Failed to load internal notes');
+            setError(t('internalNotes.failedToLoadInternalNotes'));
             setNotes([]);
         } finally {
             setLoading(false);
@@ -54,7 +56,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
         e.preventDefault();
         
         if (!newNote.note.trim()) {
-            setError('Note content is required');
+            setError(t('internalNotes.noteContentRequired'));
             return;
         }
 
@@ -84,7 +86,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
     };
 
     const handleDelete = async (noteId) => {
-        if (!window.confirm('Are you sure you want to delete this internal note?')) {
+        if (!window.confirm(t('internalNotes.confirmDeleteNote'))) {
             return;
         }
 
@@ -125,9 +127,9 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
             <div className="internal-notes-container">
                 <div className="text-center p-4">
                     <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
+                        <span className="visually-hidden">{t('common.loading')}</span>
                     </div>
-                    <p className="mt-2">Loading internal notes...</p>
+                    <p className="mt-2">{t('internalNotes.loadingInternalNotes')}</p>
                 </div>
             </div>
         );
@@ -138,8 +140,8 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h5 className="mb-0">
                     <i className="fas fa-shield-alt me-2 text-warning"></i>
-                    Internal Notes
-                    <small className="text-muted ms-2">(Staff Only)</small>
+                    {t('internalNotes.internalNotes')}
+                    <small className="text-muted ms-2">{t('internalNotes.staffOnly')}</small>
                 </h5>
                 {canManageNotes && (
                     <button 
@@ -147,7 +149,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                         onClick={() => setShowAddForm(true)}
                     >
                         <i className="fas fa-plus me-1"></i>
-                        Add Internal Note
+                        {t('internalNotes.addInternalNote')}
                     </button>
                 )}
             </div>
@@ -170,7 +172,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                     <div className="card-header bg-warning bg-opacity-10">
                         <h6 className="mb-0">
                             <i className="fas fa-edit me-2"></i>
-                            {editingNote ? 'Edit Internal Note' : 'Add New Internal Note'}
+                            {editingNote ? t('internalNotes.editInternalNote') : t('internalNotes.addNewInternalNote')}
                         </h6>
                     </div>
                     <div className="card-body">
@@ -180,19 +182,19 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                                     <div className="mb-3">
                                         <label className="form-label">
                                             <i className="fas fa-sticky-note me-2"></i>
-                                            Note Content *
+                                            {t('internalNotes.noteContent')} *
                                         </label>
                                         <textarea
                                             className="form-control"
                                             rows="4"
                                             value={newNote.note}
                                             onChange={(e) => setNewNote({...newNote, note: e.target.value})}
-                                            placeholder="Enter internal note content (visible only to staff)"
+                                            placeholder={t('internalNotes.enterInternalNoteContent')}
                                             required
                                             maxLength="2000"
                                         />
                                         <div className="form-text">
-                                            {newNote.note.length}/2000 characters
+                                            {newNote.note.length}/2000 {t('internalNotes.charactersLimit')}
                                         </div>
                                     </div>
                                 </div>
@@ -200,14 +202,14 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                                     <div className="mb-3">
                                         <label className="form-label">
                                             <i className="fas fa-cog me-2"></i>
-                                            Service (Optional)
+                                            {t('internalNotes.serviceOptional')}
                                         </label>
                                         <select
                                             className="form-select"
                                             value={newNote.service_id}
                                             onChange={(e) => setNewNote({...newNote, service_id: e.target.value})}
                                         >
-                                            <option value="">Select Service</option>
+                                            <option value="">{t('internalNotes.selectService')}</option>
                                             {services.map(service => (
                                                 <option key={service.id} value={service.id}>
                                                     {service.name}
@@ -226,7 +228,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                                             />
                                             <label className="form-check-label" htmlFor="criticalNote">
                                                 <i className="fas fa-exclamation-triangle text-danger me-1"></i>
-                                                Critical/Urgent Note
+                                                {t('internalNotes.criticalUrgentNote')}
                                             </label>
                                         </div>
                                     </div>
@@ -235,14 +237,14 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                             <div className="d-flex gap-2">
                                 <button type="submit" className="btn btn-warning">
                                     <i className="fas fa-save me-2"></i>
-                                    {editingNote ? 'Update Note' : 'Save Note'}
+                                    {editingNote ? t('internalNotes.updateNote') : t('internalNotes.saveNote')}
                                 </button>
                                 <button 
                                     type="button" 
                                     className="btn btn-outline-secondary"
                                     onClick={resetForm}
                                 >
-                                    Cancel
+                                    {t('common.cancel')}
                                 </button>
                             </div>
                         </form>
@@ -254,11 +256,11 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                     <div className="mb-3">
                         <i className="fas fa-shield-alt text-muted" style={{ fontSize: '3rem' }}></i>
                     </div>
-                    <h6 className="text-muted">No Internal Notes</h6>
+                    <h6 className="text-muted">{t('internalNotes.noInternalNotes')}</h6>
                     <p className="text-muted">
                         {canManageNotes 
-                            ? 'No internal notes have been created for this patient yet. Add the first note using the button above.'
-                            : 'No internal notes are available for this patient.'
+                            ? t('internalNotes.noInternalNotesManage')
+                            : t('internalNotes.noInternalNotesView')
                         }
                     </p>
                 </div>            ) : (
@@ -266,42 +268,41 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                     {Array.isArray(notes) && notes.map((note) => (
                         <div 
                             key={note.id} 
-                            className={`card mb-3 ${note.is_critical ? 'border-danger' : ''}`}
+                            className={`card mb- ${note.is_critical ? 'border-danger' : ''}`}
                         >
                             <div className="card-header bg-light d-flex justify-content-between align-items-start">
-                                <div>                                    <div className="d-flex align-items-center">
+                                <div>
+                                    <div className="d-flex align-items-center">
                                         <i className="fas fa-user-tie me-2 text-muted"></i>
-                                        <strong>{note.created_by?.name || 'Unknown User'}</strong>
+                                        <strong>{note.created_by?.name || t('placeholders.unknownUser')}</strong>²
                                         {note.is_critical && (
                                             <span className="badge bg-danger ms-2">
                                                 <i className="fas fa-exclamation-triangle me-1"></i>
-                                                Critical
+                                                {t('internalNotes.critical')}
                                             </span>
                                         )}
                                     </div>
                                     <small className="text-muted">
-                                        <i className="fas fa-clock me-1"></i>
+                                        <i className="fas fa-clock me-2"></i>
                                         {formatDateTime(note.created_at)}
                                         {note.updated_at !== note.created_at && (
                                             <span className="ms-2">
-                                                (Updated: {formatDateTime(note.updated_at)})
+                                                ({t('internalNotes.updated')}: {formatDateTime(note.updated_at)})
                                             </span>
                                         )}
                                     </small>
                                 </div>
                                 {canManageNotes && (
-                                    <div className="btn-group-vertical">
+                                    <div className="btn-group">
                                         <button
-                                            className="btn btn-outline-primary "
+                                            className="btn btn-outline-primary"
                                             onClick={() => handleEdit(note)}
-                                            title="Edit Note"
                                         >✏️
                                             <i className="fas fa-edit"></i>
                                         </button>
                                         <button
                                             className="btn btn-outline-danger bg-danger text-white"
                                             onClick={() => handleDelete(note.id)}
-                                            title="Delete Note"
                                         >🗑️
                                             <i className="fas fa-trash"></i>
                                         </button>
@@ -309,11 +310,12 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                                 )}
                             </div>
                             <div className="card-body">
-                                <p className="card-text">{note.note}</p>                                {note.service && (
+                                <p className="card-text">{note.note}</p>
+                                {note.service && (
                                     <div className="mt-2">
                                         <span className="badge bg-info text-dark">
                                             <i className="fas fa-cog me-1"></i>
-                                            Service: {note.service.name || note.service}
+                                            {t('internalNotes.service')}: {note.service.name || note.service}
                                         </span>
                                     </div>
                                 )}
