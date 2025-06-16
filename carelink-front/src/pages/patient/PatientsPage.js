@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../../auth/layout/BaseLayout';
 import MedicalFolderEnhanced from '../patients/MedicalFolderEnhanced';
+import { medicalNotesService } from '../../services/medicalNotesService'; // Import medical notes service
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import tokenManager from '../../utils/tokenManager';
 import { useCareTranslation } from '../../hooks/useTranslation';
@@ -9,6 +10,7 @@ import { useCareTranslation } from '../../hooks/useTranslation';
 import './PatientsPage.css';
 
 const PatientsPage = () => {    const [patients, setPatients] = useState([]);
+    const [patientsMedicalCounts, setPatientsMedicalCounts] = useState({}); // Store medical notes count for each patient
     const [error, setError] = useState(null);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,11 +26,14 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
             try {
                 if (!tokenManager.isAuthenticated()) {
                     throw new Error('User not authenticated. Please log in.');
-                }
-
-                const data = await get('http://localhost:8000/account/views_patient/');
+                }                const data = await get('http://localhost:8000/account/views_patient/');
                 console.log('[DEBUG] Fetched patient data:', data);
                 setPatients(data.results);
+                
+                // Fetch medical notes count for each patient
+                if (data.results && data.results.length > 0) {
+                    fetchMedicalNotesCount(data.results);
+                }
             } catch (err) {
                 console.error('[DEBUG] Error fetching patients:', err);
                 setError(err.message);
@@ -109,6 +114,10 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
         console.log('[DEBUG] setShowMedicalFolderModal(true) called');
     };    const handleCloseMedicalFolderModal = () => {
         setShowMedicalFolderModal(false);
+        // Refresh the medical notes count for the selected patient after closing the modal
+        if (selectedPatient) {
+            refreshPatientMedicalCount(selectedPatient.id);
+        }
     };
 
     const filteredPatients = patients.filter(patient =>
@@ -230,7 +239,7 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
                                                 </svg>
                                                 Patient Info
                                             </button>                                            <button 
-                                                className="btn-sm btn-warning" 
+                                                className="btn-sm btn-warning position-relative" 
                                                 onClick={() => handleShowMedicalFolder(patient)}
                                                 title="View medical history and records"
                                             >
@@ -238,6 +247,11 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
                                                     <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
                                                 Medical Records
+                                                {patientsMedicalCounts[patient.id] > 0 && (
+                                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{fontSize: '0.6rem', minWidth: '1.2rem'}}>
+                                                        {patientsMedicalCounts[patient.id]}
+                                                    </span>
+                                                )}
                                             </button>
                                         </div>
                                     </div>
