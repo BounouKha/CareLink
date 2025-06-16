@@ -1,6 +1,8 @@
 // Medical Notes API Service
 import { getValidAccessToken } from '../utils/tokenManager';
 
+// Define the API base URL
+const API_BASE_URL = 'http://localhost:8000';
 const BASE_URL = 'http://localhost:8000/account';
 
 export const medicalNotesService = {

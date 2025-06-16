@@ -54,14 +54,16 @@ const PatientsPageNew = () => {
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch patients.');
-                }                const data = await response.json();
+                }
+
+                const data = await response.json();
                 console.log('[DEBUG] Fetched patient data:', data);
                 setPatients(data.results);
                 
-                // Fetch medical notes count for each patient
-                if (data.results && data.results.length > 0) {
-                    fetchMedicalNotesCount(data.results);
-                }
+                // REMOVE THIS LINE - Don't automatically fetch medical notes count
+                // if (data.results && data.results.length > 0) {
+                //     fetchMedicalNotesCount(data.results);
+                // }
             } catch (err) {
                 console.error('[DEBUG] Error fetching patients:', err);
                 setError(err.message);
