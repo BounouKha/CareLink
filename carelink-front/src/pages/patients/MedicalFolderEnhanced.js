@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import InternalNotes from '../../components/InternalNotes';
 import MedicalNotes from '../../components/MedicalNotes';
 import { useSecureRole } from '../../hooks/useSecureRole';
@@ -7,6 +8,7 @@ import { medicalNotesService } from '../../services/medicalNotesService';
 import './MedicalFolderEnhanced.css';
 
 const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, services }) => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('medical');
     const [internalNotesCount, setInternalNotesCount] = useState(0);
     const [medicalNotesCount, setMedicalNotesCount] = useState(0);
@@ -115,27 +117,36 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                     <div className="modal-header border-bottom bg-white">
                         <h5 className="modal-title fw-semibold text-dark">
                             <i className="fas fa-folder-medical me-2 text-primary"></i>
-                            Patient Records - {patientName}
+                            {t('patients.patientRecords')} - {patientName}
                         </h5>
                         <button 
                             type="button" 
                             className="btn-close btn-close-dark"
                             onClick={onClose}
-                            aria-label="Close"
+                            aria-label={t('common.close')}
                         ></button>
                     </div>
                     
                     {/* Modal Body */}
-                    <div className="modal-body bg-white p-0">                        {/* Tabs Navigation */}
+                    <div className="modal-body bg-white p-0">
+                        {/* Tabs Navigation */}
                         <div className="tabs-container">
                             <ul className="nav nav-tabs nav-fill border-bottom-0">
                                 <li className="nav-item">
                                     <button 
                                         className={`nav-link ${activeTab === 'medical' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('medical')}
-                                    >                                        <i className="fas fa-stethoscope me-2"></i>
-                                        Medical Notes
-                                        <span className="badge bg-primary ms-2">{medicalNotesCount}</span>
+                                    >
+                                        <i className="fas fa-stethoscope me-2"></i>
+                                        {t('medicalNotes.title')}
+                                        {!countsLoading && (
+                                            <span className="badge bg-primary ms-2">{medicalNotesCount}</span>
+                                        )}
+                                        {countsLoading && (
+                                            <div className="spinner-border spinner-border-sm ms-2" role="status" style={{width: '12px', height: '12px'}}>
+                                                <span className="visually-hidden">{t('common.loading')}</span>
+                                            </div>
+                                        )}
                                     </button>
                                 </li>
                                 {canViewInternalNotes && (
@@ -145,9 +156,16 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                             onClick={() => setActiveTab('internal')}
                                         >
                                             <i className="fas fa-shield-alt me-2"></i>
-                                            Internal Notes
-                                            <span className="badge bg-warning text-dark ms-2">{internalNotesCount}</span>
-                                            <small className="ms-1 text-muted">(Staff Only)</small>
+                                            {t('internalNotes.title')}
+                                            {!countsLoading && (
+                                                <span className="badge bg-warning text-dark ms-2">{internalNotesCount}</span>
+                                            )}
+                                            {countsLoading && (
+                                                <div className="spinner-border spinner-border-sm ms-2" role="status" style={{width: '12px', height: '12px'}}>
+                                                    <span className="visually-hidden">{t('common.loading')}</span>
+                                                </div>
+                                            )}
+                                            <small className="ms-1 text-muted">{t('internalNotes.staffOnly')}</small>
                                         </button>
                                     </li>
                                 )}
@@ -155,7 +173,8 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                         </div>
 
                         {/* Tab Content */}
-                        <div className="tab-content p-4">                            {/* Medical Notes Tab */}
+                        <div className="tab-content p-4">
+                            {/* Medical Notes Tab */}
                             {activeTab === 'medical' && (
                                 <div className="tab-pane fade show active">
                                     <MedicalNotes 
@@ -166,7 +185,9 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                         triggerAdd={triggerMedicalAdd}
                                     />
                                 </div>
-                            )}{/* Internal Notes Tab */}
+                            )}
+
+                            {/* Internal Notes Tab */}
                             {activeTab === 'internal' && canViewInternalNotes && (
                                 <div className="tab-pane fade show active">
                                     <InternalNotes 
@@ -180,7 +201,8 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                             )}
                         </div>
                     </div>
-                      {/* Modal Footer */}
+                    
+                    {/* Modal Footer */}
                     <div className="modal-footer border-top bg-white">
                         <button 
                             type="button" 
@@ -188,7 +210,7 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                             onClick={onClose}
                         >
                             <i className="fas fa-times me-2"></i>
-                            Close
+                            {t('common.close')}
                         </button>
                     </div>
                 </div>
