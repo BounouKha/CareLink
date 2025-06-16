@@ -233,9 +233,11 @@ class TokenManager {
 
     /**
      * Handle logout when tokens are invalid
-     */
-    handleLogout() {
+     */    handleLogout() {
         this.clearTokens();
+        
+        // Clear user data from localStorage
+        localStorage.removeItem('userData');
         
         // Notify user
         console.log('🚪 Session expired, redirecting to login...');

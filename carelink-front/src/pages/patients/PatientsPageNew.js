@@ -4,7 +4,7 @@ import BaseLayout from '../../auth/layout/BaseLayout';
 import { SpinnerOnly } from '../../components/LoadingComponents';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import AddEntryForm from './AddEntryForm';
-import MedicalFolderModal from './MedicalFolderModal'; // Add this import
+import MedicalFolderEnhanced from './MedicalFolderEnhanced'; // Updated import
 
 const PatientsPageNew = () => {
     const [patients, setPatients] = useState([]);
@@ -255,15 +255,14 @@ const PatientsPageNew = () => {
                 }}
             />
         );
-    };
-
-    const renderMedicalFolderModal = () => {
+    };    const renderMedicalFolderModal = () => {
         if (!modalStates.showMedicalFolderModal || !selectedPatient) return null;
 
         return (
-            <MedicalFolderModal
+            <MedicalFolderEnhanced
                 patient={selectedPatient}
                 medicalData={medicalFolderData}
+                services={services}
                 onClose={() => {
                     setModalStates(prev => ({
                         ...prev,
