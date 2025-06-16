@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import PatientLayout from '../../layouts/PatientLayout';
 import AddEntryForm from '../../components/AddEntryForm';
 import MedicalFolderEnhanced from '../patients/MedicalFolderEnhanced';
+import { medicalNotesService } from '../../services/medicalNotesService'; // Import medical notes service
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './PatientsPageNew.css';
 
 const PatientsPageNew = () => {
     const [patients, setPatients] = useState([]);
+    const [patientsMedicalCounts, setPatientsMedicalCounts] = useState({}); // Store medical notes count for each patient
     const [error, setError] = useState(null);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -52,11 +54,14 @@ const PatientsPageNew = () => {
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch patients.');
-                }
-
-                const data = await response.json();
+                }                const data = await response.json();
                 console.log('[DEBUG] Fetched patient data:', data);
                 setPatients(data.results);
+                
+                // Fetch medical notes count for each patient
+                if (data.results && data.results.length > 0) {
+                    fetchMedicalNotesCount(data.results);
+                }
             } catch (err) {
                 console.error('[DEBUG] Error fetching patients:', err);
                 setError(err.message);
@@ -299,11 +304,12 @@ const PatientsPageNew = () => {
 
             if (!response.ok) {
                 throw new Error('Failed to add new entry to medical folder.');
-            }
-
-            console.log('[DEBUG] Added new entry to medical folder:', { newEntry, selectedService });
+            }            console.log('[DEBUG] Added new entry to medical folder:', { newEntry, selectedService });
             fetchMedicalFolder(selectedPatient.id);
-
+            
+            // Refresh the medical notes count for this patient
+            refreshPatientMedicalCount(selectedPatient.id);
+            
             setNewNote('');
             setSelectedService('');
             alert('Entry added successfully');
@@ -353,6 +359,43 @@ const PatientsPageNew = () => {
                 alert('Failed to fetch medical folder.');
             }
             setMedicalFolder([]);
+        }
+    };    // Function to fetch medical notes count for all patients (sequential to avoid rate limiting)
+    const fetchMedicalNotesCount = async (patientList) => {
+        try {
+            const counts = {};
+            
+            // Process patients sequentially to prevent overwhelming the backend
+            for (const patient of patientList) {
+                try {
+                    // Use combined count that includes both medical folder and internal notes
+                    const count = await medicalNotesService.getCombinedNotesCount(patient.id);
+                    counts[patient.id] = count;
+                    
+                    // Small delay between requests to be gentle on the backend
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                } catch (error) {
+                    console.error(`Error fetching count for patient ${patient.id}:`, error);
+                    counts[patient.id] = 0;
+                }
+            }
+            
+            setPatientsMedicalCounts(counts);
+        } catch (error) {
+            console.error('Error fetching medical notes counts:', error);
+        }
+    };
+
+    // Function to refresh medical notes count for a specific patient
+    const refreshPatientMedicalCount = async (patientId) => {
+        try {
+            const count = await medicalNotesService.getMedicalNotesCount(patientId);
+            setPatientsMedicalCounts(prev => ({
+                ...prev,
+                [patientId]: count
+            }));
+        } catch (error) {
+            console.error(`Error refreshing count for patient ${patientId}:`, error);
         }
     };
 
@@ -449,7 +492,7 @@ const PatientsPageNew = () => {
                                                     </svg>
                                                     <span className="d-none d-md-inline ms-1">{common('details')}</span>
                                                 </button>                                                <button 
-                                                    className="btn btn-outline-warning btn-sm rounded-pill px-2 py-1 text-light" 
+                                                    className="btn btn-outline-warning btn-sm rounded-pill px-2 py-1 text-light position-relative" 
                                                     onClick={() => handleShowMedicalFolder(patient)}
                                                     title={patientsT('medicalFolder')}
                                                     style={{fontSize: '0.75rem'}}
@@ -457,7 +500,12 @@ const PatientsPageNew = () => {
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                         <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>                                                    </svg>
                                                     <span className="d-none d-md-inline ms-1">{patientsT('medicalFolder')}</span>
-                                                </button>                                                <button 
+                                                    {patientsMedicalCounts[patient.id] > 0 && (
+                                                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{fontSize: '0.6rem', minWidth: '1.2rem'}}>
+                                                            {patientsMedicalCounts[patient.id]}
+                                                        </span>
+                                                    )}
+                                                </button><button 
                                                     className="btn btn-outline-success btn-sm rounded-pill px-2 py-1 text-light" 
                                                     onClick={() => handleAddEntry(patient)}
                                                     title="Add medical entry"
