@@ -30,8 +30,31 @@ const LoginPage = () => {
             
             // Use TokenManager to securely store tokens
             tokenManager.setTokens(access, refresh);
+              console.log('✅ Login successful, tokens stored securely');
             
-            console.log('✅ Login successful, tokens stored securely');
+            // Fetch and store user profile data
+            try {
+                const profileResponse = await fetch('http://localhost:8000/account/profile/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${access}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (profileResponse.ok) {
+                    const profileData = await profileResponse.json();
+                    
+                    // Store user data in localStorage for role-based access
+                    localStorage.setItem('userData', JSON.stringify(profileData));
+                    console.log('✅ User profile stored in localStorage:', profileData);
+                } else {
+                    console.warn('⚠️ Failed to fetch user profile, continuing without userData in localStorage');
+                }
+            } catch (profileError) {
+                console.warn('⚠️ Error fetching user profile:', profileError);
+                // Continue with login even if profile fetch fails
+            }
             
             // Dispatch custom event to notify other components of login
             window.dispatchEvent(new CustomEvent('user-login'));

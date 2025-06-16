@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PatientLayout from '../../layouts/PatientLayout';
 import AddEntryForm from '../../components/AddEntryForm';
+import MedicalFolderEnhanced from '../patients/MedicalFolderEnhanced';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './PatientsPageNew.css';
@@ -226,14 +227,19 @@ const PatientsPageNew = () => {
             }
             setMedicalFolder([]);
         }
-    };const handleShowMedicalFolder = (patientId) => {
-        console.log('[DEBUG] handleShowMedicalFolder called with patientId:', patientId);
+    };    const handleShowMedicalFolder = (patient) => {
+        console.log('[DEBUG] handleShowMedicalFolder called with patient:', patient);
         console.log('[DEBUG] Current modal states before:', {
             showEditPatientModal,
             showMedicalFolderModal,
             showAddEntryModal
         });
-        fetchMedicalFolder(patientId);
+        
+        // Set the selected patient first
+        setSelectedPatient(patient);
+        
+        // Fetch medical folder data for the patient
+        fetchMedicalFolder(patient.id);
         setShowMedicalFolderModal(true);
         console.log('[DEBUG] setShowMedicalFolderModal(true) called');
     };
@@ -444,7 +450,7 @@ const PatientsPageNew = () => {
                                                     <span className="d-none d-md-inline ms-1">{common('details')}</span>
                                                 </button>                                                <button 
                                                     className="btn btn-outline-warning btn-sm rounded-pill px-2 py-1 text-light" 
-                                                    onClick={() => handleShowMedicalFolder(patient.id)}
+                                                    onClick={() => handleShowMedicalFolder(patient)}
                                                     title={patientsT('medicalFolder')}
                                                     style={{fontSize: '0.75rem'}}
                                                 >
@@ -672,93 +678,18 @@ const PatientsPageNew = () => {
                         </div>
                     </div>
                 </div>
-            )}            {/* Medical Folder Modal */}
-            {showMedicalFolderModal && (
-                <div className="patient-page-modal-overlay">
-                    <div className="modal-dialog modal-lg">
-                        <div className="modal-content">
-                            {/* Modal Header */}
-                            <div className="modal-header border-bottom bg-white">
-                                <h5 className="modal-title fw-semibold text-dark">{patientsT('medicalFolder')}</h5>
-                                <button 
-                                    type="button" 
-                                    className="btn-close btn-close-dark"
-                                    onClick={handleCloseMedicalFolderModal}
-                                    aria-label={common('close')}
-                                ></button>
-                            </div>
-                            
-                            {/* Modal Body */}
-                            <div className="modal-body bg-white">
-                                {/* Sort Controls */}
-                                <div className="mb-4">
-                                    <div className="row align-items-center">
-                                        <div className="col-auto">
-                                            <label className="form-label small fw-medium text-muted mb-0">{common('sort')}:</label>
-                                        </div>                                        <div className="col-auto">
-                                            <select 
-                                                className="form-select form-select-sm border-light patient-page-sort-select"
-                                                value={sortOrder} 
-                                                onChange={handleSortOrderChange}
-                                            >
-                                                <option value="newest">{patientsT('newestToOldest')}</option>
-                                                <option value="oldest">{patientsT('oldestToNewest')}</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Medical Entries */}
-                                {medicalFolder.length > 0 ? (
-                                    <div className="row g-3">
-                                        {getSortedMedicalFolder().map((entry, index) => (
-                                            <div key={index} className="col-12">
-                                                <div className="card border-light shadow-sm">
-                                                    <div className="card-body p-3">
-                                                        <div className="row g-2">
-                                                            <div className="col-md-3">
-                                                                <small className="text-muted fw-medium">Date</small>
-                                                                <p className="mb-0 small text-dark">{formatDate(entry.created_at)}</p>
-                                                            </div>
-                                                            <div className="col-md-3">
-                                                                <small className="text-muted fw-medium">Service</small>
-                                                                <p className="mb-0 small text-dark">{entry.service || 'N/A'}</p>
-                                                            </div>
-                                                            <div className="col-md-6">
-                                                                <small className="text-muted fw-medium">Note</small>
-                                                                <p className="mb-0 small text-dark">{entry.note}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-5">
-                                        <div className="text-muted">
-                                            <svg className="mb-3" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                                <path d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L19.7071 9.70711C19.8946 9.89464 20 10.149 20 10.4142V19C20 20.1046 19.1046 21 18 21H17Z"/>
-                                            </svg>
-                                            <p className="mb-0">No medical folder entries found.</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            {/* Modal Footer */}
-                            <div className="modal-footer border-top bg-white">
-                                <button 
-                                    type="button" 
-                                    className="btn btn-light" 
-                                    onClick={handleCloseMedicalFolderModal}
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            )}            {/* Enhanced Medical Folder Modal with Internal Notes */}
+            {showMedicalFolderModal && selectedPatient && (
+                <MedicalFolderEnhanced
+                    patient={selectedPatient}
+                    medicalData={medicalFolder}
+                    services={services}
+                    onClose={handleCloseMedicalFolderModal}
+                    onAddEntry={() => {
+                        setShowMedicalFolderModal(false);
+                        handleAddEntry(selectedPatient);
+                    }}
+                />
             )}
 
             {/* Add Entry Modal */}
