@@ -1,31 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import InternalNotes from '../../components/InternalNotes';
+import { useSecureRole } from '../../hooks/useSecureRole';
 import './MedicalFolderEnhanced.css';
 
 const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, services }) => {
     const [activeTab, setActiveTab] = useState('medical');
     const [internalNotesCount, setInternalNotesCount] = useState(0);
-    const [userRole, setUserRole] = useState(null);    useEffect(() => {
-        // Get user role from localStorage
-        const userData = localStorage.getItem('userData');
-        
-        if (userData) {
-            try {
-                const parsedData = JSON.parse(userData);
-                const role = parsedData.user?.role;
-                setUserRole(role);
-            } catch (error) {
-                console.error('Error parsing userData:', error);
-            }
-        }
-    }, []);
-
-    console.log('[DEBUG] MedicalFolderEnhanced rendered with:', {
+    const [triggerInternalAdd, setTriggerInternalAdd] = useState(false);
+    
+    // Use secure server-side role validation
+    const { userRole, isLoading: roleLoading, error: roleError, canViewInternalNotes } = useSecureRole();    console.log('[DEBUG] MedicalFolderEnhanced rendered with:', {
         patient: patient,
         medicalDataLength: medicalData?.length,
         userRole: userRole,
         services: services?.length
     });
+
+    // Reset the trigger after tab becomes active
+    useEffect(() => {
+        if (activeTab === 'internal' && triggerInternalAdd) {
+            // Reset trigger after a short delay to allow the InternalNotes component to process it
+            const timer = setTimeout(() => {
+                setTriggerInternalAdd(false);
+            }, 200);
+            return () => clearTimeout(timer);
+        }
+    }, [activeTab, triggerInternalAdd]);
 
     if (!patient) {
         return (
@@ -57,16 +57,13 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
     if (patient.firstname && patient.lastname) {
         patientName = `${patient.firstname} ${patient.lastname}`;
     } else if (patient.user && patient.user.firstname && patient.user.lastname) {
-        patientName = `${patient.user.firstname} ${patient.user.lastname}`;
-    }    // Check if user can see internal notes
-    const canViewInternalNotes = ['Coordinator', 'Provider', 'Administrative', 'Social Assistant', 'Administrator'].includes(userRole);
-
-    const handleAddNote = (noteType) => {
+        patientName = `${patient.user.firstname} ${patient.user.lastname}`;    }    const handleAddNote = (noteType) => {
         if (noteType === 'medical') {
             onAddEntry();
         } else if (noteType === 'internal') {
-            // The internal notes component handles its own add functionality
+            // Switch to internal notes tab and trigger add form
             setActiveTab('internal');
+            setTriggerInternalAdd(true);
         }
     };
 
@@ -120,36 +117,20 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                         {/* Tab Content */}
                         <div className="tab-content p-4">
                             {/* Medical Notes Tab */}
-                            {activeTab === 'medical' && (
-                                <div className="tab-pane fade show active">
+                            {activeTab === 'medical' && (                                <div className="tab-pane fade show active">
                                     <div className="d-flex justify-content-between align-items-center mb-4">
                                         <h6 className="mb-0">
                                             <i className="fas fa-notes-medical me-2 text-primary"></i>
                                             Medical Entries
                                         </h6>
-                                        <button 
-                                            className="btn btn-primary btn-sm"
-                                            onClick={() => handleAddNote('medical')}
-                                        >
-                                            <i className="fas fa-plus me-1"></i>
-                                            Add Medical Entry
-                                        </button>
                                     </div>
                                     
-                                    {!medicalData || medicalData.length === 0 ? (
-                                        <div className="text-center p-5">
+                                    {!medicalData || medicalData.length === 0 ? (                                        <div className="text-center p-5">
                                             <div className="mb-3">
                                                 <i className="fas fa-notes-medical text-muted" style={{ fontSize: '3rem' }}></i>
                                             </div>
                                             <h6 className="text-muted">No Medical Entries</h6>
-                                            <p className="text-muted">This patient doesn't have any medical entries yet.</p>
-                                            <button 
-                                                className="btn btn-primary"
-                                                onClick={() => handleAddNote('medical')}
-                                            >
-                                                <i className="fas fa-plus me-2"></i>
-                                                Add First Medical Entry
-                                            </button>
+                                            <p className="text-muted">This patient doesn't have any medical entries yet. Use the "Add Note" button below to create the first entry.</p>
                                         </div>
                                     ) : (
                                         <div className="medical-entries">
@@ -179,9 +160,7 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                         </div>
                                     )}
                                 </div>
-                            )}
-
-                            {/* Internal Notes Tab */}
+                            )}                            {/* Internal Notes Tab */}
                             {activeTab === 'internal' && canViewInternalNotes && (
                                 <div className="tab-pane fade show active">
                                     <InternalNotes 
@@ -189,6 +168,7 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                         services={services}
                                         userRole={userRole}
                                         onNotesCountChange={setInternalNotesCount}
+                                        triggerAdd={triggerInternalAdd}
                                     />
                                 </div>
                             )}

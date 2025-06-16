@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { internalNotesService } from '../services/internalNotesService';
 import './InternalNotes.css';
 
-const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountChange }) => {
+const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountChange, triggerAdd }) => {
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -12,9 +12,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
         note: '',
         service_id: '',
         is_critical: false
-    });
-
-    useEffect(() => {
+    });    useEffect(() => {
         fetchInternalNotes();
     }, [patientId]);
 
@@ -23,7 +21,14 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
         if (onNotesCountChange) {
             onNotesCountChange(notes.length);
         }
-    }, [notes, onNotesCountChange]);    const fetchInternalNotes = async () => {
+    }, [notes, onNotesCountChange]);
+
+    useEffect(() => {
+        // Handle external trigger to open add form
+        if (triggerAdd) {
+            setShowAddForm(true);
+        }
+    }, [triggerAdd]);const fetchInternalNotes = async () => {
         try {
             setLoading(true);
             const data = await internalNotesService.getInternalNotes(patientId);
@@ -113,7 +118,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
     };
 
     // Check if user can add/edit internal notes
-    const canManageNotes = ['coordinator', 'provider', 'administrative', 'social_assistant', 'administrator'].includes(userRole);
+    const canManageNotes = ['Coordinator', 'Provider', 'Administrative', 'Social Assistant', 'Administrator'].includes(userRole);
 
     if (loading) {
         return (
@@ -264,10 +269,9 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                             className={`card mb-3 ${note.is_critical ? 'border-danger' : ''}`}
                         >
                             <div className="card-header bg-light d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div className="d-flex align-items-center">
+                                <div>                                    <div className="d-flex align-items-center">
                                         <i className="fas fa-user-tie me-2 text-muted"></i>
-                                        <strong>{note.created_by}</strong>
+                                        <strong>{note.created_by?.name || 'Unknown User'}</strong>
                                         {note.is_critical && (
                                             <span className="badge bg-danger ms-2">
                                                 <i className="fas fa-exclamation-triangle me-1"></i>
@@ -286,31 +290,30 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                                     </small>
                                 </div>
                                 {canManageNotes && (
-                                    <div className="btn-group btn-group-sm">
+                                    <div className="btn-group-vertical">
                                         <button
-                                            className="btn btn-outline-primary"
+                                            className="btn btn-outline-primary "
                                             onClick={() => handleEdit(note)}
                                             title="Edit Note"
-                                        >
+                                        >✏️
                                             <i className="fas fa-edit"></i>
                                         </button>
                                         <button
-                                            className="btn btn-outline-danger"
+                                            className="btn btn-outline-danger bg-danger text-white"
                                             onClick={() => handleDelete(note.id)}
                                             title="Delete Note"
-                                        >
+                                        >🗑️
                                             <i className="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 )}
                             </div>
                             <div className="card-body">
-                                <p className="card-text">{note.note}</p>
-                                {note.service && (
+                                <p className="card-text">{note.note}</p>                                {note.service && (
                                     <div className="mt-2">
                                         <span className="badge bg-info text-dark">
                                             <i className="fas fa-cog me-1"></i>
-                                            Service: {note.service}
+                                            Service: {note.service.name || note.service}
                                         </span>
                                     </div>
                                 )}
