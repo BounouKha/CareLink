@@ -177,7 +177,7 @@ const MedicalNotes = ({ patientId, services, userRole, onNotesCountChange, trigg
                                             required
                                             maxLength="2000"
                                         />                                        <div className="form-text">
-                                            {common('charactersCount', { defaultValue: '{count}/2000 characters', count: newNote.notes.length })}
+                                            {newNote.notes.length}/2000 characters
                                         </div>
                                     </div>
                                 </div>
