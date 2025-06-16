@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import { medicalNotesService } from '../../services/medicalNotesService';
+import { internalNotesService } from '../../services/internalNotesService'; // Add this import
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import AddEntryForm from './AddEntryForm';
-import MedicalFolderEnhanced from './MedicalFolderEnhanced'; // Updated import
+import MedicalFolderEnhanced from './MedicalFolderEnhanced';
 
 const PatientsPageNew = () => {
     const [patients, setPatients] = useState([]);
+    const [patientsMedicalCounts, setPatientsMedicalCounts] = useState({});
+    const [patientsInternalCounts, setPatientsInternalCounts] = useState({}); // Add internal notes counts
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -30,10 +34,14 @@ const PatientsPageNew = () => {
             const token = localStorage.getItem('accessToken');
             const response = await fetch('http://localhost:8000/account/views_patient/', {
                 headers: { Authorization: `Bearer ${token}` }
-            });
-            if (response.ok) {
+            });            if (response.ok) {
                 const data = await response.json();
                 setPatients(data.results);
+                
+                // Fetch medical notes count for each patient
+                if (data.results && data.results.length > 0) {
+                    fetchMedicalNotesCount(data.results);
+                }
             } else {
                 setError('Failed to fetch patients');
             }
@@ -139,12 +147,14 @@ const PatientsPageNew = () => {
             
             // Important: Don't clear selectedPatient immediately if we're refreshing medical folder
             const currentSelectedPatient = selectedPatient;
-            
-            // Refresh medical folder data if modal is open
+              // Refresh medical folder data if modal is open
             if (modalStates.showMedicalFolderModal && currentSelectedPatient) {
                 console.log('[DEBUG] Refreshing medical folder for patient:', currentSelectedPatient.id);
                 await fetchMedicalFolderData(currentSelectedPatient.id);
             }
+            
+            // Refresh the medical notes count for this patient
+            refreshPatientMedicalCount(patientId);
             
             // Clear selected patient after refresh
             setSelectedPatient(null);
@@ -214,6 +224,58 @@ const PatientsPageNew = () => {
             console.error('[DEBUG] Error fetching medical folder data:', error);
             setMedicalFolderData([]);
         }
+    };    // Function to fetch medical notes count for all patients (sequential to avoid rate limiting)
+    const fetchMedicalNotesCount = async (patientList) => {
+        try {
+            const medicalCounts = {};
+            const internalCounts = {};
+            
+            // Process patients sequentially to prevent overwhelming the backend
+            for (const patient of patientList) {
+                try {
+                    // Get medical folder count
+                    const medicalCount = await medicalNotesService.getCombinedNotesCount(patient.id);
+                    medicalCounts[patient.id] = medicalCount;
+                    
+                    // Get internal notes count
+                    const internalCount = await internalNotesService.getInternalNotesCount(patient.id);
+                    internalCounts[patient.id] = internalCount;
+                    
+                    // Small delay between requests to be gentle on the backend
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                } catch (error) {
+                    console.error(`Error fetching counts for patient ${patient.id}:`, error);
+                    medicalCounts[patient.id] = 0;
+                    internalCounts[patient.id] = 0;
+                }
+            }
+            
+            setPatientsMedicalCounts(medicalCounts);
+            setPatientsInternalCounts(internalCounts);
+        } catch (error) {
+            console.error('Error fetching medical notes counts:', error);
+        }
+    };
+
+    // Function to refresh medical notes count for a specific patient
+    const refreshPatientMedicalCount = async (patientId) => {
+        try {
+            // Refresh medical folder count
+            const medicalCount = await medicalNotesService.getMedicalNotesCount(patientId);
+            setPatientsMedicalCounts(prev => ({
+                ...prev,
+                [patientId]: medicalCount
+            }));
+            
+            // Refresh internal notes count
+            const internalCount = await internalNotesService.getInternalNotesCount(patientId);
+            setPatientsInternalCounts(prev => ({
+                ...prev,
+                [patientId]: internalCount
+            }));
+        } catch (error) {
+            console.error(`Error refreshing counts for patient ${patientId}:`, error);
+        }
     };
 
     const handleShowMedicalFolder = async (patient) => {
@@ -263,7 +325,13 @@ const PatientsPageNew = () => {
                 patient={selectedPatient}
                 medicalData={medicalFolderData}
                 services={services}
+                internalNotesCount={patientsInternalCounts[selectedPatient.id] || 0} // Pass internal notes count
                 onClose={() => {
+                    // Refresh the medical notes count before closing
+                    if (selectedPatient) {
+                        refreshPatientMedicalCount(selectedPatient.id);
+                    }
+                    
                     setModalStates(prev => ({
                         ...prev,
                         showMedicalFolderModal: false
@@ -277,6 +345,12 @@ const PatientsPageNew = () => {
                         showMedicalFolderModal: false,
                         showAddEntryModal: true
                     }));
+                }}
+                onInternalNotesUpdate={() => {
+                    // Callback to refresh internal notes count when internal notes are updated
+                    if (selectedPatient) {
+                        refreshPatientMedicalCount(selectedPatient.id);
+                    }
                 }}
             />
         );
@@ -350,13 +424,17 @@ const PatientsPageNew = () => {
                                                 onClick={() => handleAddEntry(patient)}
                                             >
                                                 Add Medical Entry
-                                            </button>
-                                            <button 
-                                                className="btn btn-sm btn-outline-primary"
+                                            </button>                                            <button 
+                                                className="btn btn-sm btn-outline-primary position-relative"
                                                 style={{ borderColor: '#22C7EE', color: '#22C7EE' }}
                                                 onClick={() => handleShowMedicalFolder(patient)}
                                             >
                                                 {patientTranslations('viewMedicalFolder')}
+                                                {patientsMedicalCounts[patient.id] > 0 && (
+                                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{fontSize: '0.6rem', minWidth: '1.2rem'}}>
+                                                        {patientsMedicalCounts[patient.id]}
+                                                    </span>
+                                                )}
                                             </button>
                                         </div>
                                     </div>

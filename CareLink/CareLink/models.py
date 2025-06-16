@@ -116,6 +116,7 @@ class MedicalFolder(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True) 
     note = models.CharField(max_length=1000, null=True, blank=True)
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, help_text="User who created this medical note")
 
 class InternalNote(models.Model):
     """

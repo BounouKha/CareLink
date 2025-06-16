@@ -102,12 +102,49 @@ export const internalNotesService = {    // Get internal notes for a patient
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Failed to delete internal note: ${response.status} ${errorText}`);
-            }
-
-            return true;
+            }            return true;
         } catch (error) {
             console.error('Error deleting internal note:', error);
             throw error;
         }
-    }
+    },
+
+    // Get internal notes count for a patient (for displaying counts)
+    getInternalNotesCount: async (patientId) => {
+        try {
+            const token = await getValidAccessToken();
+            const response = await fetch(`${BASE_URL}/internal_notes/${patientId}/`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return 0; // No internal notes exist yet
+                }
+                throw new Error(`Failed to fetch internal notes count: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('[DEBUG] Internal notes count response:', data);
+            
+            // Handle different response formats
+            if (data.notes && Array.isArray(data.notes)) {
+                return data.notes.length;
+            } else if (Array.isArray(data)) {
+                return data.length;
+            } else if (data.count !== undefined) {
+                return data.count;
+            } else {
+                console.warn('[DEBUG] Unexpected internal notes response format:', data);
+                return 0;
+            }
+        } catch (error) {
+            console.error(`Error fetching internal notes count for patient ${patientId}:`, error);
+            return 0; // Return 0 if there's an error
+        }
+    },
 };
