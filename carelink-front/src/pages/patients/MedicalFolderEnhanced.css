@@ -1,0 +1,249 @@
+/* Enhanced Medical Folder Modal Styles */
+.modal-xl {
+    max-width: 1200px;
+}
+
+.tabs-container {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.tabs-container .nav-tabs {
+    border-bottom: none;
+    padding: 0.5rem 1rem 0;
+}
+
+.tabs-container .nav-link {
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px 8px 0 0;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tabs-container .nav-link:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+}
+
+.tabs-container .nav-link.active {
+    background-color: #fff;
+    color: #007bff;
+    border: 1px solid #dee2e6;
+    border-bottom: 1px solid #fff;
+    margin-bottom: -1px;
+}
+
+.tabs-container .nav-link .badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+}
+
+.tab-content {
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Medical Entries Styles */
+.medical-entries .card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.medical-entries .card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.medical-entries .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 8px 8px 0 0;
+}
+
+.medical-entries .card-body {
+    padding: 1rem;
+}
+
+/* Dropdown Styles */
+.btn-group .dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0;
+}
+
+.btn-group .dropdown-item {
+    padding: 0.75rem 1.25rem;
+    border-radius: 0;
+    transition: all 0.2s ease;
+}
+
+.btn-group .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-group .dropdown-item small {
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+
+/* Empty State Styles */
+.text-center i {
+    opacity: 0.6;
+}
+
+.text-center .btn {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.text-center .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Animations */
+.modal-overlay {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-dialog {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .modal-xl {
+        max-width: 90vw;
+    }
+    
+    .tabs-container .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .tabs-container .nav-link small {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-xl {
+        max-width: 95vw;
+    }
+    
+    .tab-content {
+        padding: 1rem;
+        max-height: 400px;
+    }
+    
+    .tabs-container .nav-link {
+        flex-direction: column;
+        text-align: center;
+        padding: 0.5rem;
+    }
+    
+    .tabs-container .nav-link .badge {
+        margin-top: 0.25rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        border-radius: 8px !important;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Badge Styles */
+.badge.bg-primary {
+    background-color: #007bff !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+/* Button Styles */
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbar Styling */
+.tab-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

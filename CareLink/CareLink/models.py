@@ -117,6 +117,67 @@ class MedicalFolder(models.Model):
     note = models.CharField(max_length=1000, null=True, blank=True)
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
 
+class InternalNote(models.Model):
+    """
+    Internal notes system for authorized staff only.
+    Patients and Family Members cannot see these notes.
+    Providers can only see notes for patients they have/had appointments with.
+    """
+    patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
+    created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='created_internal_notes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    note = models.TextField(max_length=2000)
+    service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True, blank=True)
+    is_critical = models.BooleanField(default=False, help_text="Mark as critical for urgent attention")
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Internal Note"
+        verbose_name_plural = "Internal Notes"
+    
+    def __str__(self):
+        patient_name = f"{self.patient.user.firstname} {self.patient.user.lastname}" if self.patient and self.patient.user else "Unknown Patient"
+        created_by_name = f"{self.created_by.firstname} {self.created_by.lastname}" if self.created_by else "System"
+        return f"Internal Note for {patient_name} by {created_by_name} on {self.created_at.strftime('%Y-%m-%d')}"
+
+    def can_user_view(self, user):
+        """
+        Check if a user can view this internal note based on business rules:
+        - Coordinators, Administrative, Social Assistants, Administrators: All notes
+        - Providers: Only notes for patients they have/had appointments with
+        - Patients, Family Members: No access        """
+        if not user or not user.is_authenticated:
+            return False
+            
+        user_role = user.role
+        
+        # Full access for superusers and staff members (check this first)
+        if user.is_superuser or user.is_staff:
+            return True
+        
+        # No access for patients and family members
+        if user_role in ['Patient', 'Family Patient']:
+            return False
+              # Full access for coordinators, administrative, social assistants, administrators
+        if user_role in ['Coordinator', 'Administrative', 'Social Assistant', 'Administrator']:
+            return True
+            
+        # Limited access for providers - only for patients they have/had appointments with
+        if user_role == 'Provider':
+            try:
+                from CareLink.models import Provider, Schedule
+                provider = Provider.objects.get(user=user)
+                # Check if provider has any past or present appointments with this patient
+                has_appointments = Schedule.objects.filter(
+                    provider=provider,
+                    patient=self.patient
+                ).exists()
+                return has_appointments
+            except Provider.DoesNotExist:
+                return False
+                
+        return False
 class Patient(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
     gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])

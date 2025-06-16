@@ -5,7 +5,7 @@ from django.urls import reverse
 import logging
 from CareLink.models import (
     Administrative, ContestInvoice, Service, Contract, Coordinator, FamilyPatient, 
-    HelpdeskTicket, InformationProviding, Invoice, MedicalFolder, Patient, Payment, 
+    HelpdeskTicket, InformationProviding, Invoice, MedicalFolder, InternalNote, Patient, Payment, 
     Prescription, Provider, ProvidingCare, Schedule, ServiceDemand, SocialAssistant, 
     StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, UserToken
 )
@@ -196,6 +196,48 @@ class MedicalFolderAdmin(admin.ModelAdmin):
     def note_preview(self, obj):
         return obj.note[:50] + "..." if len(obj.note) > 50 else obj.note
     note_preview.short_description = 'Note Preview'
+
+@admin.register(InternalNote)
+class InternalNoteAdmin(admin.ModelAdmin):
+    list_display = ('patient_name', 'created_by_name', 'created_at', 'is_critical', 'service_name', 'note_preview')
+    list_filter = ('is_critical', 'created_at', 'service')
+    search_fields = ('patient__user__firstname', 'patient__user__lastname', 'created_by__firstname', 'created_by__lastname', 'note')
+    readonly_fields = ('created_at', 'updated_at')
+    ordering = ('-created_at',)
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('patient', 'service', 'is_critical')
+        }),
+        ('Note Content', {
+            'fields': ('note',)
+        }),
+        ('Metadata', {
+            'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def patient_name(self, obj):
+        return f"{obj.patient.user.firstname} {obj.patient.user.lastname}" if obj.patient and obj.patient.user else "No Patient"
+    patient_name.short_description = 'Patient'
+    
+    def created_by_name(self, obj):
+        return f"{obj.created_by.firstname} {obj.created_by.lastname}" if obj.created_by else "System"
+    created_by_name.short_description = 'Created By'
+    
+    def service_name(self, obj):
+        return obj.service.name if obj.service else "No Service"
+    service_name.short_description = 'Service'
+    
+    def note_preview(self, obj):
+        return obj.note[:75] + "..." if len(obj.note) > 75 else obj.note
+    note_preview.short_description = 'Note Preview'
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # Only set created_by on creation
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 # Additional Models Admin
 
