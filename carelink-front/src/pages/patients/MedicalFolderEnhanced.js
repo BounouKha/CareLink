@@ -3,75 +3,68 @@ import InternalNotes from '../../components/InternalNotes';
 import MedicalNotes from '../../components/MedicalNotes';
 import { useSecureRole } from '../../hooks/useSecureRole';
 import { internalNotesService } from '../../services/internalNotesService';
+import { medicalNotesService } from '../../services/medicalNotesService';
 import './MedicalFolderEnhanced.css';
 
-const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, services, internalNotesCount: initialInternalCount, onInternalNotesUpdate }) => {
+const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, services }) => {
     const [activeTab, setActiveTab] = useState('medical');
-    const [internalNotesCount, setInternalNotesCount] = useState(initialInternalCount || 0);
+    const [internalNotesCount, setInternalNotesCount] = useState(0);
     const [medicalNotesCount, setMedicalNotesCount] = useState(0);
+    const [countsLoading, setCountsLoading] = useState(true);
     const [triggerInternalAdd, setTriggerInternalAdd] = useState(false);
     const [triggerMedicalAdd, setTriggerMedicalAdd] = useState(false);
     
     // Use secure server-side role validation
     const { userRole, isLoading: roleLoading, error: roleError, canViewInternalNotes } = useSecureRole();
 
-    // Fetch internal notes count when component mounts
+    // Fetch counts when modal opens
     useEffect(() => {
-        const fetchInternalCount = async () => {
-            if (patient && patient.id && canViewInternalNotes) {
-                try {
-                    console.log('[DEBUG] Fetching internal notes count for patient:', patient.id);
-                    const count = await internalNotesService.getInternalNotesCount(patient.id);
-                    console.log('[DEBUG] Got internal notes count:', count);
-                    setInternalNotesCount(count);
-                    
-                    // Also update the parent component's count
-                    if (onInternalNotesUpdate) {
-                        onInternalNotesUpdate();
-                    }
-                } catch (error) {
-                    console.error('[DEBUG] Error fetching internal notes count:', error);
+        const fetchCounts = async () => {
+            if (!patient?.id) return;
+            
+            setCountsLoading(true);
+            try {
+                // Fetch both counts in parallel
+                const [medicalCount, internalCount] = await Promise.allSettled([
+                    medicalNotesService.getMedicalNotesCount(patient.id),
+                    canViewInternalNotes ? internalNotesService.getInternalNotesCount(patient.id) : Promise.resolve(0)
+                ]);
+
+                // Handle medical notes count
+                if (medicalCount.status === 'fulfilled') {
+                    setMedicalNotesCount(medicalCount.value || 0);
+                } else {
+                    console.error('Error fetching medical notes count:', medicalCount.reason);
+                    setMedicalNotesCount(0);
+                }
+
+                // Handle internal notes count
+                if (internalCount.status === 'fulfilled') {
+                    setInternalNotesCount(internalCount.value || 0);
+                } else {
+                    console.error('Error fetching internal notes count:', internalCount.reason);
                     setInternalNotesCount(0);
                 }
+            } catch (error) {
+                console.error('Error fetching counts:', error);
+                setMedicalNotesCount(0);
+                setInternalNotesCount(0);
+            } finally {
+                setCountsLoading(false);
             }
         };
 
-        fetchInternalCount();
-    }, [patient?.id, canViewInternalNotes, onInternalNotesUpdate]);
+        fetchCounts();
+    }, [patient?.id, canViewInternalNotes]);
 
-    // Update internal notes count when prop changes
-    useEffect(() => {
-        if (initialInternalCount !== undefined) {
-            setInternalNotesCount(initialInternalCount);
-        }
-    }, [initialInternalCount]);
+    // Update counts when notes are added/removed
+    const handleInternalNotesCountChange = (newCount) => {
+        setInternalNotesCount(newCount);
+    };
 
-    console.log('[DEBUG] MedicalFolderEnhanced rendered with:', {
-        patient: patient,
-        medicalDataLength: medicalData?.length,
-        userRole: userRole,
-        services: services?.length,
-        initialInternalCount: initialInternalCount,
-        internalNotesCount: internalNotesCount,
-        canViewInternalNotes: canViewInternalNotes
-    });    // Reset triggers after tab becomes active
-    useEffect(() => {
-        if (activeTab === 'internal' && triggerInternalAdd) {
-            // Reset trigger after a short delay to allow the InternalNotes component to process it
-            const timer = setTimeout(() => {
-                setTriggerInternalAdd(false);
-            }, 200);
-            return () => clearTimeout(timer);
-        }
-        
-        if (activeTab === 'medical' && triggerMedicalAdd) {
-            // Reset trigger after a short delay to allow the MedicalNotes component to process it
-            const timer = setTimeout(() => {
-                setTriggerMedicalAdd(false);
-            }, 200);
-            return () => clearTimeout(timer);
-        }
-    }, [activeTab, triggerInternalAdd, triggerMedicalAdd]);
+    const handleMedicalNotesCountChange = (newCount) => {
+        setMedicalNotesCount(newCount);
+    };
 
     if (!patient) {
         return (
@@ -169,7 +162,7 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                         patientId={patient.id}
                                         services={services}
                                         userRole={userRole}
-                                        onNotesCountChange={setMedicalNotesCount}
+                                        onNotesCountChange={handleMedicalNotesCountChange}
                                         triggerAdd={triggerMedicalAdd}
                                     />
                                 </div>
@@ -180,7 +173,7 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                         patientId={patient.id}
                                         services={services}
                                         userRole={userRole}
-                                        onNotesCountChange={setInternalNotesCount}
+                                        onNotesCountChange={handleInternalNotesCountChange}
                                         triggerAdd={triggerInternalAdd}
                                     />
                                 </div>

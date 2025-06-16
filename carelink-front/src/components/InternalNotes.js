@@ -143,15 +143,6 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                     {t('internalNotes.internalNotes')}
                     <small className="text-muted ms-2">{t('internalNotes.staffOnly')}</small>
                 </h5>
-                {canManageNotes && (
-                    <button 
-                        className="btn btn-warning btn-sm"
-                        onClick={() => setShowAddForm(true)}
-                    >
-                        <i className="fas fa-plus me-1"></i>
-                        {t('internalNotes.addInternalNote')}
-                    </button>
-                )}
             </div>
 
             {error && (
@@ -297,14 +288,16 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                                         <button
                                             className="btn btn-outline-primary"
                                             onClick={() => handleEdit(note)}
-                                        >✏️
-                                            <i className="fas fa-edit"></i>
+                                            title="Edit Note"
+                                        >
+                                            ✏️
                                         </button>
                                         <button
                                             className="btn btn-outline-danger bg-danger text-white"
                                             onClick={() => handleDelete(note.id)}
-                                        >🗑️
-                                            <i className="fas fa-trash"></i>
+                                            title="Delete Note"
+                                        >
+                                            🗑️
                                         </button>
                                     </div>
                                 )}

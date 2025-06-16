@@ -9,16 +9,19 @@ import { useCareTranslation } from '../../hooks/useTranslation';
 // Import page-specific CSS for components not covered by unified styles
 import './PatientsPage.css';
 
-const PatientsPage = () => {    const [patients, setPatients] = useState([]);
-    const [patientsMedicalCounts, setPatientsMedicalCounts] = useState({}); // Store medical notes count for each patient
+const PatientsPage = () => {
+    const [patients, setPatients] = useState([]);
     const [error, setError] = useState(null);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showMedicalFolderModal, setShowMedicalFolderModal] = useState(false);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+    const [medicalFolderCounts, setMedicalFolderCounts] = useState({}); // Store counts when modal opens
 
     // Use modern authentication API
-    const { get, put, post, delete: del } = useAuthenticatedApi();    // Import translation hooks
+    const { get, put, post, delete: del } = useAuthenticatedApi();
+
+    // Import translation hooks
     const { patients: patientsT, common, placeholders, errors, success } = useCareTranslation();
 
     useEffect(() => {
@@ -26,21 +29,19 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
             try {
                 if (!tokenManager.isAuthenticated()) {
                     throw new Error('User not authenticated. Please log in.');
-                }                const data = await get('http://localhost:8000/account/views_patient/');
+                }
+                
+                const data = await get('http://localhost:8000/account/views_patient/');
                 console.log('[DEBUG] Fetched patient data:', data);
                 setPatients(data.results);
-                
-                // Fetch medical notes count for each patient
-                if (data.results && data.results.length > 0) {
-                    fetchMedicalNotesCount(data.results);
-                }
             } catch (err) {
                 console.error('[DEBUG] Error fetching patients:', err);
                 setError(err.message);
                 if (err.message.includes('401') || err.message.includes('Unauthorized')) {
                     tokenManager.handleLogout();
                 }
-            }        };
+            }
+        };
 
         fetchPatients();
     }, [get]);
@@ -112,12 +113,11 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
         setSelectedPatient(patient);
         setShowMedicalFolderModal(true);
         console.log('[DEBUG] setShowMedicalFolderModal(true) called');
-    };    const handleCloseMedicalFolderModal = () => {
+    };
+
+    const handleCloseMedicalFolderModal = () => {
         setShowMedicalFolderModal(false);
-        // Refresh the medical notes count for the selected patient after closing the modal
-        if (selectedPatient) {
-            refreshPatientMedicalCount(selectedPatient.id);
-        }
+        setSelectedPatient(null);
     };
 
     const filteredPatients = patients.filter(patient =>
@@ -237,8 +237,8 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                     <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
-                                                Patient Info
-                                            </button>                                            <button 
+                                            </button>
+                                            <button 
                                                 className="btn-sm btn-warning position-relative" 
                                                 onClick={() => handleShowMedicalFolder(patient)}
                                                 title="View medical history and records"
@@ -246,12 +246,10 @@ const PatientsPage = () => {    const [patients, setPatients] = useState([]);
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                                     <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
-                                                Medical Records
-                                                {patientsMedicalCounts[patient.id] > 0 && (
-                                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{fontSize: '0.6rem', minWidth: '1.2rem'}}>
-                                                        {patientsMedicalCounts[patient.id]}
-                                                    </span>
-                                                )}
+                                                {/* Simple indicator that medical folder exists - no count fetching */}
+                                                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info" style={{fontSize: '0.5rem', minWidth: '0.8rem', height: '0.8rem'}}>
+                                                    <i className="fas fa-file-medical" style={{fontSize: '0.4rem'}}></i>
+                                                </span>
                                             </button>
                                         </div>
                                     </div>
