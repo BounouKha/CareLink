@@ -413,23 +413,27 @@ const PatientsPageNew = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="card-footer bg-white d-flex justify-content-between align-items-center">
-                                        <div className="text-muted">
-                                            <small className="me-2">{patientTranslations('created')}: {new Date(patient.created_at).toLocaleDateString()}</small>
-                                        </div>
-                                        <div>
+                                    <div className="card-footer bg-transparent border-0 pt-0">
+                                        <div className="d-flex gap-1 justify-content-center" role="group">
                                             <button 
-                                                className="btn btn-sm btn-outline-primary me-2"
-                                                style={{ borderColor: '#22C7EE', color: '#22C7EE' }}
-                                                onClick={() => handleAddEntry(patient)}
+                                                className="btn btn-outline-info btn-sm rounded-pill px-2 py-1 text-light" 
+                                                onClick={() => handleShowDetails(patient)}
+                                                title={patientsT('patientDetails')}
+                                                style={{fontSize: '0.75rem'}}
                                             >
-                                                Add Medical Entry
-                                            </button>                                            <button 
-                                                className="btn btn-sm btn-outline-primary position-relative"
-                                                style={{ borderColor: '#22C7EE', color: '#22C7EE' }}
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2"/>
+                                                </svg>
+                                            </button>
+                                            <button 
+                                                className="btn btn-outline-warning btn-sm rounded-pill px-2 py-1 text-light position-relative" 
                                                 onClick={() => handleShowMedicalFolder(patient)}
+                                                title={patientsT('medicalFolder')}
+                                                style={{fontSize: '0.75rem'}}
                                             >
-                                                {patientTranslations('viewMedicalFolder')}
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>
+                                                </svg>
                                                 {patientsMedicalCounts[patient.id] > 0 && (
                                                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{fontSize: '0.6rem', minWidth: '1.2rem'}}>
                                                         {patientsMedicalCounts[patient.id]}
