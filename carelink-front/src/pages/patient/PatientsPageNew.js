@@ -482,7 +482,8 @@ const PatientsPageNew = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="card-footer bg-transparent border-0 pt-0">                                            <div className="d-flex gap-1 justify-content-center" role="group">
+                                        <div className="card-footer bg-transparent border-0 pt-0">
+                                            <div className="d-flex gap-1 justify-content-center" role="group">
                                                 <button 
                                                     className="btn btn-outline-info btn-sm rounded-pill px-2 py-1 text-light" 
                                                     onClick={() => handleShowDetails(patient)}
@@ -500,23 +501,14 @@ const PatientsPageNew = () => {
                                                     style={{fontSize: '0.75rem'}}
                                                 >
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                        <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>                                                    </svg>
+                                                        <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>
+                                                    </svg>
                                                     <span className="d-none d-md-inline ms-1">{patientsT('medicalFolder')}</span>
                                                     {patientsMedicalCounts[patient.id] > 0 && (
                                                         <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{fontSize: '0.6rem', minWidth: '1.2rem'}}>
                                                             {patientsMedicalCounts[patient.id]}
                                                         </span>
                                                     )}
-                                                </button><button 
-                                                    className="btn btn-outline-success btn-sm rounded-pill px-2 py-1 text-light" 
-                                                    onClick={() => handleAddEntry(patient)}
-                                                    title="Add medical entry"
-                                                    style={{fontSize: '0.75rem'}}
-                                                >
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                                        <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                                    </svg>
-                                                    <span className="d-none d-md-inline ms-1">Add Note</span>
                                                 </button>
                                             </div>
                                         </div>

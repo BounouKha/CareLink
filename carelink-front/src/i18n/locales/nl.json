@@ -146,6 +146,8 @@
     "totalPatients": "Totaal aantal patiënten",
     "activePatients": "Actieve patiënten",
     "medicalFolder": "Med. dossier",
+    "medicalFolderTitle": "Medisch Dossier",
+    "patientRecords": "Patiëntendossiers",
     "addEntry": "Invoer toevoegen",
     "addNewEntry": "Nieuwe medische notitie toevoegen",
     "medicalNotes": "Medische notities",
@@ -621,5 +623,25 @@
     "enterInternalNoteContent": "Voer interne notitie-inhoud in (alleen zichtbaar voor personeel)",
     "service": "Service",
     "charactersLimit": "tekens"
+  },
+  "medicalNotes": {
+    "title": "Medische notities",
+    "medicalEntries": "Medische invoeren",
+    "addMedicalNote": "Medische notitie toevoegen",
+    "addNewMedicalNote": "Nieuwe medische notitie toevoegen",
+    "editMedicalNote": "Medische notitie bewerken",
+    "saveMedicalNote": "Medische notitie opslaan",
+    "updateNote": "Notitie bijwerken",
+    "saveNote": "Notitie opslaan",
+    "medicalNotesRequired": "Medische notities zijn verplicht",
+    "noMedicalEntries": "Geen medische invoeren",
+    "noMedicalEntriesMessage": "Er zijn nog geen medische invoeren aangemaakt voor deze patiënt. Voeg de eerste invoer toe met de knop hierboven.",
+    "noMedicalEntriesAvailable": "Er zijn geen medische invoeren beschikbaar voor deze patiënt.",
+    "loadingMedicalNotes": "Medische notities laden...",
+    "failedToLoadMedicalNotes": "Kan medische notities niet laden",
+    "medicalEntry": "Medische invoer",
+    "createdBy": "door",
+    "charactersLimit": "tekens",
+    "medicalEntryBy": "Medische invoer door"
   }
 }
