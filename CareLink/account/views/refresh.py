@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.cache import cache
 from django.utils import timezone
+from django.conf import settings
 import logging
 import hashlib
 
@@ -23,11 +24,16 @@ class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         import time
         start_time = time.time()
-        
         try:
             # Extract the old refresh token from the request
             step_time = time.time()
             old_refresh_token = request.data.get('refresh')
+            
+            # 🍪 If no refresh token in body, try to get from cookie
+            if not old_refresh_token:
+                old_refresh_token = request.COOKIES.get('carelink_refresh')
+                logger.info('Using refresh token from cookie')
+            
             logger.info(f'[TIMING] Extract token: {(time.time() - step_time)*1000:.2f}ms')
             if not old_refresh_token:
                 logger.warning('Token refresh attempted without refresh token')
@@ -73,9 +79,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                         )
                 except OutstandingToken.DoesNotExist:
                     # Token is not in outstanding tokens, which might be okay for some configurations
-                    pass
-
-                # Proceed with the default refresh logic to get new tokens
+                    pass                # Proceed with the default refresh logic to get new tokens
                 response = super().post(request, *args, **kwargs)
                 
                 if response.status_code == 200:
@@ -85,6 +89,21 @@ class CustomTokenRefreshView(TokenRefreshView):
                     # Add additional security headers
                     response['X-Token-Refreshed'] = 'true'
                     response['X-Refresh-Time'] = str(timezone.now().isoformat())
+                    
+                    # 🍪 Update refresh token cookie if it was used for the request
+                    if 'carelink_refresh' in request.COOKIES:
+                        new_refresh_token = response.data.get('refresh')
+                        if new_refresh_token:
+                            response.set_cookie(
+                                'carelink_refresh',
+                                new_refresh_token,
+                                max_age=12 * 60 * 60,  # 12 hours
+                                secure=not getattr(settings, 'DEBUG', False),
+                                httponly=True,
+                                samesite='Strict',
+                                path='/'
+                            )
+                            logger.info('🍪 Updated refresh token cookie')
                     
                     logger.info(f'Token refreshed successfully for user {user_id}')
                 else:
