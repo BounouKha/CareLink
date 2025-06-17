@@ -8,7 +8,7 @@ class TokenManager {
         this.isRefreshing = false;
         this.failedQueue = [];
         this.refreshThreshold = 2 * 60 * 1000; // Refresh 2 minutes before expiration
-        this.maxRetries = 3;
+        this.maxRetries = 2;
         this.retryCount = 0;
         
         // Global request deduplication

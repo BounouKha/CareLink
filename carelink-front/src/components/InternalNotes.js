@@ -274,7 +274,7 @@ const InternalNotes = ({ patientId, services, userRole, onClose, onNotesCountCha
                                 <div>
                                     <div className="d-flex align-items-center">
                                         <i className="fas fa-user-tie me-2 text-muted"></i>
-                                        <strong>{note.created_by?.name || t('placeholders.unknownUser')}</strong>²
+                                        <strong>{note.created_by?.name || t('placeholders.unknownUser')}</strong>
                                         {note.is_critical && (
                                             <span className="badge bg-danger ms-2">
                                                 <i className="fas fa-exclamation-triangle me-1"></i>
