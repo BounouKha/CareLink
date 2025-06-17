@@ -1,7 +1,10 @@
 /**
  * JWT Token Manager - Handles automatic token refresh and security
  * Best Practice Implementation for CareLink Application
+ * Enhanced with Cookie Support for Medical-Grade Security
  */
+
+import cookieManager from './cookieManager';
 
 class TokenManager {
     constructor() {
@@ -23,12 +26,17 @@ class TokenManager {
      */
     getAccessToken() {
         return localStorage.getItem('accessToken');
-    }
-
-    /**
-     * Get the current refresh token
+    }    /**
+     * Get the current refresh token (try cookie first for enhanced security)
      */
     getRefreshToken() {
+        // 🍪 Try cookie first (more secure)
+        const cookieToken = cookieManager.getRefreshToken();
+        if (cookieToken) {
+            return cookieToken;
+        }
+        
+        // Fallback to localStorage (backward compatibility)
         return localStorage.getItem('refreshToken');
     }
 
@@ -41,14 +49,16 @@ class TokenManager {
             localStorage.setItem('refreshToken', refreshToken);
         }
         this.retryCount = 0; // Reset retry count on successful token set
-    }
-
-    /**
-     * Clear all tokens (logout)
+    }    /**
+     * Clear all tokens (logout) - Enhanced with cookie clearing
      */
     clearTokens() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        
+        // 🍪 Clear all CareLink cookies for complete logout
+        cookieManager.clearAllCookies();
+        
         this.stopTokenMonitoring();
     }
 
@@ -254,10 +264,8 @@ class TokenManager {
         const refreshToken = this.getRefreshToken();
         
         return !!(accessToken && refreshToken);
-    }
-
-    /**
-     * Get token expiration info for debugging
+    }    /**
+     * Get token expiration info for debugging (Enhanced with cookie info)
      */
     getTokenInfo() {
         const accessToken = this.getAccessToken();
@@ -278,12 +286,38 @@ class TokenManager {
                 refresh: refreshPayload ? {
                     exp: new Date(refreshPayload.exp * 1000),
                     isExpired: refreshPayload.exp <= Date.now() / 1000,
+                    source: cookieManager.getRefreshToken() ? 'cookie' : 'localStorage',
                 } : null,
+                // 🍪 Cookie information for debugging
+                cookies: cookieManager.getCookieInfo(),
             };
         } catch (error) {
             console.error('Error parsing token info:', error);
             return null;
         }
+    }
+
+    /**
+     * 🍪 Check if cookie-based authentication is available
+     */
+    isCookieAuthAvailable() {
+        return cookieManager.areCookiesEnabled();
+    }
+
+    /**
+     * 🍪 Get authentication method being used
+     */
+    getAuthMethod() {
+        const hasAccessToken = !!this.getAccessToken();
+        const hasRefreshTokenCookie = !!cookieManager.getRefreshToken();
+        const hasRefreshTokenStorage = !!localStorage.getItem('refreshToken');
+        
+        if (!hasAccessToken) return 'none';
+        
+        if (hasRefreshTokenCookie) return 'hybrid_cookie';
+        if (hasRefreshTokenStorage) return 'localStorage';
+        
+        return 'access_only';
     }
 }
 
