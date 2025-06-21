@@ -73,14 +73,15 @@ class ConsentManager {
             console.error('Error saving consent preferences:', error);
             return false;
         }
-    }
-
-    /**
+    }    /**
      * Sync consent to backend for audit trail
      */
     async syncConsentToBackend(preferences) {
         try {
-            const response = await fetch('http://localhost:8000/account/consent/store/', {
+            // Generate anonymous identifier if user not logged in
+            const anonymousId = this.getOrCreateAnonymousId();
+            
+            const response = await fetch('http://localhost:8000/account/consent/storage/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -95,7 +96,8 @@ class ConsentManager {
                     functional: preferences.functional || false,
                     page_url: window.location.href,
                     user_agent: navigator.userAgent,
-                    consent_method: 'banner'
+                    consent_method: 'banner',
+                    anonymous_id: anonymousId // Include anonymous ID for later linking
                 })
             });
 
@@ -283,6 +285,22 @@ class ConsentManager {
                 examples: ['Health newsletters', 'Service announcements', 'Wellness tips']
             }
         };
+    }
+
+    /**
+     * Get or create anonymous identifier for consent tracking
+     */
+    getOrCreateAnonymousId() {
+        const anonymousKey = 'carelink_anonymous_consent_id';
+        let anonymousId = localStorage.getItem(anonymousKey);
+        
+        if (!anonymousId) {
+            // Generate a unique anonymous ID (not personally identifiable)
+            anonymousId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem(anonymousKey, anonymousId);
+        }
+        
+        return anonymousId;
     }
 }
 

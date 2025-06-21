@@ -12,18 +12,23 @@ const LoginPage = () => {
     const navigate = useNavigate();
 
     // Use translation hooks
-    const { auth, common, placeholders, errors } = useCareTranslation();
-
-    const handleLogin = async (e) => {
+    const { auth, common, placeholders, errors } = useCareTranslation();    const handleLogin = async (e) => {
         e.preventDefault();
         try {
+            // Get anonymous consent ID if it exists
+            const anonymousConsentId = localStorage.getItem('carelink_anonymous_consent_id');
+            
             const response = await fetch('http://localhost:8000/account/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password }),
-            });            if (!response.ok) {
+                body: JSON.stringify({ 
+                    email, 
+                    password,
+                    ...(anonymousConsentId && { anonymous_consent_id: anonymousConsentId })
+                }),
+            });if (!response.ok) {
                 throw new Error(errors('invalidCredentials') || 'Invalid email or password.');
             }const data = await response.json();
             const { access, refresh } = data;
