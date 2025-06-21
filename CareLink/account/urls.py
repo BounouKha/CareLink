@@ -26,6 +26,7 @@ from account.views.coordinator.medicalfolder_simple import MedicalFolderSimpleVi
 from account.views.coordinator.internalnote import InternalNoteView
 from account.views.servicedemand import ServiceDemandListCreateView, ServiceDemandDetailView, ServiceDemandStatsView, ServiceDemandStatusUpdateView, ServiceDemandCommentView, FamilyPatientLinkedView
 from account.views.logs import LogsView, LogStatsView
+from account.views.consent import ConsentStorageView, UserConsentHistoryView, ConsentWithdrawalView, consent_audit_export, consent_stats
 
 
 
@@ -76,5 +77,12 @@ urlpatterns += [
     # Logs API endpoints
     path('logs/', LogsView.as_view(), name='logs'),
     path('logs/stats/', LogStatsView.as_view(), name='logs_stats'),
+
+    # Consent API endpoints
+    path('consent/storage/', ConsentStorageView.as_view(), name='consent_storage'),
+    path('consent/history/', UserConsentHistoryView.as_view(), name='user_consent_history'),
+    path('consent/withdrawal/', ConsentWithdrawalView.as_view(), name='consent_withdrawal'),
+    path('consent/audit/export/', consent_audit_export, name='consent_audit_export'),
+    path('consent/stats/', consent_stats, name='consent_stats'),
 
 ]

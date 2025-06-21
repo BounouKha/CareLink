@@ -36,3 +36,18 @@
     transform: rotate(360deg);
   }
 }
+
+/* Admin Panel Full Width Override */
+.admin-panel-container,
+.admin-users-container, 
+.admin-profiles-container {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Ensure admin components are not constrained by global styles */
+.admin-panel-container * {
+  box-sizing: border-box;
+}
