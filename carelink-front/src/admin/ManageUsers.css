@@ -8,6 +8,13 @@
     margin: 20px;
     border: 1px solid #e5e7eb;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
 }
 
 .admin-users-header {
@@ -35,6 +42,7 @@
     margin-bottom: 32px;
     gap: 20px;
     flex-wrap: wrap;
+    width: 100%;
 }
 
 .search-section {
@@ -163,6 +171,7 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px;
     margin-bottom: 32px;
+    width: 100% !important;
 }
 
 .user-card {
@@ -408,6 +417,33 @@
     border: 1px solid #fed7aa;
 }
 
+/* DEBUG: Fix duplicate API calls in ManageUsers */
+/* Add this to the top of your ManageUsers.js component to fix the issue:
+
+1. Remove fetchUsers from useEffect dependencies
+2. Only fetch when user explicitly requests a page
+3. Add proper logging to track API calls
+
+Example fix for useEffect:
+
+useEffect(() => {
+    // Only fetch once on component mount
+    fetchUsers(1);
+}, []); // Empty dependencies!
+
+useEffect(() => {
+    // Only search when user types (with debounce)
+    if (searchTerm !== undefined) {
+        const timeoutId = setTimeout(() => {
+            setCurrentPage(1);
+            fetchUsers(1, searchTerm);
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }
+}, [searchTerm]); // Only searchTerm as dependency!
+
+*/
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .admin-users-container {
@@ -548,6 +584,47 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1040;
+}
+
+/* Admin Users Container - Full Width Fix */
+.admin-users-container {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+/* Ensure all child elements also take full width */
+.users-grid,
+.users-table,
+.users-list {
+  width: 100% !important;
+}
+
+.admin-header,
+.search-container,
+.pagination-container {
+  width: 100%;
+}
+
+/* Fix table responsive behavior */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Profile List Container */
+.admin-profiles-container {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 /* Responsive Design */

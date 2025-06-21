@@ -1,0 +1,445 @@
+/* GDPR Cookie Consent Banner for CareLink Healthcare */
+
+.cookie-consent-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.cookie-consent-banner {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.4s ease-out;
+}
+
+/* Header */
+.cookie-consent-header {
+    background: linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%);
+    color: white;
+    padding: 20px 24px 16px;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cookie-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.cookie-consent-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.healthcare-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Content */
+.cookie-consent-content {
+    padding: 24px;
+}
+
+.cookie-consent-description {
+    margin: 0 0 20px 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #374151;
+}
+
+.essential-notice {
+    background: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.essential-icon {
+    font-size: 1.2rem;
+    margin-top: 2px;
+}
+
+.essential-notice div {
+    font-size: 0.9rem;
+    color: #92400E;
+    line-height: 1.5;
+}
+
+/* Cookie Summary */
+.cookie-summary {
+    background: #F9FAFB;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.cookie-summary p {
+    margin: 0 0 12px 0;
+    font-weight: 600;
+    color: #374151;
+}
+
+.cookie-summary ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: none;
+}
+
+.cookie-summary li {
+    margin-bottom: 8px;
+    position: relative;
+    color: #6B7280;
+    line-height: 1.5;
+}
+
+.cookie-summary li::before {
+    content: "🔹";
+    position: absolute;
+    left: -20px;
+}
+
+/* Cookie Details */
+.cookie-details {
+    margin-bottom: 20px;
+}
+
+.cookie-category {
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: #FAFAFA;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.category-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #374151;
+    margin: 0;
+}
+
+.category-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #22C7EE;
+    cursor: pointer;
+}
+
+.category-label input[type="checkbox"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.required-badge {
+    background: #EF4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.category-description {
+    margin: 8px 0;
+    color: #6B7280;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.category-examples {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    font-style: italic;
+}
+
+/* Action Buttons */
+.cookie-consent-actions {
+    padding: 0 24px 20px;
+}
+
+.primary-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.secondary-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.customize-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-accept-all {
+    background: #22C7EE;
+    color: white;
+    flex: 1;
+}
+
+.btn-accept-all:hover {
+    background: #1BA8CA;
+    transform: translateY(-1px);
+}
+
+.btn-essential {
+    background: #6B7280;
+    color: white;
+    flex: 1;
+}
+
+.btn-essential:hover {
+    background: #4B5563;
+    transform: translateY(-1px);
+}
+
+.btn-customize {
+    background: transparent;
+    color: #22C7EE;
+    border: 2px solid #22C7EE;
+}
+
+.btn-customize:hover {
+    background: #22C7EE;
+    color: white;
+}
+
+.btn-save {
+    background: #10B981;
+    color: white;
+}
+
+.btn-save:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-back {
+    background: #F3F4F6;
+    color: #6B7280;
+}
+
+.btn-back:hover {
+    background: #E5E7EB;
+    color: #374151;
+}
+
+/* Footer */
+.cookie-consent-footer {
+    background: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    padding: 16px 24px;
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.footer-link {
+    color: #6B7280;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: #22C7EE;
+    text-decoration: underline;
+}
+
+.gdpr-compliance {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #10B981;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .cookie-consent-overlay {
+        padding: 10px;
+        align-items: flex-end;
+    }
+    
+    .cookie-consent-banner {
+        max-width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: 85vh;
+    }
+    
+    .cookie-consent-header {
+        padding: 16px 20px 12px;
+    }
+    
+    .cookie-consent-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .healthcare-badge {
+        font-size: 0.8rem;
+        padding: 3px 10px;
+    }
+    
+    .cookie-consent-content {
+        padding: 20px;
+    }
+    
+    .primary-actions {
+        flex-direction: column;
+    }
+    
+    .customize-actions {
+        flex-direction: column;
+    }
+    
+    .cookie-consent-footer {
+        padding: 12px 20px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .footer-links {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .cookie-consent-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .healthcare-badge {
+        align-self: center;
+    }
+    
+    .cookie-consent-content {
+        padding: 16px;
+    }
+    
+    .essential-notice {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .category-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+/* High Contrast Support */
+@media (prefers-contrast: high) {
+    .cookie-consent-banner {
+        border: 2px solid #000;
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+    
+    .essential-notice {
+        border-width: 2px;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .cookie-consent-overlay,
+    .cookie-consent-banner,
+    .btn {
+        animation: none;
+        transition: none;
+    }
+}
