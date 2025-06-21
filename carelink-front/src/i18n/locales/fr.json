@@ -58,7 +58,9 @@
     "service": "Service",
     "by": "par",
     "updated": "Mis à jour",
-    "charactersCount": "{count}/2000 caractères"
+    "charactersCount": "{count}/2000 caractères",
+    "email": "E-mail",
+    "of": "de"
   },
   "navigation": {
     "dashboard": "Tableau de bord",
@@ -181,9 +183,9 @@
     "logout": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "unsavedChanges": "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir partir ?",
     "resetForm": "Êtes-vous sûr de vouloir réinitialiser le formulaire ?"
-  },
-  "placeholders": {
+  },  "placeholders": {
     "searchAll": "🔍 Rechercher dans tous les champs",
+    "searchUsers": "Rechercher des utilisateurs par nom, e-mail ou numéro national...",
     "enterEmail": "Entrez votre adresse e-mail",
     "email": "Entrez votre adresse e-mail",
     "password": "Entrez votre mot de passe",
@@ -911,7 +913,9 @@
       "service": "Service",
       "by": "par",
       "updated": "Mis à jour",
-      "charactersCount": "{count}/2000 caractères"
+      "charactersCount": "{count}/2000 caractères",
+      "email": "E-mail",
+      "of": "de"
     }
   }
 }

@@ -39,14 +39,18 @@
     "view": "View",    
     "download": "Download",
     "upload": "Upload",
-    "family": "Family",    "from": "From",
+    "family": "Family",    
+    "from": "From",
     "to": "To",
     "firstName": "First Name",
     "lastName": "Last Name",
+    "email": "Email",
+    "of": "of",
     "birthdate": "Birthdate",
     "address": "Address",
     "title": "Title",
-    "basicInformation": "Basic Information",    "weeks": "weeks",
+    "basicInformation": "Basic Information",    
+    "weeks": "weeks",
     "memberArea": "Member Zone",
     "sort": "Sort",
     "name": "Name",
@@ -541,11 +545,11 @@
       "fixErrorsBeforeSubmitting": "Please fix all errors before submitting",
       "noValidDatesFound": "No valid dates found. Please check your recurring settings."
     }
-  },
-  "admin": {
+  },  "admin": {
     "title": "Admin",
     "users": "Users",
     "manageUsers": "Manage Users",
+    "manageUsersSubtitle": "Manage user accounts, roles, and permissions",
     "createUser": "Create User",
     "editUser": "Edit User",
     "userDetails": "User Details",
@@ -564,6 +568,11 @@
     "userCreated": "User created successfully",
     "userUpdated": "User updated successfully",
     "userDeleted": "User deleted successfully",
+    "allFields": "All Fields",
+    "nationalNumber": "National Number",
+    "showing": "Showing",
+    "page": "Page",
+    "total": "total",
     "roleOptions": {
       "administrative": "Administrative",
       "patient": "Patient",
@@ -573,7 +582,7 @@
       "provider": "Provider",
       "administrator": "Administrator"
     }
-  },  "errors": {
+  },"errors": {
     "general": "An error occurred. Please try again.",
     "network": "Network error. Please check your connection.",
     "unauthorized": "You are not authorized to perform this action.",
@@ -607,9 +616,9 @@
     "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?",
     "resetForm": "Are you sure you want to reset the form?",
     "gdprRequired": "You must accept the GDPR terms to register",
-    "gdprConsent": "I accept the GDPR terms and conditions"
-  },"placeholders": {
+    "gdprConsent": "I accept the GDPR terms and conditions"  },"placeholders": {
     "searchAll": "🔍 Search all fields",
+    "searchUsers": "Search users by name, email, or national number...",
     "enterEmail": "Enter your email address",
     "email": "Enter your email address",
     "password": "Enter your password",

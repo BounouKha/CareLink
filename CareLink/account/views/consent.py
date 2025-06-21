@@ -4,11 +4,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from django.http import Http404
+from django.core.paginator import Paginator
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from CareLink.models import CookieConsent
 from account.serializers.consent import ConsentStorageSerializer, ConsentAuditSerializer, CookieConsentSerializer
 import logging
 
 logger = logging.getLogger('carelink')
+
+User = get_user_model()
 
 class ConsentStorageView(APIView):
     """
@@ -201,3 +206,145 @@ def consent_stats(request):
             'status': 'error',
             'message': 'Failed to fetch consent statistics'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AdminConsentListView(APIView):
+    """
+    Admin endpoint to list all consents with pagination and filtering
+    """
+    permission_classes = [permissions.IsAdminUser]
+    
+    def get(self, request):
+        """List consents with pagination and filtering"""
+        try:
+            # Get query parameters
+            page = int(request.GET.get('page', 1))
+            page_size = min(int(request.GET.get('page_size', 20)), 100)  # Max 100 items per page
+            status_filter = request.GET.get('status', 'all')
+            type_filter = request.GET.get('type', 'all')
+            search = request.GET.get('search', '').strip()
+            since_date = request.GET.get('since_date')
+            
+            # Start with all consents
+            consents = CookieConsent.objects.all()
+            
+            # Apply filters
+            if status_filter != 'all':
+                if status_filter == 'granted':
+                    consents = consents.filter(withdrawn_at__isnull=True, expiry_date__gt=timezone.now())
+                elif status_filter == 'withdrawn':
+                    consents = consents.filter(withdrawn_at__isnull=False)
+                elif status_filter == 'pending':
+                    consents = consents.filter(withdrawn_at__isnull=True, expiry_date__lte=timezone.now())
+            
+            if type_filter != 'all':
+                if type_filter == 'essential':
+                    consents = consents.filter(essential_cookies='granted')
+                elif type_filter == 'analytics':
+                    consents = consents.filter(analytics_cookies='granted')                
+                elif type_filter == 'marketing':
+                    consents = consents.filter(marketing_cookies='granted')
+                elif type_filter == 'functional':
+                    consents = consents.filter(functional_cookies='granted')
+            
+            if since_date:
+                try:
+                    since_date_parsed = timezone.datetime.fromisoformat(since_date.replace('Z', '+00:00'))
+                    consents = consents.filter(consent_timestamp__gte=since_date_parsed)
+                except ValueError:
+                    pass
+            
+            if search:
+                # Search by user email or user identifier
+                consents = consents.filter(
+                    Q(user__email__icontains=search) |
+                    Q(user_identifier__icontains=search)
+                )
+              # Order by newest first and select related user
+            consents = consents.select_related('user').order_by('-consent_timestamp')
+            
+            # Paginate
+            paginator = Paginator(consents, page_size)
+            page_obj = paginator.get_page(page)            # Serialize consent data
+            consent_data = []
+            for consent in page_obj:
+                # Safely get user info, handling cases where user might have been deleted
+                try:
+                    if consent.user_id and consent.user:
+                        user_email = consent.user.email
+                        user_id = consent.user.id
+                    else:
+                        user_email = 'Anonymous'
+                        user_id = None
+                except (User.DoesNotExist, AttributeError):
+                    user_email = 'Deleted User'
+                    user_id = consent.user_id if hasattr(consent, 'user_id') else None
+                  # Determine current status
+                current_status = 'granted'
+                if consent.withdrawn_at:
+                    current_status = 'withdrawn'
+                elif consent.expiry_date <= timezone.now():
+                    current_status = 'expired'
+                
+                # Calculate days until expiry
+                days_until_expiry = (consent.expiry_date - timezone.now()).days if consent.expiry_date > timezone.now() else 0
+                
+                consent_data.append({
+                    'id': consent.id,
+                    'user_id': user_id,
+                    'user_email': user_email,
+                    'session_id': consent.user_identifier,  # Use user_identifier as session_id
+                    'consent_timestamp': consent.consent_timestamp.isoformat(),
+                    'status': current_status,
+                    'essential_cookies': consent.essential_cookies,
+                    'analytics_cookies': consent.analytics_cookies,
+                    'marketing_cookies': consent.marketing_cookies,
+                    'functional_cookies': consent.functional_cookies,
+                    'expiry_date': consent.expiry_date.isoformat(),
+                    'withdrawn_at': consent.withdrawn_at.isoformat() if consent.withdrawn_at else None,
+                    'withdrawal_reason': consent.withdrawal_reason,
+                    'days_until_expiry': days_until_expiry,
+                    'ip_address': getattr(consent, 'ip_address', 'N/A'),  # Default if field doesn't exist
+                    'user_agent': (consent.user_agent_snippet[:100] + '...' if len(consent.user_agent_snippet) > 100 else consent.user_agent_snippet) if consent.user_agent_snippet else 'N/A'
+                })
+              # Get stats for the header
+            total_consents = CookieConsent.objects.count()
+            total_users = User.objects.count()
+            granted_consents = CookieConsent.objects.filter(
+                withdrawn_at__isnull=True,
+                expiry_date__gt=timezone.now()
+            ).count()
+            withdrawn_consents = CookieConsent.objects.filter(
+                withdrawn_at__isnull=False
+            ).count()
+            
+            # Debug logging
+            logger.info(f"[ConsentAdmin] Found {total_consents} total consents, {len(consent_data)} on this page")
+            logger.info(f"[ConsentAdmin] User requesting: {request.user.email if request.user.is_authenticated else 'Anonymous'}")
+            compliance_rate = round((granted_consents / total_consents * 100) if total_consents > 0 else 0, 1)
+            
+            return Response({
+                'status': 'success',
+                'consents': consent_data,
+                'pagination': {
+                    'current_page': page,
+                    'total_pages': paginator.num_pages,
+                    'total_items': paginator.count,
+                    'page_size': page_size,
+                    'has_next': page_obj.has_next(),
+                    'has_previous': page_obj.has_previous()
+                },
+                'stats': {
+                    'total_consents': total_consents,
+                    'total_users': total_users,
+                    'granted_consents': granted_consents,
+                    'withdrawn_consents': withdrawn_consents,
+                    'compliance_rate': compliance_rate
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Error fetching consent list: {str(e)}")
+            return Response({
+                'status': 'error',
+                'message': 'Failed to fetch consent data'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
