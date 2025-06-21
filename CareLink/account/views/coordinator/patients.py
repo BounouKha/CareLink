@@ -9,10 +9,11 @@ from CareLink.models import User, Patient
 
 class ViewsPatient(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def get(self, request):
-        # Check if user has permission to view patients (role-based)
-        if request.user.role not in ['Coordinator', 'Administrative', 'Social Assistant', 'Administrator']:
+        # Check if user has permission to view patients (role-based or admin)
+        if not (request.user.is_staff or request.user.is_superuser or 
+                request.user.role in ['Coordinator', 'Administrative', 'Social Assistant', 'Administrator']):
             return Response({"error": "Permission denied."}, status=403)
 
         # Filter out patients with inactive or null users
