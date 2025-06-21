@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './LogsManagement.css';
 
 const LogsManagement = () => {
@@ -84,21 +84,38 @@ const LogsManagement = () => {
         } catch (err) {
             console.error('Failed to fetch log stats:', err);
         }
-    };
-
+    };    // Load initial data on component mount ONLY
     useEffect(() => {
+        console.log('[LogsManagement] Initial load');
         fetchLogs(1);
         fetchStats();
-    }, [filters]);
+    }, []); // Empty dependency - runs only once on mount
+
+    // Handle filter changes with debouncing (separate from initial load)
+    useEffect(() => {
+        // Don't run on initial mount - filters are already set
+        const hasNonDefaultFilters = filters.search || filters.since_date || filters.action_type || filters.type !== 'user_actions';
+        if (!hasNonDefaultFilters) return;
+        
+        console.log('[LogsManagement] Filter effect triggered:', filters);
+        const timeoutId = setTimeout(() => {
+            fetchLogs(1);
+            fetchStats();
+            setCurrentPage(1);
+        }, 300); // 300ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [filters]); // Only run when filters actually change
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({ ...prev, [field]: value }));
         setCurrentPage(1);
-    };
-
-    const handlePageChange = (newPage) => {
-        fetchLogs(newPage);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
+            setCurrentPage(newPage);
+            fetchLogs(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const formatDate = (dateString) => {

@@ -23,10 +23,10 @@ class ConsentStorageSerializer(serializers.Serializer):
     analytics = serializers.BooleanField(default=False)
     marketing = serializers.BooleanField(default=False)  
     functional = serializers.BooleanField(default=False)
-    
-    # Technical details
+      # Technical details
     page_url = serializers.URLField(required=False, allow_blank=True)
     user_agent = serializers.CharField(required=False, allow_blank=True, max_length=500)
+    anonymous_id = serializers.CharField(required=False, allow_blank=True, max_length=100)
     consent_method = serializers.ChoiceField(
         choices=[('banner', 'Cookie Banner'), ('settings', 'Settings Page')],
         default='banner'
@@ -36,14 +36,16 @@ class ConsentStorageSerializer(serializers.Serializer):
         """Create a new consent record"""
         request = self.context.get('request')
         user = request.user if request and request.user.is_authenticated else None
-        
-        # Generate anonymous identifier for non-authenticated users
+          # Generate or use anonymous identifier
         user_identifier = None
         if not user:
-            # Create a hash of IP + User Agent (not stored, just for unique ID)
-            ip = request.META.get('REMOTE_ADDR', '')
-            ua = validated_data.get('user_agent', '')
-            user_identifier = hashlib.sha256(f"{ip}_{ua}_{timezone.now().isoformat()}".encode()).hexdigest()[:32]
+            # Use provided anonymous_id or generate one
+            user_identifier = validated_data.get('anonymous_id')
+            if not user_identifier:
+                # Fallback: Create a hash of IP + User Agent
+                ip = request.META.get('REMOTE_ADDR', '')
+                ua = validated_data.get('user_agent', '')
+                user_identifier = hashlib.sha256(f"{ip}_{ua}_{timezone.now().isoformat()}".encode()).hexdigest()[:32]
         
         # Convert boolean choices to consent format
         analytics_consent = 'granted' if validated_data.get('analytics', False) else 'denied'
