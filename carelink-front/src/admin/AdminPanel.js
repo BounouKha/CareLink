@@ -6,6 +6,8 @@ import ProfileList from './ProfileList';
 import LogsManagement from './LogsManagement'; // Import the LogsManagement component
 import { useNavigate } from 'react-router-dom';
 
+import './AdminPanel.css';
+
 const AdminPanel = () => {
     const [selectedTab, setSelectedTab] = useState('users');
     const [refreshKey, setRefreshKey] = useState(0);
