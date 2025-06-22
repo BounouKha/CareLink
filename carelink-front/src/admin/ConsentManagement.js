@@ -112,14 +112,9 @@ const ConsentManagement = () => {
         console.log('[ConsentManagement] Initial load');
         fetchConsents(1);
         fetchStats();
-    }, []); // Empty dependency - runs only once on mount
-
-    // Handle filter changes with debouncing (separate from initial load)
+    }, []); // Empty dependency - runs only once on mount    // Handle filter changes with debouncing (separate from initial load)
     useEffect(() => {
-        // Don't run on initial mount - filters are already set
-        const hasNonDefaultFilters = filters.search || filters.since_date || filters.status !== 'all' || filters.type !== 'all';
-        if (!hasNonDefaultFilters) return;
-        
+        // Always run when filters change - this includes clearing search
         console.log('[ConsentManagement] Filter effect triggered:', filters);
         const timeoutId = setTimeout(() => {
             fetchConsents(1);
