@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './ConsentManagement.css';
+import RevokeConsentModal from './RevokeConsentModal';
 
 const ConsentManagement = () => {
     const [consents, setConsents] = useState([]);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [error, setError] = useState(null);    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [showRevokeModal, setShowRevokeModal] = useState(false);
+    const [selectedConsent, setSelectedConsent] = useState(null);
     const [filters, setFilters] = useState({
         status: 'all', // all, granted, withdrawn, expired
         type: 'all', // all, essential, analytics, marketing, functional
@@ -213,7 +215,24 @@ const ConsentManagement = () => {
                             <span className={`permission-badge ${consent.functional_cookies === 'granted' ? 'granted' : 'denied'}`}>
                                 ⚙️ Functional: {consent.functional_cookies}
                             </span>
-                        </div>
+                        </div>                    </div>
+
+                    {/* Action buttons */}
+                    <div className="consent-actions">
+                        {consent.status === 'granted' && (
+                            <button 
+                                className="btn-revoke"
+                                onClick={() => handleRevokeClick(consent)}
+                                title="Revoke this consent"
+                            >
+                                🚫 Revoke Consent
+                            </button>
+                        )}
+                        {consent.status === 'withdrawn' && (
+                            <span className="revoked-notice">
+                                ❌ Consent Revoked
+                            </span>
+                        )}
                     </div>
 
                     {/* Additional consent information */}
@@ -255,6 +274,39 @@ const ConsentManagement = () => {
                 </div>
             </div>
         );
+    };
+
+    // Revoke consent handlers
+    const handleRevokeClick = (consent) => {
+        setSelectedConsent(consent);
+        setShowRevokeModal(true);
+    };
+
+    const handleRevokeSuccess = (consentId, result) => {
+        // Update the local state to reflect the withdrawal
+        setConsents(prevConsents => 
+            prevConsents.map(consent => 
+                consent.id === consentId 
+                    ? {
+                        ...consent,
+                        status: 'withdrawn',
+                        withdrawn_at: result.withdrawn_at,
+                        withdrawal_reason: result.withdrawal_reason
+                    }
+                    : consent
+            )
+        );
+        
+        // Refresh stats to reflect the change
+        fetchStats();
+        
+        // Show success message (you can add a toast notification here if you have one)
+        console.log('Consent revoked successfully');
+    };
+
+    const handleCloseRevokeModal = () => {
+        setShowRevokeModal(false);
+        setSelectedConsent(null);
     };
 
     return (
@@ -442,6 +494,15 @@ const ConsentManagement = () => {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {/* Revoke Consent Modal */}            {showRevokeModal && selectedConsent && (
+                <RevokeConsentModal
+                    show={showRevokeModal}
+                    consent={selectedConsent}
+                    onClose={handleCloseRevokeModal}
+                    onRevoke={handleRevokeSuccess}
+                />
             )}
         </div>
     );

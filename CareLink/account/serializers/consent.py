@@ -18,12 +18,12 @@ class CookieConsentSerializer(serializers.ModelSerializer):
 
 class ConsentStorageSerializer(serializers.Serializer):
     """Serializer for storing new consent (from frontend)"""
-    
-    # Consent preferences
+      # Consent preferences
     analytics = serializers.BooleanField(default=False)
-    marketing = serializers.BooleanField(default=False)  
+    marketing = serializers.BooleanField(default=False)
     functional = serializers.BooleanField(default=False)
-      # Technical details
+    
+    # Technical details
     page_url = serializers.URLField(required=False, allow_blank=True)
     user_agent = serializers.CharField(required=False, allow_blank=True, max_length=500)
     anonymous_id = serializers.CharField(required=False, allow_blank=True, max_length=100)
@@ -35,8 +35,60 @@ class ConsentStorageSerializer(serializers.Serializer):
     def create(self, validated_data):
         """Create a new consent record"""
         request = self.context.get('request')
-        user = request.user if request and request.user.is_authenticated else None
-          # Generate or use anonymous identifier
+        user = request.user if request and request.user.is_authenticated else None        # Check for existing active consent for authenticated users
+        if user:
+            existing_active = CookieConsent.objects.filter(
+                user=user,
+                withdrawn_at__isnull=True,
+                expiry_date__gt=timezone.now()
+            ).order_by('-consent_timestamp').first()
+            
+            if existing_active:
+                # Compare preferences to determine action needed
+                current_preferences = {
+                    'analytics': validated_data.get('analytics', False),
+                    'marketing': validated_data.get('marketing', False),
+                    'functional': validated_data.get('functional', False)
+                }
+                
+                existing_preferences = {
+                    'analytics': existing_active.analytics_cookies == 'granted',
+                    'marketing': existing_active.marketing_cookies == 'granted',  
+                    'functional': existing_active.functional_cookies == 'granted'
+                }
+                
+                print(f"🍪 [DEBUG] User {user.email} - Current: {current_preferences}, Existing: {existing_preferences}")
+                
+                # Check if preferences are identical
+                if current_preferences == existing_preferences:
+                    # Same preferences - check if it's a rapid duplicate
+                    time_diff = timezone.now() - existing_active.consent_timestamp
+                    
+                    if time_diff.total_seconds() < 300:  # Less than 5 minutes
+                        print(f"🍪 [DEBUG] Preventing rapid duplicate - same preferences within 5 minutes")
+                        existing_active._was_updated = False
+                        return existing_active
+                    else:
+                        print(f"🍪 [DEBUG] Same preferences but sufficient time passed - no duplicate consent needed")
+                        existing_active._was_updated = False
+                        return existing_active
+                else:
+                    # DIFFERENT preferences - GDPR requires new consent record
+                    print(f"🍪 [DEBUG] Preferences CHANGED - superseding old consent ID {existing_active.id}")
+                    
+                    # Mark the old consent as superseded
+                    existing_active.withdrawn_at = timezone.now()
+                    existing_active.withdrawal_reason = "Superseded by new consent with different preferences"
+                    existing_active.save()
+                    
+                    print(f"🍪 [DEBUG] Old consent ID {existing_active.id} marked as superseded")
+                    # Continue to create new consent record below
+            else:
+                print(f"🍪 [DEBUG] No existing active consent found for user {user.email}")
+        else:
+            print(f"🍪 [DEBUG] Anonymous user - creating new consent")
+        
+        # Generate or use anonymous identifier
         user_identifier = None
         if not user:
             # Use provided anonymous_id or generate one
