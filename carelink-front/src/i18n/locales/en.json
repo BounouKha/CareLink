@@ -55,9 +55,12 @@
     "sort": "Sort",
     "name": "Name",
     "service": "Service",
-    "by": "by",
-    "updated": "Updated",
-    "charactersCount": "{count}/2000 characters"
+    "by": "by",    "updated": "Updated",
+    "charactersCount": "{count}/2000 characters",
+    "refresh": "Refresh",
+    "type": "Type",
+    "export": "Export",
+    "showing": "Showing"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -288,13 +291,10 @@
     "coordinatorNotes": "Coordinator Notes",
     "allStatuses": "All Statuses",
     "allPriorities": "All Priorities",
-    "totalDemands": "Total Demands",
-    "pending": "Pending",
+    "totalDemands": "Total Demands",    "pending": "Pending",
     "urgent": "Urgent",
     "inProgress": "In Progress",
     "created": "Created",
-    "daysAgo": "days ago",
-    "dayAgo": "day ago",
     "managedBy": "Managed by",
     "submitServiceRequest": "Submit Service Request",
     "moreInfo": "More Info",
@@ -646,13 +646,77 @@
     "enterDetailedMedicalNotes": "Enter detailed medical notes"
   },
   "tooltips": {
-    "edit": "Edit this item",
-    "delete": "Delete this item",
+    "edit": "Edit this item",    "delete": "Delete this item",
     "view": "View details",
     "add": "Add new item",
     "refresh": "Refresh data",
     "export": "Export data",
     "print": "Print",
     "help": "Get help"
+  },
+  "timeline": {
+    "title": "Patient Timeline",
+    "noData": "No Timeline Data",
+    "noActivities": "No activities found for the selected filters.",
+    "loading": "Loading timeline...",
+    "error": "Error loading timeline",
+    "filters": {
+      "all": "All Activities",
+      "medical": "Medical Records", 
+      "internal": "Internal Notes",
+      "profile": "Profile Changes",
+      "appointment": "Appointments",
+      "service": "Service Requests",
+      "dateRange": "Date Range",
+      "author": "Author",
+      "lastDays": "Last {{days}} days",
+      "allTime": "All time"
+    },
+    "medical": {
+      "title": "Medical Record",
+      "noNote": "No medical note"
+    },
+    "internal": {
+      "title": "Internal Note",
+      "critical": "Critical Internal Note",
+      "noContent": "No content"
+    },
+    "profile": {
+      "created": "Patient Profile Created",
+      "createdDesc": "Patient profile was created in the system"
+    },
+    "appointment": {
+      "title": "Appointment with {{provider}}",
+      "scheduledFor": "Scheduled for {{date}} at {{time}}",
+      "at": "at {{time}}",
+      "from": "from {{startTime}} to {{endTime}} ({{count}} slots)",
+      "noTimeSlots": "with no specific time slots",
+      "status": {
+        "completed": "Appointment Completed",
+        "cancelled": "Appointment Cancelled", 
+        "noShow": "Appointment No-Show"
+      }
+    },
+    "service": {
+      "title": "Service Request: {{title}}",
+      "reviewed": "Service Request Reviewed: {{title}}",
+      "completed": "Service Request Completed: {{title}}",
+      "statusUpdated": "Status updated to {{status}}",
+      "completedSuccessfully": "Service request was completed successfully"
+    },    "common": {
+      "unknownProvider": "Unknown Provider",
+      "unassigned": "Unassigned",
+      "system": "System",
+      "by": "by",
+      "unknown": "Unknown",
+      "highPriority": "High Priority",
+      "date": "Date",
+      "service": "Service"
+    },    "time": {
+      "yesterday": "Yesterday",
+      "today": "Today",
+      "daysAgo": "{{count}} days ago",
+      "dayAgo": "1 day ago"
+    }
   }
 }

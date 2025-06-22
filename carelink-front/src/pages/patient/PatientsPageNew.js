@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PatientLayout from '../../layouts/PatientLayout';
 import AddEntryForm from '../../components/AddEntryForm';
 import MedicalFolderEnhanced from '../patients/MedicalFolderEnhanced';
+import PatientTimeline from '../patients/PatientTimeline';
 import { medicalNotesService } from '../../services/medicalNotesService'; // Import medical notes service
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -21,8 +22,7 @@ const PatientsPageNew = () => {
     const [services, setServices] = useState([]);
     const [selectedService, setSelectedService] = useState('');
     const [isLoadingServices, setIsLoadingServices] = useState(false);
-    const [servicesLoaded, setServicesLoaded] = useState(false);
-    const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+    const [servicesLoaded, setServicesLoaded] = useState(false);    const [showEditPatientModal, setShowEditPatientModal] = useState(false);    const [showTimelineModal, setShowTimelineModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('newest');
 
     // Use translation hooks
@@ -186,15 +186,14 @@ const PatientsPageNew = () => {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(selectedPatient),
-            });
-
-            if (!response.ok) {
+            });            if (!response.ok) {
                 throw new Error('Failed to update patient details.');
             }
 
-            await response.json();
+            const result = await response.json();
             await refetchPatients();
-            handleCloseModal();
+            handleCloseModal();            // Show success message
+            alert(patientsT('patientUpdated') || 'Patient updated successfully!');
         } catch (err) {
             console.error('[DEBUG] Error updating patient:', err);
             alert('Failed to save changes. Please try again.');
@@ -253,6 +252,16 @@ const PatientsPageNew = () => {
 
     const handleCloseMedicalFolderModal = () => {
         setShowMedicalFolderModal(false);
+    };
+
+    const handleShowTimeline = (patient) => {
+        setSelectedPatient(patient);
+        setShowTimelineModal(true);
+    };
+
+    const handleCloseTimeline = () => {
+        setShowTimelineModal(false);
+        setSelectedPatient(null);
     };
 
     const getSortedMedicalFolder = () => {
@@ -503,12 +512,21 @@ const PatientsPageNew = () => {
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                         <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" strokeWidth="2"/>
                                                     </svg>
-                                                    <span className="d-none d-md-inline ms-1">{patientsT('medicalFolder')}</span>
-                                                    {patientsMedicalCounts[patient.id] > 0 && (
+                                                    <span className="d-none d-md-inline ms-1">{patientsT('medicalFolder')}</span>                                                    {patientsMedicalCounts[patient.id] > 0 && (
                                                         <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{fontSize: '0.6rem', minWidth: '1.2rem'}}>
                                                             {patientsMedicalCounts[patient.id]}
-                                                        </span>
-                                                    )}
+                                                        </span>                                                    )}
+                                                </button>
+                                                <button 
+                                                    className="btn btn-outline-success btn-sm rounded-pill px-2 py-1 text-light" 
+                                                    onClick={() => handleShowTimeline(patient)}
+                                                    title="Patient Timeline"
+                                                    style={{fontSize: '0.75rem'}}
+                                                >
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2"/>
+                                                    </svg>
+                                                    <span className="d-none d-md-inline ms-1">Timeline</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -789,9 +807,15 @@ const PatientsPageNew = () => {
                                     Cancel
                                 </button>
                             </div>
-                        </div>
-                    </div>
+                        </div>                    </div>
                 </div>
+            )}            {/* Patient Timeline Modal */}
+            {showTimelineModal && selectedPatient && (
+                <PatientTimeline
+                    patient={selectedPatient}
+                    isOpen={showTimelineModal}
+                    onClose={handleCloseTimeline}
+                />
             )}
         </>
     );

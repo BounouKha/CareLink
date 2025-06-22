@@ -1,0 +1,313 @@
+/* Patient Timeline Modal Styles */
+.patient-timeline-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.patient-timeline-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.patient-timeline-dialog {
+    position: relative;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    margin: 1.75rem auto;
+    z-index: 1055;
+}
+
+.patient-timeline-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.3rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    outline: 0;
+}
+
+.patient-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    border-top-left-radius: 0.3rem;
+    border-top-right-radius: 0.3rem;
+    background-color: #f8f9fa;
+}
+
+.patient-timeline-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
+}
+
+.patient-timeline-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+    border-bottom-right-radius: 0.3rem;
+    border-bottom-left-radius: 0.3rem;
+    background-color: #f8f9fa;
+}
+
+/* Patient Timeline Styles */
+.timeline-container {
+    background-color: #f8f9fa;
+    min-height: 400px;
+}
+
+.timeline-filters {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #007bff, #6c757d);
+}
+
+.timeline-entry {
+    position: relative;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border: 3px solid white;
+    z-index: 2;
+}
+
+.timeline-icon {
+    font-size: 0.9rem;
+    color: white;
+}
+
+.timeline-content {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    width: 100%;
+    margin-left: 1rem;
+    position: relative;
+}
+
+.timeline-content::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 20px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid white;
+}
+
+.timeline-header {
+    margin-bottom: 1rem;
+}
+
+.timeline-title {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-title h6 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0;
+    flex-grow: 1;
+}
+
+.timeline-type-badge {
+    font-size: 0.7rem;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-left: 1rem;
+}
+
+.timeline-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.timeline-description {
+    color: #495057;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.timeline-details {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    border-left: 4px solid #007bff;
+}
+
+.medical-details > div,
+.profile-changes > div,
+.appointment-details > div {
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.change-item {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 0.5rem;
+}
+
+.change-item:last-child {
+    margin-bottom: 0;
+}
+
+.importance-indicator {
+    margin-top: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.importance-indicator.high {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.timeline-summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Hover Effects */
+.timeline-content:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.timeline-marker:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .timeline {
+        padding-left: 1.5rem;
+    }
+    
+    .timeline::before {
+        left: 0.75rem;
+    }
+    
+    .timeline-marker {
+        left: -1.75rem;
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    .timeline-content {
+        margin-left: 0.5rem;
+        padding: 1rem;
+    }
+    
+    .timeline-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .timeline-type-badge {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Loading States */
+.timeline-entry.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Filter Enhancements */
+.timeline-filters .form-select {
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.timeline-filters .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Type-specific colors */
+.timeline-marker.medical { background-color: #dc3545; }
+.timeline-marker.internal { background-color: #ffc107; }
+.timeline-marker.profile { background-color: #17a2b8; }
+.timeline-marker.appointment { background-color: #28a745; }
+.timeline-marker.service { background-color: #6f42c1; }
+
+/* Empty state styling */
+.timeline-container .text-center {
+    padding: 3rem 1rem;
+}
+
+.timeline-container .text-center i {
+    opacity: 0.5;
+}
