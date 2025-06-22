@@ -3,10 +3,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import { SpinnerOnly } from '../../components/LoadingComponents';
 import { medicalNotesService } from '../../services/medicalNotesService';
-import { internalNotesService } from '../../services/internalNotesService'; // Add this import
+import { internalNotesService } from '../../services/internalNotesService';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import AddEntryForm from './AddEntryForm';
 import MedicalFolderEnhanced from './MedicalFolderEnhanced';
+import PatientTimeline from './PatientTimeline';
 
 const PatientsPageNew = () => {
     const [patients, setPatients] = useState([]);
@@ -14,10 +15,10 @@ const PatientsPageNew = () => {
     const [patientsInternalCounts, setPatientsInternalCounts] = useState({}); // Add internal notes counts
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [modalStates, setModalStates] = useState({
+    const [error, setError] = useState('');    const [modalStates, setModalStates] = useState({
         showAddEntryModal: false,
-        showMedicalFolderModal: false
+        showMedicalFolderModal: false,
+        showTimelineModal: false
     });
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [medicalFolderData, setMedicalFolderData] = useState([]);
@@ -284,6 +285,16 @@ const PatientsPageNew = () => {
         await fetchMedicalFolderData(patient.id);
     };
 
+    const handleShowTimeline = (patient) => {
+        setSelectedPatient(patient);
+        setModalStates(prev => ({ ...prev, showTimelineModal: true }));
+    };
+
+    const handleCloseTimeline = () => {
+        setModalStates(prev => ({ ...prev, showTimelineModal: false }));
+        setSelectedPatient(null);
+    };
+
     // Fix header button to require patient selection
     const handleHeaderAddEntry = () => {
         if (patients.length === 0) {
@@ -414,21 +425,19 @@ const PatientsPageNew = () => {
                                         </div>
                                     </div>
                                     <div className="card-footer bg-transparent border-0 pt-0">
-                                        <div className="d-flex gap-1 justify-content-center" role="group">
-                                            <button 
+                                        <div className="d-flex gap-1 justify-content-center" role="group">                                            <button 
                                                 className="btn btn-outline-info btn-sm rounded-pill px-2 py-1 text-light" 
                                                 onClick={() => handleShowDetails(patient)}
-                                                title={patientsT('patientDetails')}
+                                                title={patientTranslations('patientDetails')}
                                                 style={{fontSize: '0.75rem'}}
                                             >
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                     <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2"/>
                                                 </svg>
-                                            </button>
-                                            <button 
+                                            </button>                                            <button 
                                                 className="btn btn-outline-warning btn-sm rounded-pill px-2 py-1 text-light position-relative" 
                                                 onClick={() => handleShowMedicalFolder(patient)}
-                                                title={patientsT('medicalFolder')}
+                                                title={patientTranslations('medicalFolder')}
                                                 style={{fontSize: '0.75rem'}}
                                             >
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -440,18 +449,34 @@ const PatientsPageNew = () => {
                                                     </span>
                                                 )}
                                             </button>
+                                            <button 
+                                                className="btn btn-outline-success btn-sm rounded-pill px-2 py-1 text-light" 
+                                                onClick={() => handleShowTimeline(patient)}
+                                                title="Patient Timeline"
+                                                style={{fontSize: '0.75rem'}}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2"/>
+                                                </svg>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             ))
                         )}
                     </div>
-                    
-                    {/* Add Entry Modal */}
+                      {/* Add Entry Modal */}
                     {renderAddEntryModal()}
                     
                     {/* Medical Folder Modal */}
                     {renderMedicalFolderModal()}
+                    
+                    {/* Patient Timeline Modal */}
+                    <PatientTimeline
+                        patient={selectedPatient}
+                        isOpen={modalStates.showTimelineModal}
+                        onClose={handleCloseTimeline}
+                    />
                 </div>
             </div>
         </BaseLayout>
