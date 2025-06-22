@@ -38,7 +38,7 @@ class ConsentManager {
             return null;
         }
     }    /**
-     * Set consent preferences (saves locally + sends to backend for audit)
+     * Set consent preferences (saves locally, sends to backend only if authenticated)
      */
     async setConsent(preferences) {
         const consent = {
@@ -56,16 +56,21 @@ class ConsentManager {
         };
 
         try {
-            // Save locally first (primary storage)
+            // Always save locally first (primary storage)
             localStorage.setItem(this.storageKey, JSON.stringify(consent));
             console.log('🍪 Consent preferences saved locally:', consent.preferences);
             
-            // Send to backend for audit trail (best effort - don't fail if backend is down)
-            try {
-                await this.syncConsentToBackend(preferences);
-                console.log('🍪 Consent synced to backend for audit');
-            } catch (backendError) {
-                console.warn('🍪 Backend sync failed (local consent still valid):', backendError.message);
+            // Only send to backend if user is authenticated
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                try {
+                    await this.syncConsentToBackend(preferences);
+                    console.log('🍪 Consent synced to backend for authenticated user');
+                } catch (backendError) {
+                    console.warn('🍪 Backend sync failed (local consent still valid):', backendError.message);
+                }
+            } else {
+                console.log('🍪 Anonymous user - consent stored locally only');
             }
             
             return true;
@@ -73,7 +78,7 @@ class ConsentManager {
             console.error('Error saving consent preferences:', error);
             return false;
         }
-    }    /**
+    }/**
      * Sync consent to backend for audit trail
      */
     async syncConsentToBackend(preferences) {
@@ -122,12 +127,10 @@ class ConsentManager {
         if (!consent) return category === 'essential'; // Essential cookies always allowed
         
         return consent.preferences[category] === true;
-    }
-
-    /**
-     * Check if consent exists (user has made a choice)
+    }    /**
+     * Check if consent exists locally (user has made a choice) - SYNC VERSION
      */
-    hasValidConsent() {
+    hasLocalConsent() {
         return this.getConsent() !== null;
     }
 
@@ -302,6 +305,123 @@ class ConsentManager {
         
         return anonymousId;
     }
+
+    /**
+     * Check backend consent status for authenticated users
+     */
+    async checkBackendConsentStatus() {
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return null;
+
+            const response = await fetch('http://localhost:8000/account/consent/status/', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) return null;
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.warn('Failed to check backend consent status:', error);
+            return null;
+        }
+    }    /**
+     * Check if user needs to give consent
+     * - Anonymous users: Check localStorage only
+     * - Logged-in users: Check if backend consent is active
+     */
+    async hasValidConsent() {
+        try {
+            // Always check local consent first
+            const localConsent = this.getConsent();
+            
+            // If user is not authenticated, local consent is sufficient
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                if (!localConsent) {
+                    console.log('🍪 Anonymous user - no local consent found');
+                    return false;
+                }
+                console.log('🍪 Anonymous user with valid local consent');
+                return true;
+            }
+            
+            // For authenticated users, check backend status
+            try {
+                const backendStatus = await this.checkBackendConsentStatus();
+                
+                if (!backendStatus) {
+                    // No backend record - check if we have local consent to sync
+                    if (localConsent) {
+                        console.log('🍪 No backend record but local consent exists - user needs to re-consent');
+                        return false; // Force re-consent to sync with backend
+                    }
+                    console.log('🍪 No backend record and no local consent');
+                    return false;
+                }
+                
+                // Check backend status
+                if (backendStatus.status === 'active' && backendStatus.has_consent) {
+                    console.log('🍪 Authenticated user with active backend consent');
+                    return true;
+                }
+                
+                if (backendStatus.status === 'withdrawn') {
+                    console.log('🍪 Backend consent was withdrawn - clearing local consent');
+                    this.clearConsent(); // Clear stale local consent
+                    return false;
+                }
+                
+                if (backendStatus.status === 'expired') {
+                    console.log('🍪 Backend consent expired - clearing local consent');
+                    this.clearConsent(); // Clear expired local consent
+                    return false;
+                }
+                
+                if (backendStatus.status === 'no_consent') {
+                    console.log('🍪 No backend consent record found');
+                    return false;
+                }
+                
+                // Default: no valid consent
+                console.log('🍪 Backend status unclear, requiring new consent:', backendStatus.status);
+                return false;
+                
+            } catch (backendError) {
+                console.warn('🍪 Could not check backend status, using local consent:', backendError);
+                // If backend check fails but we have local consent, allow it
+                return localConsent !== null;
+            }
+        } catch (error) {
+            console.error('🍪 Error in hasValidConsent:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Sync localStorage consent to backend when user logs in
+     */
+    async syncLocalConsentOnLogin() {
+        try {
+            const localConsent = this.getConsent();
+            if (!localConsent) {
+                console.log('🍪 No local consent to sync');
+                return false;
+            }
+
+            // Sync the local preferences to backend
+            await this.syncConsentToBackend(localConsent.preferences);
+            console.log('🍪 Local consent synced to backend after login');
+            return true;
+        } catch (error) {
+            console.warn('🍪 Failed to sync local consent on login:', error);
+            return false;
+        }
+    }
 }
 
 // Create singleton instance
@@ -311,7 +431,7 @@ export default consentManager;
 
 // Export utility functions
 export const hasConsent = (category) => consentManager.hasConsent(category);
-export const hasValidConsent = () => consentManager.hasValidConsent();
+export const hasValidConsent = () => consentManager.hasValidConsent(); // Returns Promise
 export const setConsent = (preferences) => consentManager.setConsent(preferences);
 export const clearConsent = () => consentManager.clearConsent();
 export const getConsentHistory = () => consentManager.getConsentHistory();

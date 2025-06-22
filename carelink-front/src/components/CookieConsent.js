@@ -9,14 +9,25 @@ const CookieConsent = () => {
         analytics: false,
         preferences: true, // Default to true for better UX
         marketing: false
-    });
-
-    useEffect(() => {
-        // Check if user has already given consent
-        if (!consentManager.hasValidConsent()) {
-            // Small delay to let page load first
-            setTimeout(() => setShowBanner(true), 1000);
-        }
+    });    useEffect(() => {
+        // Check consent status
+        const checkConsent = async () => {
+            try {
+                const hasValidConsent = await consentManager.hasValidConsent();
+                console.log('🍪 Cookie consent check result:', hasValidConsent);
+                
+                if (!hasValidConsent) {
+                    // Small delay to let page load first
+                    setTimeout(() => setShowBanner(true), 1000);
+                }
+            } catch (error) {
+                console.error('🍪 Error checking consent status:', error);
+                // On error, assume no consent to be safe
+                setTimeout(() => setShowBanner(true), 1000);
+            }
+        };
+        
+        checkConsent();
     }, []);
 
     const handleAcceptAll = () => {

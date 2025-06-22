@@ -15,16 +15,24 @@ logger = logging.getLogger('carelink')
 
 User = get_user_model()
 
-class ConsentStorageView(APIView):
-    """
-    Store cookie consent for GDPR compliance
-    Both authenticated and anonymous users can store consent
-    """
+class ConsentStorageView(APIView):    
     permission_classes = [permissions.AllowAny]  # Allow anonymous consent
     
     def post(self, request):
         """Store new consent preferences"""
         try:
+            # Check if user has withdrawn consent recently (GDPR compliance)
+            user = request.user if request.user.is_authenticated else None
+            if user:
+                recent_withdrawal = CookieConsent.objects.filter(
+                    user=user,
+                    withdrawn_at__isnull=False
+                ).order_by('-withdrawn_at').first()
+                
+                if recent_withdrawal:
+                    # Log that user is giving new consent after withdrawal
+                    logger.info(f"User {user.email} giving new consent after withdrawal on {recent_withdrawal.withdrawn_at}")
+
             serializer = ConsentStorageSerializer(data=request.data, context={'request': request})
             
             if serializer.is_valid():
@@ -32,14 +40,16 @@ class ConsentStorageView(APIView):
                 
                 # Log consent storage
                 user_display = f"{request.user.email}" if request.user.is_authenticated else "Anonymous"
-                logger.info(f"Cookie consent stored for {user_display} - ID: {consent.id}")
+                action = "updated" if hasattr(consent, '_was_updated') else "created"
+                logger.info(f"Cookie consent {action} for {user_display} - ID: {consent.id}")
                 
                 # Return minimal response (no sensitive data)
                 return Response({
                     'status': 'success',
-                    'message': 'Consent preferences stored successfully',
+                    'message': f'Consent preferences {action} successfully',
                     'consent_id': consent.id,
-                    'expires_in_days': consent.days_until_expiry
+                    'expires_in_days': consent.days_until_expiry,
+                    'action': action
                 }, status=status.HTTP_201_CREATED)
             
             return Response({
@@ -348,3 +358,117 @@ class AdminConsentListView(APIView):
                 'status': 'error',
                 'message': 'Failed to fetch consent data'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def admin_revoke_consent(request, consent_id):
+    """
+    Admin endpoint to revoke a user's consent (GDPR compliance)
+    """
+    try:
+        consent = CookieConsent.objects.get(id=consent_id)
+        
+        # Check if already withdrawn
+        if consent.withdrawn_at:
+            return Response({
+                'status': 'error',
+                'message': 'Consent is already withdrawn'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get reason from request
+        reason = request.data.get('reason', '').strip()
+        if not reason:
+            return Response({
+                'status': 'error',
+                'message': 'Withdrawal reason is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Mark as withdrawn
+        consent.withdrawn_at = timezone.now()
+        consent.withdrawal_reason = f"Admin revocation: {reason}"
+        consent.save()
+        
+        # Log the admin action
+        user_email = consent.user.email if consent.user else 'Anonymous'
+        logger.info(f"Consent {consent_id} revoked by admin {request.user.email} for user {user_email}. Reason: {reason}")
+        
+        return Response({
+            'status': 'success',
+            'message': 'Consent revoked successfully',
+            'withdrawn_at': consent.withdrawn_at.isoformat(),
+            'withdrawal_reason': consent.withdrawal_reason
+        })
+        
+    except CookieConsent.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Consent record not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error revoking consent {consent_id}: {str(e)}")
+        return Response({
+            'status': 'error',
+            'message': 'Failed to revoke consent'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def user_consent_status(request):
+    """
+    Get current consent status for authenticated user
+    """
+    try:
+        # Get user's most recent consent
+        latest_consent = CookieConsent.objects.filter(
+            user=request.user
+        ).order_by('-consent_timestamp').first()
+        
+        if not latest_consent:
+            return Response({
+                'status': 'no_consent',
+                'has_consent': False,
+                'message': 'No consent record found'
+            })
+        
+        # Check if withdrawn
+        if latest_consent.withdrawn_at:
+            return Response({
+                'status': 'withdrawn',
+                'has_consent': False,
+                'withdrawn_at': latest_consent.withdrawn_at.isoformat(),
+                'withdrawal_reason': latest_consent.withdrawal_reason,
+                'message': 'Consent has been withdrawn'
+            })
+        
+        # Check if expired
+        if latest_consent.expiry_date <= timezone.now():
+            return Response({
+                'status': 'expired',
+                'has_consent': False,
+                'expired_at': latest_consent.expiry_date.isoformat(),
+                'message': 'Consent has expired'
+            })
+        
+        # Active consent
+        return Response({
+            'status': 'active',
+            'has_consent': True,
+            'consent_id': latest_consent.id,
+            'granted_at': latest_consent.consent_timestamp.isoformat(),
+            'expires_at': latest_consent.expiry_date.isoformat(),
+            'preferences': {
+                'essential': latest_consent.essential_cookies == 'granted',
+                'analytics': latest_consent.analytics_cookies == 'granted',
+                'marketing': latest_consent.marketing_cookies == 'granted',
+                'functional': latest_consent.functional_cookies == 'granted'
+            },
+            'message': 'Active consent found'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error checking consent status for {request.user.email}: {str(e)}")
+        return Response({
+            'status': 'error',
+            'has_consent': False,
+            'message': 'Failed to check consent status'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
