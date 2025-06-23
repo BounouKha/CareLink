@@ -52,7 +52,12 @@
     "basicInformation": "Basisinformatie",
     "weeks": "weken",
     "memberArea": "Ledenzone",
-    "sort": "Sorteren"
+    "sort": "Sorteren",    "email": "E-mail",
+    "of": "van",
+    "refresh": "Vernieuwen",
+    "type": "Type",
+    "export": "Exporteren",
+    "showing": "Weergeven"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -492,12 +497,15 @@
     "title": "Admin",
     "users": "Gebruikers",
     "manageUsers": "Gebruikers beheren",
+    "manageUsersSubtitle": "Beheer gebruikersaccounts, rollen en machtigingen",
     "createUser": "Gebruiker aanmaken",
     "editUser": "Gebruiker bewerken",
-    "userDetails": "Gebruikersdetails",
-    "roles": "Rollen",
-    "permissions": "Rechten",
     "profiles": "Profielen",
+    "allFields": "Alle velden",
+    "nationalNumber": "Nationaal nummer",
+    "showing": "Toont",
+    "page": "Pagina",
+    "total": "totaal",
     "logs": "Systeemlogboeken",
     "userActions": "Gebruikersacties",
     "systemLogs": "Systeemlogboeken",
@@ -634,8 +642,7 @@
     "updateNote": "Notitie bijwerken",
     "saveNote": "Notitie opslaan",
     "medicalNotesRequired": "Medische notities zijn verplicht",
-    "noMedicalEntries": "Geen medische invoeren",
-    "noMedicalEntriesMessage": "Er zijn nog geen medische invoeren aangemaakt voor deze patiënt. Voeg de eerste invoer toe met de knop hierboven.",
+    "noMedicalEntries": "Geen medische invoeren",    "noMedicalEntriesMessage": "Er zijn nog geen medische invoeren aangemaakt voor deze patiënt. Voeg de eerste invoer toe met de knop hierboven.",
     "noMedicalEntriesAvailable": "Er zijn geen medische invoeren beschikbaar voor deze patiënt.",
     "loadingMedicalNotes": "Medische notities laden...",
     "failedToLoadMedicalNotes": "Kan medische notities niet laden",
@@ -643,5 +650,70 @@
     "createdBy": "door",
     "charactersLimit": "tekens",
     "medicalEntryBy": "Medische invoer door"
+  },
+  "timeline": {
+    "title": "Patiënt Tijdlijn",
+    "noData": "Geen Tijdlijn Gegevens",
+    "noActivities": "Geen activiteiten gevonden voor de geselecteerde filters.",
+    "loading": "Tijdlijn laden...",
+    "error": "Fout bij het laden van tijdlijn",
+    "filters": {
+      "all": "Alle Activiteiten",
+      "medical": "Medische Dossiers",
+      "internal": "Interne Notities",
+      "profile": "Profiel Wijzigingen",
+      "appointment": "Afspraken",
+      "service": "Service Verzoeken",
+      "dateRange": "Datumbereik",
+      "author": "Auteur",
+      "lastDays": "Laatste {{days}} dagen",
+      "allTime": "Alle tijd"
+    },
+    "medical": {
+      "title": "Medisch Dossier",
+      "noNote": "Geen medische notitie"
+    },
+    "internal": {
+      "title": "Interne Notitie",
+      "critical": "Kritieke Interne Notitie",
+      "noContent": "Geen inhoud"
+    },
+    "profile": {
+      "created": "Patiënt Profiel Aangemaakt",
+      "createdDesc": "Patiënt profiel werd aangemaakt in het systeem"
+    },
+    "appointment": {
+      "title": "Afspraak met {{provider}}",
+      "scheduledFor": "Gepland voor {{date}} om {{time}}",
+      "at": "om {{time}}",
+      "from": "van {{startTime}} tot {{endTime}} ({{count}} slots)",
+      "noTimeSlots": "zonder specifieke tijdslots",
+      "status": {
+        "completed": "Afspraak Voltooid",
+        "cancelled": "Afspraak Geannuleerd",
+        "noShow": "Afspraak Niet Verschenen"
+      }
+    },
+    "service": {
+      "title": "Service Verzoek: {{title}}",
+      "reviewed": "Service Verzoek Beoordeeld: {{title}}",
+      "completed": "Service Verzoek Voltooid: {{title}}",
+      "statusUpdated": "Status bijgewerkt naar {{status}}",
+      "completedSuccessfully": "Service verzoek werd succesvol voltooid"
+    },    "common": {
+      "unknownProvider": "Onbekende Aanbieder",
+      "unassigned": "Niet Toegewezen",
+      "system": "Systeem",
+      "by": "door",
+      "unknown": "Onbekend",
+      "highPriority": "Hoge Prioriteit",
+      "date": "Datum",
+      "service": "Service"
+    },    "time": {
+      "yesterday": "Gisteren",
+      "today": "Vandaag",
+      "daysAgo": "{{count}} dagen geleden",
+      "dayAgo": "1 dag geleden"
+    }
   }
 }
