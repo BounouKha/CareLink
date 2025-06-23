@@ -68,7 +68,7 @@ def log_user_action(user, action_type, target_model, target_id, target_user=None
 
 class AdminUserListView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def get(self, request):
         # Check if the user is a superuser
         if not request.user.is_superuser:
@@ -77,8 +77,38 @@ class AdminUserListView(APIView):
                 status=403
             )
 
-        # Fetch all users from the database
+        # Get search parameters
+        search_query = request.GET.get('search', '').strip()
+        search_field = request.GET.get('search_field', 'all')
+
+        # Start with all users
         users = User.objects.all()
+
+        # Apply search filter if search query is provided
+        if search_query:
+            from django.db.models import Q
+            
+            if search_field == 'email':
+                users = users.filter(email__icontains=search_query)
+            elif search_field == 'name':
+                users = users.filter(
+                    Q(firstname__icontains=search_query) | 
+                    Q(lastname__icontains=search_query) |
+                    Q(firstname__icontains=search_query.split()[0] if ' ' in search_query else '') |
+                    Q(lastname__icontains=search_query.split()[-1] if ' ' in search_query else '')
+                )
+            elif search_field == 'national_number':
+                users = users.filter(national_number__icontains=search_query)
+            else:  # search_field == 'all' or any other value
+                users = users.filter(
+                    Q(email__icontains=search_query) |
+                    Q(firstname__icontains=search_query) |
+                    Q(lastname__icontains=search_query) |
+                    Q(national_number__icontains=search_query)
+                )
+
+        # Order users by id for consistent pagination
+        users = users.order_by('id')
 
         # Paginate the user data
         paginator = PageNumberPagination()

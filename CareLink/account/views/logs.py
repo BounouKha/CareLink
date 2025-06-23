@@ -128,11 +128,17 @@ class LogsView(APIView):
 
             log_file = log_files.get(log_type)
             if not log_file or not os.path.exists(log_file):
-                return Response({'error': f'Log file not found: {log_type}'}, status=404)
-
-            # Read log file
-            with open(log_file, 'r', encoding='utf-8') as f:
-                log_lines = f.readlines()
+                return Response({'error': f'Log file not found: {log_type}'}, status=404)            # Read log file with error handling for encoding issues
+            try:
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    log_lines = f.readlines()
+            except UnicodeDecodeError:
+                # If UTF-8 fails, try with error handling
+                try:
+                    with open(log_file, 'r', encoding='utf-8', errors='replace') as f:
+                        log_lines = f.readlines()
+                except Exception as e:
+                    return Response({'error': f'Failed to read log file due to encoding issues: {str(e)}'}, status=500)
 
             # Parse and filter logs
             parsed_logs = []

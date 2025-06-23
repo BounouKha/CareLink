@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './LogsManagement.css';
 
 const LogsManagement = () => {
@@ -8,6 +8,7 @@ const LogsManagement = () => {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const isInitialLoad = useRef(true);
     const [filters, setFilters] = useState({
         type: 'user_actions', // user_actions, admin, errors, general
         search: '',
@@ -84,21 +85,35 @@ const LogsManagement = () => {
         } catch (err) {
             console.error('Failed to fetch log stats:', err);
         }
-    };
-
+    };    // Load initial data on component mount ONLY
     useEffect(() => {
+        console.log('[LogsManagement] Initial load');
         fetchLogs(1);
         fetchStats();
-    }, [filters]);
+        isInitialLoad.current = false;
+    }, []); // Empty dependency - runs only once on mount
+
+    // Handle filter changes (skip initial load to avoid double fetch)
+    useEffect(() => {
+        if (isInitialLoad.current) return; // Skip initial load
+        
+        console.log('[LogsManagement] Filter effect triggered:', filters);
+        
+        // Fetch immediately when filters change (especially for tab switching)
+        fetchLogs(1);
+        fetchStats();
+        setCurrentPage(1);
+    }, [filters]); // Run when any filter changes
 
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({ ...prev, [field]: value }));
         setCurrentPage(1);
-    };
-
-    const handlePageChange = (newPage) => {
-        fetchLogs(newPage);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
+            setCurrentPage(newPage);
+            fetchLogs(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const formatDate = (dateString) => {
@@ -125,12 +140,14 @@ const LogsManagement = () => {
                 details: log.full_line || log.message
             };
         }
-    };    const renderLogEntry = (log) => {
+    };    const renderLogEntry = (log, index) => {
         const formatted = formatLogEntry(log);
+        // Use a combination of timestamp, index, and ID for a unique key
+        const uniqueKey = `${formatted.timestamp}-${index}-${formatted.id}`;
         
         if (filters.type === 'user_actions') {
             return (
-                <div key={formatted.id} className="log-entry">
+                <div key={uniqueKey} className="log-entry">
                     <div className="log-header">
                         <div className="log-timestamp">{formatDate(formatted.timestamp)}</div>
                         <div className="log-user">{formatted.user}</div>
@@ -166,10 +183,9 @@ const LogsManagement = () => {
                         )}
                     </div>
                 </div>
-            );
-        } else {
+            );        } else {
             return (
-                <div key={formatted.id} className="log-entry">
+                <div key={uniqueKey} className="log-entry">
                     <div className="log-header">
                         <div className="log-timestamp">{formatDate(formatted.timestamp)}</div>
                         <span className={`log-level level-${formatted.level?.toLowerCase()}`}>
@@ -300,9 +316,8 @@ const LogsManagement = () => {
                         <div className="loading-spinner">⟳</div>
                         <p>Loading logs...</p>
                     </div>
-                ) : logs.length > 0 ? (
-                    <div className="logs-list">
-                        {logs.map(renderLogEntry)}
+                ) : logs.length > 0 ? (                    <div className="logs-list">
+                        {logs.map((log, index) => renderLogEntry(log, index))}
                     </div>
                 ) : (
                     <div className="no-logs">

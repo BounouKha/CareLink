@@ -7,7 +7,7 @@ from CareLink.models import (
     Administrative, ContestInvoice, Service, Contract, Coordinator, FamilyPatient, 
     HelpdeskTicket, InformationProviding, Invoice, MedicalFolder, InternalNote, Patient, Payment, 
     Prescription, Provider, ProvidingCare, Schedule, ServiceDemand, SocialAssistant, 
-    StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, UserToken
+    StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, UserToken, CookieConsent
 )
 
 # Configure admin logging
@@ -484,6 +484,70 @@ class UserTokenAdmin(admin.ModelAdmin):
         logger.info(f"{count} user tokens revoked by {request.user.email}")
         self.message_user(request, f"{count} tokens have been revoked.")
     revoke_tokens.short_description = "Revoke selected tokens"
+
+
+@admin.register(CookieConsent)
+class CookieConsentAdmin(admin.ModelAdmin):
+    list_display = ('user_display', 'consent_timestamp', 'consent_version', 'consent_status', 'expiry_status', 'consent_method')
+    list_filter = ('consent_timestamp', 'consent_version', 'consent_method', 'analytics_cookies', 'marketing_cookies', 'functional_cookies')
+    search_fields = ('user__email', 'user__firstname', 'user__lastname', 'user_identifier')
+    readonly_fields = ('consent_timestamp', 'user_agent_snippet', 'ip_address_stored')
+    
+    fieldsets = (
+        ('Consent Information', {
+            'fields': ('user', 'user_identifier', 'consent_version', 'consent_timestamp', 'expiry_date')
+        }),
+        ('Cookie Preferences', {
+            'fields': ('essential_cookies', 'analytics_cookies', 'marketing_cookies', 'functional_cookies')
+        }),
+        ('Technical Details', {
+            'fields': ('page_url', 'consent_method', 'user_agent_snippet', 'ip_address_stored'),
+            'classes': ('collapse',)
+        }),
+        ('Withdrawal Information', {
+            'fields': ('withdrawn_at', 'withdrawal_reason'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def user_display(self, obj):
+        if obj.user:
+            return f"{obj.user.firstname} {obj.user.lastname} ({obj.user.email})"
+        return f"Anonymous ({obj.user_identifier})"
+    user_display.short_description = 'User'
+    
+    def consent_status(self, obj):
+        if obj.withdrawn_at:
+            return "🚫 Withdrawn"
+        elif obj.is_expired:
+            return "⏰ Expired"
+        else:
+            return "✅ Active"
+    consent_status.short_description = 'Status'
+    
+    def expiry_status(self, obj):
+        if obj.is_expired:
+            return "Expired"
+        days = obj.days_until_expiry
+        if days <= 30:
+            return f"⚠️ {days} days left"
+        return f"{days} days left"
+    expiry_status.short_description = 'Expires'
+    
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deletion of consent records for audit compliance
+        return request.user.is_superuser
+    
+    def get_readonly_fields(self, request, obj=None):
+        # Most fields should be readonly to maintain audit integrity
+        if obj:  # Editing existing record
+            return self.readonly_fields + (
+                'user', 'user_identifier', 'consent_version', 'expiry_date',
+                'essential_cookies', 'analytics_cookies', 'marketing_cookies', 
+                'functional_cookies', 'page_url', 'consent_method'
+            )
+        return self.readonly_fields
+
 
 # Admin site customization
 admin.site.site_header = "CareLink Administration"
