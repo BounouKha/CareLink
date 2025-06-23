@@ -108,9 +108,7 @@ class TokenManager {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ refresh: refreshToken }),
-            });
-
-            if (response.ok) {
+            });            if (response.ok) {
                 const data = await response.json();
                 
                 // Store new tokens (backend sends new refresh token due to rotation)
@@ -123,11 +121,24 @@ class TokenManager {
                 
                 return data.access;
             } else {
+                // If refresh token is expired (401), immediately logout
+                if (response.status === 401) {
+                    console.error('🚫 Refresh token expired, redirecting to login');
+                    this.processQueue(new Error('Refresh token expired'), null);
+                    this.handleLogout();
+                    throw new Error('Refresh token expired');
+                }
+                
                 const error = await response.json();
                 throw new Error(error.detail || 'Token refresh failed');
-            }
-        } catch (error) {
+            }        } catch (error) {
             console.error('❌ Token refresh failed:', error);
+            
+            // If refresh token is expired, don't retry - immediately logout
+            if (error.message === 'Refresh token expired') {
+                this.processQueue(error, null);
+                throw error;
+            }
             
             this.retryCount++;
             
