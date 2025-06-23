@@ -3,16 +3,26 @@
 
 /* Admin Panel Container */
 .admin-panel-container {
-    background: #f8fafc;
-    min-height: 100vh;
+    width: 100% !important;
+    max-width: none;
+    margin: 0;
     padding: 20px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.admin-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Admin Panel Header */
 .admin-panel-header {
+    width: 100%;
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     padding: 40px 20px;
     background: linear-gradient(135deg, #007bbf, #00bcd4);
     border-radius: 16px;
@@ -34,93 +44,89 @@
     font-weight: 400;
 }
 
-/* Admin Tab System */
+/* Admin Tabs - Small Compact Style (ONLY VERSION) */
 .admin-tabs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
+  display: flex;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 3px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  width: fit-content;
 }
 
 .admin-tab {
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 24px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    text-align: left;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.admin-tab::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #007bbf, #00bcd4);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-    transform-origin: left;
-}
-
-.admin-tab:hover::before {
-    transform: scaleX(1);
+  padding: 6px 12px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .admin-tab:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 123, 191, 0.15);
-    border-color: rgba(0, 123, 191, 0.3);
+  background: #f3f4f6;
+  color: #1f2937;
 }
 
 .admin-tab.active {
-    border-color: #007bbf;
-    background: linear-gradient(145deg, #ffffff, #f8fbff);
-    box-shadow: 0 8px 25px rgba(0, 123, 191, 0.15);
+  background: #007bbf;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 123, 191, 0.3);
 }
 
-.admin-tab.active::before {
-    transform: scaleX(1);
+/* Fix active tab text visibility */
+.admin-tab.active,
+.admin-tab.active *,
+.admin-tab.active span,
+.admin-tab.active .tab-label {
+  color: #ffffff !important;
 }
 
-.tab-icon {
-    font-size: 2rem;
-    background: linear-gradient(135deg, #007bbf, #00bcd4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    min-width: 40px;
+/* Override old tab styles completely for small tabs */
+.admin-tab .tab-icon {
+  display: none !important;
 }
 
-.tab-content {
-    flex: 1;
+.admin-tab .tab-content {
+  display: contents !important;
 }
 
-.tab-label {
-    display: block;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 4px;
+.admin-tab .tab-label {
+  display: inline !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: inherit !important;
+  margin: 0 !important;
+  line-height: 1 !important;
 }
 
-.tab-description {
-    display: block;
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-weight: 400;
-    line-height: 1.4;
+.admin-tab .tab-description {
+  display: none !important;
+}
+
+/* Ensure ALL text in tabs is visible */
+.admin-tab,
+.admin-tab *,
+.admin-tab span,
+.admin-tab div,
+.admin-tab .tab-label {
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: inherit !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
 }
 
 /* Admin Content Area */
@@ -189,31 +195,21 @@
         font-size: 2rem;
     }
     
+    /* Small tabs responsive */
     .admin-tabs {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        margin-bottom: 30px;
+        width: 100%;
+        justify-content: space-around;
     }
     
     .admin-tab {
-        padding: 20px;
-    }
-    
-    .tab-icon {
-        font-size: 1.5rem;
-        min-width: 30px;
-    }
-    
-    .tab-label {
-        font-size: 1.1rem;
+        flex: 1;
+        padding: 6px 8px;
+        font-size: 12px;
+        height: 28px;
     }
     
     .admin-section-placeholder {
         padding: 40px 20px;
-    }
-    
-    .placeholder-icon {
-        font-size: 3rem;
     }
     
     .admin-section-placeholder h2 {

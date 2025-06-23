@@ -473,4 +473,101 @@ class PhoneUser(models.Model):
     is_primary = models.BooleanField(default=False)
 
 
+class CookieConsent(models.Model):
+    """
+    GDPR Cookie Consent Storage for Audit Trail
+    Stores proof of user consent choices for legal compliance
+    """
+    CONSENT_CHOICES = [
+        ('granted', 'Granted'),
+        ('denied', 'Denied'),
+        ('withdrawn', 'Withdrawn'),
+    ]
+    
+    # User identification (only for logged-in users)
+    user = models.ForeignKey('User', on_delete=models.CASCADE, null=True, blank=True)
+    user_identifier = models.CharField(max_length=64, null=True, blank=True, 
+                                     help_text="Anonymous identifier for non-logged users")
+    
+    # Consent details
+    consent_version = models.CharField(max_length=10, default='1.0')
+    consent_timestamp = models.DateTimeField(auto_now_add=True)
+    expiry_date = models.DateTimeField()
+    
+    # Cookie categories consent
+    essential_cookies = models.BooleanField(default=True, help_text="Always true for healthcare functionality")
+    analytics_cookies = models.CharField(max_length=10, choices=CONSENT_CHOICES, default='denied')
+    marketing_cookies = models.CharField(max_length=10, choices=CONSENT_CHOICES, default='denied')
+    functional_cookies = models.CharField(max_length=10, choices=CONSENT_CHOICES, default='denied')
+    
+    # Technical details (minimal for privacy)
+    user_agent_snippet = models.CharField(max_length=100, null=True, blank=True, 
+                                        help_text="First 100 chars of user agent for audit")
+    page_url = models.URLField(null=True, blank=True, help_text="Page where consent was given")
+    
+    # Privacy compliance
+    ip_address_stored = models.BooleanField(default=False, help_text="Always False - IP not stored for privacy")
+    consent_method = models.CharField(max_length=20, default='banner', 
+                                    choices=[('banner', 'Cookie Banner'), ('settings', 'Settings Page')])
+    
+    # Audit fields
+    withdrawn_at = models.DateTimeField(null=True, blank=True)
+    withdrawal_reason = models.CharField(max_length=200, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-consent_timestamp']
+        verbose_name = "Cookie Consent"
+        verbose_name_plural = "Cookie Consents"
+        indexes = [
+            models.Index(fields=['user', '-consent_timestamp']),
+            models.Index(fields=['user_identifier', '-consent_timestamp']),
+        ]
+    
+    def __str__(self):
+        if self.user:
+            user_display = f"{self.user.firstname} {self.user.lastname} ({self.user.email})"
+        else:
+            user_display = f"Anonymous ({self.user_identifier})"
+        return f"Cookie Consent - {user_display} - {self.consent_timestamp.strftime('%Y-%m-%d %H:%M')}"
+
+    @property
+    def is_expired(self):
+        """Check if consent has expired"""
+        return timezone.now() > self.expiry_date
+    
+    @property
+    def days_until_expiry(self):
+        """Days until consent expires"""
+        if self.is_expired:
+            return 0
+        return (self.expiry_date - timezone.now()).days
+    
+    def get_consent_summary(self):
+        """Get a summary of all consent choices"""
+        return {
+            'essential': True,  # Always true
+            'analytics': self.analytics_cookies == 'granted',
+            'marketing': self.marketing_cookies == 'granted',
+            'functional': self.functional_cookies == 'granted',
+        }
+    
+    def to_audit_dict(self):
+        """Convert to dictionary for audit purposes"""
+        return {
+            'consent_id': self.id,
+            'user_id': self.user.id if self.user else None,
+            'user_email': self.user.email if self.user else None,
+            'user_identifier': self.user_identifier,
+            'consent_version': self.consent_version,
+            'given_on': self.consent_timestamp.isoformat(),
+            'expires_on': self.expiry_date.isoformat(),
+            'is_expired': self.is_expired,
+            'consent_choices': self.get_consent_summary(),
+            'page_url': self.page_url,
+            'method': self.consent_method,
+            'withdrawn': bool(self.withdrawn_at),
+            'withdrawn_on': self.withdrawn_at.isoformat() if self.withdrawn_at else None,
+        }
+
+
 

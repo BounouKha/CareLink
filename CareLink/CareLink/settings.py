@@ -237,8 +237,7 @@ LOGGING = {
             'format': '[ADMIN] {levelname} {asctime} {module} - {message}',
             'style': '{',
         },
-    },
-    'handlers': {
+    },    'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
@@ -247,17 +246,20 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'carelink.log',
             'formatter': 'verbose',
+            'encoding': 'utf-8',
         },
         'admin_file': {
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'admin.log',
             'formatter': 'admin',
+            'encoding': 'utf-8',
         },
         'error_file': {
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'errors.log',
             'formatter': 'verbose',
             'level': 'ERROR',
+            'encoding': 'utf-8',
         },
     },
     'loggers': {

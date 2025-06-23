@@ -345,6 +345,7 @@
 }
 
 .patient-page-modal-overlay .modal-header {
+  margin: 10px;
   background-color: white !important;
   border-bottom: 1px solid #e9ecef !important;
   padding: 1rem 1.5rem !important;

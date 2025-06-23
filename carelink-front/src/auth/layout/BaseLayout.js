@@ -9,6 +9,7 @@ import ZoomControl from '../../components/ZoomControl';
 import AccessibilityControls from '../../components/AccessibilityControls';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import tokenManager from '../../utils/tokenManager';
+import CookieConsent from '../../components/CookieConsent';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -237,6 +238,7 @@ const BaseLayout = ({ children }) => {
             <main className="homepage-main">
                 {children}
             </main>
+            <CookieConsent />
         </div>
     );
 };
