@@ -1,0 +1,264 @@
+/* Consent Management Page Styles */
+
+.consent-management {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.consent-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+}
+
+.consent-header h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.8em;
+}
+
+.consent-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1.1em;
+}
+
+.consent-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.withdraw-button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.withdraw-button:hover:not(:disabled) {
+    background: #c82333;
+}
+
+.withdraw-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.policy-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.policy-button:hover {
+    background: #0056b3;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+}
+
+.consent-history h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+}
+
+.no-history {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.no-history ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.consent-record {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s;
+}
+
+.consent-record:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.consent-record-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.consent-date {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.consent-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.consent-status.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.consent-status.expiring {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.consent-status.expired {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.consent-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.consent-version {
+    font-size: 0.9em;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.consent-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.choice-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.choice-name {
+    font-weight: 500;
+    color: #495057;
+}
+
+.choice-value {
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.choice-value.granted {
+    color: #28a745;
+}
+
+.choice-value.denied {
+    color: #dc3545;
+}
+
+.consent-metadata {
+    padding-top: 10px;
+    border-top: 1px solid #e9ecef;
+    color: #6c757d;
+}
+
+.consent-info {
+    margin-top: 40px;
+    padding: 20px;
+    background: #e7f3ff;
+    border-radius: 10px;
+    border: 1px solid #b8daff;
+}
+
+.consent-info h4 {
+    color: #004085;
+    margin-bottom: 15px;
+}
+
+.consent-info ul {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.6;
+}
+
+.consent-info li {
+    margin-bottom: 8px;
+    color: #004085;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .consent-management {
+        padding: 15px;
+    }
+    
+    .consent-header {
+        padding: 15px;
+    }
+    
+    .consent-header h2 {
+        font-size: 1.5em;
+    }
+    
+    .consent-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .withdraw-button,
+    .policy-button {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .consent-record-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .consent-choices {
+        grid-template-columns: 1fr;
+    }
+}

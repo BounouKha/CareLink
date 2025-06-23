@@ -57,8 +57,13 @@
     "sort": "Trier",
     "service": "Service",
     "by": "par",
-    "updated": "Mis à jour",
-    "charactersCount": "{count}/2000 caractères"
+    "updated": "Mis à jour",    "charactersCount": "{count}/2000 caractères",
+    "email": "E-mail",
+    "of": "de",
+    "refresh": "Actualiser",
+    "type": "Type",
+    "export": "Exporter",
+    "showing": "Affichage"
   },
   "navigation": {
     "dashboard": "Tableau de bord",
@@ -181,9 +186,9 @@
     "logout": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "unsavedChanges": "Vous avez des modifications non sauvegardées. Êtes-vous sûr de vouloir partir ?",
     "resetForm": "Êtes-vous sûr de vouloir réinitialiser le formulaire ?"
-  },
-  "placeholders": {
+  },  "placeholders": {
     "searchAll": "🔍 Rechercher dans tous les champs",
+    "searchUsers": "Rechercher des utilisateurs par nom, e-mail ou numéro national...",
     "enterEmail": "Entrez votre adresse e-mail",
     "email": "Entrez votre adresse e-mail",
     "password": "Entrez votre mot de passe",
@@ -904,14 +909,83 @@
       "birthdate": "Date de naissance",
       "address": "Adresse",
       "title": "Titre",
-      "basicInformation": "Informations de base",
-      "weeks": "semaines",
+      "basicInformation": "Informations de base",      "weeks": "semaines",
       "memberArea": "Espace membre",
       "sort": "Trier",
       "service": "Service",
       "by": "par",
       "updated": "Mis à jour",
-      "charactersCount": "{count}/2000 caractères"
+      "charactersCount": "{count}/2000 caractères",
+      "email": "E-mail",      "of": "de",
+      "refresh": "Actualiser",
+      "type": "Type",
+      "export": "Exporter",
+      "showing": "Affichage"
     }
-  }
+  },
+  "timeline": {
+      "title": "Chronologie du Patient",
+      "noData": "Aucune Donnée de Chronologie",
+      "noActivities": "Aucune activité trouvée pour les filtres sélectionnés.",
+      "loading": "Chargement de la chronologie...",
+      "error": "Erreur lors du chargement de la chronologie",
+      "filters": {
+        "all": "Toutes les Activités",
+        "medical": "Dossiers Médicaux",
+        "internal": "Notes Internes",
+        "profile": "Modifications du Profil",
+        "appointment": "Rendez-vous",
+        "service": "Demandes de Service",
+        "dateRange": "Plage de Dates",
+        "author": "Auteur",
+        "lastDays": "Derniers {{days}} jours",
+        "allTime": "Toutes les périodes"
+      },
+      "medical": {
+        "title": "Dossier Médical",
+        "noNote": "Aucune note médicale"
+      },
+      "internal": {
+        "title": "Note Interne",
+        "critical": "Note Interne Critique",
+        "noContent": "Aucun contenu"
+      },
+      "profile": {
+        "created": "Profil Patient Créé",
+        "createdDesc": "Le profil patient a été créé dans le système"
+      },
+      "appointment": {
+        "title": "Rendez-vous avec {{provider}}",
+        "scheduledFor": "Programmé pour le {{date}} à {{time}}",
+        "at": "à {{time}}",
+        "from": "de {{startTime}} à {{endTime}} ({{count}} créneaux)",
+        "noTimeSlots": "sans créneaux horaires spécifiques",
+        "status": {
+          "completed": "Rendez-vous Terminé",
+          "cancelled": "Rendez-vous Annulé",
+          "noShow": "Rendez-vous Manqué"
+        }
+      },
+      "service": {
+        "title": "Demande de Service: {{title}}",
+        "reviewed": "Demande de Service Examinée: {{title}}",
+        "completed": "Demande de Service Terminée: {{title}}",
+        "statusUpdated": "Statut mis à jour vers {{status}}",        "completedSuccessfully": "La demande de service a été terminée avec succès"
+      },      "common": {
+        "unknownProvider": "Prestataire Inconnu",
+        "unassigned": "Non Assigné",
+        "system": "Système",
+        "by": "par",
+        "unknown": "Inconnu",
+        "highPriority": "Priorité Élevée",
+        "date": "Date",
+        "service": "Service"
+      },      "time": {
+        "yesterday": "Hier",
+        "today": "Aujourd'hui",
+        "daysAgo": "il y a {{count}} jours",
+        "dayAgo": "il y a 1 jour"
+      }
+    }
 }
+

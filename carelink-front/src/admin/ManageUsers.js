@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './ManageUsers.css';
 import BaseLayout from '../auth/layout/BaseLayout';
 import EditUserModal from './EditUserModal';
@@ -10,10 +10,7 @@ import { useAuthenticatedApi } from '../hooks/useAuth';
 import { useCareTranslation } from '../hooks/useCareTranslation';
 import tokenManager from '../utils/tokenManager';
 
-const ManageUsers = () => {
-    const [allUsers, setAllUsers] = useState([]); // Store all users from all pages
-    const [filteredUsers, setFilteredUsers] = useState([]);
-    const [displayedUsers, setDisplayedUsers] = useState([]); // Users to display on current page
+const ManageUsers = () => {    const [displayedUsers, setDisplayedUsers] = useState([]); // Users to display on current page
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -46,8 +43,8 @@ const ManageUsers = () => {
             selectedFamilyPatientId,
             selectedUserId
         });
-    }, [showAddRelationModal, selectedFamilyPatientId, selectedUserId]);    // Fetch all users from all pages
-    const fetchAllUsers = async () => {
+    }, [showAddRelationModal, selectedFamilyPatientId, selectedUserId]);    // Fetch users for current page only (server-side pagination)
+    const fetchUsers = useCallback(async (pageNum = 1, search = '', searchField = 'all') => {
         setLoading(true);
         try {
             // Check authentication first
@@ -55,30 +52,24 @@ const ManageUsers = () => {
                 throw new Error('User not authenticated. Please log in.');
             }
 
-            let allUsersData = [];
-            let currentPage = 1;
-            let hasMorePages = true;
-
-            while (hasMorePages) {
-                const data = await get(`http://localhost:8000/account/users/?page=${currentPage}`);
-                allUsersData = [...allUsersData, ...data.results];
-                
-                // Check if there are more pages
-                hasMorePages = !!data.next;
-                currentPage++;
+            // Build URL with page and search parameters
+            let url = `http://localhost:8000/account/users/?page=${pageNum}`;
+            if (search && search.trim()) {
+                url += `&search=${encodeURIComponent(search)}`;
+                if (searchField && searchField !== 'all') {
+                    url += `&search_field=${searchField}`;
+                }
             }
 
-            setAllUsers(allUsersData);
-            setFilteredUsers(allUsersData);
+            console.log(`[ManageUsers] Fetching page ${pageNum}...`, { search, searchField, url });
+            const data = await get(url);
             
-            // Calculate total pages for filtered results
-            const totalFilteredPages = Math.ceil(allUsersData.length / USERS_PER_PAGE);
-            setTotalPages(totalFilteredPages);
+            console.log(`[ManageUsers] Received ${data.results.length} users, total: ${data.count}`);
             
-            // Set displayed users for current page
-            const startIndex = (page - 1) * USERS_PER_PAGE;
-            const endIndex = startIndex + USERS_PER_PAGE;
-            setDisplayedUsers(allUsersData.slice(startIndex, endIndex));
+            // Update state with server response
+            setDisplayedUsers(data.results);
+            setTotalPages(Math.ceil(data.count / 50)); // Assuming 50 users per page from backend
+            setPage(pageNum);
             
         } catch (err) {
             console.error('[ManageUsers] Error fetching users:', err);
@@ -91,64 +82,29 @@ const ManageUsers = () => {
         } finally {
             setLoading(false);
         }
-    };// Filter users and update pagination
-    const updateDisplayedUsers = (filtered, currentPage) => {
-        const totalFilteredPages = Math.ceil(filtered.length / USERS_PER_PAGE);
-        setTotalPages(totalFilteredPages);
-        
-        // If current page exceeds total pages, use page 1
-        const validPage = currentPage > totalFilteredPages ? 1 : currentPage;
-        
-        const startIndex = (validPage - 1) * USERS_PER_PAGE;
-        const endIndex = startIndex + USERS_PER_PAGE;
-        setDisplayedUsers(filtered.slice(startIndex, endIndex));
-        
-        // Return the valid page so caller can update page state if needed
-        return validPage;
-    };// Filter users based on search term and field
+    }, [get]); // Only depend on the get function// Load initial data on component mount ONLY
     useEffect(() => {
-        if (!searchTerm) {
-            setFilteredUsers(allUsers);
-            const validPage = updateDisplayedUsers(allUsers, page);
-            if (validPage !== page) {
-                setPage(validPage);
-            }
-            return;
-        }
+        console.log('[ManageUsers] Initial load - fetching page 1');
+        fetchUsers(1, '', 'all'); // Load first page with no search
+    }, []); // Empty dependency - runs only once on mount
 
-        const filtered = allUsers.filter(user => {
-            const searchLower = searchTerm.toLowerCase();
-            
-            switch (searchField) {
-                case 'email':
-                    return user.email?.toLowerCase().includes(searchLower);
-                case 'name':
-                    return `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchLower);
-                case 'national_number':
-                    return user.national_number?.toLowerCase().includes(searchLower);
-                case 'all':
-                default:
-                    return (
-                        user.email?.toLowerCase().includes(searchLower) ||
-                        `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchLower) ||
-                        user.national_number?.toLowerCase().includes(searchLower)
-                    );
-            }
-        });
-        
-        setFilteredUsers(filtered);
-        updateDisplayedUsers(filtered, 1); // Reset to page 1 when searching
-        if (page !== 1) {
-            setPage(1);
-        }
-    }, [searchTerm, searchField, allUsers]); // Removed 'page' from dependencies to fix infinite loop
-
-    // Update displayed users when page changes
+    // Handle search with debouncing (separate from initial load)
     useEffect(() => {
-        updateDisplayedUsers(filteredUsers, page);
-    }, [page]);    useEffect(() => {
-        fetchAllUsers();
-    }, []); // Remove get dependency to prevent infinite re-fetching
+        // Don't run search on initial mount (when searchTerm is still empty)
+        if (searchTerm === '') return;
+        
+        console.log('[ManageUsers] Search effect triggered:', { searchTerm, searchField });
+        const timeoutId = setTimeout(() => {
+            fetchUsers(1, searchTerm, searchField); // Always go to page 1 when searching
+        }, 300); // 300ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, searchField]); // Only run when search actually changes// Handle page changes
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+            fetchUsers(newPage, searchTerm, searchField);
+        }
+    };
 
     const handleEdit = (user) => {
         setEditingUser(user);
@@ -157,10 +113,8 @@ const ManageUsers = () => {
         try {
             if (!tokenManager.isAuthenticated()) {
                 throw new Error('User not authenticated. Please log in.');
-            }
-
-            // Refresh all users data
-            await fetchAllUsers();
+            }            // Refresh current page data
+            await fetchUsers(page, searchTerm, searchField);
             setMessage('User updated successfully!');
             setMessageType('success');
             setTimeout(() => setMessage(null), 3000);
@@ -186,10 +140,8 @@ const ManageUsers = () => {
         try {
             if (!tokenManager.isAuthenticated()) {
                 throw new Error('User not authenticated. Please log in.');
-            }
-
-            // Refresh all users data
-            await fetchAllUsers();
+            }            // Refresh current page data
+            await fetchUsers(page, searchTerm, searchField);
             setMessage('User created successfully!');
             setMessageType('success');
             setTimeout(() => setMessage(null), 3000);
@@ -302,10 +254,8 @@ const ManageUsers = () => {
             
             setMessage(deleteData.message);
             setMessageType('success');
-            setTimeout(() => setMessage(null), 3000);
-            
-            // Refresh all users data after deletion
-            await fetchAllUsers();
+            setTimeout(() => setMessage(null), 3000);              // Refresh current page data after deletion
+            await fetchUsers(page, searchTerm, searchField);
         } catch (err) {
             console.error('[ManageUsers] Error deleting user:', err);
             setMessage(err.message);
@@ -351,7 +301,7 @@ const ManageUsers = () => {
                             <div className="search-icon">🔍</div>
                         </div>
                     </div>                    <div className="results-info">
-                        {loading ? common('loading') : `${admin('showing')} ${displayedUsers.length} ${common('of')} ${filteredUsers.length} ${admin('users')} (${admin('total')}: ${allUsers.length})`}
+                        {loading ? common('loading') : `${admin('showing')} ${displayedUsers.length} ${admin('users')} (${admin('page')} ${page} ${common('of')} ${totalPages})`}
                     </div>
                 </div>
 
@@ -503,10 +453,9 @@ const ManageUsers = () => {
                     </div>
                 )}
             </div>            {totalPages > 1 && (
-                <div className="pagination">
-                    <button 
+                <div className="pagination">                    <button 
                         onClick={() => {
-                            setPage(page - 1);
+                            handlePageChange(page - 1);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }} 
                         disabled={page <= 1}
@@ -517,7 +466,7 @@ const ManageUsers = () => {
                     <span className="pagination-info">Page {page} of {totalPages}</span>
                     <button 
                         onClick={() => {
-                            setPage(page + 1);
+                            handlePageChange(page + 1);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }} 
                         disabled={page >= totalPages}

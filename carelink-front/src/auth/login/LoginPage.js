@@ -5,8 +5,7 @@ import tokenManager from '../../utils/tokenManager';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import './LoginPage.css';
 
-const LoginPage = () => {
-    const [email, setEmail] = useState('');
+const LoginPage = () => {    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -17,20 +16,31 @@ const LoginPage = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
+            // Get anonymous consent ID if it exists
+            const anonymousConsentId = localStorage.getItem('carelink_anonymous_consent_id');
+            
             const response = await fetch('http://localhost:8000/account/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password }),
-            });            if (!response.ok) {
+                body: JSON.stringify({ 
+                    email, 
+                    password,
+                    ...(anonymousConsentId && { anonymous_consent_id: anonymousConsentId })
+                }),
+            });
+
+            if (!response.ok) {
                 throw new Error(errors('invalidCredentials') || 'Invalid email or password.');
-            }const data = await response.json();
+            }
+
+            const data = await response.json();
             const { access, refresh } = data;
             
             // Use TokenManager to securely store tokens
             tokenManager.setTokens(access, refresh);
-              console.log('✅ Login successful, tokens stored securely');
+            console.log('✅ Login successful, tokens stored securely');
             
             // Fetch and store user profile data
             try {
@@ -56,6 +66,15 @@ const LoginPage = () => {
                 // Continue with login even if profile fetch fails
             }
             
+            // Sync any existing localStorage consent to backend
+            try {
+                const consentManager = (await import('../../utils/consentManager')).default;
+                await consentManager.syncLocalConsentOnLogin();
+            } catch (consentError) {
+                console.warn('⚠️ Failed to sync consent on login:', consentError);
+                // Don't block login for consent sync failures
+            }
+            
             // Dispatch custom event to notify other components of login
             window.dispatchEvent(new CustomEvent('user-login'));
             
@@ -63,12 +82,15 @@ const LoginPage = () => {
             setTimeout(() => {
                 navigate('/profile');
             }, 100);
-            
-        } catch (err) {
+              } catch (err) {
             setError(err.message);
-        }    };    return (
+        }
+    };
+
+    return (
         <BaseLayout>
-            <div className="login-page">                <div className="login-container">
+            <div className="login-page">
+                <div className="login-container">
                     <div className="login-header">
                         <h2>{auth('welcomeBack')}</h2>
                         <p className="login-subtitle">{auth('signInSubtitle')}</p>
@@ -112,8 +134,8 @@ const LoginPage = () => {
                                 <i className="fas fa-exclamation-triangle"></i>
                                 {error}
                             </div>
-                        )}
-                          <button type="submit" className="btn btn-primary">
+                        )}                        
+                        <button type="submit" className="btn btn-primary">
                             <i className="fas fa-sign-in-alt"></i>
                             {auth('signIn')}
                         </button>

@@ -44,11 +44,11 @@ class CookieAuthenticationTests(TransactionTestCase):
         # Clean up any existing test users first
         User.objects.filter(email__startswith='test_').delete()
         
-                self.user = User.objects.create_user(
-            email=test_email,
-            password='TestPass123!',
-            firstname='Test',
-            lastname='User'
+        self.user = User.objects.create_user(
+        email=test_email,
+        password='TestPass123!',
+        firstname='Test',
+        lastname='User'
         )
         self.test_email = test_email
     
