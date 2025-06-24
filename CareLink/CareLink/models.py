@@ -39,6 +39,112 @@ class Contract(models.Model):
     salary = models.BigIntegerField()
     hour_quantity = models.BigIntegerField()
     type_contract = models.CharField(max_length=20, choices=[('CDD', 'CDD'), ('CDR', 'CDR'), ('Intérim', 'Intérim'), ('CDI', 'CDI'), ('Bénévole', 'Bénévole'), ('Autre', 'Autre')])
+    
+    # Enhanced contract fields
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    contract_reference = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    weekly_hours = models.IntegerField(null=True, blank=True)
+    department = models.CharField(max_length=100, null=True, blank=True)
+    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='supervised_contracts')
+    status = models.CharField(max_length=20, choices=[
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('suspended', 'Suspended'),
+        ('terminated', 'Terminated'),
+        ('pending', 'Pending')
+    ], default='pending')    
+    notes = models.TextField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Contract {self.contract_reference} - {self.user.get_full_name() if self.user else 'No User'}"
+    
+    def clean(self):
+        """Validate contract business rules"""
+        from django.core.exceptions import ValidationError
+        
+        if self.user:
+            # Rule 1: Prevent multiple active contracts for the same user
+            if self.status == 'active':
+                existing_active = Contract.objects.filter(
+                    user=self.user, 
+                    status='active'
+                ).exclude(pk=self.pk)
+                
+                if existing_active.exists():
+                    raise ValidationError({
+                        'status': f'User {self.user.get_full_name()} already has an active contract. '
+                                f'Please terminate or suspend the existing contract first.'
+                    })
+            
+            # Rule 2: User must be active to have an active contract
+            if self.status == 'active' and not self.user.is_active:
+                raise ValidationError({
+                    'status': f'Cannot activate contract for inactive user {self.user.get_full_name()}. '
+                            f'Please activate the user first.'
+                })
+        
+        # Rule 3: End date must be after start date
+        if self.start_date and self.end_date and self.end_date <= self.start_date:
+            raise ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+        
+        # Rule 4: CDI contracts should not have end dates
+        if self.type_contract == 'CDI' and self.end_date:
+            raise ValidationError({
+                'end_date': 'CDI (permanent) contracts should not have an end date.'
+            })
+    
+    def save(self, *args, **kwargs):
+        """Override save to include validation"""
+        self.full_clean()  # This calls clean() method
+        
+        # Auto-generate contract reference if not provided
+        if not self.contract_reference:
+            import string
+            import random
+            self.contract_reference = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_expired(self):
+        """Check if contract has expired"""
+        if self.end_date:
+            from django.utils import timezone
+            return timezone.now().date() > self.end_date
+        return False
+    
+    @property
+    def days_until_expiry(self):
+        """Get days until contract expires"""
+        if self.end_date and self.status == 'active':
+            from django.utils import timezone
+            days = (self.end_date - timezone.now().date()).days
+            return max(0, days)
+        return None
+    
+    def can_be_activated(self):
+        """Check if contract can be activated"""
+        if not self.user:
+            return False, "Contract has no associated user"
+        
+        if not self.user.is_active:
+            return False, f"User {self.user.get_full_name()} is inactive"
+        
+        # Check for existing active contracts
+        existing_active = Contract.objects.filter(
+            user=self.user, 
+            status='active'
+        ).exclude(pk=self.pk)
+        
+        if existing_active.exists():
+            return False, f"User already has an active contract"
+        
+        return True, "Contract can be activated"
+    
 
 class Coordinator(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
