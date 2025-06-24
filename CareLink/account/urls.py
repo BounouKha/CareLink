@@ -28,6 +28,7 @@ from account.views.servicedemand import ServiceDemandListCreateView, ServiceDema
 from account.views.logs import LogsView, LogStatsView
 from account.views.consent import ConsentStorageView, UserConsentHistoryView, ConsentWithdrawalView, consent_audit_export, consent_stats, AdminConsentListView, admin_revoke_consent, user_consent_status
 from account.views.patient_timeline import patient_timeline
+from account.views.provider import provider_list, provider_detail, provider_contracts, provider_stats, available_users_for_provider, check_user_contract_status, check_current_user_contract_status
 
 
 
@@ -85,8 +86,16 @@ urlpatterns += [
     path('consent/audit/export/', consent_audit_export, name='consent_audit_export'),
     path('consent/stats/', consent_stats, name='consent_stats'),
     path('consent/admin/list/', AdminConsentListView.as_view(), name='admin_consent_list'),    path('consent/admin/revoke/<int:consent_id>/', admin_revoke_consent, name='admin_revoke_consent'),
+      # Patient Timeline API endpoint
+    path('patient/<int:patient_id>/timeline/', patient_timeline, name='patient_timeline'),    # Provider Management API endpoints
+    path('providers/', provider_list, name='provider_list'),
+    path('providers/<int:provider_id>/', provider_detail, name='provider_detail'),
+    path('providers/<int:provider_id>/contracts/', provider_contracts, name='provider_contracts'),
+    path('providers/stats/', provider_stats, name='provider_stats'),
+    path('providers/available-users/', available_users_for_provider, name='available_users_for_provider'),
     
-    # Patient Timeline API endpoint
-    path('patient/<int:patient_id>/timeline/', patient_timeline, name='patient_timeline'),
+    # Contract Validation API endpoints
+    path('users/<int:user_id>/contract-status/', check_user_contract_status, name='check_user_contract_status'),
+    path('users/my-contract-status/', check_current_user_contract_status, name='check_current_user_contract_status'),
 
 ]
