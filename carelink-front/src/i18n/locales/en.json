@@ -566,8 +566,7 @@
     "nationalNumber": "National Number",
     "showing": "Showing",
     "page": "Page",
-    "total": "total",
-    "roleOptions": {
+    "total": "total",    "roleOptions": {
       "administrative": "Administrative",
       "patient": "Patient",
       "coordinator": "Coordinator",
@@ -575,6 +574,16 @@
       "socialAssistant": "Social Assistant",
       "provider": "Provider",
       "administrator": "Administrator"
+    },
+    "navigation": {
+      "previousWeek": "Previous Week",
+      "nextWeek": "Next Week",
+      "thisWeek": "This Week",
+      "loadingSchedule": "Loading schedule...",
+      "errorLoadingSchedule": "Error Loading Schedule",
+      "retry": "Retry",
+      "noAppointmentsThisWeek": "No Appointments This Week",
+      "noScheduledAppointments": "This provider has no scheduled appointments for"
     }
   },"errors": {
     "general": "An error occurred. Please try again.",
@@ -790,9 +799,26 @@
     "noContracts": "No contracts",
     "noActiveContracts": "No active contracts",
     "oneActive": "1 active",
-    "pendingActivation": "Pending activation",    "inactiveContracts": "Inactive contracts",
-    "actions": "Actions",
+    "pendingActivation": "Pending activation",    "inactiveContracts": "Inactive contracts",    "actions": "Actions",
     "activeProvider": "Active Provider",
-    "inactiveProvider": "Inactive Provider"
+    "inactiveProvider": "Inactive Provider",
+    "schedule": "Schedule",
+    "previousWeek": "Previous Week",
+    "thisWeek": "This Week",
+    "nextWeek": "Next Week",
+    "time": "Time",
+    "loadingSchedule": "Loading schedule...",
+    "errorLoadingSchedule": "Error Loading Schedule",
+    "retrySchedule": "Retry",
+    "noAppointmentsThisWeek": "No Appointments This Week",
+    "noAppointmentsForWeek": "This provider has no scheduled appointments for {weekRange}",
+    "appointmentStatuses": {
+      "scheduled": "Scheduled",
+      "confirmed": "Confirmed",
+      "in_progress": "In Progress",
+      "completed": "Done",
+      "cancelled": "Cancelled",
+      "no_show": "No Show"
+    }
   }
 }
