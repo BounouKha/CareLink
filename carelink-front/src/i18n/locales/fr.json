@@ -310,6 +310,9 @@
     "addCommentPlaceholder": "Ajouter un commentaire ou une note à propos de cette demande..."
   },
   "schedule": {
+    "providers": "Prestataire(s)",
+    "clearPatientBlockTime": "Sans patient",
+    "optionalForBlockedTime": "Optionnel pour le temps bloqué",
     "providerService": "Service du prestataire",
     "title": "Planning",
     "calendar": "Calendrier",
@@ -588,9 +591,26 @@
       "expired": "Expiré",
       "terminated": "Résilié",
       "suspended": "Suspendu"
-    },
-    "activeProvider": "Prestataire Actif",
-    "inactiveProvider": "Prestataire Inactif"
+    },    "activeProvider": "Prestataire Actif",
+    "inactiveProvider": "Prestataire Inactif",
+    "schedule": "Planning",
+    "previousWeek": "Semaine Précédente",
+    "thisWeek": "Cette Semaine",
+    "nextWeek": "Semaine Suivante",
+    "time": "Heure",
+    "loadingSchedule": "Chargement du planning...",
+    "errorLoadingSchedule": "Erreur lors du chargement du planning",
+    "retrySchedule": "Réessayer",
+    "noAppointmentsThisWeek": "Aucun Rendez-vous Cette Semaine",
+    "noAppointmentsForWeek": "Ce prestataire n'a aucun rendez-vous programmé pour {weekRange}",
+    "appointmentStatuses": {
+      "scheduled": "Programmé",
+      "confirmed": "Confirmé",
+      "in_progress": "En Cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "no_show": "Absent"
+    }
   },
   "admin": {
     "title": "Administration",

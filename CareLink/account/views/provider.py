@@ -964,3 +964,147 @@ def my_contract_status(request):
     Includes weekly hours verification and workload analysis
     """
     return user_contract_status(request, request.user.id)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def provider_schedule(request, provider_id):
+    """
+    Get weekly schedule data for a specific provider
+    Shows all appointments (timeslots) for the provider
+    """
+    try:
+        # Check user permissions - allow providers to view their own schedule
+        if not (has_provider_management_permission(request.user) or 
+                (request.user.role == 'Provider' and 
+                 Provider.objects.filter(id=provider_id, user=request.user).exists())):
+            return Response({
+                'error': 'You do not have permission to view this schedule'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        provider = get_object_or_404(
+            Provider.objects.select_related('user', 'service'),
+            id=provider_id
+        )
+        
+        # Get date range - default to current week, or from query params
+        from datetime import datetime, timedelta
+        import calendar as cal
+        
+        start_date_param = request.GET.get('start_date')
+        if start_date_param:
+            try:
+                start_date = datetime.strptime(start_date_param, '%Y-%m-%d').date()
+            except ValueError:
+                start_date = timezone.now().date()
+        else:
+            start_date = timezone.now().date()
+        
+        # Get start of week (Monday)
+        days_since_monday = start_date.weekday()
+        week_start = start_date - timedelta(days=days_since_monday)
+        week_end = week_start + timedelta(days=6)
+          # Get all schedules for this provider in the week
+        from CareLink.models import Schedule
+        schedules = Schedule.objects.filter(
+            provider=provider,
+            date__range=[week_start, week_end]
+        ).select_related('patient__user').prefetch_related('time_slots__service').order_by('date')
+        
+        # Build weekly schedule data
+        schedule_data = {}
+        total_weekly_hours = 0
+        
+        # Initialize empty week
+        for i in range(7):
+            day_date = week_start + timedelta(days=i)
+            schedule_data[day_date.strftime('%Y-%m-%d')] = {
+                'date': day_date.strftime('%Y-%m-%d'),
+                'day_name': cal.day_name[day_date.weekday()],
+                'appointments': []
+            }
+        
+        # Fill in the appointments
+        for schedule in schedules:
+            date_key = schedule.date.strftime('%Y-%m-%d')
+            
+            for timeslot in schedule.time_slots.all():
+                # Calculate duration in hours
+                if timeslot.start_time and timeslot.end_time:
+                    start_datetime = datetime.combine(schedule.date, timeslot.start_time)
+                    end_datetime = datetime.combine(schedule.date, timeslot.end_time)
+                    duration_hours = (end_datetime - start_datetime).total_seconds() / 3600
+                    total_weekly_hours += duration_hours
+                else:
+                    duration_hours = 0
+                
+                appointment_data = {
+                    'id': timeslot.id,
+                    'schedule_id': schedule.id,
+                    'start_time': timeslot.start_time.strftime('%H:%M') if timeslot.start_time else None,
+                    'end_time': timeslot.end_time.strftime('%H:%M') if timeslot.end_time else None,
+                    'duration_hours': round(duration_hours, 2),
+                    'status': getattr(timeslot, 'status', 'scheduled'),
+                    'description': timeslot.description,
+                    'patient': {
+                        'id': schedule.patient.id if schedule.patient else None,
+                        'name': f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}" if schedule.patient and schedule.patient.user else 'No Patient Assigned',
+                        'email': schedule.patient.user.email if schedule.patient and schedule.patient.user else None
+                    },
+                    'service': {
+                        'id': timeslot.service.id if timeslot.service else None,
+                        'name': timeslot.service.name if timeslot.service else 'No Service',
+                        'description': timeslot.service.description if timeslot.service else None
+                    }
+                }
+                
+                schedule_data[date_key]['appointments'].append(appointment_data)
+        
+        # Sort appointments by start time within each day
+        for day_data in schedule_data.values():
+            day_data['appointments'].sort(key=lambda x: x['start_time'] or '00:00')
+        
+        # Calculate statistics
+        total_appointments = sum(len(day['appointments']) for day in schedule_data.values())
+        completed_appointments = sum(
+            len([apt for apt in day['appointments'] if apt['status'] == 'completed'])
+            for day in schedule_data.values()
+        )
+        
+        response_data = {
+            'provider': {
+                'id': provider.id,
+                'name': f"{provider.user.firstname} {provider.user.lastname}" if provider.user else 'Unknown Provider',
+                'email': provider.user.email if provider.user else None,
+                'service': {
+                    'id': provider.service.id if provider.service else None,
+                    'name': provider.service.name if provider.service else 'General'
+                }
+            },
+            'week_range': {
+                'start_date': week_start.strftime('%Y-%m-%d'),
+                'end_date': week_end.strftime('%Y-%m-%d'),
+                'week_start_display': week_start.strftime('%B %d, %Y'),
+                'week_end_display': week_end.strftime('%B %d, %Y')
+            },
+            'schedule_data': schedule_data,
+            'statistics': {
+                'total_weekly_hours': round(total_weekly_hours, 2),
+                'total_appointments': total_appointments,
+                'completed_appointments': completed_appointments,
+                'completion_rate': round((completed_appointments / total_appointments * 100) if total_appointments > 0 else 0, 1)
+            }
+        }
+        
+        logger.info(f"Provider {provider_id} schedule accessed by {request.user.email} for week {week_start} to {week_end}")
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+        
+    except Provider.DoesNotExist:
+        return Response({
+            'error': 'Provider not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error in provider_schedule for user {request.user.email}, provider {provider_id}: {str(e)}")
+        return Response({
+            'error': 'An error occurred while fetching provider schedule'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
