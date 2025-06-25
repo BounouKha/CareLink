@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import { useNavigate } from 'react-router-dom';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import { getNavigationItems } from '../../utils/roleUtils';
 
 const LeftToolbar = ({ userData }) => {
     const [isVisible, setIsVisible] = useState(() => {
@@ -38,33 +39,50 @@ const LeftToolbar = ({ userData }) => {
 
     const handleServiceDemandsClick = () => {
         navigateWithLoading('/service-demands');
+    };    const handleScheduleClick = () => {
+        navigateWithLoading('/schedule');
     };
 
-    const handleScheduleClick = () => {
-        navigateWithLoading('/schedule');
+    const handleProvidersClick = () => {
+        navigateWithLoading('/providers');
     };    const renderRoleSpecificToolbar = () => {
         if (!userData || !userData.user) {
             console.warn('[LeftToolbar] userData or user is undefined');
             return null;
         }
 
+        const navigationItems = getNavigationItems(userData.user);
+        
+        const handleNavigationClick = (path) => {
+            if (path === '/providers') {
+                handleProvidersClick();
+            } else if (path === '/profile') {
+                handleProfileClick();
+            } else if (path === '/patients') {
+                handlePatientsClick();
+            } else if (path === '/service-demands') {
+                handleServiceDemandsClick();
+            } else if (path === '/schedule') {
+                handleScheduleClick();
+            } else {
+                navigateWithLoading(path);
+            }
+        };
+
         return (
             <ul className="toolbar-list">
-                <li onClick={handleProfileClick} className="clickable">Profile</li>{(userData.user.role === 'Patient' || userData.user.role === 'Family Patient') && (
-                    <>
-                        <li onClick={handleServiceDemandsClick} className="clickable">Service Requests</li>
-                        <li onClick={handleScheduleClick} className="clickable">Schedule</li>
-                    </>
-                )}                {(userData.user.role === 'Coordinator' || userData.user.role === 'Administrative') && (
-                    <>
-                        <li onClick={handlePatientsClick} className="clickable">Patients</li>
-                        <li onClick={handleServiceDemandsClick} className="clickable">Service Demands</li>
-                        <li onClick={handleScheduleClick} className="clickable">Schedule Calendar</li>
-                    </>
-                )}
+                {navigationItems.map(item => (
+                    <li 
+                        key={item.key}
+                        onClick={() => handleNavigationClick(item.path)} 
+                        className="clickable"
+                    >
+                        {item.label}
+                    </li>
+                ))}
             </ul>
         );
-    };    return (
+    };return (
         <>
             {/* Navigation Loading Overlay */}
             {isNavigating && (
