@@ -412,10 +412,13 @@ const ScheduleCalendar = () => {
     setIsDragging(false);
   };  const generateTimeSlots = () => {
     const slots = [];
-    // Generate 1-hour time slots from 6am to 11pm (23h) to include appointments ending at 23:00
+    // Generate 30-minute time slots from 6am to 11pm (23h) to include appointments ending at 23:00
     for (let hour = 6; hour <= 23; hour += 1) {
-      const time = `${hour.toString().padStart(2, '0')}:00`;
-      slots.push(time);
+      // Add both :00 and :30 minute slots for each hour
+      const timeHour = `${hour.toString().padStart(2, '0')}:00`;
+      const timeHalf = `${hour.toString().padStart(2, '0')}:30`;
+      slots.push(timeHour);
+      slots.push(timeHalf);
     }
     return slots;
   };

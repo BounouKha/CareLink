@@ -55,19 +55,21 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     checkConflicts,
     handleConflictResolution,
     resetConflicts
-  } = useConflictManager();
-  // Helper function to calculate end time (1 hour after start time)
+  } = useConflictManager();  // Helper function to calculate end time (30 minutes after start time)
   const calculateEndTime = (startTime) => {
     if (!startTime) return '';
     
     const [hours, minutes] = startTime.split(':').map(Number);
-    const endHour = hours + 1;
+    const totalMinutes = hours * 60 + minutes + 30; // Add 30 minutes instead of 60
+    
+    const endHour = Math.floor(totalMinutes / 60);
+    const endMinute = totalMinutes % 60;
     
     // Handle 24-hour wrap around
     const finalHour = endHour >= 24 ? endHour - 24 : endHour;
     
-    return `${finalHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  };  useEffect(() => {
+    return `${finalHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+  };useEffect(() => {
     if (isOpen) {      executeWithLoading(async () => {
         setIsDataLoading(true);
         await Promise.all([fetchPatients(), fetchServices()]);
@@ -183,18 +185,14 @@ const fetchPatients = async () => {
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-
-    // Auto-calculate end time if start time is set (default 1 hour duration)
+    }));    // Auto-calculate end time if start time is set (default 30 minute duration)
     if (name === 'start_time' && value && !formData.end_time) {
-      const startTime = new Date(`2000-01-01T${value}`);
-      startTime.setHours(startTime.getHours() + 1);
-      const endTime = startTime.toTimeString().slice(0, 5);
+      const endTime = calculateEndTime(value);
       setFormData(prev => ({
         ...prev,
         end_time: endTime
       }));
-    }  };
+    }};
 
   // Helper function to check if date is in the past
   const isDateInPast = (dateString) => {
@@ -223,6 +221,30 @@ const fetchPatients = async () => {
       setError(schedule('errors.fillRequiredFields', { fields: missingFields.join(', ') }));
       console.error('Missing form data:', formData);
       return;
+    }
+
+    // Validate time format and duration
+    if (formData.start_time && formData.end_time) {
+      const start = new Date(`2000-01-01T${formData.start_time}`);
+      const end = new Date(`2000-01-01T${formData.end_time}`);
+      const durationMinutes = (end - start) / (1000 * 60);
+      
+      if (durationMinutes <= 0) {
+        setError('End time must be after start time');
+        return;
+      }
+      
+      if (durationMinutes < 15) {
+        setError('Minimum appointment duration is 15 minutes');
+        return;
+      }
+      
+      // Optional: Check if times align with 30-minute intervals
+      const startMinutes = start.getMinutes();
+      const endMinutes = end.getMinutes();
+      if (startMinutes % 30 !== 0 || endMinutes % 30 !== 0) {
+        console.warn('Times do not align with 30-minute intervals');
+      }
     }
 
     await executeWithLoading(async () => {
@@ -409,27 +431,27 @@ const fetchPatients = async () => {
                 ))}
               </select>
             </div>
-          </div>          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="start_time">{schedule('startTime')} *</label>
-              <input
+          </div>          <div className="form-row">            <div className="form-group">
+              <label htmlFor="start_time">{schedule('startTime')} *</label>              <input
                 type="time"
                 id="start_time"
                 name="start_time"
                 value={formData.start_time}
                 onChange={handleInputChange}
+                step="1800"
                 required
               />
+              <small className="form-hint">⏰ Default: 30 minutes</small>
             </div>
 
             <div className="form-group">
-              <label htmlFor="end_time">{schedule('endTime')} *</label>
-              <input
+              <label htmlFor="end_time">{schedule('endTime')} *</label>              <input
                 type="time"
                 id="end_time"
                 name="end_time"
                 value={formData.end_time}
                 onChange={handleInputChange}
+                step="1800"
                 required
               />
             </div>
@@ -458,13 +480,12 @@ const fetchPatients = async () => {
               {schedule('createSchedule')}
             </ButtonLoading>
           </div></form>
-      </div>      {/* Past Date Confirmation Dialog */}
+      </div>          {/* Past Date Confirmation Dialog */}
       {showPastDateConfirm && (
         <div className="modal-overlay">
           <div className="confirm-modal">
-            <h3>{schedule('pastDateConfirmation.title')}</h3>
-            <p>
-              {schedule('pastDateConfirmation.message', { date: formData.date })}
+            <h3>{schedule('pastDateConfirmation.title')}</h3>            <p>
+              {schedule('pastDateConfirmation.message').replace('{date}', new Date(formData.date).toLocaleDateString())}
             </p>
             <div className="confirm-actions">
               <button 
@@ -484,7 +505,7 @@ const fetchPatients = async () => {
               </button>
             </div>
           </div>
-        </div>      )}      {/* Conflict Management Dialog */}
+        </div>      )}{/* Conflict Management Dialog */}
       <ConflictManager
         isOpen={showConflictDialog}
         conflicts={conflicts?.conflicts || []}
