@@ -125,11 +125,23 @@ const ScheduleCalendar = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      });
-
-      if (response.ok) {
+      });      if (response.ok) {
         const data = await response.json();
         console.log('Calendar data received:', data.calendar_data?.length || 0, 'appointments');
+        
+        // Enhanced debugging for appointment data
+        if (data.calendar_data && data.calendar_data.length > 0) {
+          console.log('Sample appointment data:', data.calendar_data[0]);
+          console.log('All appointments:', data.calendar_data.map(appt => ({
+            id: appt.id,
+            date: appt.date,
+            patient: appt.patient ? appt.patient.name : 'NO PATIENT (BLOCKED TIME)',
+            provider: appt.provider ? appt.provider.name : 'NO PROVIDER',
+            timeslots: appt.timeslots?.length || 0,
+            notes: appt.notes || 'No notes'
+          })));
+        }
+        
         setCalendarData(data.calendar_data || []);
         setProviders(data.providers || []);
         setStats(data.stats || {});
@@ -244,7 +256,6 @@ const ScheduleCalendar = () => {
       default:
         return '';
     }  };
-
   const generateRecapData = () => {
     const recap = {
       byDay: {},
@@ -263,11 +274,13 @@ const ScheduleCalendar = () => {
 
     calendarData.forEach(appointment => {
       const date = appointment.date;
-      const providerName = appointment.provider.name;
-      const patientName = appointment.patient.name;
+      const providerName = appointment.provider?.name || 'Unknown Provider';
+      const patientName = appointment.patient?.name || 'Blocked Time';
       
       providersSet.add(providerName);
-      patientsSet.add(patientName);
+      if (appointment.patient) {
+        patientsSet.add(patientName);
+      }
 
       // Group by day
       if (!recap.byDay[date]) {
@@ -277,7 +290,7 @@ const ScheduleCalendar = () => {
         };
       }
       recap.byDay[date].appointments.push(appointment);
-      recap.byDay[date].timeslotCount += appointment.timeslots.length;
+      recap.byDay[date].timeslotCount += appointment.timeslots?.length || 0;
 
       // Group by provider
       if (!recap.byProvider[providerName]) {
@@ -288,23 +301,27 @@ const ScheduleCalendar = () => {
         };
       }
       recap.byProvider[providerName].appointments.push(appointment);
-      recap.byProvider[providerName].timeslotCount += appointment.timeslots.length;
-      recap.byProvider[providerName].patients.add(patientName);
-
-      // Group by patient
-      if (!recap.byPatient[patientName]) {
-        recap.byPatient[patientName] = {
-          appointments: [],
-          timeslotCount: 0,
-          providers: new Set()
-        };
+      recap.byProvider[providerName].timeslotCount += appointment.timeslots?.length || 0;
+      if (appointment.patient) {
+        recap.byProvider[providerName].patients.add(patientName);
       }
-      recap.byPatient[patientName].appointments.push(appointment);
-      recap.byPatient[patientName].timeslotCount += appointment.timeslots.length;
-      recap.byPatient[patientName].providers.add(providerName);
+
+      // Group by patient (only if patient exists)
+      if (appointment.patient) {
+        if (!recap.byPatient[patientName]) {
+          recap.byPatient[patientName] = {
+            appointments: [],
+            timeslotCount: 0,
+            providers: new Set()
+          };
+        }
+        recap.byPatient[patientName].appointments.push(appointment);
+        recap.byPatient[patientName].timeslotCount += appointment.timeslots?.length || 0;
+        recap.byPatient[patientName].providers.add(providerName);
+      }
 
       // Update totals
-      recap.totals.totalTimeslots += appointment.timeslots.length;
+      recap.totals.totalTimeslots += appointment.timeslots?.length || 0;
     });
 
     recap.totals.totalAppointments = calendarData.length;
@@ -320,7 +337,7 @@ const ScheduleCalendar = () => {
     });
 
     return recap;
-  };  const handleTimeSlotClick = (date, time) => {
+  };const handleTimeSlotClick = (date, time) => {
     if (!isDragging) {
       setSelectedTimeSlot({ date, time });
       setShowQuickSchedule(true);
@@ -412,10 +429,13 @@ const ScheduleCalendar = () => {
     setIsDragging(false);
   };  const generateTimeSlots = () => {
     const slots = [];
-    // Generate 1-hour time slots from 6am to 11pm (23h) to include appointments ending at 23:00
+    // Generate 30-minute time slots from 6am to 11pm (23h) to include appointments ending at 23:00
     for (let hour = 6; hour <= 23; hour += 1) {
-      const time = `${hour.toString().padStart(2, '0')}:00`;
-      slots.push(time);
+      // Add both :00 and :30 minute slots for each hour
+      const timeHour = `${hour.toString().padStart(2, '0')}:00`;
+      const timeHalf = `${hour.toString().padStart(2, '0')}:30`;
+      slots.push(timeHour);
+      slots.push(timeHalf);
     }
     return slots;
   };
@@ -496,7 +516,7 @@ const ScheduleCalendar = () => {
                         {timeslots.map((timeslot, index) => (
                           <div 
                             key={`${timeslot.appointmentId}-${timeslot.id}-${index}`}
-                            className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)}`}
+                            className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)} ${getAppointmentClass(timeslot.schedule)}`}
                             draggable="true"
                             onDragStart={(e) => onDragStart(e, timeslot.schedule)}
                             onDragEnd={onDragEnd}
@@ -508,12 +528,11 @@ const ScheduleCalendar = () => {
                             style={{
                               width: timeslots.length > 1 ? `${100/timeslots.length}%` : '100%',
                               display: 'inline-block',
-                              verticalAlign: 'top'
-                            }}
-                            title={`${timeslot.schedule.patient.name} - ${timeslot.schedule.provider.name}\nService: ${timeslot.service?.name || 'No Service'}\nTime: ${timeslot.start_time} - ${timeslot.end_time}`}
+                              verticalAlign: 'top'                            }}
+                            title={getAppointmentTitle(timeslot)}
                           >
-                            <div className="timeslot-patient">{timeslot.schedule.patient.name}</div>
-                            <div className="timeslot-provider">{timeslot.schedule.provider.name}</div>
+                            <div className="timeslot-patient">{getPatientDisplay(timeslot.schedule)}</div>
+                            <div className="timeslot-provider">{getProviderDisplay(timeslot.schedule)}</div>
                             {timeslot.service?.name && (
                               <div className="timeslot-service">{timeslot.service.name}</div>
                             )}
@@ -564,7 +583,7 @@ const ScheduleCalendar = () => {
                       {timeslots.map((timeslot, index) => (
                         <div 
                           key={`${timeslot.appointmentId}-${timeslot.id}-${index}`}
-                          className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)}`}
+                          className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)} ${getAppointmentClass(timeslot.schedule)}`}
                           draggable="true"
                           onDragStart={(e) => onDragStart(e, timeslot.schedule)}
                           onDragEnd={onDragEnd}
@@ -577,11 +596,10 @@ const ScheduleCalendar = () => {
                             width: timeslots.length > 1 ? `${100/timeslots.length}%` : '100%',
                             display: 'inline-block',
                             verticalAlign: 'top'
-                          }}
-                          title={`${timeslot.schedule.patient.name} - ${timeslot.schedule.provider.name}\nService: ${timeslot.service?.name || 'No Service'}\nTime: ${timeslot.start_time} - ${timeslot.end_time}`}
+                          }}                          title={getAppointmentTitle(timeslot)}
                         >
-                          <div className="timeslot-patient">{timeslot.schedule.patient.name}</div>
-                          <div className="timeslot-provider">{timeslot.schedule.provider.name}</div>
+                          <div className="timeslot-patient">{getPatientDisplay(timeslot.schedule)}</div>
+                          <div className="timeslot-provider">{getProviderDisplay(timeslot.schedule)}</div>
                           {timeslot.service?.name && (
                             <div className="timeslot-service">{timeslot.service.name}</div>
                           )}
@@ -647,8 +665,8 @@ const ScheduleCalendar = () => {
                   )}
                 </div>
                 <div className="appointments-preview">                  {appointments.slice(0, 2).map((appointment, index) => (
-                    <div key={index} className={`appointment-dot ${getStatusClass(appointment.status)}`} title={`${appointment.patient.name} - ${getTranslatedStatus(appointment.status || 'scheduled')}`}>
-                      {appointment.patient.name.charAt(0)}
+                    <div key={index} className={`appointment-dot ${getStatusClass(appointment.status)}`} title={`${getPatientDisplay(appointment)} - ${getTranslatedStatus(appointment.status || 'scheduled')}`}>
+                      {getPatientDisplay(appointment).charAt(0)}
                     </div>
                   ))}
                   {appointments.length > 2 && (
@@ -930,10 +948,9 @@ const ScheduleCalendar = () => {
                     </div>
                     <div className="appointments-grid">
                       {dayData.appointments.map((appointment, index) => (
-                        <div key={index} className="enhanced-appointment-card">
-                          <div className="appointment-header">
-                            <span className="patient-name">👤 {appointment.patient.name}</span>
-                            <span className="provider-name">👩‍⚕️ {appointment.provider.name}</span>
+                        <div key={index} className="enhanced-appointment-card">                          <div className="appointment-header">
+                            <span className="patient-name">👤 {getPatientDisplay(appointment)}</span>
+                            <span className="provider-name">👩‍⚕️ {getProviderDisplay(appointment)}</span>
                           </div>
                           <div className="timeslots-detail">
                             {appointment.timeslots.map((timeslot, tsIndex) => (
@@ -969,9 +986,8 @@ const ScheduleCalendar = () => {
                     </div>
                     <div className="appointments-grid">
                       {providerData.appointments.map((appointment, index) => (
-                        <div key={index} className="enhanced-appointment-card">
-                          <div className="appointment-header">
-                            <span className="patient-name">👤 {appointment.patient.name}</span>
+                        <div key={index} className="enhanced-appointment-card">                          <div className="appointment-header">
+                            <span className="patient-name">👤 {getPatientDisplay(appointment)}</span>
                             <span className="date">📅 {formatShortDate(appointment.date)}</span>
                           </div>
                           <div className="timeslots-detail">
@@ -1073,6 +1089,46 @@ const ScheduleCalendar = () => {
     const translationKey = statusMap[normalizedStatus];
     return translationKey ? schedule(translationKey) : status; // Fallback to original if no translation found
   };
+
+  // Helper functions to safely render appointment data
+  const getPatientDisplay = (appointment) => {
+    if (!appointment.patient) {
+      // Check notes for specific types of blocked time
+      const notes = appointment.notes?.toLowerCase() || '';
+      if (notes.includes('meal') || notes.includes('lunch') || notes.includes('break')) {
+        return '🍽️ Meal Break';
+      } else if (notes.includes('admin') || notes.includes('office')) {
+        return '📋 Admin Time';
+      } else if (notes.includes('free') || notes.includes('available')) {
+        return '✅ Free Time';
+      } else {
+        return '🚫 Blocked Time';
+      }
+    }
+    return appointment.patient.name;
+  };
+
+  const getProviderDisplay = (appointment) => {
+    return appointment.provider?.name || 'Unknown Provider';
+  };
+
+  const getAppointmentTitle = (timeslot) => {
+    const patient = getPatientDisplay(timeslot.schedule);
+    const provider = getProviderDisplay(timeslot.schedule);
+    const service = timeslot.service?.name || 'No Service';
+    const time = `${timeslot.start_time} - ${timeslot.end_time}`;
+    const notes = timeslot.schedule.notes ? `\nNotes: ${timeslot.schedule.notes}` : '';
+    return `${patient} - ${provider}\nService: ${service}\nTime: ${time}${notes}`;
+  };
+
+  // Helper function to get appointment CSS class
+  const getAppointmentClass = (appointment) => {
+    if (!appointment.patient) {
+      return 'blocked-appointment';
+    }
+    return '';
+  };
+
   return (
     <div className="schedule-calendar">
       {/* Page loading overlay for navigation only */}

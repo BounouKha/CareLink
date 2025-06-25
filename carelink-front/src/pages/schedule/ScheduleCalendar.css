@@ -421,6 +421,27 @@
 .timeslot-item:nth-child(4):hover { background: #f8bbd9; }
 .timeslot-item:nth-child(5):hover { background: #e1bee7; }
 
+/* Blocked appointment styles */
+.timeslot-item.blocked-appointment {
+  background: #f5f5f5 !important;
+  border: 2px dashed #9e9e9e !important;
+  opacity: 0.8;
+}
+
+.timeslot-item.blocked-appointment:hover {
+  background: #eeeeee !important;
+  opacity: 1;
+}
+
+.timeslot-item.blocked-appointment .timeslot-patient {
+  color: #666 !important;
+  font-style: italic;
+}
+
+.timeslot-item.blocked-appointment .timeslot-provider {
+  color: #888 !important;
+}
+
 /* Week View Styles */
 .week-view {
   border: 1px solid #e1e5e9;
@@ -481,7 +502,7 @@
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);
   border-bottom: 1px solid #f1f3f4;
-  min-height: 50px;
+  min-height: 40px; /* Reduced from 50px to accommodate 30-minute intervals */
 }
 
 .time-row:last-child {
@@ -505,11 +526,11 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  min-height: 50px; /* Reduced from 70px for more compact view */
+  min-height: 40px; /* Reduced from 50px to accommodate 30-minute intervals */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px; /* Reduced padding */
+  padding: 4px; /* Reduced padding for more compact view */
 }
 
 .time-slot:last-child {
@@ -569,7 +590,7 @@
 
 /* Multiple appointments styling - neutral background */
 .time-slot.multiple-timeslots {
-  min-height: 50px; /* Keep consistent with regular slots */
+  min-height: 40px; /* Keep consistent with regular slots - reduced for 30-minute intervals */
   background: #f8f9fa !important; /* Light grey background - neutral */
 }
 
@@ -652,7 +673,7 @@
   display: grid;
   grid-template-columns: 80px 1fr;
   border-bottom: 1px solid #f1f3f4;
-  min-height: 60px;
+  min-height: 50px; /* Reduced from 60px for 30-minute intervals */
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1571,7 +1592,6 @@
   }
 }
 
-/* Print Styles for Recap Modal */
 @media print {
   .modal-overlay {
     position: static !important;
