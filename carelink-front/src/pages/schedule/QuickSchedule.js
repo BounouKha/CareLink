@@ -26,10 +26,10 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     end_time: '',
     service_id: '',
     description: ''
-  });
-  const [patients, setPatients] = useState([]);
+  });  const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
     // Enhanced loading states
   const { 
@@ -173,10 +173,15 @@ const fetchPatients = async () => {
     setFormData(prev => ({ ...prev, provider_id: provider.id }));
     setProviderSearch(`${provider.name} - ${provider.service}`);
     setShowProviderDropdown(false);
-  };
-  const selectPatient = (patient) => {
+  };  const selectPatient = (patient) => {
     setFormData(prev => ({ ...prev, patient_id: patient.id }));
     setPatientSearch(`${patient.firstname || ''} ${patient.lastname || ''}`);
+    setShowPatientDropdown(false);
+  };
+
+  const clearPatient = () => {
+    setFormData(prev => ({ ...prev, patient_id: '' }));
+    setPatientSearch('');
     setShowPatientDropdown(false);
   };
 
@@ -213,8 +218,8 @@ const fetchPatients = async () => {
     
     await performSubmit();
   };  const performSubmit = async (forceSchedule = false) => {
-    // Frontend validation
-    const requiredFields = ['provider_id', 'patient_id', 'date', 'start_time', 'end_time'];
+    // Frontend validation - patient_id is optional for blocked time
+    const requiredFields = ['provider_id', 'date', 'start_time', 'end_time'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
     if (missingFields.length > 0) {
@@ -271,16 +276,34 @@ const fetchPatients = async () => {
       // Prepare submission data (include force_schedule if needed)
       const submitData = forceSchedule 
         ? { ...formData, force_schedule: true } 
-        : formData;
-      
+        : formData;      
       // Debug log the form data being sent
       console.log('Submitting form data:', submitData);
+        const data = await post('http://localhost:8000/schedule/quick-schedule/', submitData);
       
-      const data = await post('http://localhost:8000/schedule/quick-schedule/', submitData);
-      onScheduleCreated(data);
-      onClose();
-      resetForm();
-      resetConflicts();
+      // Show success feedback
+      setSuccess(true);
+      
+      // Provide specific feedback based on appointment type
+      if (!formData.patient_id) {
+        console.log('🚫 Blocked time created successfully!', {
+          provider: submitData.provider_id,
+          date: submitData.date,
+          time: `${submitData.start_time} - ${submitData.end_time}`,
+          description: submitData.description || 'Blocked Time'
+        });
+      } else {
+        console.log('✅ Patient appointment created successfully!', data);
+      }
+      
+      // Add a small delay to show success feedback before closing
+      setTimeout(() => {
+        onScheduleCreated(data);
+        onClose();
+        resetForm();
+        resetConflicts();
+        setSuccess(false);
+      }, 1000);
     }, '', 'modal');
   };
 
@@ -368,31 +391,67 @@ const fetchPatients = async () => {
                 )}
               </div>
             </div>            <div className="form-group">
-              <label htmlFor="patient_search">{schedule('patient')} * {formData.patient_id ? '✅' : '❌'}</label>
-              <div className="searchable-dropdown">
+              <label htmlFor="patient_search">
+                {schedule('patient')} {formData.patient_id ? '✅' : ''}                <small style={{ fontWeight: 'normal', color: '#666', marginLeft: '8px' }}>
+                  ({schedule('optionalForBlockedTime')})
+                </small>
+              </label>
+              <div className="searchable-dropdown" style={{ position: 'relative' }}>
                 <input
                   type="text"
                   id="patient_search"
-                  placeholder={schedule('searchPatientsSchedule')}
+                  placeholder={formData.patient_id ? schedule('searchPatientsSchedule') : schedule('searchPatientsOrLeaveEmptyForBlockedTime')}
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
                   onFocus={() => setShowPatientDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}                />                {showPatientDropdown && (
+                  onBlur={() => setTimeout(() => setShowPatientDropdown(false), 200)}                />                {formData.patient_id && (
+                  <button
+                    type="button"
+                    className="clear-button"
+                    onClick={clearPatient}
+                    style={{ 
+                      position: 'absolute', 
+                      right: '8px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: '#999',
+                      cursor: 'pointer',
+                      fontSize: '16px'
+                    }}
+                    title={schedule('clearPatient')}
+                  >
+                    ✕
+                  </button>
+                )}
+                {showPatientDropdown && (
                   <div className="dropdown-list">                    {isDataLoading ? (
                       <div style={{ padding: '8px', textAlign: 'center' }}>
                         <SpinnerOnly size="small" />
-                      </div>
-                    ) : filteredPatients.length > 0 ? (
-                      filteredPatients.map(patient => (
+                      </div>                    ) : filteredPatients.length > 0 ? (
+                      <>
+                        {/* Option to clear patient for blocked time */}
                         <div
-                          key={patient.id}
                           className="dropdown-item"
-                          onClick={() => selectPatient(patient)}
+                          onClick={() => clearPatient()}
+                          style={{ borderBottom: '1px solid #eee', marginBottom: '4px', color: '#007bff', fontWeight: 'bold' }}
                         >
-                          <strong>{patient.firstname} {patient.lastname}</strong>
-                          <span className="patient-info">ID: {patient.national_number}</span>
+                          🚫 {schedule('clearPatientBlockTime')}
                         </div>
-                      ))                    ) : (
+                        {/* Regular patient options */}
+                        {filteredPatients.map(patient => (
+                          <div
+                            key={patient.id}
+                            className="dropdown-item"
+                            onClick={() => selectPatient(patient)}
+                          >
+                            <strong>{patient.firstname} {patient.lastname}</strong>
+                            <span className="patient-info">ID: {patient.national_number}</span>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
                       <div className="dropdown-item disabled">
                         {patients.length === 0 ? schedule('noPatientsAvailable') : schedule('noPatientsFound')}
                         {patients.length > 0 && <span className="patient-count">({patients.length} total patients)</span>}
@@ -470,14 +529,13 @@ const fetchPatients = async () => {
           </div>          <div className="form-actions">
             <button type="button" onClick={handleClose} className="cancel-btn">
               {common('cancel')}
-            </button>
-            <ButtonLoading 
+            </button>            <ButtonLoading 
               type="submit" 
               disabled={isModalLoading || isDataLoading} 
               isLoading={isModalLoading}
-              className="submit-btn"
+              className={`submit-btn ${success ? 'success' : ''}`}
             >
-              {schedule('createSchedule')}
+              {success ? '✅ ' + schedule('appointmentCreated') : schedule('createSchedule')}
             </ButtonLoading>
           </div></form>
       </div>          {/* Past Date Confirmation Dialog */}

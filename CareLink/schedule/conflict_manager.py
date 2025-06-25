@@ -15,7 +15,7 @@ class ConflictManager:
         
         Args:
             provider_id: ID of the provider
-            patient_id: ID of the patient
+            patient_id: ID of the patient (optional for blocked time)
             date: Date of the appointment (date object or string)
             start_time: Start time (time object or string)
             end_time: End time (time object or string)
@@ -45,17 +45,18 @@ class ConflictManager:
         )
         conflicts.extend(provider_conflicts)
         
-        # Check patient conflicts
-        patient_conflicts = ConflictManager._check_patient_conflicts(
-            patient_id, date, start_time, end_time, exclude_schedule_id, exclude_timeslot_id
-        )
-        conflicts.extend(patient_conflicts)
-        
-        # Check for double booking (same provider + patient combination)
-        double_booking_conflicts = ConflictManager._check_double_booking(
-            provider_id, patient_id, date, start_time, end_time, exclude_schedule_id, exclude_timeslot_id
-        )
-        conflicts.extend(double_booking_conflicts)
+        # Check patient conflicts only if patient_id is provided (skip for blocked time)
+        if patient_id:
+            patient_conflicts = ConflictManager._check_patient_conflicts(
+                patient_id, date, start_time, end_time, exclude_schedule_id, exclude_timeslot_id
+            )
+            conflicts.extend(patient_conflicts)
+            
+            # Check for double booking (same provider + patient combination)
+            double_booking_conflicts = ConflictManager._check_double_booking(
+                provider_id, patient_id, date, start_time, end_time, exclude_schedule_id, exclude_timeslot_id
+            )
+            conflicts.extend(double_booking_conflicts)
         
         # Determine overall severity
         severity = ConflictManager._calculate_severity(conflicts)
