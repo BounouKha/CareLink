@@ -481,7 +481,7 @@
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);
   border-bottom: 1px solid #f1f3f4;
-  min-height: 50px;
+  min-height: 40px; /* Reduced from 50px to accommodate 30-minute intervals */
 }
 
 .time-row:last-child {
@@ -505,11 +505,11 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  min-height: 50px; /* Reduced from 70px for more compact view */
+  min-height: 40px; /* Reduced from 50px to accommodate 30-minute intervals */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px; /* Reduced padding */
+  padding: 4px; /* Reduced padding for more compact view */
 }
 
 .time-slot:last-child {
@@ -569,7 +569,7 @@
 
 /* Multiple appointments styling - neutral background */
 .time-slot.multiple-timeslots {
-  min-height: 50px; /* Keep consistent with regular slots */
+  min-height: 40px; /* Keep consistent with regular slots - reduced for 30-minute intervals */
   background: #f8f9fa !important; /* Light grey background - neutral */
 }
 
@@ -652,7 +652,7 @@
   display: grid;
   grid-template-columns: 80px 1fr;
   border-bottom: 1px solid #f1f3f4;
-  min-height: 60px;
+  min-height: 50px; /* Reduced from 60px for 30-minute intervals */
   cursor: pointer;
   transition: all 0.2s ease;
 }
