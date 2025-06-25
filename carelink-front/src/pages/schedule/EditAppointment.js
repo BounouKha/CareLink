@@ -528,7 +528,7 @@ const EditAppointment = ({
             <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
               <h3>⚠️ {schedule('pastDateConfirmation.title')}</h3>
               <p>
-                {schedule('pastDateConfirmation.editMessage', { date: formData.date })} 
+                {schedule('pastDateConfirmation.editMessage').replace('{date}', new Date(formData.date).toLocaleDateString())}
               </p>
               <div className="confirm-actions">
                 <button 
@@ -549,7 +549,7 @@ const EditAppointment = ({
               </div>
             </div>
           </div>
-        )}        {/* Delete Confirmation Modal */}
+        )}{/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="modal-overlay" onClick={(e) => e.stopPropagation()}>
             <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
