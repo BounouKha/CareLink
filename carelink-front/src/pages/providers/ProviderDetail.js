@@ -6,6 +6,172 @@ import { useCareTranslation } from '../../hooks/useCareTranslation';
 import './ProviderDetail.css';
 
 /**
+ * WeeklyScheduleGrid Component
+ * Displays the weekly schedule in a calendar grid format with proper time span handling
+ */
+const WeeklyScheduleGrid = ({ scheduleData }) => {
+    const { providers: providersT } = useCareTranslation();
+    const timeSlots = [
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+        '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+        '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', 
+        '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30',
+        '00:00',
+    ];
+
+    const getDayData = (dayKey) => {
+        return scheduleData.schedule_data[dayKey] || { appointments: [] };
+    };
+
+    // Convert time string to minutes since midnight for calculations
+    const timeToMinutes = (timeString) => {
+        if (!timeString) return 0;
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    // Check if a time slot should show an appointment
+    const getAppointmentForSlot = (dayKey, timeSlot) => {
+        const dayData = getDayData(dayKey);
+        const slotMinutes = timeToMinutes(timeSlot);
+        
+        return dayData.appointments.find(apt => {
+            const startMinutes = timeToMinutes(apt.start_time);
+            const endMinutes = timeToMinutes(apt.end_time);
+            
+            // Check if this time slot falls within the appointment duration
+            // The slot is 30 minutes long, so we check if it overlaps with the appointment
+            const slotEndMinutes = slotMinutes + 30;
+            
+            return startMinutes <= slotMinutes && endMinutes > slotMinutes;
+        });
+    };
+
+    // Check if this is the starting slot for an appointment (to show full info)
+    const isAppointmentStart = (dayKey, timeSlot, appointment) => {
+        if (!appointment) return false;
+        const slotMinutes = timeToMinutes(timeSlot);
+        const startMinutes = timeToMinutes(appointment.start_time);
+        return slotMinutes === startMinutes;
+    };
+
+    // Calculate how many slots this appointment spans
+    const getAppointmentSpan = (appointment) => {
+        if (!appointment || !appointment.start_time || !appointment.end_time) return 1;
+        
+        const startMinutes = timeToMinutes(appointment.start_time);
+        const endMinutes = timeToMinutes(appointment.end_time);
+        const durationMinutes = endMinutes - startMinutes;
+        
+        // Each slot is 30 minutes, so calculate how many slots it spans
+        return Math.ceil(durationMinutes / 30);
+    };
+
+    const getAppointmentStatusClass = (status) => {
+        switch (status) {
+            case 'completed': return 'completed';
+            case 'cancelled': return 'cancelled';
+            case 'confirmed': return 'confirmed';
+            case 'no_show': return 'no-show';
+            case 'in_progress': return 'in-progress';
+            case 'scheduled': return 'scheduled';
+            default: return 'scheduled';
+        }
+    };    // Format status text for display
+    const formatStatus = (status) => {
+        const statusKey = status || 'scheduled';
+        return providersT(`appointmentStatuses.${statusKey}`) || statusKey;
+    };
+
+    const isToday = (dateString) => {
+        const today = new Date().toISOString().split('T')[0];
+        return dateString === today;
+    };
+
+    const sortedDays = Object.keys(scheduleData.schedule_data).sort();
+
+    return (        <div className="weekly-schedule-grid">
+            {/* Time column header */}
+            <div className="schedule-time-header">{providersT('time')}</div>
+            
+            {/* Day headers */}
+            {sortedDays.map(dayKey => {
+                const dayData = getDayData(dayKey);
+                const date = new Date(dayKey);
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const dayNumber = date.getDate();
+                
+                return (
+                    <div 
+                        key={dayKey} 
+                        className={`schedule-day-header ${isToday(dayKey) ? 'today' : ''}`}
+                    >
+                        <div>{dayName}</div>
+                        <div>{dayNumber}</div>
+                    </div>
+                );
+            })}
+
+            {/* Time slots and appointments */}
+            {timeSlots.map((timeSlot, slotIndex) => (
+                <React.Fragment key={timeSlot}>
+                    {/* Time label */}
+                    <div className="schedule-time-label">
+                        {timeSlot}
+                    </div>
+                    
+                    {/* Day columns for this time slot */}
+                    {sortedDays.map(dayKey => {
+                        const appointment = getAppointmentForSlot(dayKey, timeSlot);
+                        const isStart = appointment && isAppointmentStart(dayKey, timeSlot, appointment);
+                        const span = appointment ? getAppointmentSpan(appointment) : 1;
+                        
+                        return (
+                            <div key={`${dayKey}-${timeSlot}`} className="schedule-time-slot">
+                                {appointment ? (
+                                    isStart ? (                                        // Show full appointment details only at the start slot
+                                        <div 
+                                            className={`schedule-appointment ${getAppointmentStatusClass(appointment.status)}`}
+                                            style={{ 
+                                                height: `${span * 60 - 4}px`, // 60px per slot minus padding
+                                                zIndex: 2 
+                                            }}
+                                            title={`${appointment.patient.name} - ${appointment.service.name} (${appointment.start_time} - ${appointment.end_time}) - Status: ${appointment.status || 'scheduled'}`}
+                                        >
+                                            <div className="appointment-patient-name">
+                                                <span className={`appointment-status-icon ${appointment.status || 'scheduled'}`}></span>
+                                                {appointment.patient.name}
+                                            </div>
+                                            <div className="appointment-service">
+                                                {appointment.service.name}
+                                            </div>
+                                            <div className="appointment-time">
+                                                {appointment.start_time} - {appointment.end_time}
+                                            </div>                                            <div className="appointment-status">
+                                                {formatStatus(appointment.status)}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // For continuation slots, show a subtle indicator
+                                        <div className="schedule-appointment-continuation">
+                                            {/* Empty - the appointment block above will cover this */}
+                                        </div>
+                                    )
+                                ) : (
+                                    <div className="schedule-empty-slot">
+                                        {/* Empty slot */}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </React.Fragment>
+            ))}
+        </div>
+    );
+};
+
+/**
  * ProviderDetail Component
  * Displays detailed provider information with role-based contract access
  */
@@ -18,16 +184,49 @@ const ProviderDetail = ({
     const [provider, setProvider] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('overview');    // Use the same authenticated API as the main component
+    const [activeTab, setActiveTab] = useState('overview');
+    const [scheduleData, setScheduleData] = useState(null);
+    const [scheduleLoading, setScheduleLoading] = useState(false);
+    const [scheduleError, setScheduleError] = useState(null);
+    const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStart(new Date()));// Use the same authenticated API as the main component
     const { get } = useAuthenticatedApi();
     const { common, providers: providersT } = useCareTranslation();
 
     const viewableFields = getViewableContractFields({ role: userRole });
     const canEdit = canEditContracts({ role: userRole });
 
+    // Helper function to get start of week (Monday)
+    function getWeekStart(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        return new Date(d.setDate(diff));
+    }
+
+    // Helper function to format date range for display
+    function formatWeekRange(weekStart) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        const options = { month: 'short', day: 'numeric' };
+        const startStr = weekStart.toLocaleDateString('en-US', options);
+        const endStr = weekEnd.toLocaleDateString('en-US', options);
+        const year = weekStart.getFullYear();
+        
+        return `${startStr} - ${endStr}, ${year}`;
+    }
+
     useEffect(() => {
         fetchProviderDetails();
-    }, [providerId]);    const fetchProviderDetails = async () => {
+    }, [providerId]);
+
+    useEffect(() => {
+        if (activeTab === 'schedule' && provider) {
+            fetchScheduleData();
+        }
+    }, [activeTab, provider, currentWeekStart]);
+
+    const fetchProviderDetails = async () => {
         try {
             setLoading(true);
             console.log(`[ProviderDetail] Fetching details for provider ID: ${providerId}`);
@@ -42,7 +241,33 @@ const ProviderDetail = ({
         } finally {
             setLoading(false);
         }
-    };    const formatDate = (dateString) => {
+    };
+
+    const fetchScheduleData = async () => {
+        try {
+            setScheduleLoading(true);
+            setScheduleError(null);
+            console.log(`[ProviderDetail] Fetching schedule for provider ID: ${providerId}, week: ${currentWeekStart.toISOString().split('T')[0]}`);
+            
+            const data = await get(`http://localhost:8000/account/providers/${providerId}/schedule/?start_date=${currentWeekStart.toISOString().split('T')[0]}`);
+            console.log(`[ProviderDetail] Schedule data received:`, data);
+            
+            setScheduleData(data);
+        } catch (err) {
+            console.error('Error fetching schedule data:', err);
+            setScheduleError(err.message);
+        } finally {
+            setScheduleLoading(false);
+        }
+    };
+
+    const navigateWeek = (direction) => {
+        const newWeekStart = new Date(currentWeekStart);
+        newWeekStart.setDate(newWeekStart.getDate() + (direction * 7));
+        setCurrentWeekStart(newWeekStart);
+    };
+
+    const formatDate = (dateString) => {
         if (!dateString) return providersT('notAvailable');
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -163,6 +388,11 @@ const ProviderDetail = ({
                         onClick={() => setActiveTab('contracts')}
                     >
                         {providersT('contracts')} ({totalContracts})
+                    </button>                    <button 
+                        className={`provider-tab-button ${activeTab === 'schedule' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('schedule')}
+                    >
+                        {providersT('schedule')}
                     </button>
                     {provider.statistics && (
                         <button 
@@ -216,9 +446,9 @@ const ProviderDetail = ({
                                         <div className="provider-summary-number">{contractsByStatus.expired?.length || 0}</div>
                                         <div className="provider-summary-label">{providersT('expiredContracts')}</div>
                                     </div>
-                                    <div className="provider-summary-card">
-                                        <div className="provider-summary-number">{provider.statistics?.total_weekly_hours || 0}h</div>
-                                        <div className="provider-summary-label">{providersT('totalWeeklyHours')}</div>
+                                    <div className="provider-summary-card weekly-hours-summary">
+                                        <div className="provider-summary-number">{scheduleData?.statistics?.total_weekly_hours || provider.statistics?.total_weekly_hours || 0}h</div>
+                                        <div className="provider-summary-label">{providersT('weeklyHours')}</div>
                                     </div>
                                 </div>
                             </div>
@@ -292,6 +522,65 @@ const ProviderDetail = ({
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'schedule' && (
+                        <div className="schedule-tab">
+                            <div className="schedule-header">
+                                <div className="schedule-current-week">
+                                    {formatWeekRange(currentWeekStart)}
+                                </div>                                <div className="schedule-nav">
+                                    <button 
+                                        className="schedule-nav-btn" 
+                                        onClick={() => navigateWeek(-1)}
+                                        disabled={scheduleLoading}
+                                    >
+                                        ← {providersT('previousWeek')}
+                                    </button>
+                                    <button 
+                                        className="schedule-nav-btn" 
+                                        onClick={() => setCurrentWeekStart(getWeekStart(new Date()))}
+                                        disabled={scheduleLoading}
+                                    >
+                                        {providersT('thisWeek')}
+                                    </button>
+                                    <button 
+                                        className="schedule-nav-btn" 
+                                        onClick={() => navigateWeek(1)}
+                                        disabled={scheduleLoading}
+                                    >
+                                        {providersT('nextWeek')} →
+                                    </button>
+                                </div>
+                            </div>                            {scheduleLoading && (
+                                <div className="schedule-loading">
+                                    <div className="spinner"></div>
+                                    <p>{providersT('loadingSchedule')}</p>
+                                </div>
+                            )}
+
+                            {scheduleError && (
+                                <div className="schedule-error">
+                                    <h4>{providersT('errorLoadingSchedule')}</h4>
+                                    <p>{scheduleError}</p>
+                                    <button className="btn-primary" onClick={fetchScheduleData}>
+                                        {providersT('retrySchedule')}
+                                    </button>
+                                </div>
+                            )}
+
+                            {!scheduleLoading && !scheduleError && scheduleData && (
+                                <div className="weekly-schedule-container">                                    {Object.keys(scheduleData.schedule_data).length === 0 || 
+                                     Object.values(scheduleData.schedule_data).every(day => day.appointments.length === 0) ? (
+                                        <div className="schedule-no-data">
+                                            <h4>{providersT('noAppointmentsThisWeek')}</h4>
+                                            <p>{providersT('noAppointmentsForWeek').replace('{weekRange}', formatWeekRange(currentWeekStart))}</p>
+                                        </div>) : (
+                                        <WeeklyScheduleGrid scheduleData={scheduleData} />
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
