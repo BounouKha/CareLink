@@ -362,8 +362,10 @@
     "statusUpdated": "Status updated successfully",
     "addCommentPlaceholder": "Add a comment or note about this demand..."
   },"schedule": {
+    "optionalForBlockedTime": "Optional for blocked time slots",
     "providerService": "Provider Service",
-    "title": "Schedule",    "calendar": "Calendar",
+    "title": "Schedule",    
+    "calendar": "Calendar",
     "appointment": "Appointment",
     "appointments": "Appointments",
     "myAppointments": "My Appointments",

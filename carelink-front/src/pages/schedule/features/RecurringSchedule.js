@@ -226,9 +226,8 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
   // Enhanced smart end time calculation
-  const calculateEndTime = (startTime, suggestedDuration = 60) => {
+  const calculateEndTime = (startTime, suggestedDuration = 30) => {
     if (!startTime) return '';
     
     try {
@@ -911,30 +910,31 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             </div>            {/* Time and Service */}
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="start_time">{schedule('startTime')} *</label>
-                <input
+                <label htmlFor="start_time">{schedule('startTime')} *</label>                <input
                   type="time"
                   id="start_time"
                   name="start_time"
                   value={formData.start_time}
                   onChange={handleInputChange}
                   className={validationErrors.start_time ? 'error' : ''}
+                  step="1800"
                   required
                 />
+                <small className="form-hint">⏰ Default: 30 minutes</small>
                 {validationErrors.start_time && (
                   <span className="validation-error">{validationErrors.start_time}</span>
                 )}
               </div>
 
               <div className="form-group">
-                <label htmlFor="end_time">{schedule('endTime')} *</label>
-                <input
+                <label htmlFor="end_time">{schedule('endTime')} *</label>                <input
                   type="time"
                   id="end_time"
                   name="end_time"
                   value={formData.end_time}
                   onChange={handleInputChange}
                   className={validationErrors.end_time ? 'error' : ''}
+                  step="1800"
                   required
                 />
                 {validationErrors.end_time && (

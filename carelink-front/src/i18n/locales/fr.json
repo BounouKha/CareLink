@@ -310,6 +310,9 @@
     "addCommentPlaceholder": "Ajouter un commentaire ou une note à propos de cette demande..."
   },
   "schedule": {
+    "providers": "Prestataire(s)",
+    "clearPatientBlockTime": "Sans patient",
+    "optionalForBlockedTime": "Optionnel pour le temps bloqué",
     "providerService": "Service du prestataire",
     "title": "Planning",
     "calendar": "Calendrier",
@@ -607,18 +610,6 @@
       "completed": "Terminé",
       "cancelled": "Annulé",
       "no_show": "Absent"
-    }
-  },
-  "schedule": {
-    "navigation": {
-      "previousWeek": "Semaine Précédente",
-      "nextWeek": "Semaine Suivante",
-      "thisWeek": "Cette Semaine",
-      "loadingSchedule": "Chargement du planning...",
-      "errorLoadingSchedule": "Erreur de Chargement du Planning",
-      "retry": "Réessayer",
-      "noAppointmentsThisWeek": "Aucun Rendez-vous Cette Semaine",
-      "noScheduledAppointments": "Ce prestataire n'a aucun rendez-vous programmé pour"
     }
   },
   "admin": {
