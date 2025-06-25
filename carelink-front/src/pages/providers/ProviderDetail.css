@@ -1,0 +1,537 @@
+/* ProviderDetail Modal Styles */
+.provider-detail-modal-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+    padding: 20px;
+}
+
+.provider-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal Header */
+.provider-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.provider-title-section h2 {
+    margin: 0 0 4px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+.provider-status-badge {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.provider-status-badge.active {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.provider-status-badge.inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.provider-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.provider-modal-close-btn:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+/* Tab Navigation */
+.provider-tab-navigation {
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+}
+
+.provider-tab-button {
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6c757d;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.provider-tab-button:hover {
+    color: #495057;
+    background-color: #e9ecef;
+}
+
+.provider-tab-button.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    background-color: white;
+}
+
+/* Tab Content */
+.provider-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+/* Overview Tab */
+.provider-overview-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.provider-info-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 8px;
+}
+
+.provider-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.provider-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.provider-info-item label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.provider-info-item span {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.provider-status-active {
+    color: #28a745;
+}
+
+.provider-status-inactive {
+    color: #dc3545;
+}
+
+/* Contract Summary Grid */
+.provider-contract-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+}
+
+.provider-summary-card {
+    padding: 20px;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.provider-summary-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.provider-summary-card.active {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.provider-summary-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: #007bff;
+    margin-bottom: 4px;
+}
+
+.provider-summary-card.active .provider-summary-number {
+    color: #28a745;
+}
+
+.provider-summary-label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Contracts Tab */
+.contracts-tab {
+    height: 100%;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+}
+
+.contracts-table-container {
+    overflow-x: auto;
+}
+
+.contracts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.contracts-table th {
+    background-color: #f8f9fa;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.contracts-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.contract-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* Statistics Tab */
+.statistics-tab {
+    height: 100%;
+}
+
+/* Schedule Tab */
+.schedule-tab {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-bottom: none;
+}
+
+.schedule-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.schedule-nav-btn {
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    background: white;
+    color: #495057;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 40px;
+}
+
+.schedule-nav-btn:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.schedule-nav-btn:disabled {
+    border-color: #dee2e6;
+    color: #6c757d;
+    cursor: not-allowed;
+    background: #e9ecef;
+}
+
+.schedule-nav-btn:disabled:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+.schedule-current-week {
+    font-weight: 600;
+    font-size: 20px;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.weekly-schedule-container {
+    flex: 1;
+    overflow: hidden;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.weekly-schedule-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    height: 100%;
+    overflow: auto;
+}
+
+.schedule-time-column, .schedule-day-column {
+    border-right: 1px solid #e9ecef;
+    position: relative;
+}
+
+.schedule-day-column:last-child {
+    border-right: none;
+}
+
+.schedule-day-header {
+    padding: 12px 8px;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.schedule-day-header.today {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.schedule-time-header {
+    padding: 12px 8px;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 11;
+}
+
+.schedule-time-slot {
+    height: 60px;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 2px;
+    position: relative;
+    overflow: visible; /* Allow appointments to span multiple slots */
+}
+
+.schedule-time-label {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 4px 8px;
+    text-align: center;
+    background-color: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.schedule-appointment {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    color: #1565c0;
+    border: 1px solid #1976d2;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin: 2px 0;
+    font-size: 11px;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.schedule-appointment-continuation {
+    /* This ensures continuation slots don't interfere with the main appointment block */
+    height: 100%;
+    pointer-events: none;
+}
+
+.schedule-appointment:hover {
+    background: linear-gradient(135deg, #bbdefb, #90caf9);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+}
+
+/* Status-based styling to match main schedule */
+.schedule-appointment.scheduled {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    color: #1565c0;
+    border-color: #1976d2;
+}
+
+.schedule-appointment.confirmed {
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+    color: #2e7d32;
+    border-color: #388e3c;
+}
+
+.schedule-appointment.in_progress {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    color: #e65100;
+    border-color: #f57c00;
+}
+
+.schedule-appointment.completed {
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+    color: #2e7d32;
+    border-color: #4caf50;
+}
+
+.schedule-appointment.cancelled {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    color: #c62828;
+    border-color: #f44336;
+    opacity: 0.8;
+}
+
+.schedule-appointment.no_show {
+    background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+    color: #7b1fa2;
+    border-color: #9c27b0;
+    opacity: 0.7;
+}
+
+/* Hover effects for each status */
+.schedule-appointment.scheduled:hover {
+    background: linear-gradient(135deg, #bbdefb, #90caf9);
+}
+
+.schedule-appointment.confirmed:hover {
+    background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+}
+
+.schedule-appointment.in_progress:hover {
+    background: linear-gradient(135deg, #ffe0b2, #ffcc80);
+}
+
+.schedule-appointment.completed:hover {
+    background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+}
+
+.schedule-appointment.cancelled:hover {
+    background: linear-gradient(135deg, #ffcdd2, #ef9a9a);
+}
+
+.schedule-appointment.no_show:hover {
+    background: linear-gradient(135deg, #e1bee7, #ce93d8);
+}
+
+.appointment-patient-name {
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appointment-service {
+    font-size: 0.6rem;
+    opacity: 0.8;
+    font-style: italic;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appointment-time {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appointment-status {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.2);
+    display: inline-block;
+}

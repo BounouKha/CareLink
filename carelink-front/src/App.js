@@ -11,6 +11,7 @@ import SchedulePage from './pages/schedule/SchedulePage';
 import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
 import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
+import ProviderManagement from './pages/providers/ProviderManagement';
 import TestUserAuth from './auth/test/TestUserAuth';
 import TokenTestPage from './pages/test/TokenTestPage';
 import TranslationDemo from './components/TranslationDemo';
@@ -46,9 +47,9 @@ function App() {
                             <Route path="/" element={<HomePage />} />
                             <Route path="/register" element={<RegisterPage />} />
                             <Route path="/profile" element={<ProfilePage />} />
-                            <Route path="/login" element={<LoginPage />} />
-                            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                            <Route path="/login" element={<LoginPage />} />                            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                             <Route path="/patients" element={<PatientsPageNew />} />
+                            <Route path="/providers" element={<ProviderManagement />} />
                             <Route path="/service-demands" element={<ServiceDemandPage />} />
                             <Route path="/schedule" element={<SchedulePage />} />
                             
