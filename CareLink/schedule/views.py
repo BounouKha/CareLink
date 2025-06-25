@@ -251,15 +251,16 @@ class QuickScheduleView(APIView):
             service_id = data.get('service_id')
             description = data.get('description', '')
             
-            # Validate required fields
-            if not all([provider_id, patient_id, date_str, start_time_str, end_time_str]):
+            # Validate required fields - patient_id is optional for blocked time
+            if not all([provider_id, date_str, start_time_str, end_time_str]):
                 return Response({
-                    'error': 'Missing required fields: provider_id, patient_id, date, start_time, end_time'
+                    'error': 'Missing required fields: provider_id, date, start_time, end_time'
                 }, status=400)
-            
-            # Parse and validate data
+              # Parse and validate data
             provider = Provider.objects.get(id=provider_id)
-            patient = Patient.objects.get(id=patient_id)
+            patient = None
+            if patient_id:
+                patient = Patient.objects.get(id=patient_id)
             schedule_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             start_time = datetime.strptime(start_time_str, '%H:%M').time()
             end_time = datetime.strptime(end_time_str, '%H:%M').time()
@@ -267,14 +268,16 @@ class QuickScheduleView(APIView):
             service = None
             if service_id:
                 service = Service.objects.get(id=service_id)
-              # Check for conflicts using ConflictManager
-            conflict_result = ConflictManager.check_scheduling_conflicts(
-                provider_id=provider_id,
-                patient_id=patient_id,
-                date=schedule_date,
-                start_time=start_time,
-                end_time=end_time
-            )
+              # Check for conflicts using ConflictManager (only if patient is provided)
+            conflict_result = {'has_conflicts': False}  # Default for blocked time
+            if patient_id:
+                conflict_result = ConflictManager.check_scheduling_conflicts(
+                    provider_id=provider_id,
+                    patient_id=patient_id,
+                    date=schedule_date,
+                    start_time=start_time,
+                    end_time=end_time
+                )
             
             # If there are conflicts and force_schedule is not set, return conflict details
             force_schedule = data.get('force_schedule', False)
@@ -298,12 +301,11 @@ class QuickScheduleView(APIView):
                 end_time=end_time,
                 description=description,
                 service=service,
-                user=request.user
-            )
-              # Add timeslot to schedule
-            schedule.time_slots.add(timeslot)
+                user=request.user            )
             
-            # Log the CREATE_SCHEDULE action
+            # Add timeslot to schedule
+            schedule.time_slots.add(timeslot)
+              # Log the CREATE_SCHEDULE action
             log_schedule_action(request.user, "CREATE_SCHEDULE", "Schedule", schedule.id, schedule=schedule)
             
             return Response({
@@ -465,11 +467,13 @@ class AppointmentManagementView(APIView):
             # Update schedule fields if provided
             if provider_id:
                 provider = Provider.objects.get(id=provider_id)
-                schedule.provider = provider
-            
+                schedule.provider = provider            
             if patient_id:
                 patient = Patient.objects.get(id=patient_id)
                 schedule.patient = patient
+            elif patient_id == '':
+                # Handle case where patient_id is explicitly set to empty string (blocked time)
+                schedule.patient = None
             
             if date_str:
                 schedule.date = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -490,11 +494,11 @@ class AppointmentManagementView(APIView):
                         timeslot.service = service
                     if status:
                         # Update the status field if provided
-                        timeslot.status = status                      # Check for conflicts before saving using ConflictManager
+                        timeslot.status = status                    # Check for conflicts before saving using ConflictManager
                     if start_time_str or end_time_str or date_str or provider_id:
                         conflict_result = ConflictManager.check_scheduling_conflicts(
                             provider_id=schedule.provider.id,
-                            patient_id=schedule.patient.id,
+                            patient_id=schedule.patient.id if schedule.patient else None,
                             date=schedule.date,
                             start_time=timeslot.start_time,
                             end_time=timeslot.end_time,
@@ -1522,11 +1526,10 @@ class ConflictCheckView(APIView):
             end_time_str = data.get('end_time')
             exclude_schedule_id = data.get('exclude_schedule_id')  # For updates
             exclude_timeslot_id = data.get('exclude_timeslot_id')  # For updates
-            
-            # Validate required fields
-            if not all([provider_id, patient_id, date_str, start_time_str, end_time_str]):
+              # Validate required fields (patient_id is optional for blocked time)
+            if not all([provider_id, date_str, start_time_str, end_time_str]):
                 return Response({
-                    'error': 'Missing required fields: provider_id, patient_id, date, start_time, end_time'
+                    'error': 'Missing required fields: provider_id, date, start_time, end_time'
                 }, status=400)
             
             # Check for conflicts using ConflictManager
@@ -1539,19 +1542,22 @@ class ConflictCheckView(APIView):
                 exclude_schedule_id=exclude_schedule_id,
                 exclude_timeslot_id=exclude_timeslot_id
             )
-            
-            # Get provider and patient names for response
+              # Get provider and patient names for response
             try:
                 provider = Provider.objects.get(id=provider_id)
                 provider_name = f"{provider.user.firstname} {provider.user.lastname}" if provider.user else f"Provider {provider_id}"
             except Provider.DoesNotExist:
                 provider_name = f"Provider {provider_id}"
             
-            try:
-                patient = Patient.objects.get(id=patient_id)
-                patient_name = f"{patient.user.firstname} {patient.user.lastname}" if patient.user else f"Patient {patient_id}"
-            except Patient.DoesNotExist:
-                patient_name = f"Patient {patient_id}"
+            # Handle patient name (optional for blocked time)
+            if patient_id:
+                try:
+                    patient = Patient.objects.get(id=patient_id)
+                    patient_name = f"{patient.user.firstname} {patient.user.lastname}" if patient.user else f"Patient {patient_id}"
+                except Patient.DoesNotExist:
+                    patient_name = f"Patient {patient_id}"
+            else:
+                patient_name = "Blocked Time"
             
             # Calculate duration for attempted schedule info
             try:
