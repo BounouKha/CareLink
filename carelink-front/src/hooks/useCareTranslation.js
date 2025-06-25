@@ -12,7 +12,6 @@ export const useCareTranslation = (namespace = null) => {
     const fullKey = namespace ? `${namespace}.${key}` : key;
     return t(fullKey, options);
   };
-
   // Common translation shortcuts
   const common = (key, options = {}) => t(`common.${key}`, options);
   const auth = (key, options = {}) => t(`auth.${key}`, options);
@@ -21,6 +20,7 @@ export const useCareTranslation = (namespace = null) => {
   const servicedemands = (key, options = {}) => t(`servicedemands.${key}`, options);
   const schedule = (key, options = {}) => t(`schedule.${key}`, options);
   const admin = (key, options = {}) => t(`admin.${key}`, options);
+  const providers = (key, options = {}) => t(`providers.${key}`, options);
   const errors = (key, options = {}) => t(`errors.${key}`, options);
   const success = (key, options = {}) => t(`success.${key}`, options);
   const navigation = (key, options = {}) => t(`navigation.${key}`, options);
@@ -40,7 +40,6 @@ export const useCareTranslation = (namespace = null) => {
       currency: currency
     }).format(amount);
   };
-
   return {
     t: translate,
     common,
@@ -50,6 +49,7 @@ export const useCareTranslation = (namespace = null) => {
     servicedemands,
     schedule,
     admin,
+    providers,
     errors,
     success,
     navigation,
