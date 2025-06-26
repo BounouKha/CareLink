@@ -1,7 +1,6 @@
 .schedule-calendar {
   padding: 10px;
   background-color: #f8f9fa;
-  max-height: calc(100vh - 150px);
   overflow-y: auto;
   position: relative;
 }

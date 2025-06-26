@@ -10,9 +10,9 @@
     "login": "Connexion",
     "logout": "Déconnexion",
     "register": "S'inscrire",    "profile": "Profil",
-    "admin": "Admin",
-    "role": "Rôle",
+    "admin": "Admin",    "role": "Rôle",
     "save": "Sauvegarder",
+    "saving": "Sauvegarde...",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "edit": "Modifier",
@@ -603,13 +603,55 @@
     "retrySchedule": "Réessayer",
     "noAppointmentsThisWeek": "Aucun Rendez-vous Cette Semaine",
     "noAppointmentsForWeek": "Ce prestataire n'a aucun rendez-vous programmé pour {weekRange}",
-    "appointmentStatuses": {
-      "scheduled": "Programmé",
+    "appointmentStatuses": {      "scheduled": "Programmé",
       "confirmed": "Confirmé",
       "in_progress": "En Cours",
       "completed": "Terminé",
       "cancelled": "Annulé",
       "no_show": "Absent"
+    },    "absent": "Absent",
+    "absences": "Absences",
+    "addAbsence": "Ajouter une absence",
+    "addNewAbsence": "Ajouter une nouvelle absence",
+    "absenceTitle": "Absences du prestataire",
+    "absenceSubtitle": "Gérer les périodes d'indisponibilité du prestataire",
+    "absenceType": "Type d'absence",
+    "absenceStatus": "Statut",
+    "absenceReason": "Raison",
+    "absenceReasonPlaceholder": "Raison optionnelle de l'absence...",
+    "absencePeriod": "Période",
+    "absencePeriodType": "Type de période",
+    "startTime": "Heure de début",
+    "endTime": "Heure de fin",
+    "noAbsencesFound": "Aucune absence trouvée",
+    "noAbsencesFoundDescription": "Ce prestataire n'a aucune période d'absence enregistrée.",
+    "loadingAbsences": "Chargement des absences...",
+    "errorLoadingAbsences": "Erreur lors du chargement des absences",
+    "createAbsence": "Créer une absence",
+    "periodTypes": {
+      "fullDay": "Journée complète",
+      "halfDayAM": "Demi-journée (matin)",
+      "halfDayPM": "Demi-journée (après-midi)",
+      "customHours": "Heures personnalisées"
+    },
+    "absenceTypes": {
+      "vacation": "Vacances",
+      "sick_leave": "Congé maladie",
+      "personal": "Congé personnel",
+      "training": "Formation",
+      "meeting": "Réunion",
+      "other": "Autre"
+    },
+    "absenceStatuses": {
+      "scheduled": "Programmé",
+      "confirmed": "Confirmé",
+      "pending": "En attente",
+      "cancelled": "Annulé"
+    },
+    "absenceValidation": {
+      "startDateRequired": "La date de début est requise",
+      "endDateRequired": "La date de fin est requise",
+      "timesRequired": "Les heures de début et de fin sont requises pour les heures personnalisées"
     }
   },
   "admin": {
