@@ -6,9 +6,9 @@
     "login": "Login",
     "logout": "Logout",
     "register": "Register",    "profile": "Profile",
-    "admin": "Admin",
-    "role": "Role",
+    "admin": "Admin",    "role": "Role",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -816,11 +816,53 @@
     "noAppointmentsForWeek": "This provider has no scheduled appointments for {weekRange}",
     "appointmentStatuses": {
       "scheduled": "Scheduled",
-      "confirmed": "Confirmed",
-      "in_progress": "In Progress",
+      "confirmed": "Confirmed",      "in_progress": "In Progress",
       "completed": "Done",
       "cancelled": "Cancelled",
       "no_show": "No Show"
+    },    "absent": "Absent",
+    "absences": "Absences",
+    "addAbsence": "Add Absence",
+    "addNewAbsence": "Add New Absence",
+    "absenceTitle": "Provider Absences",
+    "absenceSubtitle": "Manage provider unavailability periods",
+    "absenceType": "Absence Type",
+    "absenceStatus": "Status",
+    "absenceReason": "Reason",
+    "absenceReasonPlaceholder": "Optional reason for absence...",
+    "absencePeriod": "Period", 
+    "absencePeriodType": "Period Type",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "noAbsencesFound": "No absences found",
+    "noAbsencesFoundDescription": "This provider has no recorded absence periods.",
+    "loadingAbsences": "Loading absences...",
+    "errorLoadingAbsences": "Error Loading Absences",
+    "createAbsence": "Create Absence",
+    "periodTypes": {
+      "fullDay": "Full Day",
+      "halfDayAM": "Half Day (AM)",
+      "halfDayPM": "Half Day (PM)",
+      "customHours": "Custom Hours"
+    },
+    "absenceTypes": {
+      "vacation": "Vacation",
+      "sick_leave": "Sick Leave", 
+      "personal": "Personal Leave",
+      "training": "Training",
+      "meeting": "Meeting",
+      "other": "Other"
+    },
+    "absenceStatuses": {
+      "scheduled": "Scheduled",
+      "confirmed": "Confirmed",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    },
+    "absenceValidation": {
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "timesRequired": "Start and end times are required for custom hours"
     }
   }
 }

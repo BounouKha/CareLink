@@ -180,20 +180,35 @@ const ProviderDetail = ({
     onClose, 
     userRole,
     onContractUpdate 
-}) => {
-    const [provider, setProvider] = useState(null);
+}) => {    const [provider, setProvider] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('overview');
     const [scheduleData, setScheduleData] = useState(null);
     const [scheduleLoading, setScheduleLoading] = useState(false);
-    const [scheduleError, setScheduleError] = useState(null);
-    const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStart(new Date()));// Use the same authenticated API as the main component
+    const [scheduleError, setScheduleError] = useState(null);    const [absences, setAbsences] = useState([]);
+    const [absencesLoading, setAbsencesLoading] = useState(false);
+    const [absencesError, setAbsencesError] = useState(null);
+    const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStart(new Date()));
+    
+    // Absence form state
+    const [showAbsenceForm, setShowAbsenceForm] = useState(false);
+    const [absenceForm, setAbsenceForm] = useState({
+        start_date: '',
+        end_date: '',
+        start_time: '',
+        end_time: '',
+        absence_type: 'vacation',
+        status: 'scheduled',
+        reason: '',
+        period_type: 'full_day' // 'full_day', 'half_day_am', 'half_day_pm', 'custom_hours'
+    });
+    const [savingAbsence, setSavingAbsence] = useState(false);// Use the same authenticated API as the main component
     const { get } = useAuthenticatedApi();
-    const { common, providers: providersT } = useCareTranslation();
-
-    const viewableFields = getViewableContractFields({ role: userRole });
+    const { common, providers: providersT } = useCareTranslation();    const viewableFields = getViewableContractFields({ role: userRole });
     const canEdit = canEditContracts({ role: userRole });
+
+    console.log('[ProviderDetail] User role:', userRole, 'canEdit:', canEdit);
 
     // Helper function to get start of week (Monday)
     function getWeekStart(date) {
@@ -218,13 +233,17 @@ const ProviderDetail = ({
 
     useEffect(() => {
         fetchProviderDetails();
-    }, [providerId]);
-
-    useEffect(() => {
+    }, [providerId]);    useEffect(() => {
         if (activeTab === 'schedule' && provider) {
             fetchScheduleData();
         }
     }, [activeTab, provider, currentWeekStart]);
+
+    useEffect(() => {
+        if (activeTab === 'absent' && provider) {
+            fetchAbsences();
+        }
+    }, [activeTab, provider]);
 
     const fetchProviderDetails = async () => {
         try {
@@ -261,6 +280,24 @@ const ProviderDetail = ({
         }
     };
 
+    const fetchAbsences = async () => {
+        try {
+            setAbsencesLoading(true);
+            setAbsencesError(null);
+            console.log(`[ProviderDetail] Fetching absences for provider ID: ${providerId}`);
+            
+            const data = await get(`http://localhost:8000/account/providers/${providerId}/absences/`);
+            console.log(`[ProviderDetail] Absences data received:`, data);
+            
+            setAbsences(data.absences || []);
+        } catch (err) {
+            console.error('Error fetching absences:', err);
+            setAbsencesError(err.message);
+        } finally {
+            setAbsencesLoading(false);
+        }
+    };
+
     const navigateWeek = (direction) => {
         const newWeekStart = new Date(currentWeekStart);
         newWeekStart.setDate(newWeekStart.getDate() + (direction * 7));
@@ -285,7 +322,149 @@ const ProviderDetail = ({
         });
     };
 
-    const getContractsByStatus = () => {
+    // Absence form functions
+    const resetAbsenceForm = () => {
+        setAbsenceForm({
+            start_date: '',
+            end_date: '',
+            start_time: '',
+            end_time: '',
+            absence_type: 'vacation',
+            status: 'scheduled',
+            reason: '',
+            period_type: 'full_day'
+        });
+    };
+
+    const handleAbsenceFormChange = (field, value) => {
+        setAbsenceForm(prev => ({
+            ...prev,
+            [field]: value
+        }));
+
+        // Auto-set end_date if period_type changes and only start_date is set
+        if (field === 'period_type' && absenceForm.start_date && !absenceForm.end_date) {
+            setAbsenceForm(prev => ({
+                ...prev,
+                end_date: prev.start_date
+            }));
+        }
+
+        // Set default times based on period type
+        if (field === 'period_type') {
+            switch (value) {
+                case 'half_day_am':
+                    setAbsenceForm(prev => ({
+                        ...prev,
+                        start_time: '08:00',
+                        end_time: '12:00'
+                    }));
+                    break;
+                case 'half_day_pm':
+                    setAbsenceForm(prev => ({
+                        ...prev,
+                        start_time: '12:00',
+                        end_time: '18:00'
+                    }));
+                    break;
+                case 'full_day':
+                    setAbsenceForm(prev => ({
+                        ...prev,
+                        start_time: '',
+                        end_time: ''
+                    }));
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    const handleSaveAbsence = async () => {
+        try {
+            setSavingAbsence(true);
+            
+            // Validate form
+            if (!absenceForm.start_date) {
+                setAbsencesError(providersT('absenceValidation.startDateRequired'));
+                return;
+            }
+
+            if (!absenceForm.end_date) {
+                setAbsencesError(providersT('absenceValidation.endDateRequired'));
+                return;
+            }
+
+            if (absenceForm.period_type === 'custom_hours') {
+                if (!absenceForm.start_time || !absenceForm.end_time) {
+                    setAbsencesError(providersT('absenceValidation.timesRequired'));
+                    return;
+                }
+            }
+
+            // Prepare data for submission
+            const submissionData = {
+                start_date: absenceForm.start_date,
+                end_date: absenceForm.end_date,
+                absence_type: absenceForm.absence_type,
+                status: absenceForm.status,
+                reason: absenceForm.reason
+            };
+
+            // Add time fields if needed
+            if (absenceForm.period_type !== 'full_day' && absenceForm.start_time && absenceForm.end_time) {
+                submissionData.start_time = absenceForm.start_time;
+                submissionData.end_time = absenceForm.end_time;
+                submissionData.period_type = absenceForm.period_type;
+            }
+
+            console.log('[ProviderDetail] Submitting absence:', submissionData);
+
+            // Submit to API
+            const response = await fetch(`http://localhost:8000/account/providers/${providerId}/absences/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify(submissionData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create absence');
+            }
+
+            const responseData = await response.json();
+            console.log('[ProviderDetail] Absence created:', responseData);
+
+            // Refresh absences list
+            await fetchAbsences();
+            
+            // Reset form and close
+            resetAbsenceForm();
+            setShowAbsenceForm(false);
+            setAbsencesError(null);
+
+        } catch (err) {
+            console.error('Error saving absence:', err);
+            setAbsencesError(err.message);
+        } finally {
+            setSavingAbsence(false);
+        }
+    };
+
+    const openAbsenceForm = () => {
+        resetAbsenceForm();
+        setShowAbsenceForm(true);
+        setAbsencesError(null);
+    };
+
+    const closeAbsenceForm = () => {
+        setShowAbsenceForm(false);
+        resetAbsenceForm();
+        setAbsencesError(null);
+    };    const getContractsByStatus = () => {
         if (!provider?.contracts) return {};
         
         return provider.contracts.reduce((acc, contract) => {
@@ -393,6 +572,12 @@ const ProviderDetail = ({
                         onClick={() => setActiveTab('schedule')}
                     >
                         {providersT('schedule')}
+                    </button>
+                    <button 
+                        className={`provider-tab-button ${activeTab === 'absent' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('absent')}
+                    >
+                        {providersT('absent')}
                     </button>
                     {provider.statistics && (
                         <button 
@@ -578,6 +763,248 @@ const ProviderDetail = ({
                                             <p>{providersT('noAppointmentsForWeek').replace('{weekRange}', formatWeekRange(currentWeekStart))}</p>
                                         </div>) : (
                                         <WeeklyScheduleGrid scheduleData={scheduleData} />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'absent' && (
+                        <div className="provider-absent-tab">
+                            <div className="absent-header">
+                                <h3>{providersT('absenceTitle')}</h3>
+                                <p className="absent-subtitle">{providersT('absenceSubtitle')}</p>
+                            </div>
+
+                            {absencesLoading && (
+                                <div className="absences-loading">
+                                    <div className="spinner"></div>
+                                    <p>{providersT('loadingAbsences')}</p>
+                                </div>
+                            )}
+
+                            {absencesError && (
+                                <div className="absences-error">
+                                    <h4>{providersT('errorLoadingAbsences')}</h4>
+                                    <p>{absencesError}</p>
+                                    <button className="btn-primary" onClick={fetchAbsences}>
+                                        {common('retry')}
+                                    </button>
+                                </div>
+                            )}
+
+                            {!absencesLoading && !absencesError && (
+                                <div className="absences-container">                                    {/* Absence Actions */}
+                                    {canEdit && (
+                                        <div className="absence-actions">
+                                            {!showAbsenceForm ? (
+                                                <button className="btn-primary" onClick={openAbsenceForm}>
+                                                    {providersT('addAbsence')}
+                                                </button>
+                                            ) : (
+                                                <div className="absence-form-container">
+                                                    <div className="absence-form-header">
+                                                        <h4>{providersT('addNewAbsence')}</h4>
+                                                        <button className="btn-secondary" onClick={closeAbsenceForm}>
+                                                            {common('cancel')}
+                                                        </button>
+                                                    </div>
+
+                                                    <form className="absence-form" onSubmit={(e) => e.preventDefault()}>
+                                                        {/* Period Type Selection */}
+                                                        <div className="form-group">
+                                                            <label>{providersT('absencePeriodType')}</label>
+                                                            <div className="period-type-buttons">
+                                                                <button
+                                                                    type="button"
+                                                                    className={`period-btn ${absenceForm.period_type === 'full_day' ? 'active' : ''}`}
+                                                                    onClick={() => handleAbsenceFormChange('period_type', 'full_day')}
+                                                                >
+                                                                    {providersT('periodTypes.fullDay')}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`period-btn ${absenceForm.period_type === 'half_day_am' ? 'active' : ''}`}
+                                                                    onClick={() => handleAbsenceFormChange('period_type', 'half_day_am')}
+                                                                >
+                                                                    {providersT('periodTypes.halfDayAM')}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`period-btn ${absenceForm.period_type === 'half_day_pm' ? 'active' : ''}`}
+                                                                    onClick={() => handleAbsenceFormChange('period_type', 'half_day_pm')}
+                                                                >
+                                                                    {providersT('periodTypes.halfDayPM')}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`period-btn ${absenceForm.period_type === 'custom_hours' ? 'active' : ''}`}
+                                                                    onClick={() => handleAbsenceFormChange('period_type', 'custom_hours')}
+                                                                >
+                                                                    {providersT('periodTypes.customHours')}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Date Range */}
+                                                        <div className="form-row">
+                                                            <div className="form-group">
+                                                                <label>{providersT('startDate')} *</label>
+                                                                <input
+                                                                    type="date"
+                                                                    value={absenceForm.start_date}
+                                                                    onChange={(e) => handleAbsenceFormChange('start_date', e.target.value)}
+                                                                    required
+                                                                />
+                                                            </div>
+                                                            <div className="form-group">
+                                                                <label>{providersT('endDate')} *</label>
+                                                                <input
+                                                                    type="date"
+                                                                    value={absenceForm.end_date}
+                                                                    onChange={(e) => handleAbsenceFormChange('end_date', e.target.value)}
+                                                                    min={absenceForm.start_date}
+                                                                    required
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Time Range (only for partial days and custom hours) */}
+                                                        {(absenceForm.period_type === 'half_day_am' || 
+                                                          absenceForm.period_type === 'half_day_pm' || 
+                                                          absenceForm.period_type === 'custom_hours') && (
+                                                            <div className="form-row">
+                                                                <div className="form-group">
+                                                                    <label>{providersT('startTime')} *</label>
+                                                                    <input
+                                                                        type="time"
+                                                                        value={absenceForm.start_time}
+                                                                        onChange={(e) => handleAbsenceFormChange('start_time', e.target.value)}
+                                                                        required
+                                                                    />
+                                                                </div>
+                                                                <div className="form-group">
+                                                                    <label>{providersT('endTime')} *</label>
+                                                                    <input
+                                                                        type="time"
+                                                                        value={absenceForm.end_time}
+                                                                        onChange={(e) => handleAbsenceFormChange('end_time', e.target.value)}
+                                                                        min={absenceForm.start_time}
+                                                                        required
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Absence Type */}
+                                                        <div className="form-group">
+                                                            <label>{providersT('absenceType')} *</label>
+                                                            <select
+                                                                value={absenceForm.absence_type}
+                                                                onChange={(e) => handleAbsenceFormChange('absence_type', e.target.value)}
+                                                                required
+                                                            >
+                                                                <option value="vacation">{providersT('absenceTypes.vacation')}</option>
+                                                                <option value="sick_leave">{providersT('absenceTypes.sickLeave')}</option>
+                                                                <option value="personal">{providersT('absenceTypes.personal')}</option>
+                                                                <option value="training">{providersT('absenceTypes.training')}</option>
+                                                                <option value="meeting">{providersT('absenceTypes.meeting')}</option>
+                                                                <option value="other">{providersT('absenceTypes.other')}</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Status */}
+                                                        <div className="form-group">
+                                                            <label>{providersT('absenceStatus')} *</label>
+                                                            <select
+                                                                value={absenceForm.status}
+                                                                onChange={(e) => handleAbsenceFormChange('status', e.target.value)}
+                                                                required
+                                                            >
+                                                                <option value="scheduled">{providersT('absenceStatuses.scheduled')}</option>
+                                                                <option value="confirmed">{providersT('absenceStatuses.confirmed')}</option>
+                                                                <option value="pending">{providersT('absenceStatuses.pending')}</option>
+                                                                <option value="cancelled">{providersT('absenceStatuses.cancelled')}</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {/* Reason */}
+                                                        <div className="form-group">
+                                                            <label>{providersT('absenceReason')}</label>
+                                                            <textarea
+                                                                value={absenceForm.reason}
+                                                                onChange={(e) => handleAbsenceFormChange('reason', e.target.value)}
+                                                                placeholder={providersT('absenceReasonPlaceholder')}
+                                                                rows="3"
+                                                            />
+                                                        </div>
+
+                                                        {/* Form Actions */}
+                                                        <div className="form-actions">
+                                                            <button
+                                                                type="button"
+                                                                className="btn-secondary"
+                                                                onClick={closeAbsenceForm}
+                                                                disabled={savingAbsence}
+                                                            >
+                                                                {common('cancel')}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-primary"
+                                                                onClick={handleSaveAbsence}
+                                                                disabled={savingAbsence || !absenceForm.start_date || !absenceForm.end_date}
+                                                            >
+                                                                {savingAbsence ? common('saving') : common('save')}
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Absences List */}
+                                    {absences.length === 0 ? (
+                                        <div className="no-absences">
+                                            <h4>{providersT('noAbsencesFound')}</h4>
+                                            <p>{providersT('noAbsencesFoundDescription')}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="absences-list">
+                                            {absences.map(absence => (
+                                                <div key={absence.id} className="absence-card">
+                                                    <div className="absence-header">
+                                                        <div className="absence-type">
+                                                            <span className={`absence-type-badge ${absence.absence_type}`}>
+                                                                {providersT(`absenceTypes.${absence.absence_type}`)}
+                                                            </span>
+                                                            <span className={`absence-status-badge ${absence.status}`}>
+                                                                {providersT(`absenceStatuses.${absence.status}`)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                
+                                                    <div className="absence-period">
+                                                        <strong>{providersT('absencePeriod')}:</strong>
+                                                        <span>{formatDate(absence.start_date)} - {formatDate(absence.end_date)}</span>
+                                                    </div>
+                                                
+                                                    {absence.reason && (
+                                                        <div className="absence-reason">
+                                                            <strong>{providersT('absenceReason')}:</strong>
+                                                            <p>{absence.reason}</p>
+                                                        </div>
+                                                    )}
+                                                
+                                                    <div className="absence-meta">
+                                                        <small>
+                                                            {common('create')}: {absence.created_by || common('notAvailable')} - {formatDateTime(absence.created_at)}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             )}
