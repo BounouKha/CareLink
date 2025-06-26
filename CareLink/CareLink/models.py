@@ -323,6 +323,43 @@ class Provider(models.Model):
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
     is_internal = models.BooleanField(default=True)
 
+class ProviderAbsence(models.Model):
+    """Model to track provider absence periods"""
+    ABSENCE_STATUS_CHOICES = [
+        ('scheduled', 'Scheduled'),
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    ABSENCE_TYPE_CHOICES = [
+        ('vacation', 'Vacation'),
+        ('sick_leave', 'Sick Leave'),
+        ('personal', 'Personal Leave'),
+        ('training', 'Training'),
+        ('other', 'Other'),
+    ]
+    
+    provider = models.ForeignKey('Provider', on_delete=models.CASCADE, related_name='absences')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    absence_type = models.CharField(max_length=20, choices=ABSENCE_TYPE_CHOICES, default='vacation')
+    status = models.CharField(max_length=20, choices=ABSENCE_STATUS_CHOICES, default='scheduled')
+    reason = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_absences')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-start_date']
+        
+    def __str__(self):
+        return f"{self.provider.user.full_name if self.provider.user else 'Unknown'} - {self.absence_type} ({self.start_date} to {self.end_date})"
+    
+    def clean(self):
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValidationError('Start date cannot be after end date.')
+
 class ProvidingCare(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

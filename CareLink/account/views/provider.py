@@ -1108,3 +1108,96 @@ def provider_schedule(request, provider_id):
         return Response({
             'error': 'An error occurred while fetching provider schedule'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def provider_absences(request, provider_id):
+    """
+    GET: List provider absences
+    POST: Create new provider absence
+    Accessible by Administrative, Administrator, Coordinator, and the provider themselves
+    """
+    try:
+        provider = get_object_or_404(Provider, id=provider_id)
+        
+        # Check permissions - admin/coordinator/administrative OR the provider themselves
+        is_staff = has_provider_management_permission(request.user)
+        is_own_provider = provider.user and provider.user.id == request.user.id
+        
+        if not (is_staff or is_own_provider):
+            return Response({
+                'error': 'You do not have permission to access this provider\'s absences'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        if request.method == 'GET':
+            from CareLink.models import ProviderAbsence
+            absences = ProviderAbsence.objects.filter(provider=provider).order_by('-start_date')
+            
+            absence_data = []
+            for absence in absences:
+                absence_data.append({
+                    'id': absence.id,
+                    'start_date': absence.start_date,
+                    'end_date': absence.end_date,
+                    'absence_type': absence.absence_type,
+                    'status': absence.status,
+                    'reason': absence.reason,
+                    'created_by': f"{absence.created_by.firstname} {absence.created_by.lastname}".strip() if absence.created_by else None,
+                    'created_at': absence.created_at,
+                })
+            
+            return Response({
+                'absences': absence_data,
+                'total': len(absence_data)
+            }, status=status.HTTP_200_OK)
+        
+        elif request.method == 'POST':
+            # Only staff or the provider themselves can create absences
+            if not (is_staff or is_own_provider):
+                return Response({
+                    'error': 'You do not have permission to create absences'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            from CareLink.models import ProviderAbsence
+            
+            data = request.data
+            try:
+                absence = ProviderAbsence.objects.create(
+                    provider=provider,
+                    start_date=data.get('start_date'),
+                    end_date=data.get('end_date'),
+                    absence_type=data.get('absence_type', 'vacation'),
+                    status=data.get('status', 'scheduled'),
+                    reason=data.get('reason', ''),
+                    created_by=request.user
+                )
+                
+                return Response({
+                    'message': 'Absence created successfully',
+                    'absence': {
+                        'id': absence.id,
+                        'start_date': absence.start_date,
+                        'end_date': absence.end_date,
+                        'absence_type': absence.absence_type,
+                        'status': absence.status,
+                        'reason': absence.reason,
+                        'created_by': f"{absence.created_by.firstname} {absence.created_by.lastname}".strip() if absence.created_by else None,
+                        'created_at': absence.created_at,
+                    }
+                }, status=status.HTTP_201_CREATED)
+                
+            except Exception as e:
+                logger.error(f"Error creating absence: {str(e)}")
+                return Response({
+                    'error': 'Failed to create absence'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+    except Provider.DoesNotExist:
+        return Response({
+            'error': 'Provider not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error in provider_absences for user {request.user.email}, provider {provider_id}: {str(e)}")
+        return Response({
+            'error': 'An error occurred while processing absences'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
