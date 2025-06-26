@@ -28,7 +28,7 @@ from account.views.servicedemand import ServiceDemandListCreateView, ServiceDema
 from account.views.logs import LogsView, LogStatsView
 from account.views.consent import ConsentStorageView, UserConsentHistoryView, ConsentWithdrawalView, consent_audit_export, consent_stats, AdminConsentListView, admin_revoke_consent, user_consent_status
 from account.views.patient_timeline import patient_timeline
-from account.views.provider import provider_list, provider_detail, provider_contracts, provider_stats, available_users_for_provider, check_user_contract_status, check_current_user_contract_status, provider_schedule, provider_schedule
+from account.views.provider import provider_list, provider_detail, provider_contracts, provider_stats, available_users_for_provider, check_user_contract_status, check_current_user_contract_status, provider_schedule, provider_absences
 
 
 
@@ -92,6 +92,7 @@ urlpatterns += [
     path('providers/<int:provider_id>/', provider_detail, name='provider_detail'),
     path('providers/<int:provider_id>/contracts/', provider_contracts, name='provider_contracts'),
     path('providers/<int:provider_id>/schedule/', provider_schedule, name='provider_schedule'),
+    path('providers/<int:provider_id>/absences/', provider_absences, name='provider_absences'),
     path('providers/stats/', provider_stats, name='provider_stats'),
     path('providers/available-users/', available_users_for_provider, name='available_users_for_provider'),
     
