@@ -29,6 +29,11 @@ class ContractSerializer(serializers.ModelSerializer):
     service_name = serializers.SerializerMethodField()
     monthly_salary = serializers.SerializerMethodField()
     
+    # Explicitly define foreign key fields for proper handling
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
+    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all(), required=False, allow_null=True)
+    supervisor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
+    
     class Meta:
         model = Contract
         fields = [
@@ -39,6 +44,26 @@ class ContractSerializer(serializers.ModelSerializer):
             'monthly_salary', 'user', 'service', 'supervisor'
         ]
         read_only_fields = ['id', 'created_at']
+    
+    def to_internal_value(self, data):
+        """Convert empty strings to None for date fields before validation"""
+        if isinstance(data, dict):
+            # Handle empty strings for date fields
+            if 'start_date' in data and data['start_date'] == '':
+                data['start_date'] = None
+            if 'end_date' in data and data['end_date'] == '':
+                data['end_date'] = None
+        return super().to_internal_value(data)
+    
+    def validate(self, data):
+        """Custom validation to handle empty strings for date fields"""
+        # Convert empty strings to None for date fields
+        if 'start_date' in data and data['start_date'] == '':
+            data['start_date'] = None
+        if 'end_date' in data and data['end_date'] == '':
+            data['end_date'] = None
+            
+        return data
     
     def get_supervisor_name(self, obj):
         if obj.supervisor:
