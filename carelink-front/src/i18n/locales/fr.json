@@ -640,7 +640,8 @@
       "personal": "Congé personnel",
       "training": "Formation",
       "meeting": "Réunion",
-      "other": "Autre"
+      "other": "Autre",
+      "Full Day": "Journée complète"
     },
     "absenceStatuses": {
       "scheduled": "Programmé",

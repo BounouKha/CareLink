@@ -797,5 +797,23 @@
       "daysAgo": "{{count}} dagen geleden",
       "dayAgo": "1 dag geleden"
     }
+  },
+  "absenceTypes": {
+    "Sick Leave": "Ziekteverlof",
+    "Vacation": "Vakantie",
+    "Maternity Leave": "Zwangerschapsverlof",
+    "Paternity Leave": "Vaderschapsverlof",
+    "Sabbatical": "Sabbatical",
+    "Study Leave": "Studieverlof",
+    "Compassionate Leave": "Bijzonder verlof",
+    "Unpaid Leave": "Onbetaald verlof",
+    "Full Day": "Volledige dag"
+  },
+  "absenceStatuses": {
+    "Pending": "In behandeling",
+    "Approved": "Goedgekeurd",
+    "Rejected": "Afgewezen",
+    "Cancelled": "Geannuleerd",
+    "Completed": "Voltooid"
   }
 }

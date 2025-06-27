@@ -19,6 +19,7 @@ import './auth/layout/UnifiedBaseLayout.css';
 import ProtectedRoute from './auth/login/ProtectedRoute';
 import { AdminProvider } from './auth/login/AdminContext';
 import { SpinnerOnly } from './components/LoadingComponents';
+import CookieSettingsButton from './components/CookieSettingsButton';
 import './i18n'; // Initialize i18n
 
 function App() {
@@ -62,6 +63,7 @@ function App() {
                             <Route path="/test-tokens" element={<TokenTestPage />} />
                             <Route path="/translation-demo" element={<TranslationDemo />} />
                         </Routes>
+                        <CookieSettingsButton />
                     </div>
                 </Router>
             </AdminProvider>

@@ -820,7 +820,8 @@
       "completed": "Done",
       "cancelled": "Cancelled",
       "no_show": "No Show"
-    },    "absent": "Absent",
+    },    
+    "absent": "Absent",
     "absences": "Absences",
     "addAbsence": "Add Absence",
     "addNewAbsence": "Add New Absence",
@@ -851,7 +852,8 @@
       "personal": "Personal Leave",
       "training": "Training",
       "meeting": "Meeting",
-      "other": "Other"
+      "other": "Other",
+      "Full Day": "Full Day"
     },
     "absenceStatuses": {
       "scheduled": "Scheduled",
