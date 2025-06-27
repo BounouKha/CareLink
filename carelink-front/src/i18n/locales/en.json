@@ -107,7 +107,6 @@
     "birthdate": "Birth Date",
     "age": "Age",
     "years": "years",
-    "year": "year",
     "address": "Address",
     "phone": "Phone",
     "emergencyContact": "Emergency Contact",
@@ -281,7 +280,6 @@
     "statusManagement": "Status Management",
     "underReview": "Under Review",
     "approve": "Approve",
-    "inProgress": "In Progress",
     "complete": "Complete",
     "reject": "Reject",
     "created": "Created",
@@ -865,6 +863,38 @@
       "startDateRequired": "Start date is required",
       "endDateRequired": "End date is required",
       "timesRequired": "Start and end times are required for custom hours"
+    }
+  },
+  "contracts": {
+    "edit_contract": "Edit Contract",
+    "create_contract": "Create Contract",
+    "basic_info": "Basic Information",
+    "provider": "Provider",
+    "service": "Service",
+    "type": "Type",
+    "status": "Status",
+    "financial_info": "Financial Information",
+    "salary": "Salary",
+    "hourly_rate": "Hourly Rate",
+    "total_hours": "Total Hours",
+    "weekly_hours": "Weekly Hours",
+    "contract_details": "Contract Details",
+    "reference": "Reference",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "department": "Department",
+    "notes": "Notes",
+    "additional_notes": "Additional Notes",
+    "notes_placeholder": "Enter any additional notes here...",
+    "select_provider": "Select a provider",
+    "selectService": "Select Service",
+    "error": {
+      "user_required": "User is required.",
+      "service_required": "Service is required.",
+      "salary_required": "Salary is required and must be positive.",
+      "hours_required": "Total hours is required and must be positive.",
+      "type_required": "Contract type is required.",
+      "end_date_invalid": "End date must be after start date."
     }
   }
 }

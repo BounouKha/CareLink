@@ -214,7 +214,8 @@ const ProviderManagement = () => {
             <div className="provider-mgmt-container">
                 {/* Header */}
                 <div className="provider-mgmt-page-header">
-                    <div className="provider-mgmt-header-content">                        <h1>{providersT('title')}</h1>
+                    <div className="provider-mgmt-header-content">
+                        <h1>{providersT('title')}</h1>
                         <p className="provider-mgmt-header-subtitle">
                             {isReadOnly ? providersT('subtitleReadOnly') : providersT('subtitle')}
                         </p>
@@ -223,13 +224,7 @@ const ProviderManagement = () => {
                                 <small>{common('role')}: {userRole} | Access: {permission}</small>
                             </div>
                         )}
-                    </div>                    {canCreate && (
-                        <div className="provider-mgmt-header-actions">
-                            <button className="provider-mgmt-btn-primary">
-                                {providersT('addProvider')}
-                            </button>
-                        </div>
-                    )}
+                    </div>
                 </div>
 
                 {/* Statistics */}

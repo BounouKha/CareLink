@@ -815,5 +815,37 @@
     "Rejected": "Afgewezen",
     "Cancelled": "Geannuleerd",
     "Completed": "Voltooid"
+  },
+  "contracts": {
+    "edit_contract": "Contract bewerken",
+    "create_contract": "Contract aanmaken",
+    "basic_info": "Basisinformatie",
+    "provider": "Zorgverlener",
+    "service": "Service",
+    "type": "Type",
+    "status": "Status",
+    "financial_info": "Financiële informatie",
+    "salary": "Salaris",
+    "hourly_rate": "Uurtarief",
+    "total_hours": "Totaal aantal uren",
+    "weekly_hours": "Uren per week",
+    "contract_details": "Contractdetails",
+    "reference": "Referentie",
+    "start_date": "Startdatum",
+    "end_date": "Einddatum",
+    "department": "Afdeling",
+    "notes": "Notities",
+    "additional_notes": "Aanvullende notities",
+    "notes_placeholder": "Voer hier eventuele aanvullende notities in...",
+    "select_provider": "Selecteer een zorgverlener",
+    "selectService": "Selecteer service",
+    "error": {
+      "user_required": "Zorgverlener is verplicht.",
+      "service_required": "Service is verplicht.",
+      "salary_required": "Salaris is verplicht en moet positief zijn.",
+      "hours_required": "Totaal aantal uren is verplicht en moet positief zijn.",
+      "type_required": "Contracttype is verplicht.",
+      "end_date_invalid": "Einddatum moet na de startdatum liggen."
+    }
   }
 }
