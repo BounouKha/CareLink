@@ -2,33 +2,38 @@ import React, { useState, useEffect } from 'react';
 import consentManager from '../utils/consentManager';
 import './CookieConsent.css';
 
-const CookieConsent = () => {
+const CookieConsent = ({ forceShow = false, onClose }) => {
     const [showBanner, setShowBanner] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
     const [preferences, setPreferences] = useState({
         analytics: false,
         preferences: true, // Default to true for better UX
         marketing: false
-    });    useEffect(() => {
+    });
+
+    useEffect(() => {
+        if (forceShow) {
+            setShowBanner(true);
+            return;
+        }
         // Check consent status
         const checkConsent = async () => {
             try {
                 const hasValidConsent = await consentManager.hasValidConsent();
-                console.log('🍪 Cookie consent check result:', hasValidConsent);
-                
                 if (!hasValidConsent) {
-                    // Small delay to let page load first
                     setTimeout(() => setShowBanner(true), 1000);
                 }
             } catch (error) {
-                console.error('🍪 Error checking consent status:', error);
-                // On error, assume no consent to be safe
                 setTimeout(() => setShowBanner(true), 1000);
             }
         };
-        
         checkConsent();
-    }, []);
+    }, [forceShow]);
+
+    const closeBanner = () => {
+        setShowBanner(false);
+        if (onClose) onClose();
+    };
 
     const handleAcceptAll = () => {
         const allConsent = {
@@ -36,11 +41,8 @@ const CookieConsent = () => {
             preferences: true,
             marketing: true
         };
-        
         consentManager.setConsent(allConsent);
-        setShowBanner(false);
-        
-        // Trigger page reload to apply new cookie settings
+        closeBanner();
         setTimeout(() => window.location.reload(), 500);
     };
 
@@ -50,16 +52,13 @@ const CookieConsent = () => {
             preferences: false,
             marketing: false
         };
-        
         consentManager.setConsent(essentialOnly);
-        setShowBanner(false);
+        closeBanner();
     };
 
     const handleCustomize = () => {
         consentManager.setConsent(preferences);
-        setShowBanner(false);
-        
-        // Reload if analytics or preferences were enabled
+        closeBanner();
         if (preferences.analytics || preferences.preferences) {
             setTimeout(() => window.location.reload(), 500);
         }
