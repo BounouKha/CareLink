@@ -8,8 +8,9 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from datetime import timedelta
 import logging
+from rest_framework import viewsets, permissions
 
-from CareLink.models import Provider, Contract, User, Service
+from CareLink.models import Provider, Contract, User, Service, ProviderAbsence, ProviderShortAbsence
 from account.serializers.provider import (
     ProviderSerializer, 
     ProviderListSerializer, 
@@ -1201,3 +1202,91 @@ def provider_absences(request, provider_id):
         return Response({
             'error': 'An error occurred while processing absences'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def provider_all_absences(request, provider_id):
+    """
+    Get all absences (full-day and short) for a provider
+    """
+    try:
+        from CareLink.models import ProviderAbsence, ProviderShortAbsence
+        provider = get_object_or_404(Provider, id=provider_id)
+        # Permissions: admin/coordinator/administrative OR the provider themselves
+        is_staff = has_provider_management_permission(request.user)
+        is_own_provider = provider.user and provider.user.id == request.user.id
+        if not (is_staff or is_own_provider):
+            return Response({
+                'error': 'You do not have permission to access this provider\'s absences'
+            }, status=status.HTTP_403_FORBIDDEN)
+        # Full-day absences
+        absences = ProviderAbsence.objects.filter(provider=provider).order_by('-start_date')
+        absence_data = []
+        for absence in absences:
+            absence_data.append({
+                'id': absence.id,
+                'type': 'full',
+                'start_date': absence.start_date,
+                'end_date': absence.end_date,
+                'absence_type': absence.absence_type,
+                'status': absence.status,
+                'reason': absence.reason,
+                'created_by': f"{absence.created_by.firstname} {absence.created_by.lastname}".strip() if absence.created_by else None,
+                'created_at': absence.created_at,
+            })
+        # Short absences
+        short_absences = ProviderShortAbsence.objects.filter(provider=provider).order_by('-date', 'start_time')
+        short_absence_data = []
+        for sab in short_absences:
+            short_absence_data.append({
+                'id': sab.id,
+                'type': 'short',
+                'date': sab.date,
+                'start_time': sab.start_time,
+                'end_time': sab.end_time,
+                'absence_type': sab.absence_type,
+                'reason': sab.reason,
+                'created_by': f"{sab.created_by.firstname} {sab.created_by.lastname}".strip() if sab.created_by else None,
+                'created_at': sab.created_at,
+            })
+        return Response({
+            'full_absences': absence_data,
+            'short_absences': short_absence_data,
+            'total': len(absence_data) + len(short_absence_data)
+        }, status=status.HTTP_200_OK)
+    except Provider.DoesNotExist:
+        return Response({
+            'error': 'Provider not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error in provider_all_absences for user {request.user.email}, provider {provider_id}: {str(e)}")
+        return Response({
+            'error': 'An error occurred while processing absences'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ContractViewSet(viewsets.ModelViewSet):
+    queryset = Contract.objects.all()
+    serializer_class = ContractSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def update(self, request, *args, **kwargs):
+        """Override update to add debugging"""
+        try:
+            print(f"[ContractViewSet] Update request data: {request.data}")
+            print(f"[ContractViewSet] Contract ID: {kwargs.get('pk')}")
+            
+            # Get the contract instance
+            instance = self.get_object()
+            print(f"[ContractViewSet] Current contract data: user={instance.user}, service={instance.service}, status={instance.status}")
+            
+            # Try to update
+            response = super().update(request, *args, **kwargs)
+            print(f"[ContractViewSet] Update successful: {response.data}")
+            return response
+            
+        except Exception as e:
+            print(f"[ContractViewSet] Update error: {str(e)}")
+            print(f"[ContractViewSet] Error type: {type(e)}")
+            import traceback
+            print(f"[ContractViewSet] Traceback: {traceback.format_exc()}")
+            raise

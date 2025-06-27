@@ -4,6 +4,7 @@ import { formatRole, getViewableContractFields, canEditContracts } from '../../u
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import './ProviderDetail.css';
+import ContractForm from './ContractForm';
 
 /**
  * WeeklyScheduleGrid Component
@@ -203,8 +204,8 @@ const ProviderDetail = ({
         reason: '',
         period_type: 'full_day' // 'full_day', 'half_day_am', 'half_day_pm', 'custom_hours'
     });
-    const [savingAbsence, setSavingAbsence] = useState(false);// Use the same authenticated API as the main component
-    const { get } = useAuthenticatedApi();
+    const [savingAbsence, setSavingAbsence] = useState(false);
+    const { get, post } = useAuthenticatedApi();
     const { common, providers: providersT } = useCareTranslation();    const viewableFields = getViewableContractFields({ role: userRole });
     const canEdit = canEditContracts({ role: userRole });
 
@@ -381,9 +382,8 @@ const ProviderDetail = ({
     };
 
     const handleSaveAbsence = async () => {
+        setSavingAbsence(true);
         try {
-            setSavingAbsence(true);
-            
             // Validate form
             if (!absenceForm.start_date) {
                 setAbsencesError(providersT('absenceValidation.startDateRequired'));
@@ -420,22 +420,11 @@ const ProviderDetail = ({
 
             console.log('[ProviderDetail] Submitting absence:', submissionData);
 
-            // Submit to API
-            const response = await fetch(`http://localhost:8000/account/providers/${providerId}/absences/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify(submissionData)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to create absence');
-            }
-
-            const responseData = await response.json();
+            // Use authenticated API call
+            const responseData = await post(
+                `http://localhost:8000/account/providers/${providerId}/absences/`,
+                submissionData
+            );
             console.log('[ProviderDetail] Absence created:', responseData);
 
             // Refresh absences list
@@ -475,6 +464,22 @@ const ProviderDetail = ({
         }, {});
     };
 
+    const [editingContractId, setEditingContractId] = useState(null);
+
+    // Handler for editing contract
+    const handleContractUpdate = (contractId) => {
+        setEditingContractId(contractId);
+    };
+
+    const handleCancelEditContract = () => {
+        setEditingContractId(null);
+    };
+
+    const handleContractSave = async () => {
+        setEditingContractId(null);
+        await fetchProviderDetails();
+    };
+
     const renderContractRow = (contract) => (
         <tr key={contract.id} className="contract-row">
             <td>
@@ -483,7 +488,8 @@ const ProviderDetail = ({
                     complianceStatus={contract.compliance_status}
                     size="small"
                 />
-            </td>            {viewableFields.includes('contract_type') && (
+            </td>
+            {viewableFields.includes('contract_type') && (
                 <td>{contract.department || providersT('notAvailable')}</td>
             )}
             {viewableFields.includes('weekly_hours') && (
@@ -499,16 +505,20 @@ const ProviderDetail = ({
                 <td>{formatDateTime(contract.created_at)}</td>
             )}
             {canEdit && (
-                <td>                    <button 
-                        className="btn-small btn-outline"
-                        onClick={() => onContractUpdate && onContractUpdate(contract.id)}
+                <td>
+                    <button 
+                        className="btn-small btn-outline contract-edit-btn"
+                        onClick={() => handleContractUpdate(contract.id)}
+                        type="button"
                     >
                         Edit
                     </button>
                 </td>
             )}
         </tr>
-    );    if (loading) {
+    );
+
+    if (loading) {
         return (
             <div className="provider-detail-modal-wrapper">
                 <div className="provider-modal-content">
@@ -542,7 +552,9 @@ const ProviderDetail = ({
 
     const contractsByStatus = getContractsByStatus();
     const totalContracts = provider.contracts?.length || 0;
-    const activeContracts = contractsByStatus.active?.length || 0;    return (
+    const activeContracts = contractsByStatus.active?.length || 0;    const editingContract = editingContractId ? provider.contracts.find(c => c.id === editingContractId) : null;
+
+    return (
         <div className="provider-detail-modal-wrapper" onClick={(e) => e.target === e.currentTarget && onClose()}>
             <div className="provider-modal-content">
                 {/* Modal Header */}
@@ -653,7 +665,9 @@ const ProviderDetail = ({
                                 </div>
                             ) : (
                                 <div className="contracts-table-container">
-                                    <table className="contracts-table">                                        <thead>                                            <tr>
+                                    <table className="contracts-table">
+                                        <thead>
+                                            <tr>
                                                 <th>Status</th>
                                                 {viewableFields.includes('contract_type') && <th>{providersT('department')}</th>}
                                                 {viewableFields.includes('weekly_hours') && <th>{providersT('weeklyHours')}</th>}
@@ -984,19 +998,16 @@ const ProviderDetail = ({
                                                             </span>
                                                         </div>
                                                     </div>
-                                                
                                                     <div className="absence-period">
                                                         <strong>{providersT('absencePeriod')}:</strong>
                                                         <span>{formatDate(absence.start_date)} - {formatDate(absence.end_date)}</span>
                                                     </div>
-                                                
                                                     {absence.reason && (
                                                         <div className="absence-reason">
                                                             <strong>{providersT('absenceReason')}:</strong>
                                                             <p>{absence.reason}</p>
                                                         </div>
                                                     )}
-                                                
                                                     <div className="absence-meta">
                                                         <small>
                                                             {common('create')}: {absence.created_by || common('notAvailable')} - {formatDateTime(absence.created_at)}
@@ -1011,16 +1022,23 @@ const ProviderDetail = ({
                         </div>
                     )}
                 </div>
-
                 {/* Modal Footer */}
-                <div className="modal-footer">                    <button className="btn-secondary" onClick={onClose}>
+                <div className="modal-footer">
+                    <button className="btn-secondary" onClick={onClose}>
                         {common('close')}
                     </button>
-                    {canEdit && (                        <button className="btn-primary" onClick={() => console.log('Edit provider')}>
-                            {providersT('editProvider')}
-                        </button>
-                    )}
                 </div>
+                {/* Floating contract form card */}
+                {editingContract && (
+                    <div className="contract-edit-floating-card">
+                        <ContractForm
+                            contract={editingContract}
+                            provider={provider}
+                            onSave={handleContractSave}
+                            onCancel={handleCancelEditContract}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -28,7 +28,12 @@ from account.views.servicedemand import ServiceDemandListCreateView, ServiceDema
 from account.views.logs import LogsView, LogStatsView
 from account.views.consent import ConsentStorageView, UserConsentHistoryView, ConsentWithdrawalView, consent_audit_export, consent_stats, AdminConsentListView, admin_revoke_consent, user_consent_status
 from account.views.patient_timeline import patient_timeline
-from account.views.provider import provider_list, provider_detail, provider_contracts, provider_stats, available_users_for_provider, check_user_contract_status, check_current_user_contract_status, provider_schedule, provider_absences
+from account.views.provider import (
+    provider_list, provider_detail, provider_contracts, provider_stats, 
+    available_users_for_provider, check_user_contract_status, 
+    check_current_user_contract_status, provider_schedule, provider_absences,
+    provider_all_absences, ContractViewSet
+)
 
 
 
@@ -38,6 +43,7 @@ router = DefaultRouter()
 router.register(r'phoneuser', PhoneUserViewSet, basename='phoneuser')
 router.register(r'familypatient', FamilyPatientViewSet, basename='familypatient')
 router.register(r'medicalFolder', MedicalFolderViewSet, basename='medicalfolder')
+router.register(r'contracts', ContractViewSet, basename='contract')
 
 
 
@@ -93,6 +99,7 @@ urlpatterns += [
     path('providers/<int:provider_id>/contracts/', provider_contracts, name='provider_contracts'),
     path('providers/<int:provider_id>/schedule/', provider_schedule, name='provider_schedule'),
     path('providers/<int:provider_id>/absences/', provider_absences, name='provider_absences'),
+    path('providers/<int:provider_id>/all-absences/', provider_all_absences, name='provider_all_absences'),
     path('providers/stats/', provider_stats, name='provider_stats'),
     path('providers/available-users/', available_users_for_provider, name='available_users_for_provider'),
     

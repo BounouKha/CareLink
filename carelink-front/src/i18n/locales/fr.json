@@ -647,7 +647,8 @@
       "scheduled": "Programmé",
       "confirmed": "Confirmé",
       "pending": "En attente",
-      "cancelled": "Annulé"
+      "cancelled": "Annulé",
+      "Pending": "En attente"
     },
     "absenceValidation": {
       "startDateRequired": "La date de début est requise",
@@ -1130,6 +1131,38 @@
         "daysAgo": "il y a {{count}} jours",
         "dayAgo": "il y a 1 jour"
       }
+    },
+  "contracts": {
+    "edit_contract": "Modifier le contrat",
+    "create_contract": "Créer un contrat",
+    "basic_info": "Informations de base",
+    "provider": "Prestataire",
+    "service": "Service",
+    "type": "Type",
+    "status": "Statut",
+    "financial_info": "Informations financières",
+    "salary": "Salaire",
+    "hourly_rate": "Taux horaire",
+    "total_hours": "Total d'heures",
+    "weekly_hours": "Heures hebdomadaires",
+    "contract_details": "Détails du contrat",
+    "reference": "Référence",
+    "start_date": "Date de début",
+    "end_date": "Date de fin",
+    "department": "Département",
+    "notes": "Notes",
+    "additional_notes": "Notes supplémentaires",
+    "notes_placeholder": "Entrez des notes supplémentaires ici...",
+    "select_provider": "Sélectionnez un prestataire",
+    "selectService": "Sélectionner un service",
+    "error": {
+      "user_required": "Le prestataire est requis.",
+      "service_required": "Le service est requis.",
+      "salary_required": "Le salaire est requis et doit être positif.",
+      "hours_required": "Le total d'heures est requis et doit être positif.",
+      "type_required": "Le type de contrat est requis.",
+      "end_date_invalid": "La date de fin doit être après la date de début."
     }
+  }
 }
 
