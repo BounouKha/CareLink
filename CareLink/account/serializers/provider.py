@@ -206,5 +206,6 @@ class ProviderStatsSerializer(serializers.Serializer):
     providers_without_contracts = serializers.IntegerField()
     internal_providers = serializers.IntegerField()
     external_providers = serializers.IntegerField()
+    providers_with_contracts = serializers.IntegerField()
     contracts_by_type = serializers.DictField()
     contracts_by_status = serializers.DictField()
