@@ -15,13 +15,16 @@ const PatientsPageNew = () => {
     const [patientsInternalCounts, setPatientsInternalCounts] = useState({}); // Add internal notes counts
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');    const [modalStates, setModalStates] = useState({
+    const [error, setError] = useState('');
+    const [modalStates, setModalStates] = useState({
         showAddEntryModal: false,
         showMedicalFolderModal: false,
-        showTimelineModal: false
+        showTimelineModal: false,
+        showCriticalInfoModal: false // Add critical info modal state
     });
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [medicalFolderData, setMedicalFolderData] = useState([]);
+    const [criticalInfoLoading, setCriticalInfoLoading] = useState(false); // Add loading state for critical info
 
     const { patients: patientTranslations, common } = useCareTranslation();
 
@@ -30,12 +33,25 @@ const PatientsPageNew = () => {
         fetchServices();
     }, []);
 
+    // Add debugging to see patient data structure
+    useEffect(() => {
+        if (patients.length > 0) {
+            console.log('Patient data structure:', patients[0]);
+            console.log('Critical information check:', patients.map(p => ({
+                name: `${p.firstname} ${p.lastname}`,
+                critical_info: p.critical_information,
+                has_critical: p.critical_information && p.critical_information.trim()
+            })));
+        }
+    }, [patients]);
+
     const fetchPatients = async () => {
         try {
             const token = localStorage.getItem('accessToken');
             const response = await fetch('http://localhost:8000/account/views_patient/', {
                 headers: { Authorization: `Bearer ${token}` }
-            });            if (response.ok) {
+            });
+            if (response.ok) {
                 const data = await response.json();
                 setPatients(data.results);
                 
@@ -77,6 +93,41 @@ const PatientsPageNew = () => {
             ...prev,
             showAddEntryModal: true
         }));
+    };
+
+    // Add critical information handlers
+    const handleShowCriticalInfo = async (patient) => {
+        setSelectedPatient(patient);
+        setModalStates(prev => ({ ...prev, showCriticalInfoModal: true }));
+        setCriticalInfoLoading(true);
+        
+        // Fetch critical information for this specific patient
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`http://localhost:8000/account/views_patient/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                // Find the specific patient in the results
+                const patientData = data.results.find(p => p.id === patient.id);
+                if (patientData) {
+                    // Update the selected patient with fresh data
+                    setSelectedPatient(patientData);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching patient critical information:', error);
+        } finally {
+            setCriticalInfoLoading(false);
+        }
+    };
+
+    const handleCloseCriticalInfo = () => {
+        setModalStates(prev => ({ ...prev, showCriticalInfoModal: false }));
+        setSelectedPatient(null);
+        setCriticalInfoLoading(false);
     };
 
     const handleAddMedicalFolderEntry = async (entryData) => {
@@ -148,7 +199,7 @@ const PatientsPageNew = () => {
             
             // Important: Don't clear selectedPatient immediately if we're refreshing medical folder
             const currentSelectedPatient = selectedPatient;
-              // Refresh medical folder data if modal is open
+            // Refresh medical folder data if modal is open
             if (modalStates.showMedicalFolderModal && currentSelectedPatient) {
                 console.log('[DEBUG] Refreshing medical folder for patient:', currentSelectedPatient.id);
                 await fetchMedicalFolderData(currentSelectedPatient.id);
@@ -201,88 +252,54 @@ const PatientsPageNew = () => {
                     medicalEntries = data.medical_entries;
                 } else if (data.results && Array.isArray(data.results)) {
                     medicalEntries = data.results;
-                } else {
-                    console.warn('[DEBUG] Unexpected medical folder data format:', data);
-                    medicalEntries = [];
                 }
                 
                 console.log('[DEBUG] Processed medical entries:', medicalEntries);
                 setMedicalFolderData(medicalEntries);
             } else {
-                const errorText = await response.text();
-                console.error('[DEBUG] Failed to fetch medical folder data:', response.status, errorText);
-                
-                // If it's a 404, it might mean the patient has no medical folder yet
-                if (response.status === 404) {
-                    console.log('[DEBUG] Patient has no medical folder yet (404), setting empty array');
-                    setMedicalFolderData([]);
-                } else {
-                    console.error('[DEBUG] Other error fetching medical folder data');
-                    setMedicalFolderData([]);
-                }
+                console.error('[DEBUG] Failed to fetch medical folder data');
+                setMedicalFolderData([]);
             }
         } catch (error) {
             console.error('[DEBUG] Error fetching medical folder data:', error);
             setMedicalFolderData([]);
         }
-    };    // Function to fetch medical notes count for all patients (sequential to avoid rate limiting)
+    };
+
     const fetchMedicalNotesCount = async (patientList) => {
         try {
-            const medicalCounts = {};
-            const internalCounts = {};
-            
-            // Process patients sequentially to prevent overwhelming the backend
+            const counts = {};
             for (const patient of patientList) {
                 try {
-                    // Get medical folder count
-                    const medicalCount = await medicalNotesService.getCombinedNotesCount(patient.id);
-                    medicalCounts[patient.id] = medicalCount;
-                    
-                    // Get internal notes count
-                    const internalCount = await internalNotesService.getInternalNotesCount(patient.id);
-                    internalCounts[patient.id] = internalCount;
-                    
-                    // Small delay between requests to be gentle on the backend
-                    await new Promise(resolve => setTimeout(resolve, 50));
+                    const count = await medicalNotesService.getMedicalNotesCount(patient.id);
+                    counts[patient.id] = count;
                 } catch (error) {
-                    console.error(`Error fetching counts for patient ${patient.id}:`, error);
-                    medicalCounts[patient.id] = 0;
-                    internalCounts[patient.id] = 0;
+                    console.error(`Error fetching medical notes count for patient ${patient.id}:`, error);
+                    counts[patient.id] = 0;
                 }
             }
-            
-            setPatientsMedicalCounts(medicalCounts);
-            setPatientsInternalCounts(internalCounts);
+            setPatientsMedicalCounts(counts);
         } catch (error) {
             console.error('Error fetching medical notes counts:', error);
         }
     };
 
-    // Function to refresh medical notes count for a specific patient
     const refreshPatientMedicalCount = async (patientId) => {
         try {
-            // Refresh medical folder count
-            const medicalCount = await medicalNotesService.getMedicalNotesCount(patientId);
+            const count = await medicalNotesService.getMedicalNotesCount(patientId);
             setPatientsMedicalCounts(prev => ({
                 ...prev,
-                [patientId]: medicalCount
-            }));
-            
-            // Refresh internal notes count
-            const internalCount = await internalNotesService.getInternalNotesCount(patientId);
-            setPatientsInternalCounts(prev => ({
-                ...prev,
-                [patientId]: internalCount
+                [patientId]: count
             }));
         } catch (error) {
-            console.error(`Error refreshing counts for patient ${patientId}:`, error);
+            console.error(`Error refreshing medical notes count for patient ${patientId}:`, error);
         }
     };
 
     const handleShowMedicalFolder = async (patient) => {
         setSelectedPatient(patient);
-        setModalStates(prev => ({ ...prev, showMedicalFolderModal: true }));
         await fetchMedicalFolderData(patient.id);
+        setModalStates(prev => ({ ...prev, showMedicalFolderModal: true }));
     };
 
     const handleShowTimeline = (patient) => {
@@ -328,7 +345,9 @@ const PatientsPageNew = () => {
                 }}
             />
         );
-    };    const renderMedicalFolderModal = () => {
+    };
+
+    const renderMedicalFolderModal = () => {
         if (!modalStates.showMedicalFolderModal || !selectedPatient) return null;
 
         return (
@@ -364,6 +383,131 @@ const PatientsPageNew = () => {
                     }
                 }}
             />
+        );
+    };
+
+    // Add critical information modal renderer
+    const renderCriticalInfoModal = () => {
+        if (!modalStates.showCriticalInfoModal || !selectedPatient) return null;
+
+        return (
+            <div className="modal-overlay" style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1050
+            }}>
+                <div className="modal-dialog" style={{
+                    maxWidth: '500px',
+                    width: '90%',
+                    margin: '0 auto'
+                }}>
+                    <div className="modal-content" style={{
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+                    }}>
+                        <div className="modal-header" style={{
+                            borderBottom: '1px solid #dee2e6',
+                            padding: '1rem 1.5rem',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <h5 className="modal-title mb-0" style={{
+                                color: '#dc3545',
+                                fontWeight: '600'
+                            }}>
+                                <i className="fas fa-exclamation-triangle me-2"></i>
+                                Critical Information
+                            </h5>
+                            <button 
+                                type="button" 
+                                className="btn-close" 
+                                onClick={handleCloseCriticalInfo}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '1.5rem',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="modal-body" style={{
+                            padding: '1.5rem'
+                        }}>
+                            <div className="mb-3">
+                                <h6 className="text-muted mb-2">Patient:</h6>
+                                <p className="fw-bold mb-0">
+                                    {selectedPatient.firstname} {selectedPatient.lastname}
+                                </p>
+                            </div>
+                            <div>
+                                <h6 className="text-muted mb-2">Critical Information:</h6>
+                                {criticalInfoLoading ? (
+                                    <div style={{
+                                        backgroundColor: '#f8f9fa',
+                                        border: '1px solid #dee2e6',
+                                        borderRadius: '6px',
+                                        padding: '1rem',
+                                        textAlign: 'center',
+                                        color: '#6c757d'
+                                    }}>
+                                        <div className="spinner-border spinner-border-sm me-2" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                        Loading critical information...
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        backgroundColor: '#fff3cd',
+                                        border: '1px solid #ffeaa7',
+                                        borderRadius: '6px',
+                                        padding: '1rem',
+                                        color: '#856404'
+                                    }}>
+                                        {selectedPatient.critical_information && selectedPatient.critical_information.trim() 
+                                            ? selectedPatient.critical_information 
+                                            : 'No critical information has been recorded for this patient. Critical information can be added through the patient management system.'
+                                        }
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{
+                            borderTop: '1px solid #dee2e6',
+                            padding: '1rem 1.5rem',
+                            display: 'flex',
+                            justifyContent: 'flex-end'
+                        }}>
+                            <button 
+                                type="button" 
+                                className="btn btn-secondary" 
+                                onClick={handleCloseCriticalInfo}
+                                style={{
+                                    backgroundColor: '#6c757d',
+                                    borderColor: '#6c757d',
+                                    color: 'white',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     };
 
@@ -410,13 +554,46 @@ const PatientsPageNew = () => {
                             patients.map(patient => (
                                 <div key={patient.id} className="card mb-3 shadow-sm">
                                     <div className="card-header d-flex justify-content-between align-items-center bg-white border-bottom-0 pt-3 pb-1">
-                                        <h5 className="card-title mb-0">{patient.user.firstname} {patient.user.lastname}</h5>
+                                        <div className="d-flex align-items-center">
+                                            <h5 className="card-title mb-0">{patient.firstname} {patient.lastname}</h5>
+                                            {/* Critical Information Button - show for all patients */}
+                                            <button 
+                                                className="btn btn-outline-danger btn-sm ms-2 rounded-pill px-2 py-1" 
+                                                onClick={() => handleShowCriticalInfo(patient)}
+                                                title="View Critical Information"
+                                                style={{
+                                                    fontSize: '0.7rem',
+                                                    borderColor: '#dc3545',
+                                                    color: '#dc3545',
+                                                    backgroundColor: 'transparent',
+                                                    border: '2px solid #dc3545',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                <i className="fas fa-exclamation-triangle me-1"></i>
+                                                Critical
+                                            </button>
+                                            {/* Debug button - temporary */}
+                                            <button 
+                                                className="btn btn-outline-primary btn-sm ms-2 rounded-pill px-2 py-1" 
+                                                onClick={() => console.log('Patient data:', patient)}
+                                                title="Debug Patient Data"
+                                                style={{
+                                                    fontSize: '0.6rem',
+                                                    borderColor: '#007bff',
+                                                    color: '#007bff',
+                                                    backgroundColor: 'transparent'
+                                                }}
+                                            >
+                                                Debug
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="card-body pt-2 bg-white">
                                         <div className="row mb-2">
                                             <div className="col-md-6">
-                                                <p className="mb-1"><strong>{patientTranslations('email')}:</strong> {patient.user.email}</p>
-                                                <p className="mb-1"><strong>{patientTranslations('phone')}:</strong> {patient.phone_number || 'N/A'}</p>
+                                                <p className="mb-1"><strong>{patientTranslations('email')}:</strong> {patient.email || 'N/A'}</p>
+                                                <p className="mb-1"><strong>{patientTranslations('phone')}:</strong> {patient.emergency_contact || 'N/A'}</p>
                                             </div>
                                             <div className="col-md-6">
                                                 <p className="mb-1"><strong>{patientTranslations('birthdate')}:</strong> {patient.birth_date || 'N/A'}</p>
@@ -425,7 +602,8 @@ const PatientsPageNew = () => {
                                         </div>
                                     </div>
                                     <div className="card-footer bg-transparent border-0 pt-0">
-                                        <div className="d-flex gap-1 justify-content-center" role="group">                                            <button 
+                                        <div className="d-flex gap-1 justify-content-center" role="group">
+                                            <button 
                                                 className="btn btn-outline-info btn-sm rounded-pill px-2 py-1 text-light" 
                                                 onClick={() => handleShowDetails(patient)}
                                                 title={patientTranslations('patientDetails')}
@@ -434,7 +612,8 @@ const PatientsPageNew = () => {
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                                     <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" strokeWidth="2"/>
                                                 </svg>
-                                            </button>                                            <button 
+                                            </button>
+                                            <button 
                                                 className="btn btn-outline-warning btn-sm rounded-pill px-2 py-1 text-light position-relative" 
                                                 onClick={() => handleShowMedicalFolder(patient)}
                                                 title={patientTranslations('medicalFolder')}
@@ -465,11 +644,15 @@ const PatientsPageNew = () => {
                             ))
                         )}
                     </div>
-                      {/* Add Entry Modal */}
+                    
+                    {/* Add Entry Modal */}
                     {renderAddEntryModal()}
                     
                     {/* Medical Folder Modal */}
                     {renderMedicalFolderModal()}
+                    
+                    {/* Critical Information Modal */}
+                    {renderCriticalInfoModal()}
                     
                     {/* Patient Timeline Modal */}
                     <PatientTimeline
