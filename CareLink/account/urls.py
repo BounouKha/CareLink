@@ -32,7 +32,7 @@ from account.views.provider import (
     provider_list, provider_detail, provider_contracts, provider_stats, 
     available_users_for_provider, check_user_contract_status, 
     check_current_user_contract_status, provider_schedule, provider_absences,
-    provider_all_absences, ContractViewSet
+    provider_all_absences, provider_absence_check, ContractViewSet
 )
 
 
@@ -100,6 +100,7 @@ urlpatterns += [
     path('providers/<int:provider_id>/schedule/', provider_schedule, name='provider_schedule'),
     path('providers/<int:provider_id>/absences/', provider_absences, name='provider_absences'),
     path('providers/<int:provider_id>/all-absences/', provider_all_absences, name='provider_all_absences'),
+    path('providers/<int:provider_id>/absence-check/', provider_absence_check, name='provider_absence_check'),
     path('providers/stats/', provider_stats, name='provider_stats'),
     path('providers/available-users/', available_users_for_provider, name='available_users_for_provider'),
     
