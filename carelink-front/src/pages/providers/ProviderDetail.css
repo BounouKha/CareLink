@@ -1133,3 +1133,38 @@
 .contract-cancel-btn:hover {
     background: #e0e0e0;
 }
+
+/* Absent day styling */
+.schedule-day-header.absent-day {
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #f44336;
+    position: relative;
+}
+
+.schedule-day-header.absent-day:hover {
+    background-color: #ffcdd2;
+}
+
+.absence-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.schedule-time-slot.absent-slot {
+    background-color: #ffebee;
+    border-left: 2px solid #f44336;
+}
+
+.schedule-time-slot.absent-slot:hover {
+    background-color: #ffcdd2;
+}
+
+/* Make sure appointments still show properly over absent slots */
+.schedule-time-slot.absent-slot .schedule-appointment {
+    background-color: inherit;
+    border: 1px solid #f44336;
+}
