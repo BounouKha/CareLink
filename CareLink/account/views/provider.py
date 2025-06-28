@@ -1000,10 +1000,14 @@ def provider_schedule(request, provider_id):
         else:
             start_date = timezone.now().date()
         
-        # Get start of week (Monday)
-        days_since_monday = start_date.weekday()
-        week_start = start_date - timedelta(days=days_since_monday)
+        # Get start of week (Sunday - matching frontend ScheduleCalendar)
+        # weekday() returns: Monday=0, Tuesday=1, ..., Sunday=6
+        # We want to find the previous Sunday
+        days_since_sunday = (start_date.weekday() + 1) % 7  # Convert to days since Sunday
+        week_start = start_date - timedelta(days=days_since_sunday)
         week_end = week_start + timedelta(days=6)
+        
+        logger.info(f"Provider schedule calculation - start_date: {start_date}, weekday: {start_date.weekday()}, days_since_sunday: {days_since_sunday}, week_start: {week_start}, week_end: {week_end}")
           # Get all schedules for this provider in the week
         from CareLink.models import Schedule
         schedules = Schedule.objects.filter(
@@ -1262,6 +1266,119 @@ def provider_all_absences(request, provider_id):
         logger.error(f"Error in provider_all_absences for user {request.user.email}, provider {provider_id}: {str(e)}")
         return Response({
             'error': 'An error occurred while processing absences'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def provider_absence_check(request, provider_id):
+    """
+    Check if a provider is absent on specific dates
+    Query params: dates (comma-separated list of dates in YYYY-MM-DD format)
+    Returns: Dictionary with dates as keys and absence info as values
+    """
+    try:
+        provider = get_object_or_404(Provider, id=provider_id)
+        
+        # Check permissions - admin/coordinator/administrative OR the provider themselves
+        is_staff = has_provider_management_permission(request.user)
+        is_own_provider = provider.user and provider.user.id == request.user.id
+        
+        if not (is_staff or is_own_provider):
+            return Response({
+                'error': 'You do not have permission to check this provider\'s absences'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get dates from query params
+        dates_param = request.GET.get('dates', '')
+        if not dates_param:
+            return Response({
+                'error': 'dates parameter is required (comma-separated list of YYYY-MM-DD dates)'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parse dates
+        try:
+            from datetime import datetime
+            dates = [datetime.strptime(date.strip(), '%Y-%m-%d').date() for date in dates_param.split(',')]
+        except ValueError as e:
+            return Response({
+                'error': f'Invalid date format: {str(e)}. Use YYYY-MM-DD format.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        from CareLink.models import ProviderAbsence, ProviderShortAbsence
+        
+        # Check full-day absences
+        full_absences = ProviderAbsence.objects.filter(
+            provider=provider,
+            start_date__lte=max(dates),
+            end_date__gte=min(dates)
+        )
+        
+        # Check short absences
+        short_absences = ProviderShortAbsence.objects.filter(
+            provider=provider,
+            date__in=dates
+        )
+        
+        # Build response
+        absence_data = {}
+        
+        for date in dates:
+            date_str = date.strftime('%Y-%m-%d')
+            absence_data[date_str] = {
+                'is_absent': False,
+                'absence_type': None,
+                'absence_reason': None,
+                'full_day_absence': None,
+                'short_absences': []
+            }
+            
+            # Check for full-day absences
+            for absence in full_absences:
+                if absence.start_date <= date <= absence.end_date:
+                    absence_data[date_str]['is_absent'] = True
+                    absence_data[date_str]['absence_type'] = absence.absence_type
+                    absence_data[date_str]['absence_reason'] = absence.reason
+                    absence_data[date_str]['full_day_absence'] = {
+                        'id': absence.id,
+                        'start_date': absence.start_date,
+                        'end_date': absence.end_date,
+                        'status': absence.status
+                    }
+                    break  # Only one full-day absence per date
+            
+            # Check for short absences (only if no full-day absence)
+            if not absence_data[date_str]['is_absent']:
+                for short_absence in short_absences:
+                    if short_absence.date == date:
+                        absence_data[date_str]['short_absences'].append({
+                            'id': short_absence.id,
+                            'start_time': short_absence.start_time,
+                            'end_time': short_absence.end_time,
+                            'absence_type': short_absence.absence_type,
+                            'reason': short_absence.reason
+                        })
+                
+                # If there are short absences, mark as partially absent
+                if absence_data[date_str]['short_absences']:
+                    absence_data[date_str]['is_absent'] = True
+                    absence_data[date_str]['absence_type'] = 'partial'
+        
+        logger.info(f"Provider {provider_id} absence check accessed by {request.user.email} for dates: {dates}")
+        
+        return Response({
+            'provider_id': provider_id,
+            'provider_name': f"{provider.user.firstname} {provider.user.lastname}" if provider.user else 'Unknown',
+            'absence_data': absence_data
+        }, status=status.HTTP_200_OK)
+        
+    except Provider.DoesNotExist:
+        return Response({
+            'error': 'Provider not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error in provider_absence_check for user {request.user.email}, provider {provider_id}: {str(e)}")
+        return Response({
+            'error': 'An error occurred while checking absences'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ContractViewSet(viewsets.ModelViewSet):

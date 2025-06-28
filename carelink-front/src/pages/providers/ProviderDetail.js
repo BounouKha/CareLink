@@ -10,7 +10,7 @@ import ContractForm from './ContractForm';
  * WeeklyScheduleGrid Component
  * Displays the weekly schedule in a calendar grid format with proper time span handling
  */
-const WeeklyScheduleGrid = ({ scheduleData }) => {
+const WeeklyScheduleGrid = ({ scheduleData, absenceData }) => {
     const { providers: providersT } = useCareTranslation();
     const timeSlots = [
         '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -22,6 +22,16 @@ const WeeklyScheduleGrid = ({ scheduleData }) => {
 
     const getDayData = (dayKey) => {
         return scheduleData.schedule_data[dayKey] || { appointments: [] };
+    };
+
+    // Check if a day is absent
+    const isDayAbsent = (dayKey) => {
+        return absenceData && absenceData[dayKey] && absenceData[dayKey].is_absent;
+    };
+
+    // Get absence info for a day
+    const getAbsenceInfo = (dayKey) => {
+        return absenceData && absenceData[dayKey] ? absenceData[dayKey] : null;
     };
 
     // Convert time string to minutes since midnight for calculations
@@ -101,14 +111,22 @@ const WeeklyScheduleGrid = ({ scheduleData }) => {
                 const date = new Date(dayKey);
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                 const dayNumber = date.getDate();
+                const isAbsent = isDayAbsent(dayKey);
+                const absenceInfo = getAbsenceInfo(dayKey);
                 
                 return (
                     <div 
                         key={dayKey} 
-                        className={`schedule-day-header ${isToday(dayKey) ? 'today' : ''}`}
+                        className={`schedule-day-header ${isToday(dayKey) ? 'today' : ''} ${isAbsent ? 'absent-day' : ''}`}
+                        title={isAbsent ? `${absenceInfo?.absence_type || 'Absent'} - ${absenceInfo?.absence_reason || 'No reason provided'}` : ''}
                     >
                         <div>{dayName}</div>
                         <div>{dayNumber}</div>
+                        {isAbsent && (
+                            <div className="absence-indicator">
+                                {absenceInfo?.absence_type === 'partial' ? '⚠️' : '🚫'}
+                            </div>
+                        )}
                     </div>
                 );
             })}
@@ -126,11 +144,13 @@ const WeeklyScheduleGrid = ({ scheduleData }) => {
                         const appointment = getAppointmentForSlot(dayKey, timeSlot);
                         const isStart = appointment && isAppointmentStart(dayKey, timeSlot, appointment);
                         const span = appointment ? getAppointmentSpan(appointment) : 1;
+                        const isAbsent = isDayAbsent(dayKey);
                         
                         return (
-                            <div key={`${dayKey}-${timeSlot}`} className="schedule-time-slot">
+                            <div key={`${dayKey}-${timeSlot}`} className={`schedule-time-slot ${isAbsent ? 'absent-slot' : ''}`}>
                                 {appointment ? (
-                                    isStart ? (                                        // Show full appointment details only at the start slot
+                                    isStart ? (
+                                        // Show full appointment details only at the start slot
                                         <div 
                                             className={`schedule-appointment ${getAppointmentStatusClass(appointment.status)}`}
                                             style={{ 
@@ -187,10 +207,25 @@ const ProviderDetail = ({
     const [activeTab, setActiveTab] = useState('overview');
     const [scheduleData, setScheduleData] = useState(null);
     const [scheduleLoading, setScheduleLoading] = useState(false);
-    const [scheduleError, setScheduleError] = useState(null);    const [absences, setAbsences] = useState([]);
+    const [scheduleError, setScheduleError] = useState(null);
+    const [absences, setAbsences] = useState([]);
     const [absencesLoading, setAbsencesLoading] = useState(false);
     const [absencesError, setAbsencesError] = useState(null);
-    const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStart(new Date()));
+    const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+        const now = new Date();
+        console.log(`[ProviderDetail] Current date from browser: ${now.toISOString().split('T')[0]}`);
+        console.log(`[ProviderDetail] Current date local: ${now.toLocaleDateString()}`);
+        console.log(`[ProviderDetail] Current day of week: ${now.getDay()} (0=Sunday, 1=Monday, etc.)`);
+        
+        const initialWeek = getWeekStart(now);
+        console.log('[ProviderDetail] Initial week start:', initialWeek.toISOString().split('T')[0]);
+        return initialWeek;
+    });
+    
+    // Add absence data state for schedule highlighting
+    const [absenceData, setAbsenceData] = useState({});
+    const [absenceDataLoading, setAbsenceDataLoading] = useState(false);
+    const [absenceDataError, setAbsenceDataError] = useState(null);
     
     // Absence form state
     const [showAbsenceForm, setShowAbsenceForm] = useState(false);
@@ -211,12 +246,21 @@ const ProviderDetail = ({
 
     console.log('[ProviderDetail] User role:', userRole, 'canEdit:', canEdit);
 
-    // Helper function to get start of week (Monday)
+    // Helper function to get start of week (Sunday - matching ScheduleCalendar)
     function getWeekStart(date) {
+        console.log(`[ProviderDetail] getWeekStart called with date: ${date.toISOString().split('T')[0]}`);
+        console.log(`[ProviderDetail] getWeekStart - date.getDay(): ${date.getDay()}`);
+        
         const d = new Date(date);
         const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-        return new Date(d.setDate(diff));
+        const diff = d.getDate() - day; // Sunday = 0, so week starts on Sunday
+        
+        console.log(`[ProviderDetail] getWeekStart - day: ${day}, diff: ${diff}, current date: ${d.getDate()}`);
+        
+        const result = new Date(d.setDate(diff));
+        console.log(`[ProviderDetail] getWeekStart result: ${result.toISOString().split('T')[0]}`);
+        
+        return result;
     }
 
     // Helper function to format date range for display
@@ -235,7 +279,9 @@ const ProviderDetail = ({
     useEffect(() => {
         fetchProviderDetails();
     }, [providerId]);    useEffect(() => {
+        console.log(`[ProviderDetail] useEffect triggered - activeTab: ${activeTab}, provider: ${!!provider}, currentWeekStart: ${currentWeekStart.toISOString().split('T')[0]}`);
         if (activeTab === 'schedule' && provider) {
+            console.log(`[ProviderDetail] Calling fetchScheduleData from useEffect`);
             fetchScheduleData();
         }
     }, [activeTab, provider, currentWeekStart]);
@@ -263,16 +309,59 @@ const ProviderDetail = ({
         }
     };
 
+    const fetchAbsenceData = async () => {
+        setAbsenceDataLoading(true);
+        setAbsenceDataError(null);
+        
+        try {
+            // Calculate dates directly from currentWeekStart instead of relying on scheduleData
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(currentWeekStart.getDate() + i);
+                dates.push(date.toISOString().split('T')[0]);
+            }
+            
+            const datesString = dates.join(',');
+            console.log(`[ProviderDetail] Fetching absence data for dates: ${datesString}`);
+            console.log(`[ProviderDetail] Current week start: ${currentWeekStart.toISOString().split('T')[0]}`);
+            
+            const data = await get(`http://localhost:8000/account/providers/${providerId}/absence-check/?dates=${datesString}`);
+            console.log('Absence data fetched:', data);
+            
+            setAbsenceData(data.absence_data || {});
+            
+        } catch (error) {
+            console.error('Error fetching absence data:', error);
+            setAbsenceDataError(error.message);
+        } finally {
+            setAbsenceDataLoading(false);
+        }
+    };
+
     const fetchScheduleData = async () => {
         try {
             setScheduleLoading(true);
             setScheduleError(null);
-            console.log(`[ProviderDetail] Fetching schedule for provider ID: ${providerId}, week: ${currentWeekStart.toISOString().split('T')[0]}`);
             
-            const data = await get(`http://localhost:8000/account/providers/${providerId}/schedule/?start_date=${currentWeekStart.toISOString().split('T')[0]}`);
+            const weekStartDate = currentWeekStart.toISOString().split('T')[0];
+            const weekEndDate = new Date(currentWeekStart);
+            weekEndDate.setDate(currentWeekStart.getDate() + 6);
+            const weekEndDateStr = weekEndDate.toISOString().split('T')[0];
+            
+            console.log(`[ProviderDetail] Fetching schedule for provider ID: ${providerId}`);
+            console.log(`[ProviderDetail] Week range: ${weekStartDate} to ${weekEndDateStr}`);
+            console.log(`[ProviderDetail] API request: /schedule/?start_date=${weekStartDate}`);
+            
+            const data = await get(`http://localhost:8000/account/providers/${providerId}/schedule/?start_date=${weekStartDate}`);
             console.log(`[ProviderDetail] Schedule data received:`, data);
+            console.log(`[ProviderDetail] Backend week range: ${data.week_range?.start_date} to ${data.week_range?.end_date}`);
             
             setScheduleData(data);
+            
+            // Fetch absence data after schedule data is loaded
+            setTimeout(() => fetchAbsenceData(), 100);
+            
         } catch (err) {
             console.error('Error fetching schedule data:', err);
             setScheduleError(err.message);
@@ -300,8 +389,15 @@ const ProviderDetail = ({
     };
 
     const navigateWeek = (direction) => {
-        const newWeekStart = new Date(currentWeekStart);
+        // Create a completely new Date object to avoid mutation
+        const newWeekStart = new Date(currentWeekStart.getTime());
         newWeekStart.setDate(newWeekStart.getDate() + (direction * 7));
+        
+        console.log(`[ProviderDetail] navigateWeek called with direction: ${direction}`);
+        console.log(`[ProviderDetail] Current week start: ${currentWeekStart.toISOString().split('T')[0]}`);
+        console.log(`[ProviderDetail] New week start: ${newWeekStart.toISOString().split('T')[0]}`);
+        console.log(`[ProviderDetail] Date objects are equal: ${currentWeekStart.getTime() === newWeekStart.getTime()}`);
+        
         setCurrentWeekStart(newWeekStart);
     };
 
@@ -728,7 +824,10 @@ const ProviderDetail = ({
                         <div className="schedule-tab">
                             <div className="schedule-header">
                                 <div className="schedule-current-week">
-                                    {formatWeekRange(currentWeekStart)}
+                                    {scheduleData?.week_range ? 
+                                        `${scheduleData.week_range.week_start_display} - ${scheduleData.week_range.week_end_display}` :
+                                        formatWeekRange(currentWeekStart)
+                                    }
                                 </div>                                <div className="schedule-nav">
                                     <button 
                                         className="schedule-nav-btn" 
@@ -739,7 +838,11 @@ const ProviderDetail = ({
                                     </button>
                                     <button 
                                         className="schedule-nav-btn" 
-                                        onClick={() => setCurrentWeekStart(getWeekStart(new Date()))}
+                                        onClick={() => {
+                                            const currentWeek = getWeekStart(new Date());
+                                            console.log('[ProviderDetail] This Week clicked - calculated week start:', currentWeek.toISOString().split('T')[0]);
+                                            setCurrentWeekStart(currentWeek);
+                                        }}
                                         disabled={scheduleLoading}
                                     >
                                         {providersT('thisWeek')}
@@ -774,9 +877,13 @@ const ProviderDetail = ({
                                      Object.values(scheduleData.schedule_data).every(day => day.appointments.length === 0) ? (
                                         <div className="schedule-no-data">
                                             <h4>{providersT('noAppointmentsThisWeek')}</h4>
-                                            <p>{providersT('noAppointmentsForWeek').replace('{weekRange}', formatWeekRange(currentWeekStart))}</p>
+                                            <p>{providersT('noAppointmentsForWeek').replace('{weekRange}', 
+                                                scheduleData?.week_range ? 
+                                                    `${scheduleData.week_range.week_start_display} - ${scheduleData.week_range.week_end_display}` :
+                                                    formatWeekRange(currentWeekStart)
+                                            )}</p>
                                         </div>) : (
-                                        <WeeklyScheduleGrid scheduleData={scheduleData} />
+                                        <WeeklyScheduleGrid scheduleData={scheduleData} absenceData={absenceData} />
                                     )}
                                 </div>
                             )}

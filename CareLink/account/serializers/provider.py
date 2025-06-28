@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from CareLink.models import Provider, Contract, User, Service
 from django.contrib.auth import get_user_model
+from CareLink.models import Provider, Contract, Service
 
 User = get_user_model()
 
