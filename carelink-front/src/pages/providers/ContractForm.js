@@ -37,7 +37,6 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
         status: 'pending',
         weekly_hours: '',
     });
-    const [users, setUsers] = useState([]);
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
@@ -51,8 +50,10 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
         console.log('ContractForm debug - contract prop:', contract); // Debug log
         console.log('ContractForm debug - provider prop:', provider); // Debug log
         if (!isEdit) {
-            fetchUsers();
-            fetchServices();
+            // Try to fetch services but don't block the form if it fails
+            fetchServices().catch(err => {
+                console.warn('[ContractForm] Services fetch failed, using provider service:', err);
+            });
         }
         if (contract) {
             console.log('[ContractForm] Setting formData from contract:', contract);
@@ -72,56 +73,24 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
                 service: contract.service || '', // Use contract.service (ID)
             });
         } else if (provider) {
+            // Pre-fill the provider when creating a new contract
             setFormData(prev => ({
                 ...prev,
                 user: provider.user?.id || '',
+                service: provider.service?.id || '', // Pre-fill with provider's service
             }));
         }
     }, [contract, provider, isEdit]);
 
-    const fetchUsers = async () => {
-        try {
-            const response = await get('/account/providers/available-users/');
-            console.log('[ContractForm] Users fetched:', response);
-            const providerResponse = await get('/account/providers/');
-            console.log('[ContractForm] Providers fetched:', providerResponse);
-            const allUsers = [...response];
-            if (providerResponse.results) {
-                providerResponse.results.forEach(prov => {
-                    if (prov.user && !allUsers.find(u => u.id === prov.user.id)) {
-                        allUsers.push({
-                            id: prov.user.id,
-                            firstname: prov.user.firstname,
-                            lastname: prov.user.lastname,
-                            email: prov.user.email,
-                            full_name: `${prov.user.firstname} ${prov.user.lastname}`
-                        });
-                    }
-                });
-            }
-            // Ensure all users have full_name, firstname, and lastname
-            allUsers.forEach(u => {
-                if (!u.full_name && u.firstname && u.lastname) {
-                    u.full_name = `${u.firstname} ${u.lastname}`;
-                }
-                if (!u.firstname && u.full_name) {
-                    const parts = u.full_name.split(' ');
-                    u.firstname = parts[0];
-                    u.lastname = parts.slice(1).join(' ');
-                }
-            });
-            setUsers(allUsers);
-        } catch (err) {
-            console.error('[ContractForm] Error fetching users:', err);
-        }
-    };
     const fetchServices = async () => {
         try {
-            const response = await get('/account/services/');
+            const response = await get('http://localhost:8000/account/services/');
             console.log('[ContractForm] Services fetched:', response);
             setServices(response);
         } catch (err) {
             console.error('[ContractForm] Error fetching services:', err);
+            // Don't set error state for services since it's not critical for contract creation
+            // The provider's service is already pre-filled
         }
     };
 
@@ -142,11 +111,8 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
     const validateForm = () => {
         const newErrors = {};
         
-        // In edit mode, user and service are already set and displayed as plain text
-        if (!isEdit) {
-            if (!formData.user) newErrors.user_id = t('contracts.error.user_required');
-            if (!formData.service) newErrors.service_id = t('contracts.error.service_required');
-        }
+        // User and service are pre-filled when creating a new contract, so no validation needed
+        // Only validate if we're editing and the fields are editable
         
         if (!formData.salary || formData.salary <= 0) newErrors.salary = t('contracts.error.salary_required');
         if (!formData.hour_quantity || formData.hour_quantity <= 0) newErrors.hour_quantity = t('contracts.error.hours_required');
@@ -202,12 +168,6 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
         if (isEdit && contract && contract.user && contract.user.firstname) {
             return `${contract.user.firstname} ${contract.user.lastname} (${contract.user.email})`;
         }
-        // Fallback: look up in users array by user_id
-        const userId = contract?.user || formData.user;
-        const user = users.find(u => String(u.id) === String(userId));
-        if (user) {
-            return `${user.firstname} ${user.lastname} (${user.email})`;
-        }
         return '';
     };
 
@@ -236,8 +196,8 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
                 <h2>
                     {contract ? t('contracts.edit_contract') : t('contracts.create_contract')}
                 </h2>
-                <button onClick={onCancel} className="close-btn">
-                    <i className="fas fa-times"></i>
+                <button onClick={onCancel} className="close-btn" aria-label="Close">
+                    ×
                 </button>
             </div>
 
@@ -258,22 +218,11 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
                                 {t('contracts.provider')} <span className="required">*</span>
                             </label>
                             {isEdit ? (
-                                <div style={{ padding: '8px 0', fontWeight: 500 }}>{getProviderDisplay()}</div>
+                                <div className="readonly-field">{getProviderDisplay()}</div>
                             ) : (
-                                <select
-                                    id="user_id"
-                                    name="user_id"
-                                    value={formData.user_id}
-                                    onChange={handleChange}
-                                    className={`form-select ${errors.user_id ? 'error' : ''}`}
-                                >
-                                    <option value="">{t('contracts.select_provider')}</option>
-                                    {users.map(user => (
-                                        <option key={user.id} value={user.id}>
-                                            {user.full_name} ({user.email})
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="readonly-field">
+                                    {provider?.user?.firstname} {provider?.user?.lastname} ({provider?.user?.email})
+                                </div>
                             )}
                             {errors.user_id && <span className="error-text">{errors.user_id}</span>}
                         </div>
@@ -283,22 +232,11 @@ const ContractForm = ({ contract, provider, onSave, onCancel }) => {
                                 {t('contracts.service')}
                             </label>
                             {isEdit ? (
-                                <div style={{ padding: '8px 0', fontWeight: 500 }}>{getServiceDisplay()}</div>
+                                <div className="readonly-field">{getServiceDisplay()}</div>
                             ) : (
-                                <select
-                                    id="service_id"
-                                    name="service_id"
-                                    value={String(formData.service_id || '')}
-                                    onChange={handleChange}
-                                    className="form-select"
-                                >
-                                    <option value="">{t('contracts.selectService')}</option>
-                                    {services.map(service => (
-                                        <option key={service.id} value={String(service.id)}>
-                                            {service.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="readonly-field">
+                                    {provider?.service?.name || t('contracts.noServiceAssigned')}
+                                </div>
                             )}
                             {errors.service_id && <div className="form-error">{errors.service_id}</div>}
                         </div>
