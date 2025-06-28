@@ -15,6 +15,7 @@ import ProviderManagement from './pages/providers/ProviderManagement';
 import TestUserAuth from './auth/test/TestUserAuth';
 import TokenTestPage from './pages/test/TokenTestPage';
 import TranslationDemo from './components/TranslationDemo';
+import ToastManager from './components/ToastManager';
 import './auth/layout/UnifiedBaseLayout.css';
 import ProtectedRoute from './auth/login/ProtectedRoute';
 import { AdminProvider } from './auth/login/AdminContext';
@@ -42,13 +43,15 @@ function App() {
             </div>
         }>
             <AdminProvider>
+                <ToastManager />
                 <Router>
                     <div className="App">
                         <Routes>
                             <Route path="/" element={<HomePage />} />
                             <Route path="/register" element={<RegisterPage />} />
                             <Route path="/profile" element={<ProfilePage />} />
-                            <Route path="/login" element={<LoginPage />} />                            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                             <Route path="/patients" element={<PatientsPageNew />} />
                             <Route path="/providers" element={<ProviderManagement />} />
                             <Route path="/service-demands" element={<ServiceDemandPage />} />
