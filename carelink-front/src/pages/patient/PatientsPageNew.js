@@ -24,6 +24,8 @@ const PatientsPageNew = () => {
     const [isLoadingServices, setIsLoadingServices] = useState(false);
     const [servicesLoaded, setServicesLoaded] = useState(false);    const [showEditPatientModal, setShowEditPatientModal] = useState(false);    const [showTimelineModal, setShowTimelineModal] = useState(false);
     const [sortOrder, setSortOrder] = useState('newest');
+    const [showCriticalInfoModal, setShowCriticalInfoModal] = useState(false);
+    const [criticalInfoLoading, setCriticalInfoLoading] = useState(false);
 
     // Use translation hooks
     const { patients: patientsT, common, placeholders, errors, success } = useCareTranslation();
@@ -414,7 +416,44 @@ const PatientsPageNew = () => {
         `${patient.firstname} ${patient.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.national_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         patient.birth_date?.toLowerCase().includes(searchTerm.toLowerCase())
-    );    return (
+    );
+
+    // Restore handlers
+    const handleShowCriticalInfo = async (patient) => {
+        setSelectedPatient(patient);
+        setShowCriticalInfoModal(true);
+        setCriticalInfoLoading(true);
+        
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`http://localhost:8000/account/views_patient/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                // Find the specific patient in the results
+                const patientData = data.results.find(p => p.id === patient.id);
+                if (patientData) {
+                    // Update the selected patient with fresh data including critical_information
+                    setSelectedPatient(patientData);
+                }
+            } else {
+                console.error('Failed to fetch patient data:', response.status);
+            }
+        } catch (error) {
+            console.error('Error fetching patient critical information:', error);
+        } finally {
+            setCriticalInfoLoading(false);
+        }
+    };
+    const handleCloseCriticalInfo = () => {
+        setShowCriticalInfoModal(false);
+        setSelectedPatient(null);
+        setCriticalInfoLoading(false);
+    };
+
+    return (
         <>
             <PatientLayout>
                 <div className="patient-page-container">                    <div className="patient-page-content">
@@ -459,6 +498,12 @@ const PatientsPageNew = () => {
                                                     <div>
                                                         <h5 className="card-title mb-1">{patient.firstname} {patient.lastname}</h5>
                                                         <small className="text-muted">ID: {patient.national_number}</small>
+                                                    </div>
+                                                    {/* Critical Info Icon, right-aligned - always visible */}
+                                                    <div className="ms-auto" style={{marginLeft: 'auto', cursor: 'pointer'}} title="View critical information" onClick={() => handleShowCriticalInfo(patient)}>
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{color: '#dc3545'}}>
+                                                            <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2"/>
+                                                        </svg>
                                                     </div>
                                                 </div>                                                <div className="row g-2 mb-3">
                                                     <div className="col-8">
@@ -816,6 +861,116 @@ const PatientsPageNew = () => {
                     isOpen={showTimelineModal}
                     onClose={handleCloseTimeline}
                 />
+            )}
+
+            {/* Critical Information Modal */}
+            {showCriticalInfoModal && selectedPatient && (
+                <div className="patient-page-modal-overlay">
+                    <div className="modal-dialog" style={{
+                        maxWidth: '500px',
+                        width: '90%',
+                        margin: '0 auto'
+                    }}>
+                        <div className="modal-content" style={{
+                            backgroundColor: 'white',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+                        }}>
+                            <div className="modal-header" style={{
+                                borderBottom: '1px solid #dee2e6',
+                                padding: '1rem 1.5rem',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <h5 className="modal-title mb-0" style={{
+                                    color: '#dc3545',
+                                    fontWeight: '600'
+                                }}>
+                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                    Critical Information
+                                </h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={handleCloseCriticalInfo}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        fontSize: '1.5rem',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <div className="modal-body" style={{
+                                padding: '1.5rem'
+                            }}>
+                                <div className="mb-3">
+                                    <h6 className="text-muted mb-2">Patient:</h6>
+                                    <p className="fw-bold mb-0">
+                                        {selectedPatient.firstname} {selectedPatient.lastname}
+                                    </p>
+                                </div>
+                                <div>
+                                    <h6 className="text-muted mb-2">Critical Information:</h6>
+                                    {criticalInfoLoading ? (
+                                        <div style={{
+                                            backgroundColor: '#f8f9fa',
+                                            border: '1px solid #dee2e6',
+                                            borderRadius: '6px',
+                                            padding: '1rem',
+                                            textAlign: 'center',
+                                            color: '#6c757d'
+                                        }}>
+                                            <div className="spinner-border spinner-border-sm me-2" role="status">
+                                                <span className="visually-hidden">Loading...</span>
+                                            </div>
+                                            Loading critical information...
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            backgroundColor: '#fff3cd',
+                                            border: '1px solid #ffeaa7',
+                                            borderRadius: '6px',
+                                            padding: '1rem',
+                                            color: '#856404'
+                                        }}>
+                                            {selectedPatient.critical_information && selectedPatient.critical_information.trim() 
+                                                ? selectedPatient.critical_information 
+                                                : 'No critical information has been recorded for this patient. Critical information can be added through the patient management system.'
+                                            }
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="modal-footer" style={{
+                                borderTop: '1px solid #dee2e6',
+                                padding: '1rem 1.5rem',
+                                display: 'flex',
+                                justifyContent: 'flex-end'
+                            }}>
+                                <button 
+                                    type="button" 
+                                    className="btn btn-secondary" 
+                                    onClick={handleCloseCriticalInfo}
+                                    style={{
+                                        backgroundColor: '#6c757d',
+                                        borderColor: '#6c757d',
+                                        color: 'white',
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '4px',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     );
