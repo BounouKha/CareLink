@@ -561,6 +561,8 @@ const ProviderDetail = ({
     };
 
     const [editingContractId, setEditingContractId] = useState(null);
+    // Add state for creating new contracts
+    const [showCreateContractForm, setShowCreateContractForm] = useState(false);
 
     // Handler for editing contract
     const handleContractUpdate = (contractId) => {
@@ -574,6 +576,24 @@ const ProviderDetail = ({
     const handleContractSave = async () => {
         setEditingContractId(null);
         await fetchProviderDetails();
+    };
+
+    // Add handler for creating new contracts
+    const handleCreateContract = () => {
+        setShowCreateContractForm(true);
+    };
+
+    const handleCancelCreateContract = () => {
+        setShowCreateContractForm(false);
+    };
+
+    const handleContractCreated = async () => {
+        setShowCreateContractForm(false);
+        // Refresh provider data to show the new contract
+        await fetchProviderDetails();
+        if (onContractUpdate) {
+            onContractUpdate();
+        }
     };
 
     const renderContractRow = (contract) => (
@@ -754,13 +774,28 @@ const ProviderDetail = ({
                                 <div className="empty-state">
                                     <p>{providersT('noContractsFound')}</p>
                                     {canEdit && (
-                                        <button className="btn-primary">
+                                        <button 
+                                            className="btn-primary"
+                                            onClick={handleCreateContract}
+                                        >
                                             {providersT('createContract')}
                                         </button>
                                     )}
                                 </div>
                             ) : (
                                 <div className="contracts-table-container">
+                                    {/* Add a "Create New Contract" button at the top of the table */}
+                                    {canEdit && (
+                                        <div className="contracts-actions">
+                                            <button 
+                                                className="btn-primary"
+                                                onClick={handleCreateContract}
+                                            >
+                                                {providersT('createContract')}
+                                            </button>
+                                        </div>
+                                    )}
+                                    
                                     <table className="contracts-table">
                                         <thead>
                                             <tr>
@@ -1135,14 +1170,26 @@ const ProviderDetail = ({
                         {common('close')}
                     </button>
                 </div>
-                {/* Floating contract form card */}
+                {/* Floating contract form card for editing */}
                 {editingContract && (
-                    <div className="contract-edit-floating-card">
+                    <div className="contract-edit-floating-card" onClick={(e) => e.target === e.currentTarget && handleCancelEditContract()}>
                         <ContractForm
                             contract={editingContract}
                             provider={provider}
                             onSave={handleContractSave}
                             onCancel={handleCancelEditContract}
+                        />
+                    </div>
+                )}
+
+                {/* Floating contract form card for creating new contracts */}
+                {showCreateContractForm && (
+                    <div className="contract-edit-floating-card" onClick={(e) => e.target === e.currentTarget && handleCancelCreateContract()}>
+                        <ContractForm
+                            contract={null}
+                            provider={provider}
+                            onSave={handleContractCreated}
+                            onCancel={handleCancelCreateContract}
                         />
                     </div>
                 )}
