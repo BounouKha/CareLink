@@ -134,11 +134,11 @@ const ProviderManagement = () => {
         
         return {
             total: statistics.total_providers || 0,
-            active: statistics.active_providers || 0,
+            active: statistics.active_contracts || 0,
             withContracts: statistics.providers_with_contracts || 0,
-            totalContracts: statistics.total_contracts || 0,
+            totalContracts: 0,
             activeContracts: statistics.active_contracts || 0,
-            totalWeeklyHours: statistics.total_weekly_hours || 0
+            totalWeeklyHours: 0
         };
     };    // Filter providers based on search and filters
     const filteredProviders = providers.filter(provider => {
@@ -229,7 +229,8 @@ const ProviderManagement = () => {
 
                 {/* Statistics */}
                 {stats && (
-                    <div className="provider-mgmt-statistics-section">                        <div className="provider-mgmt-stats-grid">
+                    <div className="provider-mgmt-statistics-section">
+                        <div className="provider-mgmt-stats-grid">
                             <div className="provider-mgmt-stat-card">
                                 <div className="provider-mgmt-stat-number">{stats.total}</div>
                                 <div className="provider-mgmt-stat-label">{providersT('totalProviders')}</div>
@@ -241,18 +242,6 @@ const ProviderManagement = () => {
                             <div className="provider-mgmt-stat-card">
                                 <div className="provider-mgmt-stat-number">{stats.withContracts}</div>
                                 <div className="provider-mgmt-stat-label">{providersT('withContracts')}</div>
-                            </div>
-                            <div className="provider-mgmt-stat-card">
-                                <div className="provider-mgmt-stat-number">{stats.totalContracts}</div>
-                                <div className="provider-mgmt-stat-label">{providersT('totalContracts')}</div>
-                            </div>
-                            <div className="provider-mgmt-stat-card">
-                                <div className="provider-mgmt-stat-number">{stats.activeContracts}</div>
-                                <div className="provider-mgmt-stat-label">{providersT('activeContracts')}</div>
-                            </div>
-                            <div className="provider-mgmt-stat-card">
-                                <div className="provider-mgmt-stat-number">{stats.totalWeeklyHours}h</div>
-                                <div className="provider-mgmt-stat-label">{providersT('totalWeeklyHours')}</div>
                             </div>
                         </div>
                     </div>

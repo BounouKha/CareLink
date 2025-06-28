@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, Count, Case, When, IntegerField
+from django.db.models import Q, Count, Case, When, IntegerField, Sum
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from datetime import timedelta
@@ -290,6 +290,18 @@ def provider_stats(request):
         internal_providers = Provider.objects.filter(is_internal=True).count()
         external_providers = Provider.objects.filter(is_internal=False).count()
         
+        # Additional statistics that frontend expects
+        try:
+            # Providers with contracts (any contracts, not just active)
+            providers_with_contracts = Provider.objects.filter(
+                user__isnull=False,
+                user__contract__isnull=False
+            ).distinct().count()
+            print(f"[DEBUG] Providers with contracts: {providers_with_contracts}")
+        except Exception as e:
+            print(f"[DEBUG] Error calculating providers_with_contracts: {e}")
+            providers_with_contracts = 0
+        
         # Contracts by type
         contract_types = Contract.objects.values('type_contract').annotate(
             count=Count('id')
@@ -309,6 +321,7 @@ def provider_stats(request):
             'providers_without_contracts': providers_without_contracts,
             'internal_providers': internal_providers,
             'external_providers': external_providers,
+            'providers_with_contracts': providers_with_contracts,
             'contracts_by_type': contracts_by_type,
             'contracts_by_status': contracts_by_status
         }
