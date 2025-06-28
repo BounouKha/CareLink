@@ -429,6 +429,136 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     setFormData(prev => ({ ...prev, provider_id: provider.id }));
     setProviderSearch(`${provider.name} - ${provider.service}`);
     setShowProviderDropdown(false);
+    
+    // Check for provider absences across the recurring period if we have dates
+    if (formData.start_date && recurringData.end_date) {
+      checkProviderAbsencesForPeriod(provider.id, formData.start_date, recurringData.end_date);
+    }
+  };
+
+  const checkProviderAbsencesForPeriod = async (providerId, startDate, endDate) => {
+    try {
+      console.log(`[RecurringSchedule] Checking absences for provider ${providerId} from ${startDate} to ${endDate}`);
+      
+      // Generate all dates in the period to check
+      const dates = [];
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toISOString().split('T')[0]);
+      }
+      
+      const datesString = dates.join(',');
+      const response = await get(`http://localhost:8000/account/providers/${providerId}/absence-check/?dates=${datesString}`);
+      
+      if (response.absence_data) {
+        const absences = [];
+        
+        // Find all dates where the provider is absent
+        Object.entries(response.absence_data).forEach(([date, absenceData]) => {
+          if (absenceData.is_absent) {
+            absences.push({
+              date,
+              type: absenceData.absence_type || 'absence',
+              reason: absenceData.absence_reason || 'No reason provided'
+            });
+          }
+        });
+        
+        if (absences.length > 0) {
+          const providerName = providers.find(p => p.id === providerId)?.name || 'Provider';
+          
+          // Group absences by type
+          const absencesByType = absences.reduce((acc, absence) => {
+            if (!acc[absence.type]) {
+              acc[absence.type] = [];
+            }
+            acc[absence.type].push(absence);
+            return acc;
+          }, {});
+          
+          // Function to merge consecutive dates into periods
+          const mergeConsecutiveDates = (dateList) => {
+            if (dateList.length === 0) return [];
+            
+            // Sort dates
+            const sortedDates = dateList.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const periods = [];
+            let currentPeriod = {
+              start: sortedDates[0].date,
+              end: sortedDates[0].date,
+              reason: sortedDates[0].reason
+            };
+            
+            for (let i = 1; i < sortedDates.length; i++) {
+              const currentDate = new Date(sortedDates[i].date);
+              const previousDate = new Date(sortedDates[i - 1].date);
+              const dayDiff = (currentDate - previousDate) / (1000 * 60 * 60 * 24);
+              
+              if (dayDiff === 1) {
+                // Consecutive date, extend the period
+                currentPeriod.end = sortedDates[i].date;
+                // Keep the reason from the first date in the period
+              } else {
+                // Non-consecutive date, save current period and start new one
+                periods.push({ ...currentPeriod });
+                currentPeriod = {
+                  start: sortedDates[i].date,
+                  end: sortedDates[i].date,
+                  reason: sortedDates[i].reason
+                };
+              }
+            }
+            
+            // Don't forget the last period
+            periods.push(currentPeriod);
+            return periods;
+          };
+          
+          // Create a comprehensive message
+          let message = `⚠️ ${providerName} has absences during the recurring period:\n\n`;
+          
+          Object.entries(absencesByType).forEach(([type, typeAbsences]) => {
+            message += `📅 ${type.charAt(0).toUpperCase() + type.slice(1)}:\n`;
+            
+            // Merge consecutive dates into periods
+            const periods = mergeConsecutiveDates(typeAbsences);
+            
+            periods.forEach(period => {
+              const startDate = new Date(period.start);
+              const endDate = new Date(period.end);
+              
+              if (period.start === period.end) {
+                // Single date
+                const formattedDate = startDate.toLocaleDateString();
+                message += `   • ${formattedDate}${period.reason ? ` - ${period.reason}` : ''}\n`;
+              } else {
+                // Date range
+                const startFormatted = startDate.toLocaleDateString();
+                const endFormatted = endDate.toLocaleDateString();
+                message += `   • ${startFormatted} - ${endFormatted}${period.reason ? ` - ${period.reason}` : ''}\n`;
+              }
+            });
+            
+            message += '\n';
+          });
+          
+          message += 'Please review the schedule or consider adjusting the recurring period.';
+          
+          // Show toast without auto-dismiss for recurring schedules
+          if (window.showToast) {
+            window.showToast(message, 'warning', 0); // 0 = no auto-dismiss
+          }
+          
+          console.log(`[RecurringSchedule] Provider absences detected:`, absences);
+        } else {
+          console.log(`[RecurringSchedule] Provider is available for the entire period`);
+        }
+      }
+    } catch (error) {
+      console.error('[RecurringSchedule] Error checking provider absences:', error);
+    }
   };
 
   const selectPatient = (patient) => {
@@ -486,6 +616,13 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                 ...prev,
                 weekdays: [...prev.weekdays, dayOfWeek]
               }));
+            }
+            
+            // Check for absences when start date changes and we have provider and end date
+            if (formData.provider_id && recurringData.end_date) {
+              setTimeout(() => {
+                checkProviderAbsencesForPeriod(formData.provider_id, value, recurringData.end_date);
+              }, 100);
             }
           }
         } catch (dateError) {
@@ -559,6 +696,14 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
               occurrences: 4
             }));
           }
+        }
+        
+        // Check for absences when end_date changes
+        if (name === 'end_date' && value && formData.provider_id && formData.start_date) {
+          // Use setTimeout to ensure the state is updated before checking
+          setTimeout(() => {
+            checkProviderAbsencesForPeriod(formData.provider_id, formData.start_date, value);
+          }, 100);
         }
       }
     } catch (error) {

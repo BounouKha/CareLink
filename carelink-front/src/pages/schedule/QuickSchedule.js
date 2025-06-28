@@ -173,7 +173,51 @@ const fetchPatients = async () => {
     setFormData(prev => ({ ...prev, provider_id: provider.id }));
     setProviderSearch(`${provider.name} - ${provider.service}`);
     setShowProviderDropdown(false);
-  };  const selectPatient = (patient) => {
+    
+    // Check for provider absence if date is already selected
+    if (formData.date) {
+      console.log(`[QuickSchedule] Provider selected, checking absence for date: ${formData.date}`);
+      checkProviderAbsence(provider.id, formData.date);
+    } else {
+      console.log(`[QuickSchedule] Provider selected but no date selected yet`);
+    }
+  };
+
+  const checkProviderAbsence = async (providerId, date) => {
+    try {
+      console.log(`[QuickSchedule] Checking absence for provider ${providerId} on ${date}`);
+      
+      const response = await get(`http://localhost:8000/account/providers/${providerId}/absence-check/?dates=${date}`);
+      console.log(`[QuickSchedule] Absence check response:`, response);
+      
+      if (response.absence_data && response.absence_data[date]) {
+        const absence = response.absence_data[date];
+        console.log(`[QuickSchedule] Absence data for ${date}:`, absence);
+        
+        // Only show warning if the provider is actually absent
+        if (absence.is_absent) {
+          const absenceType = absence.absence_type || 'absence';
+          const providerName = providers.find(p => p.id === providerId)?.name || 'Provider';
+          
+          const message = `⚠️ ${providerName} is absent on ${new Date(date).toLocaleDateString()} (${absenceType}). Do you want to schedule anyway?`;
+          
+          if (window.showToast) {
+            window.showToast(message, 'warning', 8000);
+          }
+          
+          console.log(`[QuickSchedule] Provider absence detected:`, absence);
+        } else {
+          console.log(`[QuickSchedule] Provider is available on ${date}`);
+        }
+      } else {
+        console.log(`[QuickSchedule] No absence data found for ${date}`);
+      }
+    } catch (error) {
+      console.error('[QuickSchedule] Error checking provider absence:', error);
+    }
+  };
+
+  const selectPatient = (patient) => {
     setFormData(prev => ({ ...prev, patient_id: patient.id }));
     setPatientSearch(`${patient.firstname || ''} ${patient.lastname || ''}`);
     setShowPatientDropdown(false);
@@ -190,14 +234,23 @@ const fetchPatients = async () => {
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));    // Auto-calculate end time if start time is set (default 30 minute duration)
+    }));
+
+    // Auto-calculate end time if start time is set (default 30 minute duration)
     if (name === 'start_time' && value && !formData.end_time) {
       const endTime = calculateEndTime(value);
       setFormData(prev => ({
         ...prev,
         end_time: endTime
       }));
-    }};
+    }
+
+    // Check for provider absence when date changes
+    if (name === 'date' && value && formData.provider_id) {
+      console.log(`[QuickSchedule] Date changed to ${value}, checking absence for provider ${formData.provider_id}`);
+      checkProviderAbsence(formData.provider_id, value);
+    }
+  };
 
   // Helper function to check if date is in the past
   const isDateInPast = (dateString) => {
