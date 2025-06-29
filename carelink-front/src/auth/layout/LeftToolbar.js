@@ -45,7 +45,21 @@ const LeftToolbar = ({ userData }) => {
 
     const handleProvidersClick = () => {
         navigateWithLoading('/providers');
-    };    const renderRoleSpecificToolbar = () => {
+    };
+
+    const handleTicketsClick = () => {
+        navigateWithLoading('/tickets');
+    };
+
+    const handleHelpdeskClick = () => {
+        navigateWithLoading('/coordinator/helpdesk');
+    };
+
+    const handleManageTicketsClick = () => {
+        navigateWithLoading('/coordinator/tickets');
+    };
+
+    const renderRoleSpecificToolbar = () => {
         if (!userData || !userData.user) {
             console.warn('[LeftToolbar] userData or user is undefined');
             return null;
@@ -64,6 +78,12 @@ const LeftToolbar = ({ userData }) => {
                 handleServiceDemandsClick();
             } else if (path === '/schedule') {
                 handleScheduleClick();
+            } else if (path === '/tickets') {
+                handleTicketsClick();
+            } else if (path === '/coordinator/helpdesk') {
+                handleHelpdeskClick();
+            } else if (path === '/coordinator/tickets') {
+                handleManageTicketsClick();
             } else {
                 navigateWithLoading(path);
             }

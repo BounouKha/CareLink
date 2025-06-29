@@ -187,6 +187,215 @@ class HelpdeskTicket(models.Model):
     handled_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_tickets')
     priority = models.CharField(max_length=10, choices=[('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')], default='Medium')
 
+# Enhanced Ticketing System Models
+class TicketCategory(models.Model):
+    """Categories for tickets"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    team_assignment = models.CharField(max_length=20, choices=[
+        ('Coordinator', 'Coordinator Team'),
+        ('Administrator', 'Administrator Team'),
+    ], help_text="Default team assignment for this category")
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "Ticket Category"
+        verbose_name_plural = "Ticket Categories"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
+class EnhancedTicket(models.Model):
+    """Enhanced ticket system with team assignment and workflow"""
+    CATEGORY_CHOICES = [
+        ('Technical Issue', 'Technical Issue'),
+        ('Care Request', 'Care Request'),
+        ('Planning Issue', 'Planning Issue'),
+        ('Billing Issue', 'Billing Issue'),
+        ('Appointment Issue', 'Appointment Issue'),
+        ('General Inquiry', 'General Inquiry'),
+        ('Emergency', 'Emergency'),
+        ('Other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('New', 'New'),
+        ('In Progress', 'In Progress'),
+        ('Resolved', 'Resolved'),
+        ('Cancelled', 'Cancelled'),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('Low', 'Low'),
+        ('Medium', 'Medium'),
+        ('High', 'High'),
+        ('Urgent', 'Urgent'),
+    ]
+    
+    TEAM_CHOICES = [
+        ('Coordinator', 'Coordinator Team'),
+        ('Administrator', 'Administrator Team'),
+    ]
+    
+    # Basic ticket information
+    title = models.CharField(max_length=255, help_text="Brief title for the ticket")
+    description = models.TextField(help_text="Detailed description of the issue or request")
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='General Inquiry')
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Medium')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
+    
+    # Team assignment
+    assigned_team = models.CharField(max_length=20, choices=TEAM_CHOICES, help_text="Team responsible for handling this ticket")
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets', help_text="Specific team member assigned to this ticket")
+    
+    # User information
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_enhanced_tickets')
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_tickets')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    
+    # Additional fields
+    is_urgent = models.BooleanField(default=False, help_text="Mark as urgent for immediate attention")
+    internal_notes = models.TextField(blank=True, null=True, help_text="Internal notes visible only to team members")
+    
+    class Meta:
+        ordering = ['-created_at', 'priority']
+        verbose_name = "Enhanced Ticket"
+        verbose_name_plural = "Enhanced Tickets"
+        indexes = [
+            models.Index(fields=['status', 'priority']),
+            models.Index(fields=['assigned_team', 'status']),
+            models.Index(fields=['created_by', 'status']),
+            models.Index(fields=['assigned_to', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"#{self.id} - {self.title} ({self.status})"
+    
+    def save(self, *args, **kwargs):
+        # Auto-set urgent flag based on priority
+        if self.priority == 'Urgent':
+            self.is_urgent = True
+        
+        # Set resolved_at timestamp when status changes to Resolved
+        if self.status == 'Resolved' and not self.resolved_at:
+            self.resolved_at = timezone.now()
+        
+        # Set cancelled_at timestamp when status changes to Cancelled
+        if self.status == 'Cancelled' and not self.cancelled_at:
+            self.cancelled_at = timezone.now()
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def days_since_created(self):
+        """Calculate days since ticket was created"""
+        return (timezone.now() - self.created_at).days
+    
+    @property
+    def is_overdue(self):
+        """Check if ticket is overdue based on priority"""
+        if self.status in ['Resolved', 'Cancelled']:
+            return False
+        
+        days_open = self.days_since_created
+        if self.priority == 'Urgent' and days_open > 1:
+            return True
+        elif self.priority == 'High' and days_open > 3:
+            return True
+        elif self.priority == 'Medium' and days_open > 7:
+            return True
+        elif self.priority == 'Low' and days_open > 14:
+            return True
+        return False
+    
+    def can_user_access(self, user):
+        """Check if user can access this ticket based on role and team assignment"""
+        if not user or not user.is_authenticated:
+            return False
+        
+        # Superusers and staff can access all tickets
+        if user.is_superuser or user.is_staff:
+            return True
+        
+        # Creator can always see their own tickets
+        if self.created_by == user:
+            return True
+        
+        # Assigned user can always see their tickets
+        if self.assigned_to == user:
+            return True
+        
+        # Team-based access
+        if self.assigned_team == 'Coordinator':
+            return user.role in ['Coordinator', 'Administrator']
+        elif self.assigned_team == 'Administrator':
+            return user.role in ['Administrator', 'Administrative']
+        
+        return False
+
+
+class TicketComment(models.Model):
+    """Comments for tickets to enable communication between users and team members"""
+    ticket = models.ForeignKey(EnhancedTicket, on_delete=models.CASCADE, related_name='comments')
+    comment = models.TextField(help_text="Comment content")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='ticket_comments')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_internal = models.BooleanField(default=False, help_text="Internal comment visible only to team members")
+    
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = "Ticket Comment"
+        verbose_name_plural = "Ticket Comments"
+    
+    def __str__(self):
+        return f"Comment on Ticket #{self.ticket.id} by {self.created_by.firstname if self.created_by else 'System'}"
+    
+    def can_user_view(self, user):
+        """Check if user can view this comment"""
+        if not user or not user.is_authenticated:
+            return False
+        
+        # Internal comments are only visible to team members
+        if self.is_internal:
+            if user.is_superuser or user.is_staff:
+                return True
+            
+            # Check if user is part of the assigned team
+            if self.ticket.assigned_team == 'Coordinator':
+                return user.role in ['Coordinator', 'Administrator']
+            elif self.ticket.assigned_team == 'Administrator':
+                return user.role in ['Administrator', 'Administrative']
+            
+            return False
+        
+        # Public comments are visible to ticket creator and team members
+        return self.ticket.can_user_access(user)
+
+
+class TicketStatusHistory(models.Model):
+    """Track status changes for audit purposes"""
+    ticket = models.ForeignKey(EnhancedTicket, on_delete=models.CASCADE, related_name='status_history')
+    previous_status = models.CharField(max_length=20, choices=EnhancedTicket.STATUS_CHOICES, null=True, blank=True)
+    new_status = models.CharField(max_length=20, choices=EnhancedTicket.STATUS_CHOICES)
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='ticket_status_changes')
+    changed_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, null=True, help_text="Optional notes about the status change")
+    
+    class Meta:
+        ordering = ['-changed_at']
+        verbose_name = "Ticket Status History"
+        verbose_name_plural = "Ticket Status History"
+    
+    def __str__(self):
+        return f"Ticket #{self.ticket.id}: {self.previous_status} → {self.new_status}"
+
 class InformationProviding(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     provider = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True)

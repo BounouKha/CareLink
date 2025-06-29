@@ -12,6 +12,12 @@ import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
 import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
 import ProviderManagement from './pages/providers/ProviderManagement';
+import TicketDashboard from './components/EnhancedTicketSystem/TicketDashboard';
+import SubmitTicketPage from './components/EnhancedTicketSystem/SubmitTicketPage';
+import ManageTicketsPage from './components/EnhancedTicketSystem/ManageTicketsPage';
+import CoordinatorTicketPanel from './components/EnhancedTicketSystem/CoordinatorTicketPanel';
+import CoordinatorHelpdeskPanel from './components/EnhancedTicketSystem/CoordinatorHelpdeskPanel';
+import UserHelpdeskPanel from './components/EnhancedTicketSystem/UserHelpdeskPanel';
 import TestUserAuth from './auth/test/TestUserAuth';
 import TokenTestPage from './pages/test/TokenTestPage';
 import TranslationDemo from './components/TranslationDemo';
@@ -56,6 +62,18 @@ function App() {
                             <Route path="/providers" element={<ProviderManagement />} />
                             <Route path="/service-demands" element={<ServiceDemandPage />} />
                             <Route path="/schedule" element={<SchedulePage />} />
+                            
+                            {/* Ticket System Routes */}
+                            <Route path="/tickets" element={<TicketDashboard />} />
+                            <Route path="/submit-ticket" element={<ProtectedRoute><SubmitTicketPage /></ProtectedRoute>} />
+                            <Route path="/manage-tickets" element={<ProtectedRoute><ManageTicketsPage /></ProtectedRoute>} />
+                            
+                            {/* Coordinator Specific Routes */}
+                            <Route path="/coordinator/tickets" element={<CoordinatorTicketPanel />} />
+                            <Route path="/coordinator/helpdesk" element={<CoordinatorHelpdeskPanel />} />
+                            
+                            {/* User Helpdesk Route */}
+                            <Route path="/user/helpdesk" element={<UserHelpdeskPanel />} />
                             
                             {/* Keep the old routes for backward compatibility */}
                             <Route path="/schedule/router" element={<ScheduleRouter />} />

@@ -5,6 +5,8 @@ import ManageUsers from './ManageUsers'; // Import the ManageUsers component
 import ProfileList from './ProfileList';
 import LogsManagement from './LogsManagement'; // Import the LogsManagement component
 import ConsentManagement from './ConsentManagement'; // Import the ConsentManagement component
+import SubmitTicketPage from '../components/EnhancedTicketSystem/SubmitTicketPage';
+import ManageTicketsPage from '../components/EnhancedTicketSystem/ManageTicketsPage';
 import { useNavigate } from 'react-router-dom';
 
 import './AdminPanel.css';
@@ -16,6 +18,8 @@ const AdminPanel = () => {
         { id: 'users', label: 'Users', icon: '👥', description: 'Manage user accounts and roles' },
         { id: 'logs', label: 'Logs', icon: '📋', description: 'View system activity logs' },
         { id: 'consent', label: 'Consent', icon: '🔒', description: 'Manage user privacy and consent' },
+        { id: 'submit-tickets', label: 'Submit Tickets', icon: '📝', description: 'Create new support tickets' },
+        { id: 'manage-tickets', label: 'Manage Tickets', icon: '🎫', description: 'Handle and manage existing tickets' },
         { id: 'settings', label: 'Settings', icon: '⚙️', description: 'Configure system settings' },
         { id: 'profile', label: 'Profiles', icon: '👤', description: 'Manage user profiles' }
     ];    const renderContent = () => {        switch (selectedTab) {
@@ -25,6 +29,10 @@ const AdminPanel = () => {
                 return <LogsManagement />;
             case 'consent':
                 return <ConsentManagement />;
+            case 'submit-tickets':
+                return <SubmitTicketPage />;
+            case 'manage-tickets':
+                return <ManageTicketsPage />;
             case 'settings':
                 return (
                     <div className="admin-section-placeholder">
