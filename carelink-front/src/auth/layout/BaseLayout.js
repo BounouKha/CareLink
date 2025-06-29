@@ -149,7 +149,7 @@ const BaseLayout = ({ children }) => {
             window.location.href = url;
         }, delay);
     };    const isConnected = tokenManager.isAuthenticated();
-    const isMemberArea = ['/profile', '/patients', '/service-demands', '/schedule', '/providers'].some(path => 
+    const isMemberArea = ['/profile', '/patients', '/service-demands', '/schedule', '/providers', '/tickets', '/coordinator/helpdesk', '/coordinator/tickets', '/user/helpdesk'].some(path => 
         window.location.pathname.startsWith(path)
     ); // Include all member area routes
 

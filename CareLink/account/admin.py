@@ -7,7 +7,8 @@ from CareLink.models import (
     Administrative, ContestInvoice, Service, Contract, Coordinator, FamilyPatient, 
     HelpdeskTicket, InformationProviding, Invoice, MedicalFolder, InternalNote, Patient, Payment, 
     Prescription, Provider, ProvidingCare, Schedule, ServiceDemand, SocialAssistant, 
-    StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, UserToken, CookieConsent
+    StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, UserToken, CookieConsent,
+    EnhancedTicket, TicketComment, TicketStatusHistory, TicketCategory
 )
 
 # Configure admin logging
@@ -553,5 +554,113 @@ class CookieConsentAdmin(admin.ModelAdmin):
 admin.site.site_header = "CareLink Administration"
 admin.site.site_title = "CareLink Admin"
 admin.site.index_title = "CareLink Healthcare Management System"
+
+# Enhanced Ticketing System Admin
+@admin.register(TicketCategory)
+class TicketCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'team_assignment', 'is_active')
+    list_filter = ('team_assignment', 'is_active')
+    search_fields = ('name', 'description')
+    list_editable = ('is_active',)
+
+
+@admin.register(EnhancedTicket)
+class EnhancedTicketAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'created_by_name', 'assigned_team', 'assigned_to_name', 'status', 'priority', 'category', 'is_urgent', 'created_at', 'is_overdue')
+    list_filter = ('status', 'priority', 'category', 'assigned_team', 'is_urgent', 'created_at')
+    search_fields = ('title', 'description', 'created_by__firstname', 'created_by__lastname', 'assigned_to__firstname', 'assigned_to__lastname')
+    readonly_fields = ('created_at', 'updated_at', 'resolved_at', 'cancelled_at', 'days_since_created', 'is_overdue')
+    list_editable = ('status', 'priority')
+    date_hierarchy = 'created_at'
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('title', 'description', 'category', 'priority', 'status')
+        }),
+        ('Team Assignment', {
+            'fields': ('assigned_team', 'assigned_to')
+        }),
+        ('User Information', {
+            'fields': ('created_by', 'updated_by')
+        }),
+        ('Additional Information', {
+            'fields': ('is_urgent', 'internal_notes')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'resolved_at', 'cancelled_at', 'days_since_created'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def created_by_name(self, obj):
+        return f"{obj.created_by.firstname} {obj.created_by.lastname}" if obj.created_by else "No User"
+    created_by_name.short_description = 'Created By'
+    
+    def assigned_to_name(self, obj):
+        return f"{obj.assigned_to.firstname} {obj.assigned_to.lastname}" if obj.assigned_to else "Unassigned"
+    assigned_to_name.short_description = 'Assigned To'
+    
+    def is_overdue(self, obj):
+        return obj.is_overdue
+    is_overdue.boolean = True
+    is_overdue.short_description = 'Overdue'
+    
+    actions = ['assign_to_coordinator', 'assign_to_administrator', 'mark_as_resolved', 'mark_as_cancelled']
+    
+    def assign_to_coordinator(self, request, queryset):
+        queryset.update(assigned_team='Coordinator')
+        self.message_user(request, f"{queryset.count()} tickets assigned to Coordinator team.")
+    assign_to_coordinator.short_description = "Assign to Coordinator Team"
+    
+    def assign_to_administrator(self, request, queryset):
+        queryset.update(assigned_team='Administrator')
+        self.message_user(request, f"{queryset.count()} tickets assigned to Administrator team.")
+    assign_to_administrator.short_description = "Assign to Administrator Team"
+    
+    def mark_as_resolved(self, request, queryset):
+        queryset.update(status='Resolved')
+        self.message_user(request, f"{queryset.count()} tickets marked as resolved.")
+    mark_as_resolved.short_description = "Mark as Resolved"
+    
+    def mark_as_cancelled(self, request, queryset):
+        queryset.update(status='Cancelled')
+        self.message_user(request, f"{queryset.count()} tickets marked as cancelled.")
+    mark_as_cancelled.short_description = "Mark as Cancelled"
+
+
+@admin.register(TicketComment)
+class TicketCommentAdmin(admin.ModelAdmin):
+    list_display = ('ticket_id', 'created_by_name', 'comment_preview', 'is_internal', 'created_at')
+    list_filter = ('is_internal', 'created_at')
+    search_fields = ('comment', 'created_by__firstname', 'created_by__lastname', 'ticket__title')
+    readonly_fields = ('created_at',)
+    
+    def ticket_id(self, obj):
+        return f"#{obj.ticket.id}"
+    ticket_id.short_description = 'Ticket ID'
+    
+    def created_by_name(self, obj):
+        return f"{obj.created_by.firstname} {obj.created_by.lastname}" if obj.created_by else "System"
+    created_by_name.short_description = 'Created By'
+    
+    def comment_preview(self, obj):
+        return obj.comment[:100] + "..." if len(obj.comment) > 100 else obj.comment
+    comment_preview.short_description = 'Comment Preview'
+
+
+@admin.register(TicketStatusHistory)
+class TicketStatusHistoryAdmin(admin.ModelAdmin):
+    list_display = ('ticket_id', 'previous_status', 'new_status', 'changed_by_name', 'changed_at')
+    list_filter = ('previous_status', 'new_status', 'changed_at')
+    search_fields = ('ticket__title', 'changed_by__firstname', 'changed_by__lastname', 'notes')
+    readonly_fields = ('changed_at',)
+    
+    def ticket_id(self, obj):
+        return f"#{obj.ticket.id}"
+    ticket_id.short_description = 'Ticket ID'
+    
+    def changed_by_name(self, obj):
+        return f"{obj.changed_by.firstname} {obj.changed_by.lastname}" if obj.changed_by else "System"
+    changed_by_name.short_description = 'Changed By'
 
 

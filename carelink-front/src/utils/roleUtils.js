@@ -194,12 +194,37 @@ export const getNavigationItems = (user) => {
             { key: 'service-demands', label: 'Service Demands', path: '/service-demands', roles: [ROLES.COORDINATOR, ROLES.ADMINISTRATIVE] },
             { key: 'schedule-calendar', label: 'Schedule Calendar', path: '/schedule', roles: [ROLES.COORDINATOR, ROLES.ADMINISTRATIVE] }
         );
+        
+        // Coordinator-specific ticket management
+        if (hasRole(user, ROLES.COORDINATOR)) {
+            items.push(
+                { key: 'manage-tickets', label: 'Manage Tickets', path: '/coordinator/tickets', roles: [ROLES.COORDINATOR] }
+            );
+        } else {
+            // Admin ticket management
+            items.push(
+                { key: 'tickets', label: 'Help Desk', path: '/tickets', roles: [ROLES.ADMINISTRATIVE, ROLES.ADMINISTRATOR] }
+            );
+        }
     }
     
     // Provider management for staff
     if (canAccessProviderManagement(user)) {
         items.push(
             { key: 'providers', label: 'Providers', path: '/providers', roles: [ROLES.COORDINATOR, ROLES.ADMINISTRATIVE, ROLES.ADMINISTRATOR] }
+        );
+    }
+    
+    // Add helpdesk access for all users (including patients)
+    // All users can submit tickets through the coordinator helpdesk panel
+    items.push(
+        { key: 'helpdesk', label: 'Helpdesk', path: '/coordinator/helpdesk', roles: [ROLES.COORDINATOR] }
+    );
+    
+    // Add user helpdesk for patients and admins
+    if (isPatient(user) || isAdmin(user)) {
+        items.push(
+            { key: 'user-helpdesk', label: 'Helpdesk', path: '/user/helpdesk', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT, ROLES.ADMINISTRATIVE, ROLES.ADMINISTRATOR] }
         );
     }
     
