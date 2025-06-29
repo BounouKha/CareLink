@@ -34,6 +34,7 @@ from account.views.provider import (
     check_current_user_contract_status, provider_schedule, provider_absences,
     provider_all_absences, provider_absence_check, ContractViewSet
 )
+from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
 
 
 
@@ -44,6 +45,9 @@ router.register(r'phoneuser', PhoneUserViewSet, basename='phoneuser')
 router.register(r'familypatient', FamilyPatientViewSet, basename='familypatient')
 router.register(r'medicalFolder', MedicalFolderViewSet, basename='medicalfolder')
 router.register(r'contracts', ContractViewSet, basename='contract')
+router.register(r'enhanced-tickets', EnhancedTicketViewSet, basename='enhanced_ticket')
+router.register(r'ticket-comments', TicketCommentViewSet, basename='ticket_comment')
+router.register(r'ticket-status-history', TicketStatusHistoryViewSet, basename='ticket_status_history')
 
 
 
