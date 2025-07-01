@@ -32,7 +32,7 @@ from account.views.provider import (
     provider_list, provider_detail, provider_contracts, provider_stats, 
     available_users_for_provider, check_user_contract_status, 
     check_current_user_contract_status, provider_schedule, provider_absences,
-    provider_all_absences, provider_absence_check, ContractViewSet
+    provider_all_absences, provider_absence_check, ContractViewSet, my_contracts, my_schedule, my_absences
 )
 from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
 
@@ -111,5 +111,8 @@ urlpatterns += [
     # Contract Validation API endpoints
     path('users/<int:user_id>/contract-status/', check_user_contract_status, name='check_user_contract_status'),
     path('users/my-contract-status/', check_current_user_contract_status, name='check_current_user_contract_status'),
+    path('providers/my-contracts/', my_contracts, name='my_contracts'),
+    path('providers/my-schedule/', my_schedule, name='my_schedule'),
+    path('providers/my-absences/', my_absences, name='my_absences'),
 
 ]
