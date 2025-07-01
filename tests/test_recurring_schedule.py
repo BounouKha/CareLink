@@ -15,7 +15,7 @@ RECURRING_SCHEDULE_URL = f"{BASE_URL}/schedule/recurring-schedule/"
 
 # Test credentials (adjust as needed)
 TEST_CREDENTIALS = {
-    "email": "c2@carelink.be",  # Coordinator account
+    "email": "p1@carelink.be",  # Coordinator account
     "password": "Pugu8874@"   # Adjust password as needed
 }
 

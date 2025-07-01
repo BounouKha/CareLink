@@ -12,6 +12,7 @@ import ScheduleCalendar from './pages/schedule/ScheduleCalendar';
 import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
 import ProviderManagement from './pages/providers/ProviderManagement';
+import ProviderSchedule from './pages/provider/ProviderSchedule';
 import TicketDashboard from './components/EnhancedTicketSystem/TicketDashboard';
 import SubmitTicketPage from './components/EnhancedTicketSystem/SubmitTicketPage';
 import ManageTicketsPage from './components/EnhancedTicketSystem/ManageTicketsPage';
@@ -74,6 +75,9 @@ function App() {
                             
                             {/* User Helpdesk Route */}
                             <Route path="/user/helpdesk" element={<UserHelpdeskPanel />} />
+                            
+                            {/* Provider Schedule Route */}
+                            <Route path="/provider/schedule" element={<ProviderSchedule />} />
                             
                             {/* Keep the old routes for backward compatibility */}
                             <Route path="/schedule/router" element={<ScheduleRouter />} />

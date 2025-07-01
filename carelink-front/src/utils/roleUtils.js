@@ -7,6 +7,7 @@
 export const ROLES = {
     PATIENT: 'Patient',
     FAMILY_PATIENT: 'Family Patient',
+    PROVIDER: 'Provider',
     COORDINATOR: 'Coordinator',
     ADMINISTRATIVE: 'Administrative',
     ADMINISTRATOR: 'Administrator'
@@ -184,6 +185,13 @@ export const getNavigationItems = (user) => {
         items.push(
             { key: 'service-requests', label: 'Service Requests', path: '/service-demands', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT] },
             { key: 'schedule', label: 'Schedule', path: '/schedule', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT] }
+        );
+    }
+    
+    // Provider items
+    if (hasRole(user, ROLES.PROVIDER)) {
+        items.push(
+            { key: 'provider-schedule', label: 'Schedule', path: '/provider/schedule', roles: [ROLES.PROVIDER] }
         );
     }
     

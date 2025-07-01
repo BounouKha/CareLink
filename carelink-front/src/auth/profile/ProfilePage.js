@@ -12,6 +12,7 @@ const ProfilePage = () => {
     const [error, setError] = useState(null);    
     const [selectedTab, setSelectedTab] = useState('user');
     const [linkedPatients, setLinkedPatients] = useState([]);
+    const [providerContracts, setProviderContracts] = useState([]);
     const profileRef = useRef(null);
     
     // Use translation hooks
@@ -59,6 +60,19 @@ const ProfilePage = () => {
                     }
                 } else {
                     console.log('[DEBUG] User is not Family Patient, role:', data.user.role);
+                }
+                
+                // If user is a Provider, fetch their contracts
+                if (data.user.role === 'Provider') {
+                    console.log('[DEBUG] User is Provider, fetching contracts...');
+                    try {
+                        const contractsData = await get('http://localhost:8000/account/providers/my-contracts/');
+                        console.log('[DEBUG] Provider Contracts Data:', contractsData);
+                        setProviderContracts(contractsData.contracts || []);
+                    } catch (err) {
+                        console.error('[DEBUG] Error fetching provider contracts:', err);
+                        // Don't fail the entire profile load if contracts fail
+                    }
                 }
             } catch (err) {
                 console.error('[DEBUG] Error fetching profile:', err);
@@ -339,7 +353,8 @@ const ProfilePage = () => {
                 );
             case 'contact':
                 return (
-                    <div className="card shadow-sm border-0">                        <div className="card-header bg-secondary bg-opacity-10 border-0">
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-secondary bg-opacity-10 border-0">
                             <h5 className="card-title mb-0">
                                 <i className="fas fa-phone me-2 text-secondary"></i>
                                 {profile('contactInfo')}
@@ -359,9 +374,93 @@ const ProfilePage = () => {
                                         </div>
                                     ))}
                                 </div>
-                            ) : (                                <div className="text-center py-4">
+                            ) : (
+                                <div className="text-center py-4">
                                     <i className="fas fa-phone-slash text-muted mb-2" style={{fontSize: '2rem'}}></i>
                                     <p className="text-muted mb-0">{profile('noContactInfo')}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            case 'contract':
+                return (
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-info bg-opacity-10 border-0">
+                            <h5 className="card-title mb-0">
+                                <i className="fas fa-file-contract me-2 text-info"></i>
+                                {profile('contractInformation')}
+                            </h5>
+                        </div>
+                        <div className="card-body">
+                            {providerContracts && providerContracts.length > 0 ? (
+                                <div className="row g-3">
+                                    {providerContracts.map((contract, index) => (
+                                        <div key={index} className="col-12">
+                                            <div className="card bg-light border-0">
+                                                <div className="card-body">
+                                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                                        <h6 className="card-title mb-0">
+                                                            {profile('contractReference')} #{contract.contract_reference || contract.id}
+                                                        </h6>
+                                                        <span className={`badge ${
+                                                            contract.status === 'active' ? 'bg-success' :
+                                                            contract.status === 'pending' ? 'bg-warning' :
+                                                            contract.status === 'inactive' ? 'bg-secondary' :
+                                                            'bg-light text-dark'
+                                                        }`}>
+                                                            {contract.status}
+                                                        </span>
+                                                    </div>
+                                                    <div className="row g-2">
+                                                        <div className="col-md-6">
+                                                            <label className="form-label text-muted">{profile('contractType')}:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{contract.type_contract}</p>
+                                                        </div>
+                                                        <div className="col-md-6">
+                                                            <label className="form-label text-muted">{profile('service')}:</label>
+                                                            <p className="fs-6 fw-medium mb-0">{contract.service_name || 'N/A'}</p>
+                                                        </div>
+                                                        <div className="col-md-6">
+                                                            <label className="form-label text-muted">{profile('startDate')}:</label>
+                                                            <p className="fs-6 fw-medium mb-0">
+                                                                {contract.start_date ? new Date(contract.start_date).toLocaleDateString() : 'N/A'}
+                                                            </p>
+                                                        </div>
+                                                        <div className="col-md-6">
+                                                            <label className="form-label text-muted">{profile('endDate')}:</label>
+                                                            <p className="fs-6 fw-medium mb-0">
+                                                                {contract.end_date ? new Date(contract.end_date).toLocaleDateString() : 'N/A'}
+                                                            </p>
+                                                        </div>
+                                                        {contract.weekly_hours && (
+                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">{profile('weeklyHours')}:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{contract.weekly_hours}h</p>
+                                                            </div>
+                                                        )}
+                                                        {contract.hourly_rate && (
+                                                            <div className="col-md-6">
+                                                                <label className="form-label text-muted">{profile('hourlyRate')}:</label>
+                                                                <p className="fs-6 fw-medium mb-0">€{contract.hourly_rate}</p>
+                                                            </div>
+                                                        )}
+                                                        {contract.department && (
+                                                            <div className="col-12">
+                                                                <label className="form-label text-muted">{profile('department')}:</label>
+                                                                <p className="fs-6 fw-medium mb-0">{contract.department}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <i className="fas fa-file-contract text-muted mb-2" style={{fontSize: '2rem'}}></i>
+                                    <p className="text-muted mb-0">{profile('noContractsFound')}</p>
                                 </div>
                             )}
                         </div>
@@ -446,6 +545,23 @@ const ProfilePage = () => {
                                                 >
                                                     <i className="fas fa-user-injured me-2"></i>
                                                     {profile('linkedPatients')}
+                                                </button>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('contact')}
+                                                >
+                                                    <i className="fas fa-phone me-2"></i>
+                                                    {profile('contactInfo')}
+                                                </button>
+                                            </>
+                                        ) : userData.user.role === 'Provider' ? (
+                                            <>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'contract' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('contract')}
+                                                >
+                                                    <i className="fas fa-file-contract me-2"></i>
+                                                    {profile('contract')}
                                                 </button>
                                                 <button 
                                                     className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}
