@@ -59,6 +59,10 @@ const LeftToolbar = ({ userData }) => {
         navigateWithLoading('/coordinator/tickets');
     };
 
+    const handleProviderScheduleClick = () => {
+        navigateWithLoading('/provider/schedule');
+    };
+
     const renderRoleSpecificToolbar = () => {
         if (!userData || !userData.user) {
             console.warn('[LeftToolbar] userData or user is undefined');
@@ -84,6 +88,8 @@ const LeftToolbar = ({ userData }) => {
                 handleHelpdeskClick();
             } else if (path === '/coordinator/tickets') {
                 handleManageTicketsClick();
+            } else if (path === '/provider/schedule') {
+                handleProviderScheduleClick();
             } else {
                 navigateWithLoading(path);
             }

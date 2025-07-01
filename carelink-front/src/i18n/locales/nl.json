@@ -538,7 +538,8 @@
       "endDateAfterStart": "Einddatum moet na startdatum zijn",
       "fixErrorsBeforeSubmitting": "Los alle fouten op voordat u indient",
       "noValidDatesFound": "Geen geldige datums gevonden. Controleer uw terugkerende instellingen."
-    },    "generating": "Afspraken genereren..."
+    },    "generating": "Afspraken genereren...",
+    "thisWeek": "Deze week"
   },
   "providers": {
     "title": "Zorgverlener Beheer",

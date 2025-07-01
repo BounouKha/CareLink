@@ -1,0 +1,462 @@
+/* Provider Schedule Styles */
+
+.provider-schedule-container {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.provider-schedule-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.provider-schedule-stats {
+    margin-bottom: 2rem;
+}
+
+.provider-schedule-stats .card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.provider-schedule-stats .card:hover {
+    transform: translateY(-2px);
+}
+
+.provider-schedule-day-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    height: 100%;
+}
+
+.provider-schedule-day-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.provider-schedule-day-card .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1rem;
+}
+
+.provider-schedule-day-card .card-body {
+    padding: 0;
+}
+
+.provider-schedule-appointment {
+    border-bottom: 1px solid #f1f3f4;
+    padding: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.provider-schedule-appointment:hover {
+    background-color: #f8f9fa;
+}
+
+.provider-schedule-appointment:last-child {
+    border-bottom: none;
+}
+
+.provider-schedule-appointment .patient-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.provider-schedule-appointment .service-name {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.provider-schedule-appointment .appointment-time {
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+.provider-schedule-appointment .appointment-duration {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.provider-schedule-appointment .appointment-description {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-style: italic;
+    margin-top: 0.5rem;
+}
+
+/* Status badges */
+.status-scheduled {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.status-completed {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-no-show {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+/* Navigation buttons */
+.provider-schedule-nav-btn {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.provider-schedule-nav-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Empty state */
+.provider-schedule-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.provider-schedule-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .provider-schedule-stats .col-md-3 {
+        margin-bottom: 1rem;
+    }
+    
+    .provider-schedule-day-card {
+        margin-bottom: 1rem;
+    }
+    
+    .provider-schedule-header {
+        padding: 1rem 0;
+    }
+    
+    .provider-schedule-header h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Loading and error states */
+.provider-schedule-loading,
+.provider-schedule-error {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.provider-schedule-error .alert {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.provider-schedule-day-card {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.provider-schedule-day-card:nth-child(1) { animation-delay: 0.1s; }
+.provider-schedule-day-card:nth-child(2) { animation-delay: 0.2s; }
+.provider-schedule-day-card:nth-child(3) { animation-delay: 0.3s; }
+.provider-schedule-day-card:nth-child(4) { animation-delay: 0.4s; }
+.provider-schedule-day-card:nth-child(5) { animation-delay: 0.5s; }
+.provider-schedule-day-card:nth-child(6) { animation-delay: 0.6s; }
+.provider-schedule-day-card:nth-child(7) { animation-delay: 0.7s; }
+
+/* Weekly Schedule Grid Styles */
+.weekly-schedule-container {
+    flex: 1;
+    overflow: hidden;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.weekly-schedule-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    height: 100%;
+    overflow: auto;
+}
+
+.schedule-time-header, .schedule-day-header {
+    padding: 12px 8px;
+    font-weight: 600;
+    color: #495057;
+    text-align: center;
+    border-right: 1px solid #e9ecef;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.schedule-day-header:last-child {
+    border-right: none;
+}
+
+.schedule-day-header.today {
+    background: #e3f2fd;
+    color: #1976d2;
+    font-weight: 700;
+}
+
+.schedule-day-header.absent-day {
+    background: #ffebee;
+    color: #d32f2f;
+    position: relative;
+}
+
+.absence-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 12px;
+}
+
+.schedule-time-label {
+    padding: 8px 4px;
+    font-size: 12px;
+    color: #6c757d;
+    text-align: center;
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #f1f3f4;
+    background: #f8f9fa;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.schedule-time-slot {
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #f1f3f4;
+    position: relative;
+    min-height: 40px;
+    padding: 2px;
+}
+
+.schedule-time-slot:last-child {
+    border-right: none;
+}
+
+.schedule-time-slot.absent-slot {
+    background: #ffebee;
+    opacity: 0.7;
+}
+
+.schedule-empty-slot {
+    height: 100%;
+    background: #fafafa;
+}
+
+.schedule-appointment {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #1976d2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    z-index: 2;
+}
+
+.schedule-appointment:hover {
+    background: #bbdefb;
+    transform: scale(1.02);
+    z-index: 3;
+}
+
+.schedule-appointment.completed {
+    background: #e8f5e8;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+
+.schedule-appointment.cancelled {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.schedule-appointment.confirmed {
+    background: #fff3e0;
+    border-color: #ff9800;
+    color: #ef6c00;
+}
+
+.schedule-appointment.no-show {
+    background: #f3e5f5;
+    border-color: #9c27b0;
+    color: #7b1fa2;
+}
+
+.schedule-appointment.in-progress {
+    background: #e1f5fe;
+    border-color: #00bcd4;
+    color: #00695c;
+}
+
+.appointment-patient-name {
+    font-weight: 600;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.appointment-service {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+
+.appointment-time {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-bottom: 2px;
+}
+
+.appointment-status {
+    font-size: 9px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.appointment-status-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.appointment-status-icon.scheduled {
+    background: #2196f3;
+}
+
+.appointment-status-icon.completed {
+    background: #4caf50;
+}
+
+.appointment-status-icon.cancelled {
+    background: #f44336;
+}
+
+.appointment-status-icon.confirmed {
+    background: #ff9800;
+}
+
+.appointment-status-icon.no-show {
+    background: #9c27b0;
+}
+
+.appointment-status-icon.in-progress {
+    background: #00bcd4;
+}
+
+.schedule-appointment-continuation {
+    height: 100%;
+    background: transparent;
+}
+
+.schedule-no-data {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.schedule-no-data h4 {
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .weekly-schedule-grid {
+        grid-template-columns: 60px repeat(7, 1fr);
+    }
+    
+    .schedule-time-header, .schedule-day-header {
+        padding: 8px 4px;
+        font-size: 12px;
+    }
+    
+    .schedule-time-label {
+        padding: 4px 2px;
+        font-size: 10px;
+    }
+    
+    .schedule-appointment {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+}
+
+/* Animation for cards */
+.provider-schedule-day-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.provider-schedule-day-card:nth-child(1) { animation-delay: 0.1s; }
+.provider-schedule-day-card:nth-child(2) { animation-delay: 0.2s; }
+.provider-schedule-day-card:nth-child(3) { animation-delay: 0.3s; }
+.provider-schedule-day-card:nth-child(4) { animation-delay: 0.4s; }
+.provider-schedule-day-card:nth-child(5) { animation-delay: 0.5s; }
+.provider-schedule-day-card:nth-child(6) { animation-delay: 0.6s; }
+.provider-schedule-day-card:nth-child(7) { animation-delay: 0.7s; } 
