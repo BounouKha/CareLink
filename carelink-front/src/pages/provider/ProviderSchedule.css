@@ -96,7 +96,7 @@
 /* Status badges */
 .status-scheduled {
     background-color: #17a2b8;
-    color: white;
+    color: rgb(10, 10, 10);
 }
 
 .status-completed {
