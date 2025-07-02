@@ -35,6 +35,7 @@ from account.views.provider import (
     provider_all_absences, provider_absence_check, ContractViewSet, my_contracts, my_schedule, my_absences
 )
 from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
+from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView
 
 
 
@@ -114,5 +115,10 @@ urlpatterns += [
     path('providers/my-contracts/', my_contracts, name='my_contracts'),
     path('providers/my-schedule/', my_schedule, name='my_schedule'),
     path('providers/my-absences/', my_absences, name='my_absences'),
-
+    path('my-invoices/', MyInvoicesView.as_view(), name='my-invoices'),
+    path('patients/<int:patient_id>/invoices/', InvoiceListView.as_view(), name='invoice-list'),
+    path('patients/<int:patient_id>/invoices/create/', InvoiceCreateView.as_view(), name='invoice-create'),
+    path('invoices/<int:id>/', InvoiceDetailView.as_view(), name='invoice-detail'),
+    path('invoices/<int:invoice_id>/lines/', InvoiceLinesView.as_view(), name='invoice-lines'),
+    path('invoices/<int:invoice_id>/contest/', ContestInvoiceView.as_view(), name='invoice-contest'),
 ]
