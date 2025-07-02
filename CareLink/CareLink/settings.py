@@ -294,3 +294,6 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+# Cron Service Configuration
+CRON_SECRET_TOKEN = 'carelink-invoice-2024-secret-token-change-this-in-production'
