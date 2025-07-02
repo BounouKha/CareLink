@@ -184,7 +184,8 @@ export const getNavigationItems = (user) => {
     if (isPatient(user)) {
         items.push(
             { key: 'service-requests', label: 'Service Requests', path: '/service-demands', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT] },
-            { key: 'schedule', label: 'Schedule', path: '/schedule', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT] }
+            { key: 'schedule', label: 'Schedule', path: '/schedule', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT] },
+            { key: 'invoices', label: 'Invoices', path: '/invoices', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT] }
         );
     }
     

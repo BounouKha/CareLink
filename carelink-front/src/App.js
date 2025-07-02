@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import HomePage from './auth/layout/HomePage';
 import RegisterPage from './auth/register/RegisterPage';
 import ProfilePage from './auth/profile/ProfilePage';
@@ -29,6 +29,7 @@ import { AdminProvider } from './auth/login/AdminContext';
 import { SpinnerOnly } from './components/LoadingComponents';
 import CookieSettingsButton from './components/CookieSettingsButton';
 import './i18n'; // Initialize i18n
+import PatientInvoices from './pages/invoices/PatientInvoices';
 
 function App() {
     return (
@@ -87,6 +88,7 @@ function App() {
                             <Route path="/test-auth" element={<TestUserAuth />} />
                             <Route path="/test-tokens" element={<TokenTestPage />} />
                             <Route path="/translation-demo" element={<TranslationDemo />} />
+                            <Route path="/invoices/:patientId?" element={<PatientInvoicesWrapper />} />
                         </Routes>
                         <CookieSettingsButton />
                     </div>
@@ -94,6 +96,12 @@ function App() {
             </AdminProvider>
         </Suspense>
     );
+}
+
+// Wrapper component to handle patientId from URL
+function PatientInvoicesWrapper() {
+    const { patientId } = useParams();
+    return <PatientInvoices patientId={patientId} />;
 }
 
 export default App;
