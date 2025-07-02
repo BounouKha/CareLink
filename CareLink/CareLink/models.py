@@ -406,24 +406,29 @@ class InformationProviding(models.Model):
 class Invoice(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    period_start = models.DateField(null=True, blank=True)
+    period_end = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=[('Paid', 'Paid'), ('In Progress', 'In Progress'), ('Cancelled', 'Cancelled'), ('Contested', 'Contested')])
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     recall_at = models.DateTimeField(null=True, blank=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    timeslots = models.ManyToManyField('TimeSlot', blank=True)
-    service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
 
     def calculate_total_amount(self):
-        """Calculate the total amount for all timeslots in this invoice."""
-        if self.service:
-            return sum(timeslot.calculate_price() for timeslot in self.timeslots.filter(service=self.service))
-        return 0.0
+        return sum(line.price for line in self.lines.all())
 
-    def generate_invoice(self, date, service):
-        """Generate an invoice for all timeslots on a specific date and service."""
-        self.service = service
-        self.timeslots.set(TimeSlot.objects.filter(start_time__date=date, service=service))
+    def update_amount(self):
         self.amount = self.calculate_total_amount()
         self.save()
+
+class InvoiceLine(models.Model):
+    invoice = models.ForeignKey('Invoice', on_delete=models.CASCADE, related_name='lines')
+    timeslot = models.ForeignKey('TimeSlot', on_delete=models.SET_NULL, null=True)
+    service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
+    provider = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True)
+    date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=[('scheduled', 'Scheduled'), ('confirmed', 'Confirmed'), ('in_progress', 'In Progress'), ('completed', 'Completed'), ('cancelled', 'Cancelled'), ('no_show', 'No Show')])
 
 class MedicalFolder(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
@@ -511,6 +516,7 @@ class Patient(models.Model):
 
 class Payment(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
+    invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True, blank=True)
     payment_token = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=[('Pending', 'Pending'), ('Succeeded', 'Succeeded'), ('Failed', 'Failed')])
