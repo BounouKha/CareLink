@@ -7,6 +7,13 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime
 import logging
 from django.db import transaction
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.core.management import call_command
+from django.conf import settings
+from io import StringIO
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -289,5 +296,91 @@ class ContestInvoiceView(generics.CreateAPIView):
             logger.error(f"Failed to contest invoice {invoice.id}: {str(e)}")
             return Response(
                 {"error": f"Failed to contest invoice: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GenerateInvoicesView(generics.GenericAPIView):
+    """Trigger invoice generation via HTTP request for production automation"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        # Check if user is admin/staff
+        if not (request.user.is_superuser or request.user.is_staff):
+            return Response(
+                {"error": "Only administrators can trigger invoice generation"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            # Capture command output
+            out = StringIO()
+            err = StringIO()
+            
+            # Run the management command
+            call_command('generate_monthly_invoices', stdout=out, stderr=err)
+            
+            output = out.getvalue()
+            error_output = err.getvalue()
+            
+            logger.info(f"Invoice generation triggered by user {request.user.id}")
+            
+            return Response({
+                "message": "Invoice generation completed successfully",
+                "output": output,
+                "errors": error_output if error_output else None
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Invoice generation failed: {str(e)}")
+            return Response(
+                {"error": f"Invoice generation failed: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CronGenerateInvoicesView(generics.GenericAPIView):
+    """Secure endpoint for external cron services"""
+    permission_classes = []  # No authentication required, uses token instead
+    
+    def post(self, request, *args, **kwargs):
+        # Get the secret token from request headers or body
+        auth_token = request.headers.get('X-Cron-Token') or request.data.get('token')
+        
+        # Check against your secret token from settings
+        expected_token = getattr(settings, 'CRON_SECRET_TOKEN', 'default-token')
+        
+        if not auth_token or auth_token != expected_token:
+            logger.warning(f"Invalid cron token attempt: {auth_token}")
+            return Response(
+                {"error": "Invalid or missing authentication token"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        try:
+            # Capture command output
+            out = StringIO()
+            err = StringIO()
+            
+            # Run the management command
+            call_command('generate_monthly_invoices', stdout=out, stderr=err)
+            
+            output = out.getvalue()
+            error_output = err.getvalue()
+            
+            logger.info("Invoice generation triggered by external cron service")
+            
+            return Response({
+                "success": True,
+                "message": "Invoice generation completed successfully",
+                "timestamp": datetime.now().isoformat(),
+                "output": output,
+                "errors": error_output if error_output else None
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Cron invoice generation failed: {str(e)}")
+            return Response(
+                {"success": False, "error": f"Invoice generation failed: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             ) 
