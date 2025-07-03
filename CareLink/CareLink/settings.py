@@ -204,6 +204,100 @@ SIMPLE_JWT = {
 }
 
 
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'detailed': {
+            'format': '[{asctime}] {levelname} - {name} - {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'carelink.log',
+            'formatter': 'detailed',
+            'encoding': 'utf-8',
+        },
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'formatter': 'detailed',
+            'encoding': 'utf-8',
+        },
+        'admin_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'admin.log',
+            'formatter': 'detailed',
+            'encoding': 'utf-8',
+        },
+        'ticket_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'tickets.log',
+            'formatter': 'detailed',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'carelink': {
+            'handlers': ['console', 'file', 'admin_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'account.views.ticket': {
+            'handlers': ['console', 'ticket_file', 'admin_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'account.views.login': {
+            'handlers': ['console', 'security_file', 'admin_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'account.views.logout': {
+            'handlers': ['console', 'security_file', 'admin_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'account.views.invoice': {
+            'handlers': ['console', 'admin_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+
 # Secure default settings
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -220,80 +314,7 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Logging Configuration
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-        'admin': {
-            'format': '[ADMIN] {levelname} {asctime} {module} - {message}',
-            'style': '{',
-        },
-    },    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'carelink.log',
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
-        },
-        'admin_file': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'admin.log',
-            'formatter': 'admin',
-            'encoding': 'utf-8',
-        },
-        'error_file': {
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'errors.log',
-            'formatter': 'verbose',
-            'level': 'ERROR',
-            'encoding': 'utf-8',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['file', 'error_file'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'carelink': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'carelink.admin': {
-            'handlers': ['admin_file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'rest_framework': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-    },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-}
+
 
 # Cron Service Configuration
 CRON_SECRET_TOKEN = 'carelink-invoice-2024-secret-token-change-this-in-production'

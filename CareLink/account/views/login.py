@@ -6,6 +6,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from CareLink.models import CookieConsent
 import logging
+from datetime import datetime
+from ..services.activity_logger import ActivityLogger
 
 logger = logging.getLogger('carelink')
 
@@ -13,18 +15,36 @@ class LoginAPIView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
+        
+        # Get client IP address
+        client_ip = self.get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown')
 
         # Debugging: Log email and password
         print("[DEBUG] Email:", email)
         print("[DEBUG] Password:", password)
 
         if not email or not password:
+            logger.warning(
+                f"LOGIN FAILED - Missing credentials - IP: {client_ip}, "
+                f"User Agent: {user_agent[:100]}"
+            )
             print("[DEBUG] Missing email or password.")
             return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(request, email=email, password=password)
 
         if user is not None:
+            # Log successful login
+            logger.info(
+                f"LOGIN SUCCESSFUL - User: {user.firstname} {user.lastname} "
+                f"({user.email}) - Role: {user.role} - IP: {client_ip} - "
+                f"User Agent: {user_agent[:100]}"
+            )
+            
+            # Log to database for admin panel
+            ActivityLogger.log_login(user, client_ip, user_agent)
+            
             # Debugging: Log successful authentication
             print("[DEBUG] User authenticated:", user)
 
@@ -74,6 +94,24 @@ class LoginAPIView(APIView):
             print("[DEBUG] 🍪 Refresh token set in HttpOnly cookie")
             return response
         else:
+            # Log failed login attempt
+            logger.warning(
+                f"LOGIN FAILED - Invalid credentials for email: {email} - "
+                f"IP: {client_ip} - User Agent: {user_agent[:100]}"
+            )
+            
+            # Log to database for admin panel
+            ActivityLogger.log_login_failed(email, client_ip, user_agent)
+            
             # Debugging: Log failed authentication
             print("[DEBUG] Invalid credentials.")
             return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    def get_client_ip(self, request):
+        """Get the client's IP address"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip

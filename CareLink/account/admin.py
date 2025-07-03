@@ -17,17 +17,18 @@ logger = logging.getLogger('carelink.admin')
 # Custom User Admin
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('email', 'firstname', 'lastname', 'role', 'is_active', 'is_staff', 'created_at')
+    list_display = ('email', 'firstname', 'lastname', 'role', 'is_active', 'is_staff', 'created_at', 'unpaid_invoices_count')
     list_filter = ('role', 'is_active', 'is_staff', 'is_admin', 'created_at')
     search_fields = ('email', 'firstname', 'lastname', 'national_number')
     ordering = ('-created_at',)
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'unpaid_invoices_count')
     
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('firstname', 'lastname', 'birthdate', 'address', 'national_number')}),
         ('Role & Permissions', {'fields': ('role', 'is_active', 'is_staff', 'is_admin', 'is_superuser')}),
         ('Important dates', {'fields': ('created_at', 'updated_at', 'last_login')}),
+        ('Financial Status', {'fields': ('unpaid_invoices_count',), 'classes': ('collapse',)}),
     )
     
     add_fieldsets = (
@@ -43,6 +44,152 @@ class UserAdmin(BaseUserAdmin):
         else:
             logger.info(f"User {obj.email} created by {request.user.email}")
         super().save_model(request, obj, form, change)
+    
+    def unpaid_invoices_count(self, obj):
+        """Display count of pending invoices for this user (In Progress or Contested)"""
+        from CareLink.models import Invoice, Patient
+        
+        # Check if user is a patient
+        try:
+            patient = Patient.objects.get(user=obj)
+            pending_count = Invoice.objects.filter(
+                patient=patient,
+                status__in=['In Progress', 'Contested']
+            ).count()
+            
+            if pending_count > 0:
+                return format_html(
+                    '<span style="color: red; font-weight: bold;">{} pending invoices</span>',
+                    pending_count
+                )
+            else:
+                return format_html(
+                    '<span style="color: green;">No pending invoices</span>'
+                )
+        except Patient.DoesNotExist:
+            return format_html(
+                '<span style="color: gray;">Not a patient</span>'
+            )
+    unpaid_invoices_count.short_description = 'Pending Invoices'
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion if user has pending invoices (In Progress or Contested)"""
+        if obj is None:
+            return super().has_delete_permission(request, obj)
+        
+        from CareLink.models import Invoice, Patient
+        
+        # Check if user is a patient
+        try:
+            patient = Patient.objects.get(user=obj)
+            pending_invoices = Invoice.objects.filter(
+                patient=patient,
+                status__in=['In Progress', 'Contested']
+            )
+            
+            if pending_invoices.exists():
+                # Log the deletion attempt
+                logger.warning(
+                    f"USER DELETION BLOCKED - User: {obj.firstname} {obj.lastname} "
+                    f"({obj.email}) - Reason: Has {pending_invoices.count()} pending invoices - "
+                    f"Attempted by: {request.user.firstname} {request.user.lastname} "
+                    f"({request.user.email})"
+                )
+                
+                # Log to database for admin panel
+                from .services.activity_logger import ActivityLogger
+                ActivityLogger.log_unauthorized_access(
+                    request.user,
+                    'USER_DELETION_BLOCKED',
+                    'User',
+                    obj.id,
+                    request.META.get('REMOTE_ADDR')
+                )
+                
+                return False
+        except Patient.DoesNotExist:
+            # User is not a patient, allow deletion
+            pass
+        
+        return super().has_delete_permission(request, obj)
+    
+    def delete_model(self, request, obj):
+        """Log successful user deletion"""
+        logger.info(
+            f"USER DELETED - User: {obj.firstname} {obj.lastname} "
+            f"({obj.email}) - Deleted by: {request.user.firstname} "
+            f"{request.user.lastname} ({request.user.email})"
+        )
+        
+        # Log to database for admin panel
+        from .services.activity_logger import ActivityLogger
+        ActivityLogger.log_unauthorized_access(
+            request.user,
+            'USER_DELETED',
+            'User',
+            obj.id,
+            request.META.get('REMOTE_ADDR')
+        )
+        
+        super().delete_model(request, obj)
+    
+    def delete_queryset(self, request, queryset):
+        """Handle bulk deletion with invoice validation"""
+        from CareLink.models import Invoice, Patient
+        
+        blocked_users = []
+        allowed_users = []
+        
+        for user in queryset:
+            try:
+                patient = Patient.objects.get(user=user)
+                pending_invoices = Invoice.objects.filter(
+                    patient=patient,
+                    status__in=['In Progress', 'Contested']
+                )
+                
+                if pending_invoices.exists():
+                    blocked_users.append({
+                        'user': user,
+                        'invoice_count': pending_invoices.count()
+                    })
+                else:
+                    allowed_users.append(user)
+            except Patient.DoesNotExist:
+                allowed_users.append(user)
+        
+        # Log blocked deletions
+        for blocked in blocked_users:
+            logger.warning(
+                f"BULK USER DELETION BLOCKED - User: {blocked['user'].firstname} "
+                f"{blocked['user'].lastname} ({blocked['user'].email}) - "
+                f"Reason: Has {blocked['invoice_count']} pending invoices - "
+                f"Attempted by: {request.user.firstname} {request.user.lastname} "
+                f"({request.user.email})"
+            )
+        
+        # Only delete allowed users
+        if allowed_users:
+            super().delete_queryset(request, User.objects.filter(id__in=[u.id for u in allowed_users]))
+        
+        # Show message about blocked deletions
+        if blocked_users:
+            blocked_names = [f"{b['user'].firstname} {b['user'].lastname}" for b in blocked_users]
+            self.message_user(
+                request,
+                f"Could not delete {len(blocked_users)} users with pending invoices: {', '.join(blocked_names)}",
+                level='WARNING'
+            )
+        
+        if allowed_users:
+            self.message_user(
+                request,
+                f"Successfully deleted {len(allowed_users)} users without pending invoices."
+            )
+    
+    def get_queryset(self, request):
+        """Optimize queryset with related data"""
+        return super().get_queryset(request).select_related()
 
 @admin.register(Administrative)
 class AdministrativeAdmin(admin.ModelAdmin):
@@ -447,25 +594,123 @@ class UserActionLogAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('user', 'action_type', 'target_model', 'target_id', 'created_at')
+            'fields': ('user', 'action_type', 'created_at')
         }),
-        ('Affected Entities', {
-            'fields': ('affected_patient_name', 'affected_provider_name')
+        ('Target Information', {
+            'fields': ('target_model', 'target_id', 'description')
         }),
-        ('Details', {
-            'fields': ('description', 'additional_data'),
+        ('Affected Parties', {
+            'fields': ('affected_patient_name', 'affected_provider_name'),
+            'classes': ('collapse',)
+        }),
+        ('Additional Data', {
+            'fields': ('additional_data',),
             'classes': ('collapse',)
         }),
     )
     
     def user_name(self, obj):
         if obj.user:
-            return f"{obj.user.firstname} {obj.user.lastname} ({obj.user.email})"
-        return "No User"
-    user_name.short_description = 'User Who Made Action'
+            return f"{obj.user.firstname} {obj.user.lastname} ({obj.user.role})"
+        return "Anonymous/System"
+    user_name.short_description = 'User'
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user')
+    
+    def has_add_permission(self, request):
+        return False  # Prevent manual creation of log entries
+    
+    def has_change_permission(self, request, obj=None):
+        return False  # Prevent editing of log entries
+    
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser  # Only superusers can delete logs
+    
+    # Custom admin actions
+    actions = ['export_recent_activities', 'clear_old_logs']
+    
+    def export_recent_activities(self, request, queryset):
+        """Export recent activities to CSV"""
+        import csv
+        from django.http import HttpResponse
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Get activities from last 7 days
+        cutoff_date = timezone.now() - timedelta(days=7)
+        recent_activities = UserActionLog.objects.filter(created_at__gte=cutoff_date)
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="user_activities_{timezone.now().strftime("%Y%m%d")}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['Timestamp', 'User', 'Action', 'Target', 'Description', 'IP Address'])
+        
+        for activity in recent_activities:
+            ip_address = activity.additional_data.get('ip_address', 'N/A') if activity.additional_data else 'N/A'
+            writer.writerow([
+                activity.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                self.user_name(activity),
+                activity.action_type,
+                f"{activity.target_model} #{activity.target_id}" if activity.target_id else activity.target_model,
+                activity.description,
+                ip_address
+            ])
+        
+        return response
+    export_recent_activities.short_description = "Export recent activities to CSV"
+    
+    def clear_old_logs(self, request, queryset):
+        """Clear logs older than 30 days"""
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        cutoff_date = timezone.now() - timedelta(days=30)
+        old_logs = UserActionLog.objects.filter(created_at__lt=cutoff_date)
+        count = old_logs.count()
+        old_logs.delete()
+        
+        self.message_user(request, f"Successfully deleted {count} log entries older than 30 days.")
+    clear_old_logs.short_description = "Clear logs older than 30 days"
+    
+    # Custom list display for better readability
+    def get_list_display(self, request):
+        """Customize list display based on user permissions"""
+        base_display = list(super().get_list_display(request))
+        
+        # Add action type color coding for better visibility
+        if 'action_type' in base_display:
+            base_display[base_display.index('action_type')] = 'colored_action_type'
+        
+        return base_display
+    
+    def colored_action_type(self, obj):
+        """Display action type with color coding"""
+        colors = {
+            'LOGIN_SUCCESSFUL': 'green',
+            'LOGOUT_SUCCESSFUL': 'blue',
+            'LOGIN_FAILED': 'red',
+            'UNAUTHORIZED_ACCESS': 'red',
+            'TICKET_CREATED': 'green',
+            'TICKET_UPDATED': 'orange',
+            'TICKET_STATUS_CHANGED': 'purple',
+            'TICKET_ASSIGNED': 'blue',
+            'TICKET_COMMENT_CREATED': 'green',
+            'TICKET_COMMENT_UPDATED': 'orange',
+            'TICKET_COMMENT_DELETED': 'red',
+            'INVOICE_GENERATED': 'green',
+            'INVOICE_CONTESTED': 'red',
+        }
+        
+        color = colors.get(obj.action_type, 'black')
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            obj.action_type
+        )
+    colored_action_type.short_description = 'Action Type'
+    colored_action_type.admin_order_field = 'action_type'
 
 @admin.register(UserToken)
 class UserTokenAdmin(admin.ModelAdmin):

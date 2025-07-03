@@ -6,6 +6,8 @@ from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 from django.utils import timezone
+import logging
+from ..services.activity_logger import ActivityLogger
 
 from CareLink.models import (
     EnhancedTicket, 
@@ -18,6 +20,7 @@ from ..serializers.ticket import (
     CreateTicketCommentSerializer, TicketStatusHistorySerializer, UpdateTicketStatusSerializer, TicketFilterSerializer
 )
 
+logger = logging.getLogger(__name__)
 
 class EnhancedTicketViewSet(viewsets.ModelViewSet):
     """
@@ -86,6 +89,18 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
         """Create ticket and send notifications"""
         ticket = serializer.save()
         
+        # Log ticket creation
+        logger.info(
+            f"TICKET CREATED - ID: {ticket.id}, Title: '{ticket.title}', "
+            f"Category: {ticket.category}, Priority: {ticket.priority}, "
+            f"Assigned Team: {ticket.assigned_team}, "
+            f"Created by: {self.request.user.firstname} {self.request.user.lastname} "
+            f"({self.request.user.role})"
+        )
+        
+        # Log to database for admin panel
+        ActivityLogger.log_ticket_created(ticket, self.request.user)
+        
         # Create initial status history
         TicketStatusHistory.objects.create(
             ticket=ticket,
@@ -103,8 +118,25 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
         previous_status = self.get_object().status
         ticket = serializer.save()
         
+        # Log ticket update
+        logger.info(
+            f"TICKET UPDATED - ID: {ticket.id}, Title: '{ticket.title}', "
+            f"Updated by: {self.request.user.firstname} {self.request.user.lastname} "
+            f"({self.request.user.role})"
+        )
+        
+        # Log to database for admin panel
+        ActivityLogger.log_ticket_updated(ticket, self.request.user, previous_status, ticket.status)
+        
         # Track status changes
         if previous_status != ticket.status:
+            logger.info(
+                f"TICKET STATUS CHANGED - ID: {ticket.id}, "
+                f"From: {previous_status} To: {ticket.status}, "
+                f"Changed by: {self.request.user.firstname} {self.request.user.lastname} "
+                f"({self.request.user.role})"
+            )
+            
             TicketStatusHistory.objects.create(
                 ticket=ticket,
                 previous_status=previous_status,
@@ -120,7 +152,20 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(ticket, data=request.data, partial=True)
         
         if serializer.is_valid():
-            serializer.save()
+            previous_status = ticket.status
+            ticket = serializer.save()
+            
+            # Log status update
+            logger.info(
+                f"TICKET STATUS UPDATED - ID: {ticket.id}, "
+                f"From: {previous_status} To: {ticket.status}, "
+                f"Updated by: {request.user.firstname} {request.user.lastname} "
+                f"({request.user.role}), Notes: {request.data.get('notes', 'No notes')}"
+            )
+            
+            # Log to database for admin panel
+            ActivityLogger.log_ticket_updated(ticket, request.user, previous_status, ticket.status)
+            
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -131,13 +176,39 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
         
         # Check if user can assign this ticket
         if not ticket.can_user_access(request.user):
+            logger.warning(
+                f"UNAUTHORIZED TICKET ASSIGNMENT ATTEMPT - Ticket ID: {ticket.id}, "
+                f"User: {request.user.firstname} {request.user.lastname} "
+                f"({request.user.role})"
+            )
+            
+            # Log unauthorized access to database
+            ActivityLogger.log_unauthorized_access(
+                request.user, 
+                'TICKET_ASSIGNMENT', 
+                'EnhancedTicket', 
+                ticket.id
+            )
+            
             return Response(
                 {"error": "You don't have permission to assign this ticket"},
                 status=status.HTTP_403_FORBIDDEN
             )
         
+        previous_assignee = ticket.assigned_to
         ticket.assigned_to = request.user
         ticket.save()
+        
+        # Log ticket assignment
+        logger.info(
+            f"TICKET ASSIGNED - ID: {ticket.id}, "
+            f"From: {previous_assignee.firstname if previous_assignee else 'Unassigned'} "
+            f"To: {request.user.firstname} {request.user.lastname} "
+            f"({request.user.role})"
+        )
+        
+        # Log to database for admin panel
+        ActivityLogger.log_ticket_assigned(ticket, request.user, previous_assignee)
         
         # Create status history entry
         TicketStatusHistory.objects.create(
@@ -208,6 +279,11 @@ class TicketCommentViewSet(viewsets.ModelViewSet):
     Provides CRUD operations for ticket comments
     """
     permission_classes = [IsAuthenticated]
+    serializer_class = TicketCommentSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['ticket']
+    ordering_fields = ['created_at']
+    ordering = ['created_at']
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -222,31 +298,76 @@ class TicketCommentViewSet(viewsets.ModelViewSet):
         if user.is_superuser or user.is_staff:
             return TicketComment.objects.all()
         
-        # Regular users can only see comments they can view
-        queryset = TicketComment.objects.filter(
-            Q(created_by=user) |  # Their own comments
-            Q(ticket__created_by=user) |  # Comments on their tickets
-            Q(ticket__assigned_to=user)  # Comments on tickets assigned to them
-        )
-        
-        # Filter out internal comments for non-team members
-        if user.role not in ['Coordinator', 'Administrator', 'Administrative']:
-            queryset = queryset.filter(is_internal=False)
-        
-        return queryset
+        # Team-based filtering for coordinators and administrators
+        if user.role == 'Coordinator':
+            return TicketComment.objects.filter(
+                Q(ticket__created_by=user) |  # Comments on tickets they created
+                Q(ticket__assigned_team='Coordinator') |  # Comments on Coordinator team tickets
+                Q(ticket__assigned_to=user) |  # Comments on tickets assigned to them
+                Q(created_by=user)  # Comments they created
+            )
+        elif user.role == 'Administrator' or user.role == 'Administrative':
+            return TicketComment.objects.filter(
+                Q(ticket__created_by=user) |  # Comments on tickets they created
+                Q(ticket__assigned_team='Administrator') |  # Comments on Administrator team tickets
+                Q(ticket__assigned_to=user) |  # Comments on tickets assigned to them
+                Q(created_by=user)  # Comments they created
+            )
+        else:
+            # Regular users can only see comments on their own tickets
+            return TicketComment.objects.filter(ticket__created_by=user)
     
     def perform_create(self, serializer):
-        """Create comment and send notifications"""
-        # Check if user can access the ticket before creating comment
-        ticket = serializer.validated_data.get('ticket')
-        if not ticket.can_user_access(self.request.user):
-            raise PermissionError("You don't have permission to comment on this ticket")
-        
+        """Create comment and log the action"""
         comment = serializer.save()
         
-        # TODO: Send notification to ticket creator and assigned user
-        # self.send_comment_notification(comment)
+        # Log comment creation
+        logger.info(
+            f"TICKET COMMENT CREATED - Ticket ID: {comment.ticket.id}, "
+            f"Comment ID: {comment.id}, "
+            f"Created by: {self.request.user.firstname} {self.request.user.lastname} "
+            f"({self.request.user.role}), "
+            f"Content: '{comment.comment[:100]}{'...' if len(comment.comment) > 100 else ''}'"
+        )
+        
+        # Log to database for admin panel
+        ActivityLogger.log_comment_created(comment, self.request.user)
     
+    def perform_update(self, serializer):
+        """Update comment and log the action"""
+        comment = serializer.save()
+        
+        # Log comment update
+        logger.info(
+            f"TICKET COMMENT UPDATED - Ticket ID: {comment.ticket.id}, "
+            f"Comment ID: {comment.id}, "
+            f"Updated by: {self.request.user.firstname} {self.request.user.lastname} "
+            f"({self.request.user.role}), "
+            f"Content: '{comment.comment[:100]}{'...' if len(comment.comment) > 100 else ''}'"
+        )
+        
+        # Log to database for admin panel
+        ActivityLogger.log_comment_updated(comment, self.request.user)
+    
+    def perform_destroy(self, instance):
+        """Delete comment and log the action"""
+        ticket_id = instance.ticket.id
+        ticket_title = instance.ticket.title
+        comment_id = instance.id
+        user_info = f"{self.request.user.firstname} {self.request.user.lastname} ({self.request.user.role})"
+        
+        # Log comment deletion
+        logger.info(
+            f"TICKET COMMENT DELETED - Ticket ID: {ticket_id}, "
+            f"Comment ID: {comment_id}, "
+            f"Deleted by: {user_info}"
+        )
+        
+        # Log to database for admin panel
+        ActivityLogger.log_comment_deleted(ticket_id, ticket_title, comment_id, self.request.user)
+        
+        instance.delete()
+
     @action(detail=False, methods=['get'])
     def by_ticket(self, request):
         """Get comments for a specific ticket"""
