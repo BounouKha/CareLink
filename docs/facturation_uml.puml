@@ -1,0 +1,147 @@
+@startuml FacturationClassDiagram
+' =============================
+'  CLASS DIAGRAM – Core Model
+' =============================
+skinparam classAttributeIconSize 0
+hide empty members
+
+class Patient {
+  UUID id
+  String firstName
+  String lastName
+  +getInvoices()
+}
+
+class Invoice {
+  UUID id
+  Date periodStart
+  Date periodEnd
+  Money totalAmount
+  InvoiceStatus status
+  Date createdAt
+  +addLine()
+  +getLines()
+}
+
+class InvoiceLine {
+  UUID id
+  Date date
+  Time startTime
+  Time endTime
+  String service
+  String provider
+  Money price
+  Boolean contested
+}
+
+class Timeslot {
+  UUID id
+  DateTime start
+  DateTime end
+  String service
+  String provider
+  TimeslotStatus status
+}
+
+class Contestation {
+  UUID id
+  DateTime createdAt
+  String reason
+  ContestationStatus status
+  +open()
+  +close()
+}
+
+class ContestationLine {
+  UUID id
+}
+
+abstract class User {
+  UUID id
+  String email
+  UserRole role
+}
+
+class Administrator
+class FamilyAccount
+class Coordinator
+
+class Service {
+  UUID id
+  String name
+  Money unitPrice
+}
+
+class Provider {
+  UUID id
+  String name
+}
+
+' Relationships
+User <|-- Patient
+User <|-- Administrator
+User <|-- FamilyAccount
+User <|-- Coordinator
+
+Patient "1" o-- "many" Invoice
+Invoice "1" o-- "many" InvoiceLine
+InvoiceLine "many" --> "1" Timeslot
+Timeslot "1" --> "1" Service
+Timeslot "1" --> "1" Provider
+Invoice "0..1" o-- Contestation
+Contestation "1" o-- "many" ContestationLine
+InvoiceLine "0..1" o-- ContestationLine
+@enduml
+
+' ==================================================================
+'  SEQUENCE DIAGRAM – Automatic Invoice Generation (Cron Workflow)
+' ==================================================================
+@startuml AutomaticInvoiceGeneration
+actor Cron as "Cron Service"
+participant "Invoice API" as API
+participant "Auth Service" as Auth
+participant "InvoiceGenerationService" as Gen
+database DB
+participant "LogService" as Log
+
+Cron -> API: POST /account/invoices/cron-generate/ (CronToken)
+API -> Auth: validate(CronToken)
+Auth --> API: OK
+API --> Cron: 202 Accepted
+API -> Gen: generateInvoices(period)
+Gen -> DB: fetchPatientsWithValidatedTimeslots(period)
+loop for each Patient
+  Gen -> DB: create Invoice
+  loop for each Timeslot
+    Gen -> DB: create InvoiceLine
+  end
+end
+Gen -> Log: writeAudit(success | errors)
+@enduml
+
+' ================================================================
+'  SEQUENCE DIAGRAM – Contestation Workflow
+' ================================================================
+@startuml InvoiceContestation
+actor Patient
+participant "Web UI (React)" as UI
+participant "Invoice API" as API
+participant "Auth Service" as Auth
+participant DB
+participant "Ticketing Service" as Ticket
+
+Patient -> UI: Open Invoice Detail
+UI -> API: GET /account/invoices/{id}/lines/
+API -> Auth: validate(JWT)
+Auth --> API: OK
+API -> DB: fetchInvoiceLines(id)
+API --> UI: lines
+Patient -> UI: Select lines & enter reason
+UI -> API: POST /account/invoices/{id}/contest/ {lines, reason}
+API -> Auth: validate(JWT)
+Auth --> API: OK
+API -> DB: create Contestation & ContestationLines
+API -> Ticket: createSupportTicket(contestation)
+API --> UI: 201 Created
+UI --> Patient: Confirmation message
+@enduml
