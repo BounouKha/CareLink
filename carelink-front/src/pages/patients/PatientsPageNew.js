@@ -593,7 +593,11 @@ const PatientsPageNew = () => {
                                         <div className="row mb-2">
                                             <div className="col-md-6">
                                                 <p className="mb-1"><strong>{patientTranslations('email')}:</strong> {patient.email || 'N/A'}</p>
-                                                <p className="mb-1"><strong>{patientTranslations('phone')}:</strong> {patient.emergency_contact || 'N/A'}</p>
+                                                <p className="mb-1"><strong>{patientTranslations('phone')}:</strong> {
+                                                    patient.emergency_contact_name && patient.emergency_contact_phone 
+                                                        ? `${patient.emergency_contact_name} - ${patient.emergency_contact_phone}`
+                                                        : 'N/A'
+                                                }</p>
                                             </div>
                                             <div className="col-md-6">
                                                 <p className="mb-1"><strong>{patientTranslations('birthdate')}:</strong> {patient.birth_date || 'N/A'}</p>
