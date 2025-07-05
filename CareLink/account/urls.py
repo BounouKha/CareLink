@@ -38,6 +38,7 @@ from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, Ti
 from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView, GenerateInvoicesView, CronGenerateInvoicesView
 from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView
 from .views.appointment_comments import AppointmentCommentAPIView, CheckCommentPermissionAPIView, CoordinatorViewCommentsAPIView
+from .views.patient_details import PatientDetailsView
 
 
 
@@ -133,4 +134,5 @@ urlpatterns += [
     path('appointment-comments/<int:timeslot_id>/', AppointmentCommentAPIView.as_view(), name='appointment-comments'),
     path('appointment-comments/<int:timeslot_id>/check-permission/', CheckCommentPermissionAPIView.as_view(), name='check-comment-permission'),
     path('coordinator-comments/<int:timeslot_id>/', CoordinatorViewCommentsAPIView.as_view(), name='coordinator-comments'),
+    path('patient-details/<int:patient_id>/', PatientDetailsView.as_view(), name='patient-details'),
 ]
