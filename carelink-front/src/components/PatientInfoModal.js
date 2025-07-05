@@ -217,7 +217,11 @@ const PatientInfoModal = ({ appointment, onClose }) => {
                                     </h6>
                                     <div className="row">
                                         <div className="col-md-6 mb-2">
-                                            <strong>Emergency Contact:</strong> {patientDetails?.emergency_contact || 'N/A'}
+                                            <strong>Emergency Contact:</strong> {
+                                                patientDetails?.emergency_contact_name && patientDetails?.emergency_contact_phone 
+                                                    ? `${patientDetails.emergency_contact_name} (${patientDetails.emergency_contact_relationship || 'Contact'}) - ${patientDetails.emergency_contact_phone}`
+                                                    : 'N/A'
+                                            }
                                         </div>
                                         {patientDetails?.illness && (
                                             <div className="col-12 mb-2">

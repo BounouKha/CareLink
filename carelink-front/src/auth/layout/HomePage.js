@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom';
 // CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from './BaseLayout';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import tokenManager from '../../utils/tokenManager';
 
 const HomePage = () => {
     const navigate = useNavigate();
     const { t } = useCareTranslation();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+    useEffect(() => {
+        setIsAuthenticated(tokenManager.isAuthenticated());
+    }, []);
 
     return (
         <BaseLayout>
@@ -45,55 +50,86 @@ const HomePage = () => {
                             >
                                 {t('homepage.subtitle')}
                             </p>
-                            <div 
-                                className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start"
-                                style={{ opacity: 0, animation: 'fadeInUp 1s ease forwards 0.9s' }}
-                            >
-                                <button 
-                                    className="btn btn-primary btn-lg px-4 py-3 fw-semibold"
-                                    style={{
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        border: 'none',
-                                        borderRadius: '12px',
-                                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
-                                        transition: 'all 0.3s ease'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.transform = 'translateY(-2px)';
-                                        e.target.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.4)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.transform = 'translateY(0)';
-                                        e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
-                                    }}
-                                    onClick={() => navigate('/login')}
+                            {!isAuthenticated && (
+                                <div 
+                                    className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start"
+                                    style={{ opacity: 0, animation: 'fadeInUp 1s ease forwards 0.9s' }}
                                 >
-                                    {t('homepage.getStarted')}
-                                </button>
-                                <button 
-                                    className="btn btn-outline-primary btn-lg px-4 py-3 fw-semibold"
-                                    style={{
-                                        border: '2px solid #667eea',
-                                        color: '#667eea',
-                                        borderRadius: '12px',
-                                        background: 'transparent',
-                                        transition: 'all 0.3s ease'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.background = '#667eea';
-                                        e.target.style.color = 'white';
-                                        e.target.style.transform = 'translateY(-2px)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.background = 'transparent';
-                                        e.target.style.color = '#667eea';
-                                        e.target.style.transform = 'translateY(0)';
-                                    }}
-                                    onClick={() => navigate('/register')}
+                                    <button 
+                                        className="btn btn-primary btn-lg px-4 py-3 fw-semibold"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
+                                        }}
+                                        onClick={() => navigate('/login')}
+                                    >
+                                        {t('homepage.getStarted')}
+                                    </button>
+                                    <button 
+                                        className="btn btn-outline-primary btn-lg px-4 py-3 fw-semibold"
+                                        style={{
+                                            border: '2px solid #667eea',
+                                            color: '#667eea',
+                                            borderRadius: '12px',
+                                            background: 'transparent',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.background = '#667eea';
+                                            e.target.style.color = 'white';
+                                            e.target.style.transform = 'translateY(-2px)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.background = 'transparent';
+                                            e.target.style.color = '#667eea';
+                                            e.target.style.transform = 'translateY(0)';
+                                        }}
+                                        onClick={() => navigate('/register')}
+                                    >
+                                        {t('homepage.learnMore')}
+                                    </button>
+                                </div>
+                            )}
+                            {isAuthenticated && (
+                                <div 
+                                    className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start"
+                                    style={{ opacity: 0, animation: 'fadeInUp 1s ease forwards 0.9s' }}
                                 >
-                                    {t('homepage.learnMore')}
-                                </button>
-                            </div>
+                                    <button 
+                                        className="btn btn-success btn-lg px-4 py-3 fw-semibold"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            boxShadow: '0 8px 25px rgba(16, 185, 129, 0.3)',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.transform = 'translateY(-2px)';
+                                            e.target.style.boxShadow = '0 12px 35px rgba(16, 185, 129, 0.4)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.transform = 'translateY(0)';
+                                            e.target.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.3)';
+                                        }}
+                                        onClick={() => navigate('/profile')}
+                                    >
+                                        <i className="fas fa-user me-2"></i>
+                                        {t('homepage.goToProfile')}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                     

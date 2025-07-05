@@ -6,26 +6,23 @@ from account.serializers.service import ServiceSerializer
 from account.serializers.patient import PatientSerializer, PatientWithUserSerializer
 
 class ServiceDemandSerializer(serializers.ModelSerializer):
-    sent_by_info = UserSerializer(source='sent_by', read_only=True)
-    managed_by_info = UserSerializer(source='managed_by', read_only=True)
-    service_info = ServiceSerializer(source='service', read_only=True)
-    patient_info = PatientWithUserSerializer(source='patient', read_only=True)
-    days_since_created = serializers.ReadOnlyField()
-    is_urgent = serializers.ReadOnlyField()
+    patient_name = serializers.CharField(source='patient.user.get_full_name', read_only=True)
+    service_name = serializers.CharField(source='service.name', read_only=True)
+    sent_by_name = serializers.CharField(source='sent_by.get_full_name', read_only=True)
+    managed_by_name = serializers.CharField(source='managed_by.get_full_name', read_only=True)
+    assigned_provider_name = serializers.CharField(source='assigned_provider.user.get_full_name', read_only=True)
     
     class Meta:
         model = ServiceDemand
         fields = [
-            'id', 'title', 'description', 'reason', 'priority', 'status',
-            'preferred_start_date', 'frequency', 'duration_weeks', 'preferred_time',
-            'contact_method', 'emergency_contact', 'special_instructions',
-            'coordinator_notes', 'rejection_reason', 'estimated_cost',
-            'created_at', 'updated_at', 'reviewed_at', 'completed_at',
-            'patient', 'sent_by', 'service', 'managed_by', 'assigned_provider',
-            'sent_by_info', 'managed_by_info', 'service_info', 'patient_info',
-            'days_since_created', 'is_urgent'
+            'id', 'patient', 'patient_name', 'sent_by', 'sent_by_name', 'service', 'service_name',
+            'title', 'description', 'reason', 'priority', 'preferred_start_date', 'frequency',
+            'duration_weeks', 'preferred_time', 'contact_method', 'special_instructions',
+            'status', 'managed_by', 'managed_by_name', 'assigned_provider', 'assigned_provider_name',
+            'coordinator_notes', 'rejection_reason', 'estimated_cost', 'created_at', 'updated_at',
+            'reviewed_at', 'completed_at', 'is_urgent', 'days_since_created'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'days_since_created', 'is_urgent']
+        read_only_fields = ['created_at', 'updated_at', 'reviewed_at', 'completed_at', 'is_urgent', 'days_since_created']
     
     def validate_preferred_start_date(self, value):
         if value and value < serializers.DateField().to_internal_value(serializers.DateField().to_representation(timezone.now().date())):
@@ -43,9 +40,9 @@ class ServiceDemandCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceDemand
         fields = [
-            'patient', 'service', 'title', 'description', 'reason', 'priority',
+            'patient', 'sent_by', 'service', 'title', 'description', 'reason', 'priority',
             'preferred_start_date', 'frequency', 'duration_weeks', 'preferred_time',
-            'contact_method', 'emergency_contact', 'special_instructions'
+            'contact_method', 'special_instructions'
         ]
     
     def create(self, validated_data):

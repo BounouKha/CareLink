@@ -6,8 +6,8 @@ import logging
 from CareLink.models import (
     Administrative, ContestInvoice, Service, Contract, Coordinator, FamilyPatient, 
     HelpdeskTicket, InformationProviding, Invoice, MedicalFolder, InternalNote, Patient, Payment, 
-    Prescription, Provider, ProvidingCare, Schedule, ServiceDemand, SocialAssistant, 
-    StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, UserToken, CookieConsent,
+    Prescription, Provider, Schedule, ServiceDemand, SocialAssistant, 
+    StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, CookieConsent,
     EnhancedTicket, TicketComment, TicketStatusHistory, TicketCategory
 )
 
@@ -18,7 +18,7 @@ logger = logging.getLogger('carelink.admin')
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     list_display = ('email', 'firstname', 'lastname', 'role', 'is_active', 'is_staff', 'created_at', 'unpaid_invoices_count')
-    list_filter = ('role', 'is_active', 'is_staff', 'is_admin', 'created_at')
+    list_filter = ('role', 'is_active', 'is_staff', 'created_at')
     search_fields = ('email', 'firstname', 'lastname', 'national_number')
     ordering = ('-created_at',)
     readonly_fields = ('created_at', 'updated_at', 'unpaid_invoices_count')
@@ -26,7 +26,7 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('firstname', 'lastname', 'birthdate', 'address', 'national_number')}),
-        ('Role & Permissions', {'fields': ('role', 'is_active', 'is_staff', 'is_admin', 'is_superuser')}),
+        ('Role & Permissions', {'fields': ('role', 'is_active', 'is_staff', 'is_superuser')}),
         ('Important dates', {'fields': ('created_at', 'updated_at', 'last_login')}),
         ('Financial Status', {'fields': ('unpaid_invoices_count',), 'classes': ('collapse',)}),
     )
@@ -411,29 +411,6 @@ class ProviderAdmin(admin.ModelAdmin):
         return obj.schedule_set.count()
     schedules_count.short_description = 'Schedules'
 
-@admin.register(ProvidingCare)
-class ProvidingCareAdmin(admin.ModelAdmin):
-    list_display = ('patient_name', 'provider_name', 'service_name', 'coordinator_name', 'created_at')
-    list_filter = ('created_at', 'service')
-    search_fields = ('patient__user__firstname', 'patient__user__lastname', 'provider__user__firstname')
-    readonly_fields = ('created_at',)
-    
-    def patient_name(self, obj):
-        return f"{obj.patient.user.firstname} {obj.patient.user.lastname}" if obj.patient and obj.patient.user else "No Patient"
-    patient_name.short_description = 'Patient'
-    
-    def provider_name(self, obj):
-        return f"{obj.provider.user.firstname} {obj.provider.user.lastname}" if obj.provider and obj.provider.user else "No Provider"
-    provider_name.short_description = 'Provider'
-    
-    def service_name(self, obj):
-        return obj.service.name if obj.service else "No Service"
-    service_name.short_description = 'Service'
-    
-    def coordinator_name(self, obj):
-        return f"{obj.coordinator.user.firstname} {obj.coordinator.user.lastname}" if obj.coordinator and obj.coordinator.user else "No Coordinator"
-    coordinator_name.short_description = 'Coordinator'
-
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
     list_display = ('date', 'patient_name', 'provider_name', 'timeslots_count', 'created_by_name', 'created_at')
@@ -711,26 +688,6 @@ class UserActionLogAdmin(admin.ModelAdmin):
         )
     colored_action_type.short_description = 'Action Type'
     colored_action_type.admin_order_field = 'action_type'
-
-@admin.register(UserToken)
-class UserTokenAdmin(admin.ModelAdmin):
-    list_display = ('user_name', 'created_at', 'access_token_expires_at', 'refresh_token_expires_at', 'revoked')
-    list_filter = ('revoked', 'created_at', 'access_token_expires_at')
-    search_fields = ('user__firstname', 'user__lastname', 'user__email')
-    readonly_fields = ('created_at', 'access_token_hash', 'refresh_token_hash')
-    
-    def user_name(self, obj):
-        return f"{obj.user.firstname} {obj.user.lastname}" if obj.user else "No User"
-    user_name.short_description = 'User'
-    
-    actions = ['revoke_tokens']
-    
-    def revoke_tokens(self, request, queryset):
-        count = queryset.update(revoked=True)
-        logger.info(f"{count} user tokens revoked by {request.user.email}")
-        self.message_user(request, f"{count} tokens have been revoked.")
-    revoke_tokens.short_description = "Revoke selected tokens"
-
 
 @admin.register(CookieConsent)
 class CookieConsentAdmin(admin.ModelAdmin):

@@ -393,7 +393,11 @@ const ProfilePage = () => {
                                                             </div>
                                                             <div className="col-md-6">
                                                                 <label className="form-label text-muted">{profile('emergencyContact')}:</label>
-                                                                <p className="fs-6 fw-medium mb-0">{patient.emergency_contact}</p>
+                                                                <p className="fs-6 fw-medium mb-0">
+                                                                    {patient.emergency_contact_name && patient.emergency_contact_phone
+                                                                        ? `${patient.emergency_contact_name} (${patient.emergency_contact_relationship || 'Contact'}) - ${patient.emergency_contact_phone}`
+                                                                        : 'N/A'}
+                                                                </p>
                                                             </div>
                                                             <div className="col-12">
                                                                 <label className="form-label text-muted">{profile('illness')}:</label>

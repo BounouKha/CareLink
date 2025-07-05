@@ -686,11 +686,26 @@ const PatientsPageNew = () => {
                                                 <label className="form-label small fw-medium text-dark">{patientsT('emergencyContact')}</label>
                                                 <input
                                                     type="text"
-                                                    className="form-control"
-                                                    value={selectedPatient.emergency_contact || ''}
-                                                    onChange={(e) => handleInputChange('emergency_contact', e.target.value)}
-                                                    placeholder="Emergency contact number"
+                                                    className="form-control mb-2"
+                                                    value={selectedPatient.emergency_contact_name || ''}
+                                                    readOnly
+                                                    placeholder="Emergency contact name"
                                                 />
+                                                <input
+                                                    type="text"
+                                                    className="form-control mb-2"
+                                                    value={selectedPatient.emergency_contact_phone || ''}
+                                                    readOnly
+                                                    placeholder="Emergency contact phone"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    value={selectedPatient.emergency_contact_relationship || ''}
+                                                    readOnly
+                                                    placeholder="Relationship (e.g., Spouse, Child, Friend)"
+                                                />
+                                                <small className="text-muted">Emergency contact information is managed in user preferences</small>
                                             </div>
                                             <div className="col-12">
                                                 <label className="form-label small fw-medium text-dark">{patientsT('illness')}</label>

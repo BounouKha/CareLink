@@ -147,9 +147,10 @@
   },
   "homepage": {
     "title": "Welkom bij CareLink",
-    "subtitle": "Verbinden van families met uitstekende huishoudelijke en gezinshulpverleners door middel van innovatieve plannings- en communicatietools.",
+    "subtitle": "Verbinden van families met uitzonderlijke huishoudelijke en gezinshulpverleners door middel van innovatieve plannings- en communicatietools.",
     "getStarted": "Aan de slag",
-    "learnMore": "Meer info.",
+    "learnMore": "Meer informatie",
+    "goToProfile": "Ga naar Profiel",
     "whyChooseTitle": "Waarom kiezen voor CareLink?",
     "features": {
       "household": {

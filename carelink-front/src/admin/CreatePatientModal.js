@@ -5,7 +5,6 @@ const CreatePatientModal = ({ userId, onClose, onProfileCreated }) => {
     const [formData, setFormData] = useState({
         gender: '',
         blood_type: '',
-        emergency_contact: '',
         katz_score: '',
         it_score: '',
         illness: '',
@@ -13,6 +12,9 @@ const CreatePatientModal = ({ userId, onClose, onProfileCreated }) => {
         medication: '',
         social_price: false,
         is_alive: true,
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
+        emergency_contact_relationship: '',
     });
 
     const handleChange = (e) => {
@@ -112,12 +114,29 @@ const CreatePatientModal = ({ userId, onClose, onProfileCreated }) => {
                                             </label>
                                             <input 
                                                 type="text" 
-                                                name="emergency_contact" 
-                                                className="form-control" 
-                                                value={formData.emergency_contact} 
+                                                name="emergency_contact_name" 
+                                                className="form-control mb-2" 
+                                                value={formData.emergency_contact_name} 
                                                 onChange={handleChange} 
                                                 required
-                                                placeholder="Emergency contact person and phone number"
+                                                placeholder="Emergency contact name"
+                                            />
+                                            <input 
+                                                type="text" 
+                                                name="emergency_contact_phone" 
+                                                className="form-control mb-2" 
+                                                value={formData.emergency_contact_phone} 
+                                                onChange={handleChange} 
+                                                required
+                                                placeholder="Emergency contact phone number"
+                                            />
+                                            <input 
+                                                type="text" 
+                                                name="emergency_contact_relationship" 
+                                                className="form-control" 
+                                                value={formData.emergency_contact_relationship} 
+                                                onChange={handleChange} 
+                                                placeholder="Relationship (e.g., Spouse, Child, Friend)"
                                             />
                                         </div>
                                     </div>
