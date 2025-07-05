@@ -121,6 +121,18 @@ class AppointmentCommentAPIView(APIView):
                     "error": f"Not authorized to comment: {reason}"
                 }, status=status.HTTP_403_FORBIDDEN)
 
+            # Get comment content first
+            comment_text = request.data.get('comment', '').strip()
+            if not comment_text:
+                return Response({
+                    "error": "Comment text is required"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if len(comment_text) > 500:
+                return Response({
+                    "error": "Comment must be 500 characters or less"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             # Check if comment already exists - if so, update it instead of creating new
             existing_comment = AppointmentComment.objects.filter(
                 timeslot=timeslot,
@@ -143,6 +155,10 @@ class AppointmentCommentAPIView(APIView):
                 # Console message as requested
                 print(f"[APPOINTMENT COMMENT] {request.user.firstname} {request.user.lastname} updated comment on appointment {timeslot_id}: '{comment_text[:50]}{'...' if len(comment_text) > 50 else ''}'")
 
+                # Send notification for appointment comment
+                from ..services.notification_service import NotificationService
+                NotificationService.notify_comment_added(existing_comment, 'appointment')
+
                 return Response({
                     "message": "Comment updated successfully",
                     "comment": {
@@ -155,18 +171,6 @@ class AppointmentCommentAPIView(APIView):
                         "can_still_comment": existing_comment.can_still_comment
                     }
                 }, status=status.HTTP_200_OK)
-
-            # Get comment content
-            comment_text = request.data.get('comment', '').strip()
-            if not comment_text:
-                return Response({
-                    "error": "Comment text is required"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            if len(comment_text) > 500:
-                return Response({
-                    "error": "Comment must be 500 characters or less"
-                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Create the comment
             comment = AppointmentComment(
@@ -192,6 +196,10 @@ class AppointmentCommentAPIView(APIView):
             
             # Console message as requested
             print(f"[APPOINTMENT COMMENT] {request.user.firstname} {request.user.lastname} added comment to appointment {timeslot_id}: '{comment_text[:50]}{'...' if len(comment_text) > 50 else ''}'")
+
+            # Send notification for appointment comment
+            from ..services.notification_service import NotificationService
+            NotificationService.notify_comment_added(comment, 'appointment')
 
             return Response({
                 "message": "Comment added successfully",
