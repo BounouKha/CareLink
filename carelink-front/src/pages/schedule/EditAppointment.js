@@ -41,6 +41,11 @@ const EditAppointment = ({
   const [deleteStrategy, setDeleteStrategy] = useState('smart'); // 'smart', 'aggressive', 'conservative'
   const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
   
+  // Comments viewing state
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  
   // Enhanced loading states
   const { 
     isLoading: isModalLoading, 
@@ -250,9 +255,35 @@ const EditAppointment = ({
       setShowDeleteConfirm(false);
     }
   };  const handleClose = () => {
-    resetConflicts(); // Reset conflicts when closing
+    resetConflicts();
     onClose();
-  };  // Handle conflict resolution
+  };
+
+  // Function to fetch comments for this appointment
+  const fetchComments = async () => {
+    if (!appointment || !appointment.timeslots || !appointment.timeslots[0]) {
+      return;
+    }
+
+    setCommentsLoading(true);
+    try {
+      const timeslotId = appointment.timeslots[0].id;
+      const response = await get(`http://localhost:8000/account/coordinator-comments/${timeslotId}/`);
+      
+      if (response.comments) {
+        setComments(response.comments);
+      } else {
+        setComments([]);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      setComments([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  // Handle conflict resolution
   const onConflictResolution = (resolution, force = false) => {
     // Handle resolution types and force flag
     const result = handleConflictResolution(resolution, force);
@@ -511,6 +542,20 @@ const EditAppointment = ({
                 </ButtonLoading>
               </div>
               
+              <div className="secondary-actions">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowComments(true);
+                    fetchComments();
+                  }}
+                  className="view-comments-btn"
+                  disabled={isModalLoading || isDataLoading}
+                >
+                  💬 View Comments
+                </button>
+              </div>
+              
               <div className="danger-actions">
                 <button 
                   type="button" 
@@ -602,6 +647,81 @@ const EditAppointment = ({
           onCancel={(action) => onConflictResolution(action || 'cancel')}
           schedulingData={conflicts?.scheduling_data}
         />
+        
+        {/* Comments Viewing Modal */}
+        {showComments && (
+          <div className="modal-overlay" onClick={() => setShowComments(false)}>
+            <div className="comments-view-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>💬 Patient Comments</h3>
+                <button 
+                  className="close-btn" 
+                  onClick={() => setShowComments(false)}
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="appointment-info">
+                  <p><strong>Patient:</strong> {appointment?.patient?.name || `${appointment?.patient?.firstname || ''} ${appointment?.patient?.lastname || ''}`.trim()}</p>
+                  <p><strong>Date:</strong> {appointment?.date}</p>
+                  <p><strong>Time:</strong> {appointment?.timeslots?.[0]?.start_time} - {appointment?.timeslots?.[0]?.end_time}</p>
+                </div>
+                
+                <div className="comments-content">
+                  {commentsLoading ? (
+                    <div className="loading-center">
+                      <SpinnerOnly size="medium" />
+                    </div>
+                  ) : comments.length > 0 ? (
+                    <div className="comments-list">
+                      {comments.map((comment, index) => (
+                        <div key={comment.id || index} className="comment-item">
+                          <div className="comment-header">
+                            <div className="comment-meta">
+                              <span className="comment-author">
+                                {comment.created_by_name} ({comment.created_by_role})
+                              </span>
+                              <span className="comment-date">
+                                {new Date(comment.created_at).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                            {comment.is_edited && (
+                              <span className="edited-badge">Edited</span>
+                            )}
+                          </div>
+                          <div className="comment-text">
+                            {comment.comment}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-comments">
+                      <p>No comments have been added to this appointment yet.</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="modal-footer">
+                  <button 
+                    className="close-btn-footer" 
+                    onClick={() => setShowComments(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
