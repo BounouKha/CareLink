@@ -90,20 +90,23 @@ const AppointmentCommentModal = ({
                 console.log('[APPOINTMENT COMMENT] Loaded comments:', data);
                 
                 if (data.comments && data.comments.length > 0) {
-                    // Handle array response - set all comments
+                    // Handle array response - since backend filters by current user, all comments are theirs
                     setAllComments(data.comments);
                     
-                    // Find the current user's comment (if any)
-                    const userComment = data.comments.find(comment => comment.is_current_user);
-                    if (userComment) {
-                        setExistingComment(userComment);
-                        setComment(userComment.comment);
-                    }
+                    // Take the first comment as the user's comment (there should only be one per user)
+                    const userComment = data.comments[0];
+                    setExistingComment(userComment);
+                    setComment(userComment.comment);
                 } else if (data.comment) {
                     // Handle single comment response
-                    setAllComments([data]);
-                    setExistingComment(data);
-                    setComment(data.comment);
+                    setAllComments([data.comment]);
+                    setExistingComment(data.comment);
+                    setComment(data.comment.comment);
+                } else {
+                    // No comments found - reset state
+                    setAllComments([]);
+                    setExistingComment(null);
+                    setComment('');
                 }
             }
             // Don't set error if comment doesn't exist - that's normal
@@ -166,11 +169,16 @@ const AppointmentCommentModal = ({
                 }
                 
                 setIsEditing(false);
-                onClose();
                 
                 // Show success message
                 const message = data.message || (existingComment ? 'Comment updated successfully!' : 'Comment added successfully!');
                 alert(message);
+                
+                // Refresh the comment data to make sure everything is up to date
+                await loadExistingComment();
+                
+                // Don't close the modal immediately - let user see the comment
+                // The user can close it manually if they want
                 
             } else {
                 const errorData = await response.json();

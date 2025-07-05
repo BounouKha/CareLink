@@ -10,6 +10,7 @@ import AccessibilityControls from '../../components/AccessibilityControls';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import tokenManager from '../../utils/tokenManager';
 import CookieConsent from '../../components/CookieConsent';
+import NotificationCenter from '../../components/NotificationCenter';
 
 const BaseLayout = ({ children }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,12 +22,44 @@ const BaseLayout = ({ children }) => {
         return saved !== null ? JSON.parse(saved) : true;
     });
     const [forceUpdate, setForceUpdate] = useState(0);
+    const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+    const [notificationCount, setNotificationCount] = useState(0);
 
     // Get superuser status from AdminContext
     const { isSuperUser, refreshAdminStatus } = useContext(AdminContext);
     const isSuperuser = isSuperUser;
 
     const { common, auth, admin } = useCareTranslation();
+
+    // Define isConnected early to avoid initialization issues
+    const isConnected = tokenManager.isAuthenticated();
+
+    // Fetch notification count for authenticated users
+    const fetchNotificationCount = async () => {
+        if (!tokenManager.isAuthenticated()) return;
+        
+        try {
+            const response = await tokenManager.authenticatedFetch('http://localhost:8000/account/notifications/stats/');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Notification stats:', data); // Debug log
+                setNotificationCount(data.unread_notifications || 0);
+            } else {
+                console.error('Failed to fetch notification stats:', response.status);
+            }
+        } catch (error) {
+            console.error('Error fetching notification count:', error);
+        }
+    };
+
+    // Fetch notification count on component mount and every 2 minutes
+    useEffect(() => {
+        if (isConnected) {
+            fetchNotificationCount();
+            const interval = setInterval(fetchNotificationCount, 120000); // 2 minutes
+            return () => clearInterval(interval);
+        }
+    }, [isConnected]);
 
     // Listen for toolbar visibility changes
     useEffect(() => {
@@ -148,8 +181,7 @@ const BaseLayout = ({ children }) => {
         setTimeout(() => {
             window.location.href = url;
         }, delay);
-    };    const isConnected = tokenManager.isAuthenticated();
-    const isMemberArea = [
+    };    const isMemberArea = [
         '/profile', '/patients', '/service-demands', '/schedule', '/providers', '/tickets',
         '/coordinator/helpdesk', '/coordinator/tickets', '/user/helpdesk', '/provider/schedule', '/invoices'
     ].some(path => window.location.pathname.startsWith(path));
@@ -228,6 +260,22 @@ const BaseLayout = ({ children }) => {
                         <button className="btn btn-secondary" onClick={() => navigateWithLoading('/admin')}>{admin('title')}</button>
                     )}
                     
+                    {/* Notification Bell - only show for authenticated users */}
+                    {isConnected && (
+                        <button 
+                            className="btn btn-outline-primary notification-bell"
+                            onClick={() => setNotificationCenterOpen(true)}
+                            title="Notifications"
+                        >
+                            <i className="bi bi-bell"></i>
+                            {notificationCount > 0 && (
+                                <span className="badge">
+                                    {notificationCount > 99 ? '99+' : notificationCount}
+                                </span>
+                            )}
+                        </button>
+                    )}
+                    
                     <AccessibilityControls />
                     <ZoomControl />
                     <LanguageSwitcher />
@@ -238,6 +286,15 @@ const BaseLayout = ({ children }) => {
                 {children}
             </main>
             <CookieConsent />
+            
+            {/* Notification Center */}
+            {isConnected && (
+                <NotificationCenter 
+                    isOpen={notificationCenterOpen}
+                    onClose={() => setNotificationCenterOpen(false)}
+                    currentUser={userData}
+                />
+            )}
         </div>
     );
 };
