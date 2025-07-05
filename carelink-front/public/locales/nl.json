@@ -67,6 +67,31 @@
     "redirecting": "Doorverwijzing over {{seconds}} seconden...",
     "checkingPermissions": "Beheerderrechten controleren..."
   },
+  "homepage": {
+    "title": "Welkom bij CareLink",
+    "subtitle": "Verbinden van families met uitstekende huishoudelijke en gezinshulpverleners door middel van innovatieve plannings- en communicatietools.",
+    "getStarted": "Aan de slag",
+    "learnMore": "Meer info.",
+    "whyChooseTitle": "Waarom kiezen voor CareLink?",
+    "features": {
+      "household": {
+        "title": "Huishoudelijke & Gezinshulp",
+        "description": "Specifiek gebouwd voor huishoudelijke hulp, gezinsondersteuning en zorgcoördinatie."
+      },
+      "family": {
+        "title": "Familiegericht",
+        "description": "Verbind hele families naadloos met hun hulpverleners."
+      },
+      "easyToUse": {
+        "title": "Gebruiksvriendelijk",
+        "description": "Intuïtieve interface ontworpen voor gebruikers van alle technische niveaus."
+      },
+      "secure": {
+        "title": "Veilig & Privé",
+        "description": "Veilig platform dat ervoor zorgt dat uw gezinsgegevens beschermd blijven."
+      }
+    }
+  },
   "profile": {
     "title": "Profielinformatie",
     "personalInfo": "Persoonlijke informatie",
