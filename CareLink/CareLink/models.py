@@ -1053,11 +1053,138 @@ class ProviderShortAbsence(models.Model):
         verbose_name_plural = "Provider Short Absences"
 
     def __str__(self):
-        return f"{self.provider.user.full_name if self.provider.user else 'Unknown'} - {self.absence_type} on {self.date} ({self.start_time} to {self.end_time})"
+        return f"{self.provider.user.get_full_name() if self.provider.user else 'Unknown Provider'} - {self.absence_type} on {self.date}"
 
     def clean(self):
-        if self.start_time and self.end_time and self.start_time >= self.end_time:
-            raise ValidationError('Start time must be before end time.')
+        if self.start_time >= self.end_time:
+            raise ValidationError('End time must be after start time.')
+
+class AppointmentComment(models.Model):
+    """
+    Comments that patients and family members can add to their appointments
+    Only allowed within 14 days of the appointment date
+    """
+    # Link to the appointment (TimeSlot)
+    timeslot = models.ForeignKey('TimeSlot', on_delete=models.CASCADE, related_name='patient_comments')
+    
+    # Who made the comment (Patient or Family Member)
+    created_by = models.ForeignKey('User', on_delete=models.CASCADE, related_name='appointment_comments')
+    
+    # Comment content
+    comment = models.TextField(max_length=500, help_text="Patient comment about this appointment")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Flag to track if comment was edited
+    is_edited = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Appointment Comment"
+        verbose_name_plural = "Appointment Comments"
+        # Ensure one comment per user per timeslot
+        unique_together = ['timeslot', 'created_by']
+
+    def __str__(self):
+        user_name = f"{self.created_by.firstname} {self.created_by.lastname}" if self.created_by else "Unknown User"
+        return f"Comment by {user_name} on appointment {self.timeslot.id}"
+
+    def clean(self):
+        """Validate that comment is being added within 14 days of appointment AND after appointment has happened"""
+        from django.core.exceptions import ValidationError
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        if self.timeslot and self.timeslot.schedule_set.exists():
+            # Get the appointment date from the schedule
+            schedule = self.timeslot.schedule_set.first()
+            if schedule:
+                appointment_date = schedule.date
+                current_date = timezone.now().date()
+                
+                # Check if appointment has happened yet
+                if appointment_date >= current_date:
+                    raise ValidationError(
+                        f'Comments can only be added after the appointment has taken place. '
+                        f'This appointment is scheduled for {appointment_date}.'
+                    )
+                
+                # Check 14-day window (only after appointment has happened)
+                days_since_appointment = (current_date - appointment_date).days
+                
+                if days_since_appointment > 14:
+                    raise ValidationError(
+                        f'Comments can only be added within 14 days of the appointment. '
+                        f'This appointment was {days_since_appointment} days ago.'
+                    )
+
+    def can_user_comment(self, user):
+        """Check if user is allowed to comment on this appointment"""
+        if not self.timeslot or not self.timeslot.schedule_set.exists():
+            return False, "No schedule found for this appointment"
+        
+        schedule = self.timeslot.schedule_set.first()
+        if not schedule or not schedule.patient:
+            return False, "No patient associated with this appointment"
+        
+        # Check if user is the patient
+        if schedule.patient.user == user:
+            return True, "User is the patient"
+        
+        # Check if user is a family member of the patient
+        try:
+            family_relation = FamilyPatient.objects.get(
+                patient=schedule.patient,
+                user=user
+            )
+            return True, f"User is family member ({family_relation.link})"
+        except FamilyPatient.DoesNotExist:
+            # Check if user has family_patients relationship (reverse lookup)
+            if hasattr(user, 'family_patients') and user.family_patients.filter(patient=schedule.patient).exists():
+                family_relation = user.family_patients.get(patient=schedule.patient)
+                return True, f"User is family member ({family_relation.link})"
+            return False, "User is not authorized to comment on this appointment"
+
+    @property
+    def days_since_appointment(self):
+        """Get number of days since the appointment"""
+        if self.timeslot and self.timeslot.schedule_set.exists():
+            schedule = self.timeslot.schedule_set.first()
+            if schedule:
+                from django.utils import timezone
+                return (timezone.now().date() - schedule.date).days
+        return None
+
+    @property
+    def can_still_comment(self):
+        """Check if it's still within the 14-day window to comment AND appointment has happened"""
+        if self.timeslot and self.timeslot.schedule_set.exists():
+            schedule = self.timeslot.schedule_set.first()
+            if schedule:
+                from django.utils import timezone
+                appointment_date = schedule.date
+                current_date = timezone.now().date()
+                
+                # Appointment must have happened
+                if appointment_date >= current_date:
+                    return False
+                
+                # Must be within 14 days
+                days_since_appointment = (current_date - appointment_date).days
+                return days_since_appointment <= 14
+        return False
+
+    @property
+    def has_appointment_happened(self):
+        """Check if the appointment date has passed"""
+        if self.timeslot and self.timeslot.schedule_set.exists():
+            schedule = self.timeslot.schedule_set.first()
+            if schedule:
+                from django.utils import timezone
+                return schedule.date < timezone.now().date()
+        return False
 
 
 
