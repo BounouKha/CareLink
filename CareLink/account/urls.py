@@ -37,6 +37,7 @@ from account.views.provider import (
 from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
 from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView, GenerateInvoicesView, CronGenerateInvoicesView
 from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView
+from .views.appointment_comments import AppointmentCommentAPIView, CheckCommentPermissionAPIView, CoordinatorViewCommentsAPIView
 
 
 
@@ -128,4 +129,8 @@ urlpatterns += [
     path('profile/login-history/', LoginHistoryView.as_view(), name='login_history'),
     path('profile/contact-preferences/', PreferredContactMethodsView.as_view(), name='contact_preferences'),
     path('profile/delete-account/', AccountDeletionRequestView.as_view(), name='delete_account'),
+    path('appointment-comments/', AppointmentCommentAPIView.as_view(), name='appointment-comments-list'),
+    path('appointment-comments/<int:timeslot_id>/', AppointmentCommentAPIView.as_view(), name='appointment-comments'),
+    path('appointment-comments/<int:timeslot_id>/check-permission/', CheckCommentPermissionAPIView.as_view(), name='check-comment-permission'),
+    path('coordinator-comments/<int:timeslot_id>/', CoordinatorViewCommentsAPIView.as_view(), name='coordinator-comments'),
 ]
