@@ -1186,5 +1186,186 @@ class AppointmentComment(models.Model):
                 return schedule.date < timezone.now().date()
         return False
 
+class Notification(models.Model):
+    """
+    Comprehensive notification system for all user interactions
+    """
+    NOTIFICATION_TYPES = [
+        # Schedule related
+        ('schedule_new', 'New Appointment Scheduled'),
+        ('schedule_confirmed', 'Appointment Confirmed'),
+        ('schedule_cancelled', 'Appointment Cancelled'),
+        ('schedule_modified', 'Appointment Modified'),
+        ('schedule_change_request', 'Schedule Change Requested'),
+        
+        # Helpdesk related
+        ('ticket_new', 'New Helpdesk Ticket'),
+        ('ticket_assigned', 'Ticket Assigned'),
+        ('ticket_updated', 'Ticket Updated'),
+        ('ticket_resolved', 'Ticket Resolved'),
+        ('ticket_comment', 'New Ticket Comment'),
+        
+        # Service demand related
+        ('demand_new', 'New Service Demand'),
+        ('demand_approved', 'Service Demand Approved'),
+        ('demand_rejected', 'Service Demand Rejected'),
+        
+        # Comments and communication
+        ('appointment_comment', 'New Appointment Comment'),
+        ('provider_message', 'Message from Provider'),
+        ('coordinator_message', 'Message from Coordinator'),
+        
+        # System notifications
+        ('profile_updated', 'Profile Updated'),
+        ('system_announcement', 'System Announcement'),
+    ]
+    
+    PRIORITY_LEVELS = [
+        ('low', 'Low'),
+        ('normal', 'Normal'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+    
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_notifications')
+    
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    priority = models.CharField(max_length=10, choices=PRIORITY_LEVELS, default='normal')
+    
+    # Related objects (optional)
+    schedule = models.ForeignKey('Schedule', on_delete=models.CASCADE, null=True, blank=True)
+    ticket = models.ForeignKey('EnhancedTicket', on_delete=models.CASCADE, null=True, blank=True)
+    service_demand = models.ForeignKey('ServiceDemand', on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Additional data as JSON for flexibility
+    extra_data = models.JSONField(default=dict, blank=True)
+    
+    # Status
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', '-created_at']),
+            models.Index(fields=['recipient', 'is_read']),
+            models.Index(fields=['notification_type']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.recipient.get_full_name()}"
+    
+    def mark_as_read(self):
+        """Mark notification as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at'])
+
+
+class ScheduleChangeRequest(models.Model):
+    """
+    Model for tracking schedule change requests from patients/family
+    """
+    REQUEST_TYPES = [
+        ('cancel', 'Cancel Appointment'),
+        ('reschedule', 'Reschedule Appointment'),
+        ('modify_time', 'Modify Time Only'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('completed', 'Completed'),
+    ]
+    
+    # Request details
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='schedule_change_requests')
+    schedule = models.ForeignKey('Schedule', on_delete=models.CASCADE, related_name='change_requests')
+    request_type = models.CharField(max_length=20, choices=REQUEST_TYPES)
+    
+    # Current appointment details (for reference)
+    current_date = models.DateField()
+    current_start_time = models.TimeField()
+    current_end_time = models.TimeField()
+    
+    # Requested changes (if applicable)
+    requested_date = models.DateField(null=True, blank=True)
+    requested_start_time = models.TimeField(null=True, blank=True)
+    requested_end_time = models.TimeField(null=True, blank=True)
+    
+    # Reason and notes
+    reason = models.TextField()
+    requester_notes = models.TextField(blank=True)
+    coordinator_notes = models.TextField(blank=True)
+    
+    # Status and processing
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_schedule_requests')
+    processed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Auto-created helpdesk ticket
+    helpdesk_ticket = models.ForeignKey('EnhancedTicket', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['requester', '-created_at']),
+            models.Index(fields=['status']),
+            models.Index(fields=['schedule']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_request_type_display()} - {self.schedule.patient.user.get_full_name()} ({self.created_at.strftime('%Y-%m-%d')})"
+
+
+class NotificationPreference(models.Model):
+    """
+    User preferences for notifications
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_preferences')
+    
+    # Email notifications
+    email_enabled = models.BooleanField(default=True)
+    email_schedule_changes = models.BooleanField(default=True)
+    email_new_tickets = models.BooleanField(default=True)
+    email_comments = models.BooleanField(default=True)
+    
+    # In-app notifications
+    app_enabled = models.BooleanField(default=True)
+    app_schedule_changes = models.BooleanField(default=True)
+    app_new_tickets = models.BooleanField(default=True)
+    app_comments = models.BooleanField(default=True)
+    
+    # Frequency settings
+    digest_frequency = models.CharField(
+        max_length=20,
+        choices=[
+            ('immediate', 'Immediate'),
+            ('hourly', 'Hourly'),
+            ('daily', 'Daily'),
+            ('weekly', 'Weekly'),
+        ],
+        default='immediate'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Notification preferences for {self.user.get_full_name()}"
+
 
 

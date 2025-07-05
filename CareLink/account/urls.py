@@ -39,6 +39,11 @@ from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView
 from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView
 from .views.appointment_comments import AppointmentCommentAPIView, CheckCommentPermissionAPIView, CoordinatorViewCommentsAPIView
 from .views.patient_details import PatientDetailsView
+from .views.notification_views import (
+    NotificationListView, NotificationDetailView, NotificationStatsView,
+    ScheduleChangeRequestView, NotificationPreferenceView,
+    mark_all_notifications_read, clear_all_notifications, get_user_schedule_change_requests
+)
 
 
 
@@ -135,4 +140,16 @@ urlpatterns += [
     path('appointment-comments/<int:timeslot_id>/check-permission/', CheckCommentPermissionAPIView.as_view(), name='check-comment-permission'),
     path('coordinator-comments/<int:timeslot_id>/', CoordinatorViewCommentsAPIView.as_view(), name='coordinator-comments'),
     path('patient-details/<int:patient_id>/', PatientDetailsView.as_view(), name='patient-details'),
+    
+    # Notification System API endpoints
+    path('notifications/', NotificationListView.as_view(), name='notification-list'),
+    path('notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification-detail'),
+    path('notifications/stats/', NotificationStatsView.as_view(), name='notification-stats'),
+    path('notifications/mark-all-read/', mark_all_notifications_read, name='mark-all-notifications-read'),
+    path('notifications/clear-all/', clear_all_notifications, name='clear-all-notifications'),
+    path('notifications/preferences/', NotificationPreferenceView.as_view(), name='notification-preferences'),
+    
+    # Schedule Change Request API endpoints
+    path('schedule-change-requests/', ScheduleChangeRequestView.as_view(), name='schedule-change-request'),
+    path('schedule-change-requests/my-requests/', get_user_schedule_change_requests, name='my-schedule-change-requests'),
 ]

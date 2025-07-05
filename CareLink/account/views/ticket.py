@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 import logging
 from ..services.activity_logger import ActivityLogger
+from ..services.notification_service import NotificationService
 
 from CareLink.models import (
     EnhancedTicket, 
@@ -110,8 +111,8 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
             notes="Ticket created"
         )
         
-        # TODO: Send notification to assigned team
-        # self.send_ticket_created_notification(ticket)
+        # Send notification to assigned team
+        NotificationService.notify_ticket_created(ticket, self.request.user)
     
     def perform_update(self, serializer):
         """Update ticket and track changes"""
@@ -144,6 +145,12 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
                 changed_by=self.request.user,
                 notes=f"Status changed from {previous_status} to {ticket.status}"
             )
+            
+            # Send notification for status change
+            NotificationService.notify_ticket_updated(ticket, self.request.user, 'status changed')
+        else:
+            # Send notification for general update
+            NotificationService.notify_ticket_updated(ticket, self.request.user, 'updated')
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
@@ -165,6 +172,9 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
             
             # Log to database for admin panel
             ActivityLogger.log_ticket_updated(ticket, request.user, previous_status, ticket.status)
+            
+            # Send notification for status update
+            NotificationService.notify_ticket_updated(ticket, request.user, 'status updated')
             
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -218,6 +228,9 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
             changed_by=request.user,
             notes=f"Ticket assigned to {request.user.firstname} {request.user.lastname}"
         )
+        
+        # Send notification for ticket assignment
+        NotificationService.notify_ticket_assigned(ticket, request.user, previous_assignee)
         
         serializer = self.get_serializer(ticket)
         return Response(serializer.data)
@@ -332,6 +345,9 @@ class TicketCommentViewSet(viewsets.ModelViewSet):
         
         # Log to database for admin panel
         ActivityLogger.log_comment_created(comment, self.request.user)
+        
+        # Send notification for new comment
+        NotificationService.notify_ticket_comment(comment, self.request.user)
     
     def perform_update(self, serializer):
         """Update comment and log the action"""

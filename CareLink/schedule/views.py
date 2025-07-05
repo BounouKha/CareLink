@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, date
 from django.db.models import Q, Count, Avg
 from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog
 from account.serializers.user import UserSerializer
+from account.services.notification_service import NotificationService
 from .conflict_manager import ConflictManager
 import calendar
 
@@ -308,6 +309,16 @@ class QuickScheduleView(APIView):
               # Log the CREATE_SCHEDULE action
             log_schedule_action(request.user, "CREATE_SCHEDULE", "Schedule", schedule.id, schedule=schedule)
             
+            # Create notification for new appointment
+            try:
+                NotificationService.notify_schedule_created(
+                    schedule=schedule,
+                    created_by=request.user
+                )
+            except Exception as e:
+                # Log notification error but don't fail the creation
+                print(f"Failed to create notification for new schedule: {e}")
+            
             return Response({
                 'message': 'Schedule created successfully',
                 'schedule_id': schedule.id,
@@ -521,6 +532,31 @@ class AppointmentManagementView(APIView):
             # Log the UPDATE_APPOINTMENT action
             log_schedule_action(request.user, "UPDATE_APPOINTMENT", "Schedule", schedule.id, schedule=schedule)
             
+            # Create notification for appointment modification
+            try:
+                changes = []
+                if provider_id:
+                    changes.append('provider')
+                if patient_id:
+                    changes.append('patient')
+                if date_str:
+                    changes.append('date')
+                if start_time_str or end_time_str:
+                    changes.append('time')
+                if service_id:
+                    changes.append('service')
+                if status:
+                    changes.append('status')
+                
+                NotificationService.notify_schedule_updated(
+                    schedule=schedule,
+                    updated_by=request.user,
+                    changes=changes
+                )
+            except Exception as e:
+                # Log notification error but don't fail the update
+                print(f"Failed to create notification for schedule update: {e}")
+            
             return Response({
                 'message': 'Appointment updated successfully',
                 'appointment_id': schedule.id
@@ -570,6 +606,18 @@ class AppointmentManagementView(APIView):
                         
                         # Log the DELETE_APPOINTMENT action
                         log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule.id, schedule=schedule)
+                        
+                        # Create notification for appointment cancellation
+                        try:
+                            NotificationService.notify_schedule_cancelled(
+                                schedule=schedule,
+                                cancelled_by=request.user,
+                                reason="Appointment cancelled by coordinator"
+                            )
+                        except Exception as e:
+                            # Log notification error but don't fail the deletion
+                            print(f"Failed to create notification for schedule cancellation: {e}")
+                        
                         return Response({
                             'message': 'Timeslot and schedule deleted successfully',
                             'deletion_type': 'schedule_deleted'                        }, status=200)
@@ -593,6 +641,16 @@ class AppointmentManagementView(APIView):
                     else:  # 'smart' strategy (default)
                         # Delete schedule only if no timeslots remain (current behavior)
                         if remaining_timeslots == 0:
+                            # Create notification before deleting schedule
+                            try:
+                                NotificationService.notify_schedule_cancelled(
+                                    schedule=schedule,
+                                    cancelled_by=request.user,
+                                    reason="Appointment cancelled by coordinator"
+                                )
+                            except Exception as e:
+                                print(f"Failed to create notification for schedule cancellation: {e}")
+                            
                             schedule.delete()
                             
                             # Log the DELETE_APPOINTMENT action
@@ -639,6 +697,17 @@ class AppointmentManagementView(APIView):
                     # Delete everything (default behavior)
                     timeslot_count = timeslots.count()
                     schedule_id = schedule.id  # Store ID before deletion
+                    
+                    # Create notification before deleting schedule
+                    try:
+                        NotificationService.notify_schedule_cancelled(
+                            schedule=schedule,
+                            cancelled_by=request.user,
+                            reason="Appointment cancelled by coordinator"
+                        )
+                    except Exception as e:
+                        print(f"Failed to create notification for schedule cancellation: {e}")
+                    
                     for timeslot in timeslots:
                         timeslot.delete()
                     schedule.delete()
@@ -1381,6 +1450,16 @@ class RecurringScheduleView(APIView):
                         
                         # Log the CREATE_SCHEDULE action for new schedules
                         log_schedule_action(request.user, "CREATE_SCHEDULE", "Schedule", schedule.id, schedule=schedule)
+                        
+                        # Create notification for new appointment
+                        try:
+                            NotificationService.notify_schedule_created(
+                                schedule=schedule,
+                                created_by=request.user
+                            )
+                        except Exception as e:
+                            # Log notification error but don't fail the creation
+                            print(f"Failed to create notification for new recurring schedule: {e}")
                     
                     # Create timeslot
                     timeslot = TimeSlot.objects.create(
