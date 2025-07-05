@@ -136,3 +136,295 @@
         padding: 1rem;
     }
 }
+
+/* Settings Container Styles */
+.settings-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.settings-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.settings-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+/* Settings Navigation */
+.settings-nav .nav-pills .nav-link {
+    border-radius: 50px;
+    padding: 12px 24px;
+    margin: 0 4px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    color: #6c757d;
+    background: #f8f9fa;
+}
+
+.settings-nav .nav-pills .nav-link:hover {
+    background: #e9ecef;
+    color: #495057;
+    transform: translateY(-2px);
+}
+
+.settings-nav .nav-pills .nav-link.active {
+    background: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+}
+
+/* Settings Cards */
+.settings-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.settings-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.settings-card-header {
+    padding: 1.5rem 2rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.settings-card-body {
+    padding: 2rem;
+}
+
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* Animation */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Password Form Enhancements */
+.password-form .form-floating {
+    position: relative;
+}
+
+.password-strength {
+    margin-top: 1rem;
+}
+
+.password-strength .progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.password-strength .progress-bar {
+    transition: all 0.5s ease;
+}
+
+/* Login History List */
+.login-history-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.login-history-item {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f3f4;
+    transition: background-color 0.2s ease;
+}
+
+.login-history-item:hover {
+    background-color: #f8f9fa;
+}
+
+.login-history-item:last-child {
+    border-bottom: none;
+}
+
+.login-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 50%;
+}
+
+/* Preferences Grid */
+.preferences-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+.preference-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.preference-section-title {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.preference-switches {
+    display: grid;
+    gap: 1rem;
+}
+
+.preference-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.preference-item:hover {
+    border-color: #ced4da;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.preference-label {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+/* Contact Methods */
+.contact-methods .form-floating {
+    background: white;
+    border-radius: 8px;
+}
+
+.emergency-contact-form {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-header {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .settings-card-body {
+        padding: 1.5rem;
+    }
+    
+    .preference-section {
+        padding: 1rem;
+    }
+    
+    .settings-nav .nav-pills .nav-link {
+        font-size: 0.875rem;
+        padding: 8px 16px;
+    }
+}
+
+/* Button Enhancements */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #b02a37);
+    border: none;
+}
+
+/* Form Enhancements */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-floating > label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Alert Enhancements */
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 1rem 1.5rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 // CSS is now handled by UnifiedBaseLayout.css
 import BaseLayout from '../layout/BaseLayout';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
@@ -8,18 +8,192 @@ import { useCareTranslation } from '../../hooks/useCareTranslation';
 import MedicalFolder from '../../components/MedicalFolder'; // Import MedicalFolder component
 
 const ProfilePage = () => {
+    // --- All hooks at the top (fixes React error) ---
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);    
     const [selectedTab, setSelectedTab] = useState('user');
     const [linkedPatients, setLinkedPatients] = useState([]);
     const [providerContracts, setProviderContracts] = useState([]);
     const profileRef = useRef(null);
+    // Settings tab hooks
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordStrength, setPasswordStrength] = useState('');
+    const [passwordChangeMsg, setPasswordChangeMsg] = useState('');
+    const [passwordChangeError, setPasswordChangeError] = useState('');
+    const [changingPassword, setChangingPassword] = useState(false);
+    // Login history
+    const [loginHistory, setLoginHistory] = useState([]);
+    const [loginHistoryLoading, setLoginHistoryLoading] = useState(false);
+    const [loginHistoryError, setLoginHistoryError] = useState('');
     
+    // Contact preferences
+    const [preferences, setPreferences] = useState({
+        email_notifications: true,
+        sms_notifications: false,
+        appointment_reminders: true,
+        billing_notifications: true,
+        medical_alerts: true,
+        marketing_communications: false,
+        preferred_contact_method: 'email',
+        primary_phone_contact: null,
+        available_phones: [],
+        emergency_contact: {
+            name: '',
+            phone: '',
+            relationship: ''
+        }
+    });
+    const [preferencesLoading, setPreferencesLoading] = useState(false);
+    const [preferencesError, setPreferencesError] = useState('');
+    const [preferencesMsg, setPreferencesMsg] = useState('');
+    const [savingPreferences, setSavingPreferences] = useState(false);
+    
+    // Settings tab state
+    const [selectedSettingsTab, setSelectedSettingsTab] = useState('security');
     // Use translation hooks
     const { profile, common, auth } = useCareTranslation();
-    
     // Use modern authentication API
-    const { get, loading, error: apiError } = useAuthenticatedApi();    useEffect(() => {
+    const { get, loading, error: apiError } = useAuthenticatedApi();
+    
+    // Password strength checker (client-side, simple)
+    const checkStrength = (pwd) => {
+        let score = 0;
+        if (pwd.length >= 8) score++;
+        if (pwd.length >= 12) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[a-z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) score++;
+        if (score <= 2) return 'Weak';
+        if (score <= 4) return 'Medium';
+        if (score <= 6) return 'Strong';
+        return 'Very Strong';
+    };
+
+    // Update password strength as user types
+    useEffect(() => {
+        setPasswordStrength(newPassword ? checkStrength(newPassword) : '');
+    }, [newPassword]);
+
+    const handleChangePassword = useCallback(async () => {
+        setPasswordChangeMsg('');
+        setPasswordChangeError('');
+        setChangingPassword(true);
+        try {
+            const response = await fetch('http://localhost:8000/account/profile/change-password/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenManager.getAccessToken()}`
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                    confirm_password: confirmPassword
+                })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setPasswordChangeMsg(data.message || 'Password changed successfully.');
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setPasswordStrength('');
+            } else {
+                setPasswordChangeError(data.error || 'Failed to change password.');
+            }
+        } catch (err) {
+            setPasswordChangeError('Network error. Please try again.');
+        } finally {
+            setChangingPassword(false);
+        }
+    }, [currentPassword, newPassword, confirmPassword]);
+
+    // Fetch login history and preferences when settings tab is selected
+    useEffect(() => {
+        if (selectedTab === 'settings') {
+            // Fetch login history
+            setLoginHistoryLoading(true);
+            setLoginHistoryError('');
+            fetch('http://localhost:8000/account/profile/login-history/', {
+                headers: {
+                    'Authorization': `Bearer ${tokenManager.getAccessToken()}`
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.login_history) {
+                        setLoginHistory(data.login_history);
+                    } else {
+                        setLoginHistory([]);
+                        if (data.error) setLoginHistoryError(data.error);
+                    }
+                })
+                .catch(() => setLoginHistoryError('Failed to load login history.'))
+                .finally(() => setLoginHistoryLoading(false));
+
+            // Fetch contact preferences
+            setPreferencesLoading(true);
+            setPreferencesError('');
+            fetch('http://localhost:8000/account/profile/contact-preferences/', {
+                headers: {
+                    'Authorization': `Bearer ${tokenManager.getAccessToken()}`
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        setPreferencesError(data.error);
+                    } else {
+                        setPreferences(data);
+                    }
+                })
+                .catch(() => setPreferencesError('Failed to load contact preferences.'))
+                .finally(() => setPreferencesLoading(false));
+        }
+    }, [selectedTab]);
+
+    // Save preferences function
+    const handleSavePreferences = useCallback(async () => {
+        setPreferencesMsg('');
+        setPreferencesError('');
+        setSavingPreferences(true);
+        try {
+            const response = await fetch('http://localhost:8000/account/profile/contact-preferences/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenManager.getAccessToken()}`
+                },
+                body: JSON.stringify({
+                    email_notifications: preferences.email_notifications,
+                    sms_notifications: preferences.sms_notifications,
+                    appointment_reminders: preferences.appointment_reminders,
+                    billing_notifications: preferences.billing_notifications,
+                    medical_alerts: preferences.medical_alerts,
+                    marketing_communications: preferences.marketing_communications,
+                    preferred_contact_method: preferences.preferred_contact_method,
+                    primary_phone_contact_id: preferences.primary_phone_contact?.id || null,
+                    emergency_contact: preferences.emergency_contact
+                })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setPreferencesMsg(data.message || 'Preferences saved successfully.');
+            } else {
+                setPreferencesError(data.error || 'Failed to save preferences.');
+            }
+        } catch (err) {
+            setPreferencesError('Network error. Please try again.');
+        } finally {
+            setSavingPreferences(false);
+        }
+    }, [preferences]);
+    // --- End hooks ---
+
+    useEffect(() => {
         const fetchProfile = async () => {
             console.log('[DEBUG] Starting profile data fetch');
             try {
@@ -84,7 +258,9 @@ const ProfilePage = () => {
                     tokenManager.handleLogout();
                 }
             }
-        };        fetchProfile();
+        };        
+
+        fetchProfile();
     }, []); // Remove get dependency to prevent infinite re-fetching
 
     useEffect(() => {
@@ -126,7 +302,9 @@ const ProfilePage = () => {
             window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('mouseup', onMouseUp);
         };
-    }, [profileRef]);    const renderContent = () => {
+    }, [profileRef]);
+
+    const renderContent = () => {
         const userRole = userData?.user?.role;
         
         switch (selectedTab) {
@@ -466,6 +644,595 @@ const ProfilePage = () => {
                         </div>
                     </div>
                 );
+            case 'settings':
+                return (
+                    <div className="settings-container">
+                        {/* Settings Header */}
+                        <div className="settings-header mb-4">
+                            <div className="d-flex align-items-center mb-3">
+                                <div className="settings-icon me-3">
+                                    <i className="fas fa-cog"></i>
+                                </div>
+                                <div>
+                                    <h4 className="mb-1">{profile('settings') || 'Settings'}</h4>
+                                    <p className="text-muted mb-0">Manage your account preferences and security</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Settings Tabs Navigation */}
+                        <div className="settings-nav mb-4">
+                            <nav className="nav nav-pills nav-fill">
+                                <button 
+                                    className={`nav-link ${selectedSettingsTab === 'security' ? 'active' : ''}`}
+                                    onClick={() => setSelectedSettingsTab('security')}
+                                >
+                                    <i className="fas fa-shield-alt me-2"></i>
+                                    Security
+                                </button>
+                                <button 
+                                    className={`nav-link ${selectedSettingsTab === 'preferences' ? 'active' : ''}`}
+                                    onClick={() => setSelectedSettingsTab('preferences')}
+                                >
+                                    <i className="fas fa-bell me-2"></i>
+                                    Preferences
+                                </button>
+                                <button 
+                                    className={`nav-link ${selectedSettingsTab === 'account' ? 'active' : ''}`}
+                                    onClick={() => setSelectedSettingsTab('account')}
+                                >
+                                    <i className="fas fa-user-cog me-2"></i>
+                                    Account
+                                </button>
+                            </nav>
+                        </div>
+
+                        {/* Settings Content */}
+                        <div className="settings-content">
+                            {selectedSettingsTab === 'security' && (
+                                <div className="settings-section fade-in">
+                                    {/* Change Password Card */}
+                                    <div className="settings-card mb-4">
+                                        <div className="settings-card-header">
+                                            <div className="d-flex align-items-center">
+                                                <div className="icon-circle bg-primary bg-opacity-10 text-primary me-3">
+                                                    <i className="fas fa-key"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 className="mb-1">{profile('changePassword')}</h6>
+                                                    <small className="text-muted">Update your account password</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="settings-card-body">
+                                            <form onSubmit={e => { e.preventDefault(); handleChangePassword(); }}>
+                                                <div className="password-form">
+                                                    <div className="form-floating mb-3">
+                                                        <input 
+                                                            type="password" 
+                                                            className="form-control" 
+                                                            id="currentPassword"
+                                                            placeholder={profile('currentPassword')} 
+                                                            value={currentPassword} 
+                                                            onChange={e => setCurrentPassword(e.target.value)} 
+                                                            autoComplete="current-password" 
+                                                        />
+                                                        <label htmlFor="currentPassword">{profile('currentPassword')}</label>
+                                                    </div>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6">
+                                                            <div className="form-floating">
+                                                                <input 
+                                                                    type="password" 
+                                                                    className="form-control" 
+                                                                    id="newPassword"
+                                                                    placeholder={profile('newPassword')} 
+                                                                    value={newPassword} 
+                                                                    onChange={e => setNewPassword(e.target.value)} 
+                                                                    autoComplete="new-password" 
+                                                                />
+                                                                <label htmlFor="newPassword">{profile('newPassword')}</label>
+                                                            </div>
+                                                        </div>
+                                                        <div className="col-md-6">
+                                                            <div className="form-floating">
+                                                                <input 
+                                                                    type="password" 
+                                                                    className="form-control" 
+                                                                    id="confirmPassword"
+                                                                    placeholder={profile('confirmNewPassword')} 
+                                                                    value={confirmPassword} 
+                                                                    onChange={e => setConfirmPassword(e.target.value)} 
+                                                                    autoComplete="new-password" 
+                                                                />
+                                                                <label htmlFor="confirmPassword">{profile('confirmNewPassword')}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {passwordStrength && (
+                                                        <div className="password-strength mt-3">
+                                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                <small className="text-muted">{profile('passwordStrength')}</small>
+                                                                <span className={`badge ${passwordStrength === 'Weak' ? 'bg-danger' : passwordStrength === 'Medium' ? 'bg-warning' : passwordStrength === 'Strong' ? 'bg-info' : 'bg-success'}`}>
+                                                                    {passwordStrength}
+                                                                </span>
+                                                            </div>
+                                                            <div className="progress" style={{height: '4px'}}>
+                                                                <div 
+                                                                    className={`progress-bar ${passwordStrength === 'Weak' ? 'bg-danger' : passwordStrength === 'Medium' ? 'bg-warning' : passwordStrength === 'Strong' ? 'bg-info' : 'bg-success'}`}
+                                                                    style={{width: passwordStrength === 'Weak' ? '25%' : passwordStrength === 'Medium' ? '50%' : passwordStrength === 'Strong' ? '75%' : '100%'}}
+                                                                ></div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {passwordChangeMsg && (
+                                                        <div className="alert alert-success d-flex align-items-center mt-3">
+                                                            <i className="fas fa-check-circle me-2"></i>
+                                                            {passwordChangeMsg}
+                                                        </div>
+                                                    )}
+                                                    {passwordChangeError && (
+                                                        <div className="alert alert-danger d-flex align-items-center mt-3">
+                                                            <i className="fas fa-exclamation-triangle me-2"></i>
+                                                            {passwordChangeError}
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className="d-flex justify-content-end mt-4">
+                                                        <button type="submit" className="btn btn-primary px-4" disabled={changingPassword}>
+                                                            {changingPassword ? (
+                                                                <>
+                                                                    <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                                    {profile('savingPreferences')}
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <i className="fas fa-save me-2"></i>
+                                                                    {profile('changePassword')}
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Login History Card */}
+                                    <div className="settings-card">
+                                        <div className="settings-card-header">
+                                            <div className="d-flex align-items-center">
+                                                <div className="icon-circle bg-info bg-opacity-10 text-info me-3">
+                                                    <i className="fas fa-history"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 className="mb-1">{profile('loginHistory')}</h6>
+                                                    <small className="text-muted">Recent login activity</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="settings-card-body">
+                                            {loginHistoryLoading ? (
+                                                <div className="text-center py-4">
+                                                    <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                    Loading...
+                                                </div>
+                                            ) : loginHistoryError ? (
+                                                <div className="alert alert-warning">
+                                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                                    {loginHistoryError}
+                                                </div>
+                                            ) : loginHistory.length === 0 ? (
+                                                <div className="text-center py-4 text-muted">
+                                                    <i className="fas fa-info-circle mb-2 d-block" style={{fontSize: '2rem'}}></i>
+                                                    No login history available
+                                                </div>
+                                            ) : (
+                                                <div className="login-history-list">
+                                                    {loginHistory.slice(0, 5).map((log, idx) => (
+                                                        <div key={idx} className="login-history-item">
+                                                            <div className="d-flex align-items-center">
+                                                                <div className="login-icon me-3">
+                                                                    <i className={`fas fa-${log.success ? 'check-circle text-success' : 'times-circle text-danger'}`}></i>
+                                                                </div>
+                                                                <div className="flex-grow-1">
+                                                                    <div className="fw-medium">{new Date(log.timestamp).toLocaleDateString()}</div>
+                                                                    <small className="text-muted">{new Date(log.timestamp).toLocaleTimeString()}</small>
+                                                                </div>
+                                                                <div className="text-end">
+                                                                    <small className="text-muted d-block">{log.user_agent.substring(0, 30)}...</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {loginHistory.length > 5 && (
+                                                        <div className="text-center mt-3">
+                                                            <small className="text-muted">Showing 5 of {loginHistory.length} entries</small>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {selectedSettingsTab === 'preferences' && (
+                                <div className="settings-section fade-in">
+                                    {/* Contact Preferences Card */}
+                                    <div className="settings-card">
+                                        <div className="settings-card-header">
+                                            <div className="d-flex align-items-center">
+                                                <div className="icon-circle bg-success bg-opacity-10 text-success me-3">
+                                                    <i className="fas fa-bell"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 className="mb-1">{profile('contactPreferences')}</h6>
+                                                    <small className="text-muted">Manage your notification and contact preferences</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="settings-card-body">
+                                            {preferencesLoading ? (
+                                                <div className="text-center py-4">
+                                                    <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                    {profile('preferencesLoading')}
+                                                </div>
+                                            ) : (
+                                                <form onSubmit={(e) => e.preventDefault()}>
+                                                    <div className="preferences-grid">
+                                                        {/* Notification Preferences */}
+                                                        <div className="preference-section">
+                                                            <h6 className="preference-section-title">
+                                                                <i className="fas fa-bell me-2"></i>
+                                                                {profile('notificationTypes')}
+                                                            </h6>
+                                                            <div className="preference-switches">
+                                                                <div className="preference-item">
+                                                                    <div className="form-check form-switch">
+                                                                        <input 
+                                                                            className="form-check-input" 
+                                                                            type="checkbox" 
+                                                                            id="emailNotifications"
+                                                                            checked={preferences.email_notifications}
+                                                                            onChange={(e) => setPreferences({...preferences, email_notifications: e.target.checked})}
+                                                                        />
+                                                                        <label className="form-check-label" htmlFor="emailNotifications">
+                                                                            <div className="preference-label">
+                                                                                <i className="fas fa-envelope text-primary me-2"></i>
+                                                                                <span>{profile('emailNotifications')}</span>
+                                                                            </div>
+                                                                            <small className="text-muted">Receive notifications via email</small>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="preference-item">
+                                                                    <div className="form-check form-switch">
+                                                                        <input 
+                                                                            className="form-check-input" 
+                                                                            type="checkbox" 
+                                                                            id="smsNotifications"
+                                                                            checked={preferences.sms_notifications}
+                                                                            onChange={(e) => setPreferences({...preferences, sms_notifications: e.target.checked})}
+                                                                        />
+                                                                        <label className="form-check-label" htmlFor="smsNotifications">
+                                                                            <div className="preference-label">
+                                                                                <i className="fas fa-sms text-info me-2"></i>
+                                                                                <span>{profile('smsNotifications')}</span>
+                                                                            </div>
+                                                                            <small className="text-muted">Receive notifications via SMS</small>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="preference-item">
+                                                                    <div className="form-check form-switch">
+                                                                        <input 
+                                                                            className="form-check-input" 
+                                                                            type="checkbox" 
+                                                                            id="appointmentReminders"
+                                                                            checked={preferences.appointment_reminders}
+                                                                            onChange={(e) => setPreferences({...preferences, appointment_reminders: e.target.checked})}
+                                                                        />
+                                                                        <label className="form-check-label" htmlFor="appointmentReminders">
+                                                                            <div className="preference-label">
+                                                                                <i className="fas fa-calendar text-warning me-2"></i>
+                                                                                <span>{profile('appointmentReminders')}</span>
+                                                                            </div>
+                                                                            <small className="text-muted">Get reminders for upcoming appointments</small>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="preference-item">
+                                                                    <div className="form-check form-switch">
+                                                                        <input 
+                                                                            className="form-check-input" 
+                                                                            type="checkbox" 
+                                                                            id="billingNotifications"
+                                                                            checked={preferences.billing_notifications}
+                                                                            onChange={(e) => setPreferences({...preferences, billing_notifications: e.target.checked})}
+                                                                        />
+                                                                        <label className="form-check-label" htmlFor="billingNotifications">
+                                                                            <div className="preference-label">
+                                                                                <i className="fas fa-file-invoice text-success me-2"></i>
+                                                                                <span>{profile('billingNotifications')}</span>
+                                                                            </div>
+                                                                            <small className="text-muted">Receive billing and payment notifications</small>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="preference-item">
+                                                                    <div className="form-check form-switch">
+                                                                        <input 
+                                                                            className="form-check-input" 
+                                                                            type="checkbox" 
+                                                                            id="medicalAlerts"
+                                                                            checked={preferences.medical_alerts}
+                                                                            onChange={(e) => setPreferences({...preferences, medical_alerts: e.target.checked})}
+                                                                        />
+                                                                        <label className="form-check-label" htmlFor="medicalAlerts">
+                                                                            <div className="preference-label">
+                                                                                <i className="fas fa-heartbeat text-danger me-2"></i>
+                                                                                <span>{profile('medicalAlerts')}</span>
+                                                                            </div>
+                                                                            <small className="text-muted">Important medical notifications and alerts</small>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="preference-item">
+                                                                    <div className="form-check form-switch">
+                                                                        <input 
+                                                                            className="form-check-input" 
+                                                                            type="checkbox" 
+                                                                            id="marketingCommunications"
+                                                                            checked={preferences.marketing_communications}
+                                                                            onChange={(e) => setPreferences({...preferences, marketing_communications: e.target.checked})}
+                                                                        />
+                                                                        <label className="form-check-label" htmlFor="marketingCommunications">
+                                                                            <div className="preference-label">
+                                                                                <i className="fas fa-bullhorn text-secondary me-2"></i>
+                                                                                <span>{profile('marketingCommunications')}</span>
+                                                                            </div>
+                                                                            <small className="text-muted">Marketing updates and promotional content</small>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {/* Contact Method Preferences */}
+                                                        <div className="preference-section">
+                                                            <h6 className="preference-section-title">
+                                                                <i className="fas fa-phone me-2"></i>
+                                                                {profile('contactPreferencesTitle')}
+                                                            </h6>
+                                                            
+                                                            <div className="contact-methods">
+                                                                <div className="form-floating mb-3">
+                                                                    <select 
+                                                                        className="form-select"
+                                                                        id="preferredContactMethod"
+                                                                        value={preferences.preferred_contact_method}
+                                                                        onChange={(e) => setPreferences({...preferences, preferred_contact_method: e.target.value})}
+                                                                    >
+                                                                        <option value="email">📧 Email</option>
+                                                                        <option value="phone">📞 Phone</option>
+                                                                        <option value="sms">💬 SMS</option>
+                                                                    </select>
+                                                                    <label htmlFor="preferredContactMethod">{profile('preferredContactMethod')}</label>
+                                                                </div>
+                                                                
+                                                                {preferences.available_phones && preferences.available_phones.length > 0 && (
+                                                                    <div className="form-floating mb-3">
+                                                                        <select 
+                                                                            className="form-select"
+                                                                            id="primaryPhoneContact"
+                                                                            value={preferences.primary_phone_contact?.id || ''}
+                                                                            onChange={(e) => {
+                                                                                const phoneId = e.target.value;
+                                                                                const selectedPhone = preferences.available_phones.find(p => p.id.toString() === phoneId);
+                                                                                setPreferences({...preferences, primary_phone_contact: selectedPhone || null});
+                                                                            }}
+                                                                        >
+                                                                            <option value="">{profile('noPrimaryPhone')}</option>
+                                                                            {preferences.available_phones.map(phone => (
+                                                                                <option key={phone.id} value={phone.id}>
+                                                                                    📱 {phone.phone_number} ({phone.name})
+                                                                                    {phone.is_primary ? ' - Primary' : ''}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <label htmlFor="primaryPhoneContact">{profile('primaryPhoneContact')}</label>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {/* Emergency Contact */}
+                                                        <div className="preference-section">
+                                                            <h6 className="preference-section-title">
+                                                                <i className="fas fa-user-shield me-2"></i>
+                                                                {profile('emergencyContactTitle')}
+                                                            </h6>
+                                                            
+                                                            <div className="emergency-contact-form">
+                                                                <div className="row g-3">
+                                                                    <div className="col-md-6">
+                                                                        <div className="form-floating">
+                                                                            <input 
+                                                                                type="text" 
+                                                                                className="form-control"
+                                                                                id="emergencyContactName"
+                                                                                value={preferences.emergency_contact.name}
+                                                                                onChange={(e) => setPreferences({
+                                                                                    ...preferences, 
+                                                                                    emergency_contact: {
+                                                                                        ...preferences.emergency_contact,
+                                                                                        name: e.target.value
+                                                                                    }
+                                                                                })}
+                                                                                placeholder={profile('emergencyContactNamePlaceholder')}
+                                                                            />
+                                                                            <label htmlFor="emergencyContactName">{profile('emergencyContactName')}</label>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-md-6">
+                                                                        <div className="form-floating">
+                                                                            <input 
+                                                                                type="tel" 
+                                                                                className="form-control"
+                                                                                id="emergencyContactPhone"
+                                                                                value={preferences.emergency_contact.phone}
+                                                                                onChange={(e) => setPreferences({
+                                                                                    ...preferences, 
+                                                                                    emergency_contact: {
+                                                                                        ...preferences.emergency_contact,
+                                                                                        phone: e.target.value
+                                                                                    }
+                                                                                })}
+                                                                                placeholder={profile('emergencyContactPhonePlaceholder')}
+                                                                            />
+                                                                            <label htmlFor="emergencyContactPhone">{profile('emergencyContactPhone')}</label>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="col-12">
+                                                                        <div className="form-floating">
+                                                                            <input 
+                                                                                type="text" 
+                                                                                className="form-control"
+                                                                                id="emergencyContactRelationship"
+                                                                                value={preferences.emergency_contact.relationship}
+                                                                                onChange={(e) => setPreferences({
+                                                                                    ...preferences, 
+                                                                                    emergency_contact: {
+                                                                                        ...preferences.emergency_contact,
+                                                                                        relationship: e.target.value
+                                                                                    }
+                                                                                })}
+                                                                                placeholder={profile('emergencyContactRelationshipPlaceholder')}
+                                                                            />
+                                                                            <label htmlFor="emergencyContactRelationship">{profile('emergencyContactRelationship')}</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Messages */}
+                                                    {preferencesMsg && (
+                                                        <div className="alert alert-success d-flex align-items-center mb-3">
+                                                            <i className="fas fa-check-circle me-2"></i>
+                                                            {preferencesMsg}
+                                                        </div>
+                                                    )}
+                                                    {preferencesError && (
+                                                        <div className="alert alert-danger d-flex align-items-center mb-3">
+                                                            <i className="fas fa-exclamation-triangle me-2"></i>
+                                                            {preferencesError}
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className="d-flex justify-content-end">
+                                                        <button 
+                                                            type="button" 
+                                                            className="btn btn-primary px-4"
+                                                            onClick={handleSavePreferences}
+                                                            disabled={savingPreferences}
+                                                        >
+                                                            {savingPreferences ? (
+                                                                <>
+                                                                    <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                                    {profile('savingPreferences')}
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <i className="fas fa-save me-2"></i>
+                                                                    {profile('savePreferences')}
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedSettingsTab === 'account' && (
+                                <div className="settings-section fade-in">
+                                    {/* Account Deletion Card */}
+                                    <div className="settings-card">
+                                        <div className="settings-card-header">
+                                            <div className="d-flex align-items-center">
+                                                <div className="icon-circle bg-danger bg-opacity-10 text-danger me-3">
+                                                    <i className="fas fa-user-slash"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 className="mb-1 text-danger">{profile('deleteAccountTitle')}</h6>
+                                                    <small className="text-muted">Permanently delete your account and data</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="settings-card-body">
+                                            <div className="alert alert-warning d-flex align-items-start">
+                                                <i className="fas fa-exclamation-triangle me-3 mt-1"></i>
+                                                <div>
+                                                    <h6 className="alert-heading">Warning: This action cannot be undone</h6>
+                                                    <p className="mb-0">
+                                                        Deleting your account will permanently remove all your data, including medical records, 
+                                                        appointments, and personal information. This action is irreversible.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            <form onSubmit={(e) => e.preventDefault()}>
+                                                <div className="mb-3">
+                                                    <label htmlFor="deletionReason" className="form-label">{profile('deleteAccountReason')}</label>
+                                                    <textarea 
+                                                        className="form-control" 
+                                                        id="deletionReason"
+                                                        rows="3"
+                                                        placeholder="Please let us know why you're leaving (optional)"
+                                                    ></textarea>
+                                                </div>
+                                                
+                                                <div className="form-check mb-4">
+                                                    <input 
+                                                        className="form-check-input" 
+                                                        type="checkbox" 
+                                                        id="confirmDeletion"
+                                                    />
+                                                    <label className="form-check-label" htmlFor="confirmDeletion">
+                                                        <strong>{profile('confirmDeleteAccount')}</strong>
+                                                    </label>
+                                                </div>
+                                                
+                                                <div className="d-flex justify-content-end gap-3">
+                                                    <button type="button" className="btn btn-outline-secondary px-4">
+                                                        <i className="fas fa-times me-2"></i>
+                                                        Cancel
+                                                    </button>
+                                                    <button type="button" className="btn btn-danger px-4">
+                                                        <i className="fas fa-trash me-2"></i>
+                                                        {profile('requestAccountDeletion')}
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
             default:
                 return null;
         }
@@ -506,7 +1273,9 @@ const ProfilePage = () => {
                 </div>
             </BaseLayout>
         );
-    }return (
+    }
+
+    return (
         <BaseLayout>
             <div className="container-fluid py-4">
                 <div className="row justify-content-center">
@@ -603,6 +1372,10 @@ const ProfilePage = () => {
                                                 </button>
                                             </>
                                         )}
+                                        <button className={`nav-link ${selectedTab === 'settings' ? 'active' : ''}`} onClick={() => setSelectedTab('settings')}>
+                                            <i className="fas fa-cog me-2"></i>
+                                            {profile('settings') || 'Settings'}
+                                        </button>
                                     </nav>
                                 </div>
                             </div>
@@ -620,3 +1393,4 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
