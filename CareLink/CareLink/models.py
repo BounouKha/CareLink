@@ -778,6 +778,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     address = models.CharField(max_length=255, null=True, blank=True)
     national_number = models.CharField(max_length=11, unique=True, null=True, blank=True)  # Reduced max_length
 
+    # Failed login tracking fields
+    failed_login_attempts = models.IntegerField(default=0, help_text="Number of consecutive failed login attempts")
+    last_failed_login = models.DateTimeField(null=True, blank=True, help_text="Timestamp of last failed login attempt")
+    account_locked_until = models.DateTimeField(null=True, blank=True, help_text="Account locked until this timestamp")
+
     ROLE_CHOICES = [
         ('Administrative', 'Administrative'),
         ('Patient', 'Patient'),
@@ -795,7 +800,103 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return f"{self.firstname} {self.lastname} ({self.email})"
+
+    def get_full_name(self):
+        return f"{self.firstname} {self.lastname}"
+
+    def get_short_name(self):
+        return self.firstname
+
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
+
+    @property
+    def is_superuser_role(self):
+        return self.is_admin
+
+    # Account lockout methods
+    def is_account_locked(self):
+        """Check if account is currently locked"""
+        if self.account_locked_until:
+            # If account has 10+ failed attempts, it's permanently blocked until admin unlocks
+            if self.failed_login_attempts >= 10:
+                return True
+            
+            # For soft locks (5-9 attempts), check if lockout period has expired
+            if timezone.now() >= self.account_locked_until:
+                # Lockout period has expired, automatically unlock (only for soft locks)
+                self.failed_login_attempts = 0
+                self.last_failed_login = None
+                self.account_locked_until = None
+                # Don't change is_active here - it should still be True for soft locks
+                self.save()
+                return False
+            return True
+        return False
+
+    def increment_failed_login(self):
+        """Increment failed login attempts and potentially lock account"""
+        self.failed_login_attempts += 1
+        self.last_failed_login = timezone.now()
+        
+        # Show lockout message after 5 attempts (soft warning)
+        if self.failed_login_attempts >= 5:
+            self.account_locked_until = timezone.now() + timezone.timedelta(minutes=30)
+        
+        # Actually block account after 10 failed attempts (hard block)
+        if self.failed_login_attempts >= 10:
+            self.is_active = False  # Deactivate account
+            
+        self.save()
+
+    def reset_failed_login_attempts(self):
+        """Reset failed login attempts after successful login"""
+        self.failed_login_attempts = 0
+        self.last_failed_login = None
+        self.account_locked_until = None
+        # Always reactivate account on successful login
+        self.is_active = True
+        self.save()
+
+    def unlock_account(self):
+        """Manually unlock account (for admin use)"""
+        self.failed_login_attempts = 0
+        self.last_failed_login = None
+        self.account_locked_until = None
+        self.is_active = True
+        self.save()
+
+    def get_lockout_info(self):
+        """Get lockout information for display"""
+        if self.failed_login_attempts >= 10:
+            # Permanent block - no time remaining
+            return {
+                'is_locked': True,
+                'is_permanent': True,
+                'minutes_remaining': None,
+                'locked_until': None,
+                'failed_attempts': self.failed_login_attempts
+            }
+        elif self.is_account_locked():
+            # Temporary lock - show time remaining
+            remaining_time = self.account_locked_until - timezone.now()
+            minutes_remaining = int(remaining_time.total_seconds() / 60)
+            return {
+                'is_locked': True,
+                'is_permanent': False,
+                'minutes_remaining': minutes_remaining,
+                'locked_until': self.account_locked_until,
+                'failed_attempts': self.failed_login_attempts
+            }
+        return {
+            'is_locked': False,
+            'is_permanent': False,
+            'failed_attempts': self.failed_login_attempts
+        }
 
 class UserActionLog(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
