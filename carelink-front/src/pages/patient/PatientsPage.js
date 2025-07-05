@@ -351,8 +351,27 @@ const PatientsPage = () => {
                                         {patientsT('emergencyContact')}:
                                         <input
                                             type="text"
-                                            value={selectedPatient.emergency_contact}
-                                            onChange={(e) => handleInputChange('emergency_contact', e.target.value)}
+                                            value={selectedPatient.emergency_contact_name || ''}
+                                            readOnly
+                                            placeholder="Emergency contact name"
+                                        />
+                                    </label>
+                                    <label>
+                                        Emergency Contact Phone:
+                                        <input
+                                            type="text"
+                                            value={selectedPatient.emergency_contact_phone || ''}
+                                            readOnly
+                                            placeholder="Emergency contact phone"
+                                        />
+                                    </label>
+                                    <label>
+                                        Emergency Contact Relationship:
+                                        <input
+                                            type="text"
+                                            value={selectedPatient.emergency_contact_relationship || ''}
+                                            readOnly
+                                            placeholder="Relationship (e.g., Spouse, Child, Friend)"
                                         />
                                     </label>
                                 </div>

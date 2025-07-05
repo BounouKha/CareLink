@@ -504,7 +504,6 @@ class Patient(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
     gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
     blood_type = models.CharField(max_length=3, null=True, blank=True)
-    emergency_contact = models.CharField(max_length=15)
     katz_score = models.IntegerField(null=True, blank=True)
     it_score = models.IntegerField(null=True, blank=True)
     illness = models.CharField(max_length=100, null=True, blank=True)
@@ -575,14 +574,6 @@ class ProviderAbsence(models.Model):
     def clean(self):
         if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValidationError('Start date cannot be after end date.')
-
-class ProvidingCare(models.Model):
-    patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
-    provider = models.ForeignKey('Provider', on_delete=models.SET_NULL, null=True)
-    coordinator = models.ForeignKey('Coordinator', on_delete=models.SET_NULL, null=True)
-    prescription = models.ForeignKey('Prescription', on_delete=models.SET_NULL, null=True, blank=True)
 
 class Schedule(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
@@ -669,7 +660,6 @@ class ServiceDemand(models.Model):
     
     # Contact & Communication
     contact_method = models.CharField(max_length=20, choices=CONTACT_CHOICES, default='Email')
-    emergency_contact = models.CharField(max_length=15, null=True, blank=True, help_text="Emergency contact number")
     special_instructions = models.TextField(null=True, blank=True, help_text="Any special instructions or requirements")
     
     # Status & Management
@@ -753,7 +743,6 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_admin', True)
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
@@ -772,7 +761,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     birthdate = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True) 
-    is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     address = models.CharField(max_length=255, null=True, blank=True)
@@ -813,10 +801,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def has_module_perms(self, app_label):
         return True
-
-    @property
-    def is_superuser_role(self):
-        return self.is_admin
 
     # Account lockout methods
     def is_account_locked(self):
@@ -916,15 +900,6 @@ class UserActionLog(models.Model):
     def __str__(self):
         user_name = f"{self.user.firstname} {self.user.lastname}" if self.user else "Unknown User"
         return f"{user_name} - {self.action_type} on {self.target_model} (ID: {self.target_id})"
-
-class UserToken(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
-    access_token_hash = models.CharField(max_length=64, unique=True)
-    refresh_token_hash = models.CharField(max_length=64, unique=True)
-    access_token_expires_at = models.DateTimeField()
-    refresh_token_expires_at = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    revoked = models.BooleanField(default=False)
 
 class PhoneUser(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='phone_numbers')
