@@ -76,6 +76,31 @@
     "redirecting": "Redirecting in {{seconds}} seconds...",
     "checkingPermissions": "Checking admin permissions..."
   },
+  "homepage": {
+    "title": "Welcome to CareLink",
+    "subtitle": "Connecting families with exceptional household and family assistance providers through innovative scheduling and communication tools.",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "whyChooseTitle": "Why Choose CareLink?",
+    "features": {
+      "household": {
+        "title": "Household & Family Help",
+        "description": "Built specifically for household assistance, family support, and care coordination."
+      },
+      "family": {
+        "title": "Family Centered",
+        "description": "Connect entire families with their assistance providers seamlessly."
+      },
+      "easyToUse": {
+        "title": "Easy to Use",
+        "description": "Intuitive interface designed for users of all technical levels."
+      },
+      "secure": {
+        "title": "Secure & Private",
+        "description": "Secure platform ensuring your family data stays protected."
+      }
+    }
+  },
   "profile": {
     "title": "Profile Information",
     "personalInfo": "Personal Information",

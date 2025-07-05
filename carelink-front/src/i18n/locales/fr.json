@@ -1343,6 +1343,31 @@
   "inProgress": "En Cours",
   "assignedToMe": "Assigné à Moi",
   "manageCoordinatorTickets": "Gérer les tickets du coordinateur",
-  "manageCoordinatorTicketsDescription": "Afficher et gérer les tickets assignés à l'équipe de coordination"
+  "manageCoordinatorTicketsDescription": "Afficher et gérer les tickets assignés à l'équipe de coordination",
+  "homepage": {
+    "title": "Bienvenue sur CareLink",
+    "subtitle": "Connecter les familles avec des prestataires d'assistance ménagère et familiale exceptionnels grâce à des outils innovants de planification et de communication.",
+    "getStarted": "Commencer",
+    "learnMore": "En savoir plus",
+    "whyChooseTitle": "Pourquoi choisir CareLink ?",
+    "features": {
+      "household": {
+        "title": "Aide ménagère & familiale",
+        "description": "Conçu spécifiquement pour l'assistance ménagère, le soutien familial et la coordination des soins."
+      },
+      "family": {
+        "title": "Centré sur la famille",
+        "description": "Connectez des familles entières avec leurs prestataires d'assistance de manière transparente."
+      },
+      "easyToUse": {
+        "title": "Facile à utiliser",
+        "description": "Interface intuitive conçue pour les utilisateurs de tous niveaux techniques."
+      },
+      "secure": {
+        "title": "Sécurisé et privé",
+        "description": "Plateforme sécurisée garantissant la protection de vos données familiales."
+      }
+    }
+  }
 }
 
