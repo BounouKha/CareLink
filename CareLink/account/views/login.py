@@ -4,10 +4,11 @@ from rest_framework import status
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
-from CareLink.models import CookieConsent
+from CareLink.models import CookieConsent, User
 import logging
 from datetime import datetime
 from ..services.activity_logger import ActivityLogger
+from django.utils import timezone
 
 logger = logging.getLogger('carelink')
 
@@ -32,9 +33,59 @@ class LoginAPIView(APIView):
             print("[DEBUG] Missing email or password.")
             return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Check if user exists and if account is locked
+        try:
+            user_obj = User.objects.get(email=email)
+            
+            # Check account status (this will auto-unlock if time has expired)
+            is_locked = user_obj.is_account_locked()
+            
+            # Check if account is hard-blocked (10+ attempts and is_active=False)
+            if user_obj.failed_login_attempts >= 10 and not user_obj.is_active and is_locked:
+                lockout_info = user_obj.get_lockout_info()
+                logger.warning(
+                    f"LOGIN BLOCKED - Account hard-blocked for email: {email} - "
+                    f"Failed attempts: {user_obj.failed_login_attempts} - "
+                    f"IP: {client_ip} - User Agent: {user_agent[:100]}"
+                )
+                ActivityLogger.log_login_failed(email, client_ip, user_agent)
+                
+                return Response({
+                    "error": "Your account is blocked, contact administrator.",
+                    "lockout_info": {
+                        "minutes_remaining": lockout_info['minutes_remaining'],
+                        "locked_until": lockout_info['locked_until'].isoformat() if lockout_info['locked_until'] else None
+                    }
+                }, status=status.HTTP_423_LOCKED)
+            
+            # Check if account has soft warning (5+ attempts but still active)
+            elif is_locked and user_obj.failed_login_attempts >= 5:
+                lockout_info = user_obj.get_lockout_info()
+                logger.warning(
+                    f"LOGIN WARNING - Account soft-locked for email: {email} - "
+                    f"Failed attempts: {user_obj.failed_login_attempts} - "
+                    f"IP: {client_ip} - User Agent: {user_agent[:100]}"
+                )
+                ActivityLogger.log_login_failed(email, client_ip, user_agent)
+                
+                return Response({
+                    "error": "Too many failed attempts. Please wait before trying again.",
+                    "lockout_info": {
+                        "minutes_remaining": lockout_info['minutes_remaining'],
+                        "locked_until": lockout_info['locked_until'].isoformat() if lockout_info['locked_until'] else None
+                    }
+                }, status=status.HTTP_423_LOCKED)
+                
+        except User.DoesNotExist:
+            # User doesn't exist, but we still proceed to authenticate to avoid user enumeration
+            pass
+
         user = authenticate(request, email=email, password=password)
 
         if user is not None:
+            # Reset failed login attempts on successful login
+            user.reset_failed_login_attempts()
+            
             # Log successful login
             logger.info(
                 f"LOGIN SUCCESSFUL - User: {user.firstname} {user.lastname} "
@@ -94,17 +145,71 @@ class LoginAPIView(APIView):
             print("[DEBUG] 🍪 Refresh token set in HttpOnly cookie")
             return response
         else:
-            # Log failed login attempt
-            logger.warning(
-                f"LOGIN FAILED - Invalid credentials for email: {email} - "
-                f"IP: {client_ip} - User Agent: {user_agent[:100]}"
-            )
-            
-            # Log to database for admin panel
+            # Increment failed login attempts for existing users
+            try:
+                user_obj = User.objects.get(email=email)
+                user_obj.increment_failed_login()
+                
+                # Check if account is now hard-blocked (10+ attempts)
+                if user_obj.failed_login_attempts >= 10 and not user_obj.is_active:
+                    lockout_info = user_obj.get_lockout_info()
+                    logger.warning(
+                        f"LOGIN FAILED - Account now hard-blocked after {user_obj.failed_login_attempts} attempts - "
+                        f"Email: {email} - IP: {client_ip} - User Agent: {user_agent[:100]}"
+                    )
+                    ActivityLogger.log_login_failed(email, client_ip, user_agent)
+                    
+                    return Response({
+                        "error": "Account blocked due to many bad information.",
+                        "lockout_info": {
+                            "minutes_remaining": lockout_info['minutes_remaining'],
+                            "locked_until": lockout_info['locked_until'].isoformat() if lockout_info['locked_until'] else None
+                        }
+                    }, status=status.HTTP_423_LOCKED)
+                
+                # Check if account has soft warning (5+ attempts but still active)
+                elif user_obj.is_account_locked() and user_obj.failed_login_attempts >= 5:
+                    lockout_info = user_obj.get_lockout_info()
+                    logger.warning(
+                        f"LOGIN FAILED - Account soft-locked after {user_obj.failed_login_attempts} attempts - "
+                        f"Email: {email} - IP: {client_ip} - User Agent: {user_agent[:100]}"
+                    )
+                    ActivityLogger.log_login_failed(email, client_ip, user_agent)
+                    
+                    return Response({
+                        "error": "Too many failed attempts. Please wait before trying again.",
+                        "lockout_info": {
+                            "minutes_remaining": lockout_info['minutes_remaining'],
+                            "locked_until": lockout_info['locked_until'].isoformat() if lockout_info['locked_until'] else None
+                        }
+                    }, status=status.HTTP_423_LOCKED)
+                else:
+                    # Account not locked yet, show remaining attempts
+                    remaining_attempts = 5 - user_obj.failed_login_attempts
+                    if remaining_attempts > 0:
+                        logger.warning(
+                            f"LOGIN FAILED - Invalid credentials for email: {email} - "
+                            f"Attempt {user_obj.failed_login_attempts}/5 - "
+                            f"IP: {client_ip} - User Agent: {user_agent[:100]}"
+                        )
+                        ActivityLogger.log_login_failed(email, client_ip, user_agent)
+                        
+                        return Response({
+                            "error": "Invalid credentials.",
+                            "warning": f"Account will be temporarily locked after {remaining_attempts} more failed attempts."
+                        }, status=status.HTTP_401_UNAUTHORIZED)
+                    else:
+                        # This shouldn't happen due to the logic above, but just in case
+                        return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+                    
+            except User.DoesNotExist:
+                # User doesn't exist - don't reveal this information
+                                 logger.warning(
+                     f"LOGIN FAILED - Invalid credentials for email: {email} - "
+                     f"IP: {client_ip} - User Agent: {user_agent[:100]}"
+                 )
             ActivityLogger.log_login_failed(email, client_ip, user_agent)
-            
-            # Debugging: Log failed authentication
-            print("[DEBUG] Invalid credentials.")
+                
             return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
     
     def get_client_ip(self, request):
