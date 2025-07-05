@@ -8,9 +8,9 @@ const LanguageSwitcher = ({ className = '', style = {} }) => {
   const dropdownRef = useRef(null);
 
   const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸', nativeName: 'English' },
-    { code: 'nl', name: 'Dutch', flag: '🇳🇱', nativeName: 'Nederlands' },
-    { code: 'fr', name: 'French', flag: '🇫🇷', nativeName: 'Français' }
+    { code: 'en', name: 'English', nativeName: 'English' },
+    { code: 'nl', name: 'Dutch', nativeName: 'Nederlands' },
+    { code: 'fr', name: 'French', nativeName: 'Français' }
   ];
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];

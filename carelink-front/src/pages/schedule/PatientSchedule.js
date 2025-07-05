@@ -5,6 +5,7 @@ import './PatientSchedule.css';
 import { SpinnerOnly } from '../../components/LoadingComponents';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import AppointmentCommentModal from '../../components/AppointmentCommentModal';
 import tokenManager from '../../utils/tokenManager';
 
 const PatientSchedule = () => {
@@ -20,6 +21,9 @@ const PatientSchedule = () => {
   const [selectedFamilyMember, setSelectedFamilyMember] = useState(null);
   const [roleChecked, setRoleChecked] = useState(false); // Add this to track if role check is complete
   const navigate = useNavigate();
+  
+  // Comment modal state
+  const [showCommentModal, setShowCommentModal] = useState(false);
 
   // Use translation hooks
   const { schedule, common, placeholders } = useCareTranslation();
@@ -428,9 +432,32 @@ const PatientSchedule = () => {
                   <p><strong>{schedule('patient')}:</strong> {appointmentDetails.patient_name}</p>
                 )}
               </div>
+              
+              {/* Comment Button */}
+              {appointmentDetails.appointments && appointmentDetails.appointments.length > 0 && (
+                <div className="appointment-actions">
+                  <button 
+                    className="comment-btn"
+                    onClick={() => setShowCommentModal(true)}
+                  >
+                    💬 Add Comment
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
+      )}
+      
+      {/* Appointment Comment Modal */}
+      {showCommentModal && appointmentDetails && appointmentDetails.appointments && appointmentDetails.appointments[0] && (
+        <AppointmentCommentModal
+          isOpen={showCommentModal}
+          onClose={() => setShowCommentModal(false)}
+          timeslotId={appointmentDetails.appointments[0].id}
+          appointmentDate={appointmentDetails.date}
+          patientName={appointmentDetails.patient_name || 'Patient'}
+        />
       )}
     </div>
   );
