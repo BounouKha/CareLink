@@ -3,13 +3,14 @@ import BaseLayout from '../../auth/layout/BaseLayout';
 import { useAuthenticatedApi } from '../../hooks/useAuth';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import { SpinnerOnly } from '../../components/LoadingComponents';
+import PatientInfoModal from '../../components/PatientInfoModal';
 import './ProviderSchedule.css';
 
 /**
  * WeeklyScheduleGrid Component
  * Displays the weekly schedule in a calendar grid format with proper time span handling
  */
-const WeeklyScheduleGrid = ({ scheduleData, absenceData }) => {
+const WeeklyScheduleGrid = ({ scheduleData, absenceData, onAppointmentClick }) => {
     const { providers: providersT } = useCareTranslation();
     const timeSlots = [
         '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -160,6 +161,7 @@ const WeeklyScheduleGrid = ({ scheduleData, absenceData }) => {
                                                 zIndex: 2 
                                             }}
                                             title={`${appointment.patient.name} - ${appointment.service.name} (${appointment.start_time} - ${appointment.end_time}) - Status: ${appointment.status || 'scheduled'}`}
+                                            onClick={() => onAppointmentClick && onAppointmentClick(appointment)}
                                         >
                                             <div className="appointment-patient-name">
                                                 <span className={`appointment-status-icon ${appointment.status || 'scheduled'}`}></span>
@@ -213,6 +215,8 @@ const ProviderSchedule = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [absenceData, setAbsenceData] = useState({});
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [showPatientModal, setShowPatientModal] = useState(false);
     
     const { get } = useAuthenticatedApi();
     const { schedule, common, providers: providersT } = useCareTranslation();
@@ -283,6 +287,17 @@ const ProviderSchedule = () => {
         });
         
         return `${startStr} - ${endStr}`;
+    };
+
+    const handleAppointmentClick = (appointment) => {
+        console.log('Appointment clicked:', appointment);
+        setSelectedAppointment(appointment);
+        setShowPatientModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowPatientModal(false);
+        setSelectedAppointment(null);
     };
 
     if (loading) {
@@ -435,12 +450,24 @@ const ProviderSchedule = () => {
                                     )}</p>
                                 </div>
                             ) : (
-                                <WeeklyScheduleGrid scheduleData={scheduleData} absenceData={absenceData} />
+                                <WeeklyScheduleGrid 
+                            scheduleData={scheduleData} 
+                            absenceData={absenceData} 
+                            onAppointmentClick={handleAppointmentClick} 
+                        />
                             )}
                         </div>
                     </div>
                 </div>
             </div>
+            
+            {/* Patient Information Modal */}
+            {showPatientModal && selectedAppointment && (
+                <PatientInfoModal 
+                    appointment={selectedAppointment}
+                    onClose={handleCloseModal}
+                />
+            )}
         </BaseLayout>
     );
 };

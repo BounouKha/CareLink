@@ -224,16 +224,18 @@ export const getNavigationItems = (user) => {
         );
     }
     
-    // Add helpdesk access for all users (including patients)
-    // All users can submit tickets through the coordinator helpdesk panel
-    items.push(
-        { key: 'helpdesk', label: 'Helpdesk', path: '/coordinator/helpdesk', roles: [ROLES.COORDINATOR] }
-    );
-    
-    // Add user helpdesk for patients and admins
-    if (isPatient(user) || isAdmin(user)) {
+    // Add helpdesk access for all users
+    // All users can submit tickets through the user helpdesk panel
+    if (isPatient(user) || isAdmin(user) || hasRole(user, ROLES.PROVIDER)) {
         items.push(
-            { key: 'user-helpdesk', label: 'Helpdesk', path: '/user/helpdesk', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT, ROLES.ADMINISTRATIVE, ROLES.ADMINISTRATOR] }
+            { key: 'user-helpdesk', label: 'Helpdesk', path: '/user/helpdesk', roles: [ROLES.PATIENT, ROLES.FAMILY_PATIENT, ROLES.PROVIDER, ROLES.ADMINISTRATIVE, ROLES.ADMINISTRATOR] }
+        );
+    }
+    
+    // Add coordinator helpdesk for coordinators only
+    if (hasRole(user, ROLES.COORDINATOR)) {
+        items.push(
+            { key: 'helpdesk', label: 'Helpdesk', path: '/coordinator/helpdesk', roles: [ROLES.COORDINATOR] }
         );
     }
     
