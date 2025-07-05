@@ -64,7 +64,7 @@ class EnhancedTicketViewSet(viewsets.ModelViewSet):
                     Q(assigned_to=user)  # Tickets assigned to them personally
                 )
             else:
-                # Regular users (Patient, Family Patient) can only see their own tickets
+                # Regular users (Patient, Family Patient, Provider) can only see their own tickets
                 queryset = EnhancedTicket.objects.filter(created_by=user)
         
         # Apply additional filters
