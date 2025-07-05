@@ -1,0 +1,385 @@
+/* APPOINTMENT COMMENT MODAL - SPECIFIC STYLES TO AVOID CONFLICTS */
+
+.appointment-comment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.appointment-comment-modal {
+    background: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    width: 90% !important;
+    max-width: 600px !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    z-index: 1001 !important;
+}
+
+.appointment-comment-modal .modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 20px !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+    background-color: #f8f9fa !important;
+    border-radius: 8px 8px 0 0 !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    min-height: 60px !important;
+}
+
+.appointment-comment-modal .modal-body {
+    padding: 20px !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
+    position: relative !important;
+    max-height: calc(90vh - 80px) !important; /* Account for header height */
+}
+
+.appointment-comment-modal .modal-header h3 {
+    margin: 0 !important;
+    color: #333 !important;
+    font-size: 1.25rem !important;
+    flex: 1 !important;
+    font-weight: 600 !important;
+}
+
+.appointment-comment-modal .close-button {
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    color: #666 !important;
+    padding: 0 !important;
+    width: 30px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    transition: background-color 0.2s !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 10 !important;
+    font-family: Arial, sans-serif !important;
+    line-height: 1 !important;
+    text-align: center !important;
+}
+
+.appointment-comment-modal .close-button:hover:not(:disabled) {
+    background-color: #e9ecef !important;
+    color: #333 !important;
+}
+
+.appointment-comment-modal .close-button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+.appointment-comment-modal .appointment-info {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border-left: 4px solid #007bff;
+}
+
+.appointment-comment-modal .appointment-info p {
+    margin: 5px 0;
+    color: #333;
+}
+
+.appointment-comment-modal .error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #f5c6cb;
+}
+
+.appointment-comment-modal .loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.appointment-comment-modal .no-permission {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.appointment-comment-modal .comment-section {
+    margin-top: 20px !important;
+    padding: 15px !important;
+    border-top: 1px solid #e0e0e0 !important;
+    min-height: 100px !important;
+    background-color: #fafafa !important;
+    border-radius: 6px !important;
+    overflow: visible !important;
+    position: relative !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    /* Debug: Ensure section is visible */
+    border: 2px dashed #007bff !important;
+    margin-bottom: 20px !important;
+}
+
+.appointment-comment-modal .all-comments-section {
+    margin-bottom: 20px !important;
+    padding: 15px !important;
+    background-color: #f0f8ff !important;
+    border-radius: 6px !important;
+    border: 1px solid #b3d9ff !important;
+    overflow: visible !important;
+    /* Debug: Make sure this section is visible */
+    min-height: 50px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.appointment-comment-modal .all-comments-section h4 {
+    margin: 0 0 15px 0 !important;
+    color: #0066cc !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+.appointment-comment-modal .all-comments-section h5 {
+    margin: 0 0 8px 0 !important;
+    color: #333 !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+}
+
+.appointment-comment-modal .existing-comment {
+    background-color: #f8f9fa !important;
+    padding: 15px !important;
+    border-radius: 6px !important;
+    margin-bottom: 15px !important;
+    text-align: left !important;
+    border: 1px solid #dee2e6 !important;
+    border-left: 4px solid #007bff !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    position: relative !important;
+    height: auto !important;
+    min-height: auto !important;
+    display: block !important;
+    /* Debug: Make each comment clearly visible */
+    border-right: 2px solid #28a745 !important;
+    clear: both !important;
+}
+
+.appointment-comment-modal .existing-comment:last-child {
+    margin-bottom: 0 !important;
+}
+
+.appointment-comment-modal .existing-comment h4,
+.appointment-comment-modal .existing-comment h5 {
+    margin: 0 0 10px 0 !important;
+    color: #333 !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
+
+.appointment-comment-modal .comment-text {
+    background-color: white !important;
+    padding: 12px !important;
+    border-radius: 4px !important;
+    border: 1px solid #dee2e6 !important;
+    margin-bottom: 10px !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    min-height: 50px !important;
+    line-height: 1.5 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.appointment-comment-modal .comment-meta {
+    margin-bottom: 15px !important;
+}
+
+.appointment-comment-modal .comment-meta small {
+    color: #666 !important;
+}
+
+.appointment-comment-modal .edited-badge {
+    color: #007bff !important;
+    font-weight: bold !important;
+}
+
+.appointment-comment-modal .comment-actions {
+    display: flex !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+.appointment-comment-modal form {
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.appointment-comment-modal .form-group {
+    margin-bottom: 20px !important;
+    text-align: left !important;
+    width: 100% !important;
+}
+
+.appointment-comment-modal .form-group label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-weight: 500 !important;
+    color: #333 !important;
+}
+
+.appointment-comment-modal .form-group textarea {
+    width: 100% !important;
+    min-height: 120px !important;
+    padding: 12px !important;
+    border: 2px solid #dee2e6 !important;
+    border-radius: 6px !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    resize: vertical !important;
+    box-sizing: border-box !important;
+}
+
+.appointment-comment-modal .form-group textarea:focus {
+    outline: none !important;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+}
+
+.appointment-comment-modal .char-count {
+    display: block !important;
+    text-align: right !important;
+    color: #666 !important;
+    margin-top: 5px !important;
+    font-size: 12px !important;
+}
+
+.appointment-comment-modal .form-actions {
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+}
+
+.appointment-comment-modal .btn {
+    padding: 10px 20px !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    text-align: center !important;
+}
+
+.appointment-comment-modal .btn:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+.appointment-comment-modal .btn-primary {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+.appointment-comment-modal .btn-primary:hover:not(:disabled) {
+    background-color: #0056b3 !important;
+}
+
+.appointment-comment-modal .btn-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.appointment-comment-modal .btn-secondary:hover:not(:disabled) {
+    background-color: #545b62 !important;
+}
+
+.appointment-comment-modal .btn-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.appointment-comment-modal .btn-danger:hover:not(:disabled) {
+    background-color: #c82333 !important;
+}
+
+.appointment-comment-modal .appointment-status {
+    padding: 10px !important;
+    border-radius: 5px !important;
+    margin: 10px 0 !important;
+    font-weight: 500 !important;
+}
+
+.appointment-comment-modal .appointment-status.future {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+    border: 1px solid #ffeaa7 !important;
+}
+
+.appointment-comment-modal .appointment-status.past {
+    background-color: #d4edda !important;
+    color: #155724 !important;
+    border: 1px solid #c3e6cb !important;
+}
+
+.appointment-comment-modal .permission-info {
+    margin-top: 10px !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .appointment-comment-modal {
+        width: 95% !important;
+        margin: 10px !important;
+    }
+    
+    .appointment-comment-modal .modal-header,
+    .appointment-comment-modal .modal-body {
+        padding: 15px !important;
+    }
+    
+    .appointment-comment-modal .form-actions,
+    .appointment-comment-modal .comment-actions {
+        flex-direction: column !important;
+    }
+    
+    .appointment-comment-modal .btn {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+    }
+} 

@@ -373,6 +373,7 @@
   font-weight: 600;
   display: inline-block;
   min-width: 120px;
+  font-size: 12px;
 }
 
 .appointment-notes {
@@ -506,4 +507,41 @@
   .appointment-detail-content strong {
     min-width: 100px;
   }
+}
+
+/* Appointment Actions */
+.appointment-actions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+  text-align: center;
+}
+
+.appointment-actions .comment-btn {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appointment-actions .comment-btn:hover {
+  background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.appointment-actions .comment-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
