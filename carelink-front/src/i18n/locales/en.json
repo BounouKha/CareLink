@@ -782,7 +782,12 @@
     "networkError": "Network error occurred",
     "unableToDetermineUserRole": "Unable to determine user role",
     "scheduleNotAvailableForRole": "Schedule not available for your role: {role}",
-    "scheduleAccessError": "Schedule Access Error"
+    "scheduleAccessError": "Schedule Access Error",
+    "accountLocked": "Your account is blocked, contact administrator",
+    "accountBlockedBadInfo": "Account blocked due to many bad information",
+    "tooManyAttempts": "Too many failed attempts. Please wait before trying again.",
+    "tryAgainIn": "Try again in {minutes} minutes",
+    "remainingAttempts": "Account will be locked after {attempts} more failed attempts"
   },
   "success": {
     "saved": "Saved successfully",
