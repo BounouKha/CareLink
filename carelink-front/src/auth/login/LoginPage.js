@@ -31,8 +31,48 @@ const LoginPage = () => {    const [email, setEmail] = useState('');
                 }),
             });
 
-            if (!response.ok) {
-                throw new Error(errors('invalidCredentials') || 'Invalid email or password.');
+            // Handle different response statuses
+            if (response.status === 423) {
+                // Account locked
+                const data = await response.json();
+                const lockoutInfo = data.lockout_info;
+                
+                let errorMessage = data.error;
+                
+                // Use appropriate translated message based on the error
+                if (data.error === 'Your account is blocked, contact administrator.') {
+                    errorMessage = errors('accountLocked');
+                } else if (data.error === 'Account blocked due to many bad information.') {
+                    errorMessage = errors('accountBlockedBadInfo');
+                } else if (data.error === 'Too many failed attempts. Please wait before trying again.') {
+                    errorMessage = errors('tooManyAttempts');
+                } else {
+                    errorMessage = data.error || errors('accountLocked');
+                }
+                
+                // Only show timer for temporary locks (not permanent blocks)
+                if (lockoutInfo && lockoutInfo.minutes_remaining > 0 && !lockoutInfo.is_permanent) {
+                    errorMessage += ` ${errors('tryAgainIn').replace('{minutes}', lockoutInfo.minutes_remaining)}`;
+                }
+                
+                setError(errorMessage);
+                return;
+            } else if (response.status === 401) {
+                // Invalid credentials or account lockout warning
+                const data = await response.json();
+                let errorMessage = data.error || errors('invalidCredentials');
+                
+                // Check if there's a warning about remaining attempts
+                if (data.warning) {
+                    errorMessage += ` ${data.warning}`;
+                }
+                
+                setError(errorMessage);
+                return;
+            } else if (!response.ok) {
+                // Other errors
+                const data = await response.json();
+                throw new Error(data.error || errors('invalidCredentials') || 'Login failed.');
             }
 
             const data = await response.json();

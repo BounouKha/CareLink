@@ -724,7 +724,12 @@
     "networkError": "Netwerkfout opgetreden",
     "unableToDetermineUserRole": "Kan gebruikersrol niet bepalen",
     "scheduleNotAvailableForRole": "Planning niet beschikbaar voor uw rol: {role}",
-    "scheduleAccessError": "Planning toegang fout"
+    "scheduleAccessError": "Planning toegang fout",
+    "accountLocked": "Uw account is geblokkeerd, neem contact op met de beheerder",
+    "accountBlockedBadInfo": "Account geblokkeerd vanwege veel verkeerde informatie",
+    "tooManyAttempts": "Te veel mislukte pogingen. Wacht even voordat u het opnieuw probeert.",
+    "tryAgainIn": "Probeer opnieuw over {minutes} minuten",
+    "remainingAttempts": "Account wordt geblokkeerd na nog {attempts} mislukte pogingen"
   },
   "success": {
     "saved": "Succesvol opgeslagen",
