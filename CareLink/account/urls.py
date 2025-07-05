@@ -36,6 +36,7 @@ from account.views.provider import (
 )
 from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
 from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView, GenerateInvoicesView, CronGenerateInvoicesView
+from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView
 
 
 
@@ -123,4 +124,8 @@ urlpatterns += [
     path('invoices/<int:invoice_id>/contest/', ContestInvoiceView.as_view(), name='invoice-contest'),
     path('invoices/generate/', GenerateInvoicesView.as_view(), name='generate-invoices'),
     path('invoices/cron-generate/', CronGenerateInvoicesView.as_view(), name='cron-generate-invoices'),
+    path('profile/change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('profile/login-history/', LoginHistoryView.as_view(), name='login_history'),
+    path('profile/contact-preferences/', PreferredContactMethodsView.as_view(), name='contact_preferences'),
+    path('profile/delete-account/', AccountDeletionRequestView.as_view(), name='delete_account'),
 ]

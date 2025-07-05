@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission, Group
 from django.utils import timezone
 
+
 ##Attention la base de données doit être en UTF-8 pour éviter les problèmes d'encodage
 
 
