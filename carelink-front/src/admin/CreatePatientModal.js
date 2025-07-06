@@ -15,6 +15,10 @@ const CreatePatientModal = ({ userId, onClose, onProfileCreated }) => {
         emergency_contact_name: '',
         emergency_contact_phone: '',
         emergency_contact_relationship: '',
+        doctor_name: '',
+        doctor_address: '',
+        doctor_phone: '',
+        doctor_email: '',
     });
 
     const handleChange = (e) => {
@@ -234,6 +238,75 @@ const CreatePatientModal = ({ userId, onClose, onProfileCreated }) => {
                                                 value={formData.medication} 
                                                 onChange={handleChange}
                                                 placeholder="Current medications and dosages"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="card border-0 shadow-sm mb-4">
+                                <div className="card-header bg-primary bg-opacity-10 border-0">
+                                    <h5 className="card-title mb-0">
+                                        <i className="fas fa-user-md me-2 text-primary"></i>
+                                        Doctor (General Practitioner) Information
+                                    </h5>
+                                </div>
+                                <div className="card-body">
+                                    <div className="row g-3">
+                                        <div className="col-md-6">
+                                            <label className="form-label">
+                                                <i className="fas fa-user me-2 text-muted"></i>
+                                                Doctor Name
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                name="doctor_name" 
+                                                className="form-control" 
+                                                value={formData.doctor_name} 
+                                                onChange={handleChange}
+                                                placeholder="Dr. John Smith"
+                                            />
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label className="form-label">
+                                                <i className="fas fa-phone me-2 text-muted"></i>
+                                                Phone Number
+                                            </label>
+                                            <input 
+                                                type="tel" 
+                                                name="doctor_phone" 
+                                                className="form-control" 
+                                                value={formData.doctor_phone} 
+                                                onChange={handleChange}
+                                                placeholder="+32 2 123 45 67"
+                                            />
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label className="form-label">
+                                                <i className="fas fa-envelope me-2 text-muted"></i>
+                                                Email Address
+                                            </label>
+                                            <input 
+                                                type="email" 
+                                                name="doctor_email" 
+                                                className="form-control" 
+                                                value={formData.doctor_email} 
+                                                onChange={handleChange}
+                                                placeholder="doctor@clinic.be"
+                                            />
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label className="form-label">
+                                                <i className="fas fa-map-marker-alt me-2 text-muted"></i>
+                                                Address
+                                            </label>
+                                            <textarea 
+                                                name="doctor_address" 
+                                                className="form-control" 
+                                                rows="2"
+                                                value={formData.doctor_address} 
+                                                onChange={handleChange}
+                                                placeholder="Clinic address"
                                             />
                                         </div>
                                     </div>

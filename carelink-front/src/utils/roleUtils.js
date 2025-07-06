@@ -171,9 +171,10 @@ export const getViewableContractFields = (user) => {
 /**
  * Get navigation items for user role
  * @param {Object} user - User object
+ * @param {Object} userData - Full user data including provider info
  * @returns {Array<Object>} Array of navigation items
  */
-export const getNavigationItems = (user) => {
+export const getNavigationItems = (user, userData = null) => {
     if (!user || !user.role) return [];
     
     const items = [
@@ -194,6 +195,9 @@ export const getNavigationItems = (user) => {
         items.push(
             { key: 'provider-schedule', label: 'Schedule', path: '/provider/schedule', roles: [ROLES.PROVIDER] }
         );
+        
+        // Service-specific navigation for providers can be added here if needed
+        // For now, Service 3 providers access patient doctor info through the schedule view
     }
     
     // Staff items

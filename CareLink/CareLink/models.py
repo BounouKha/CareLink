@@ -513,6 +513,12 @@ class Patient(models.Model):
     is_alive = models.BooleanField(default=True)
     spouse = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
+    
+    # Doctor (General Practitioner) Information
+    doctor_name = models.CharField(max_length=255, null=True, blank=True, help_text="Name of the patient's general practitioner")
+    doctor_address = models.TextField(null=True, blank=True, help_text="Address of the patient's general practitioner")
+    doctor_phone = models.CharField(max_length=20, null=True, blank=True, help_text="Phone number of the patient's general practitioner")
+    doctor_email = models.EmailField(null=True, blank=True, help_text="Email address of the patient's general practitioner")
 
 class Payment(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)

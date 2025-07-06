@@ -247,3 +247,46 @@
 .tab-content::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* Doctor Information Styles */
+.doctor-info-container {
+    padding: 1rem 0;
+}
+
+.doctor-info-container .card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.doctor-info-container .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.doctor-info-container .form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+
+.doctor-info-container .form-control-plaintext {
+    font-size: 1rem;
+    color: #212529;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 0;
+}
+
+.doctor-info-container .form-control-plaintext a {
+    color: #007bff;
+    transition: color 0.2s ease;
+}
+
+.doctor-info-container .form-control-plaintext a:hover {
+    color: #0056b3;
+    text-decoration: underline !important;
+}
+
+.doctor-info-container .text-muted {
+    font-style: italic;
+}

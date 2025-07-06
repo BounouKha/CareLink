@@ -466,6 +466,7 @@ const ProviderSchedule = () => {
                 <PatientInfoModal 
                     appointment={selectedAppointment}
                     onClose={handleCloseModal}
+                    providerService={scheduleData.provider?.service}
                 />
             )}
         </BaseLayout>

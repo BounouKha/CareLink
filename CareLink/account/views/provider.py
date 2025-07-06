@@ -1470,3 +1470,54 @@ def my_absences(request):
         for a in absences
     ]
     return Response({'absence_data': data}, status=status.HTTP_200_OK)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_provider_service(request, provider_id):
+    """
+    Update provider service information
+    """
+    try:
+        # Check user permissions
+        if not has_provider_management_permission(request.user):
+            return Response({
+                'error': 'You do not have permission to update providers'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        provider = get_object_or_404(Provider, id=provider_id)
+        
+        # Get the new service ID from request
+        service_id = request.data.get('service_id')
+        is_internal = request.data.get('is_internal', provider.is_internal)
+        
+        if service_id is not None:
+            try:
+                service = Service.objects.get(id=service_id)
+                provider.service = service
+            except Service.DoesNotExist:
+                return Response({
+                    'error': f'Service with ID {service_id} does not exist'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        provider.is_internal = is_internal
+        provider.save()
+        
+        # Return updated provider data
+        serializer = ProviderSerializer(provider)
+        
+        logger.info(f"Provider {provider_id} service updated by {request.user.email}")
+        
+        return Response({
+            'message': 'Provider service updated successfully',
+            'provider': serializer.data
+        }, status=status.HTTP_200_OK)
+        
+    except Provider.DoesNotExist:
+        return Response({
+            'error': 'Provider not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error updating provider service for user {request.user.email}, provider {provider_id}: {str(e)}")
+        return Response({
+            'error': 'An error occurred while updating provider service'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
