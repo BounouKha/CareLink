@@ -6,6 +6,7 @@ import tokenManager from '../../utils/tokenManager';
 import { formatBirthdateWithAge, getAgeDisplay, calculateAge } from '../../utils/ageUtils';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import MedicalFolder from '../../components/MedicalFolder'; // Import MedicalFolder component
+import DoctorInfo from '../../components/DoctorInfo'; // Import DoctorInfo component
 
 const ProfilePage = () => {
     // --- All hooks at the top (fixes React error) ---
@@ -529,6 +530,42 @@ const ProfilePage = () => {
                 return (
                     <MedicalFolder 
                         patientId={medicalPatientId}
+                        userData={userData}
+                        userRole={userRole}
+                    />
+                );
+            case 'doctor':
+                // Get the correct patient ID based on user role
+                let doctorPatientId = null;
+                
+                if (userRole === 'Patient') {
+                    // For regular patients, use their own patient profile ID
+                    doctorPatientId = userData?.patient?.id || userData?.user?.id;
+                } else if (userRole === 'Family Patient') {
+                    // For family patients, use the linked patient ID
+                    const linkedPatient = userData?.linked_patients?.[0] || userData?.linked_patient;
+                    doctorPatientId = linkedPatient?.id;
+                }
+
+                if (!doctorPatientId) {
+                    return (
+                        <div className="alert alert-warning">
+                            <h4>Doctor Information</h4>
+                            <p>Unable to load doctor information. Patient information not found.</p>
+                            <p><strong>Debug Info:</strong></p>
+                            <ul>
+                                <li>User Role: {userRole}</li>
+                                <li>User ID: {userData?.user?.id}</li>
+                                <li>Patient ID: {userData?.patient?.id}</li>
+                                <li>Linked Patient: {JSON.stringify(userData?.linked_patient || userData?.linked_patients?.[0])}</li>
+                            </ul>
+                        </div>
+                    );
+                }
+
+                return (
+                    <DoctorInfo 
+                        patientId={doctorPatientId}
                         userData={userData}
                         userRole={userRole}
                     />
@@ -1366,6 +1403,13 @@ const ProfilePage = () => {
                                                 >
                                                     <i className="fas fa-folder-medical me-2"></i>
                                                     {profile('medicalFolder')}
+                                                </button>
+                                                <button 
+                                                    className={`nav-link ${selectedTab === 'doctor' ? 'active' : ''}`}
+                                                    onClick={() => setSelectedTab('doctor')}
+                                                >
+                                                    <i className="fas fa-user-md me-2"></i>
+                                                    {profile('doctorInfo')}
                                                 </button>
                                                 <button 
                                                     className={`nav-link ${selectedTab === 'contact' ? 'active' : ''}`}

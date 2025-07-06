@@ -2,10 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from account.views.familypatient import FamilyPatientViewSet
-from CareLink.models import MedicalFolder
+from CareLink.models import MedicalFolder, Provider
 from account.serializers.phoneuser import PhoneUserSerializer
 from account.serializers.user import UserSerializer
 from account.serializers.patient import PatientSerializer
+from account.serializers.provider import ServiceBasicSerializer
 from django.http import JsonResponse
 from account.serializers.familypatient import FamilyPatientSerializer  # Import the correct serializer
 
@@ -47,7 +48,19 @@ class ProfileView(APIView):
             except Patient.DoesNotExist:
                 patient_data = None
 
-        
+        # Add provider info if user is a provider
+        provider_data = None
+        if user.role == 'Provider':
+            try:
+                provider = Provider.objects.get(user=user)
+                provider_data = {
+                    'id': provider.id,
+                    'is_internal': provider.is_internal,
+                    'service': ServiceBasicSerializer(provider.service).data if provider.service else None
+                }
+            except Provider.DoesNotExist:
+                provider_data = None
+
         # Add medical folder data
         from CareLink.models import MedicalFolder
         from account.serializers.medicalfolder import MedicalFolderSerializer
@@ -76,6 +89,7 @@ class ProfileView(APIView):
             "phone_numbers": phone_serializer.data,
             "family_relationships": family_relationships_serializer.data,
             "patient": patient_data,
+            "provider": provider_data,
             "medical_folder": medical_folder_data
         }
         

@@ -101,9 +101,9 @@ const ProfilePage = () => {
         // Additional tabs for users with roles
         const additionalTabs = [];
         
-        // Medical information for patients and healthcare providers
+        // Patient information for patients and healthcare providers
         if (['Patient', 'Provider', 'Family Patient'].includes(userRole)) {
-            additionalTabs.push({ id: 'medical', label: 'Medical Information', icon: '🏥' });
+            additionalTabs.push({ id: 'patient', label: 'Patient Information', icon: '🏥' });
         }
         
         // Family information for family patients
@@ -116,6 +116,8 @@ const ProfilePage = () => {
             additionalTabs.push({ id: 'folder', label: 'Medical Folder', icon: '📁' });
         }
         
+
+        
         // Contact information for all users with roles
         if (userRole) {
             additionalTabs.push({ id: 'contact', label: 'Contact Information', icon: '📞' });
@@ -125,6 +127,8 @@ const ProfilePage = () => {
     };
 
     const availableTabs = getAvailableTabs();
+    
+
 
     // Ensure selected tab is valid for current user
     useEffect(() => {
@@ -206,17 +210,17 @@ const ProfilePage = () => {
                 );
             
             // Only show other cases if user has proper role
-            case 'medical':
+            case 'folder':
                 // Get the correct patient ID based on user role
-                let medicalPatientId = null;
+                let folderPatientId = null;
                 
                 if (userRole === 'Patient') {
                     // For regular patients, use their own patient profile ID
-                    medicalPatientId = userData?.patient?.id || userData?.user?.id;
+                    folderPatientId = userData?.patient?.id || userData?.user?.id;
                 } else if (userRole === 'Family Patient') {
                     // For family patients, use the linked patient ID
                     const linkedPatient = userData?.linked_patients?.[0] || userData?.linked_patient;
-                    medicalPatientId = linkedPatient?.id;
+                    folderPatientId = linkedPatient?.id;
                 } else if (userRole === 'Coordinator') {
                     // Coordinators shouldn't see medical folder tab, but if they do, handle gracefully
                     return (
@@ -227,7 +231,7 @@ const ProfilePage = () => {
                     );
                 }
 
-                if (!medicalPatientId) {
+                if (!folderPatientId) {
                     return (
                         <div className="alert alert-warning">
                             <h4>Medical Folder</h4>
@@ -245,11 +249,13 @@ const ProfilePage = () => {
 
                 return (
                     <MedicalFolder 
-                        patientId={medicalPatientId}
+                        patientId={folderPatientId}
                         userData={userData}
                         userRole={userRole}
                     />
                 );
+
+
 
             case 'patient':
                 return (
@@ -443,7 +449,7 @@ const ProfilePage = () => {
                                                 className={`nav-link ${selectedTab === tab.id ? 'active' : ''}`}
                                                 onClick={() => setSelectedTab(tab.id)}
                                             >
-                                                <i className={`fas fa-${tab.icon} me-2`}></i>
+                                                <span className="me-2">{tab.icon}</span>
                                                 {tab.label}
                                             </button>
                                         ))}
