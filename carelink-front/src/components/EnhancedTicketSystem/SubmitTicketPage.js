@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import BaseLayout from '../../auth/layout/BaseLayout';
 import { AdminContext } from '../../auth/login/AdminContext';
+import UserSearch from './UserSearch';
 import './TicketDashboard.css';
 
 const SubmitTicketPage = () => {
@@ -14,6 +15,7 @@ const SubmitTicketPage = () => {
         priority: 'Medium',
         assigned_team: ''
     });
+    const [selectedUser, setSelectedUser] = useState(null);
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [categories, setCategories] = useState([]);
@@ -23,6 +25,9 @@ const SubmitTicketPage = () => {
 
     // Get user role from userData
     const userRole = userData?.user?.role;
+    
+    // Check if user is admin (can create tickets for other users)
+    const isAdmin = userData?.user?.is_superuser === true;
 
     console.log('[SubmitTicketPage] userData from AdminContext:', userData);
     console.log('[SubmitTicketPage] user role:', userRole);
@@ -119,6 +124,11 @@ const SubmitTicketPage = () => {
             newErrors.assigned_team = 'Team assignment is required';
         }
         
+        // Validate user selection for admins
+        if (isAdmin && !selectedUser) {
+            newErrors.user = 'Please select a user for this ticket';
+        }
+        
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -137,13 +147,19 @@ const SubmitTicketPage = () => {
                 throw new Error('No access token found');
             }
 
+            // Include user ID in form data if admin is creating ticket for another user
+            const submitData = {
+                ...formData,
+                ...(isAdmin && selectedUser && { user_id: selectedUser.id })
+            };
+
             const response = await fetch('http://localhost:8000/account/enhanced-tickets/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(submitData),
             });
 
             if (!response.ok) {
@@ -155,6 +171,7 @@ const SubmitTicketPage = () => {
             
             setSuccess(true);
             setFormData({ title: '', description: '', category: '', priority: 'Medium', assigned_team: '' });
+            setSelectedUser(null);
             
             // Reset success message after 3 seconds
             setTimeout(() => setSuccess(false), 3000);
@@ -168,6 +185,7 @@ const SubmitTicketPage = () => {
 
     const handleReset = () => {
         setFormData({ title: '', description: '', category: '', priority: 'Medium', assigned_team: '' });
+        setSelectedUser(null);
         setErrors({});
         setSuccess(false);
     };
@@ -215,98 +233,152 @@ const SubmitTicketPage = () => {
 
                 <div className="submit-ticket-content">
                     <div className="row justify-content-center">
-                        <div className="col-lg-8">
+                        <div className="col-lg-10">
                             <div className="card">
                                 <div className="card-body">
                                     <form onSubmit={handleSubmit}>
                                         <div className="row">
-                                            <div className="col-12 mb-3">
-                                                <label className="form-label">
-                                                    {t('title') || 'Title'} *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    className={`form-control ${errors.title ? 'is-invalid' : ''}`}
-                                                    value={formData.title}
-                                                    onChange={(e) => handleInputChange('title', e.target.value)}
-                                                    placeholder={t('titlePlaceholder') || 'Enter ticket title'}
-                                                    disabled={submitting}
-                                                />
-                                                {errors.title && <div className="invalid-feedback">{errors.title}</div>}
+                                            {/* Left Column - Main Form Fields */}
+                                            <div className="col-lg-8">
+                                                <div className="row">
+                                                    <div className="col-12 mb-3">
+                                                        <label className="form-label">
+                                                            {t('title') || 'Title'} *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            className={`form-control ${errors.title ? 'is-invalid' : ''}`}
+                                                            value={formData.title}
+                                                            onChange={(e) => handleInputChange('title', e.target.value)}
+                                                            placeholder={t('titlePlaceholder') || 'Enter ticket title'}
+                                                            disabled={submitting}
+                                                        />
+                                                        {errors.title && <div className="invalid-feedback">{errors.title}</div>}
+                                                    </div>
+                                                    
+                                                    <div className="col-12 mb-3">
+                                                        <label className="form-label">
+                                                            {t('description') || 'Description'} *
+                                                        </label>
+                                                        <textarea
+                                                            className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                                                            rows="4"
+                                                            value={formData.description}
+                                                            onChange={(e) => handleInputChange('description', e.target.value)}
+                                                            placeholder={t('descriptionPlaceholder') || 'Describe the issue or request'}
+                                                            disabled={submitting}
+                                                        ></textarea>
+                                                        {errors.description && <div className="invalid-feedback">{errors.description}</div>}
+                                                    </div>
+                                                    
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="form-label">
+                                                            {t('category') || 'Category'} *
+                                                        </label>
+                                                        <select
+                                                            className={`form-select ${errors.category ? 'is-invalid' : ''}`}
+                                                            value={formData.category}
+                                                            onChange={(e) => handleInputChange('category', e.target.value)}
+                                                            disabled={submitting}
+                                                        >
+                                                            <option value="">{t('selectCategory') || 'Select category'}</option>
+                                                            {categories.map(category => (
+                                                                <option key={category.value} value={category.value}>
+                                                                    {category.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        {errors.category && <div className="invalid-feedback">{errors.category}</div>}
+                                                    </div>
+                                                    
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="form-label">
+                                                            {t('priority') || 'Priority'}
+                                                        </label>
+                                                        <select
+                                                            className="form-select"
+                                                            value={formData.priority}
+                                                            onChange={(e) => handleInputChange('priority', e.target.value)}
+                                                            disabled={submitting}
+                                                        >
+                                                            {priorities.map(priority => (
+                                                                <option key={priority.value} value={priority.value}>
+                                                                    {priority.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div className="col-12 mb-3">
+                                                        <label className="form-label">
+                                                            {t('assignedTeam') || 'Assigned Team'} *
+                                                        </label>
+                                                        <select
+                                                            className={`form-select ${errors.assigned_team ? 'is-invalid' : ''}`}
+                                                            value={formData.assigned_team}
+                                                            onChange={(e) => handleInputChange('assigned_team', e.target.value)}
+                                                            disabled={submitting}
+                                                        >
+                                                            <option value="">{t('selectTeam') || 'Select team'}</option>
+                                                            {filteredTeams.map(team => (
+                                                                <option key={team.value} value={team.value}>
+                                                                    {team.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        {errors.assigned_team && <div className="invalid-feedback">{errors.assigned_team}</div>}
+                                                    </div>
+                                                </div>
                                             </div>
                                             
-                                            <div className="col-12 mb-3">
-                                                <label className="form-label">
-                                                    {t('description') || 'Description'} *
-                                                </label>
-                                                <textarea
-                                                    className={`form-control ${errors.description ? 'is-invalid' : ''}`}
-                                                    rows="4"
-                                                    value={formData.description}
-                                                    onChange={(e) => handleInputChange('description', e.target.value)}
-                                                    placeholder={t('descriptionPlaceholder') || 'Describe the issue or request'}
-                                                    disabled={submitting}
-                                                ></textarea>
-                                                {errors.description && <div className="invalid-feedback">{errors.description}</div>}
-                                            </div>
-                                            
-                                            <div className="col-md-6 mb-3">
-                                                <label className="form-label">
-                                                    {t('category') || 'Category'} *
-                                                </label>
-                                                <select
-                                                    className={`form-select ${errors.category ? 'is-invalid' : ''}`}
-                                                    value={formData.category}
-                                                    onChange={(e) => handleInputChange('category', e.target.value)}
-                                                    disabled={submitting}
-                                                >
-                                                    <option value="">{t('selectCategory') || 'Select category'}</option>
-                                                    {categories.map(category => (
-                                                        <option key={category.value} value={category.value}>
-                                                            {category.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.category && <div className="invalid-feedback">{errors.category}</div>}
-                                            </div>
-                                            
-                                            <div className="col-md-6 mb-3">
-                                                <label className="form-label">
-                                                    {t('priority') || 'Priority'}
-                                                </label>
-                                                <select
-                                                    className="form-select"
-                                                    value={formData.priority}
-                                                    onChange={(e) => handleInputChange('priority', e.target.value)}
-                                                    disabled={submitting}
-                                                >
-                                                    {priorities.map(priority => (
-                                                        <option key={priority.value} value={priority.value}>
-                                                            {priority.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            
-                                            <div className="col-12 mb-3">
-                                                <label className="form-label">
-                                                    {t('assignedTeam') || 'Assigned Team'} *
-                                                </label>
-                                                <select
-                                                    className={`form-select ${errors.assigned_team ? 'is-invalid' : ''}`}
-                                                    value={formData.assigned_team}
-                                                    onChange={(e) => handleInputChange('assigned_team', e.target.value)}
-                                                    disabled={submitting}
-                                                >
-                                                    <option value="">{t('selectTeam') || 'Select team'}</option>
-                                                    {filteredTeams.map(team => (
-                                                        <option key={team.value} value={team.value}>
-                                                            {team.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.assigned_team && <div className="invalid-feedback">{errors.assigned_team}</div>}
-                                            </div>
+                                            {/* Right Column - User Search (Only for Admins) */}
+                                            {isAdmin && (
+                                                <div className="col-lg-4">
+                                                    <div className="user-search-sidebar">
+                                                        <div className="mb-3">
+                                                            <label className="form-label">
+                                                                {t('createTicketFor') || 'Create Ticket For'} *
+                                                            </label>
+                                                            <UserSearch
+                                                                onUserSelect={setSelectedUser}
+                                                                selectedUser={selectedUser}
+                                                                placeholder={t('searchUserPlaceholder') || "Search for a user..."}
+                                                                disabled={submitting}
+                                                                required={true}
+                                                                error={errors.user}
+                                                            />
+                                                            {errors.user && <div className="invalid-feedback">{errors.user}</div>}
+                                                            <small className="form-text text-muted">
+                                                                {t('createTicketForHelp') || "Search and select a user to create this ticket on their behalf"}
+                                                            </small>
+                                                        </div>
+                                                        
+                                                        {selectedUser && (
+                                                            <div className="selected-user-info">
+                                                                <h6 className="text-muted mb-2">Selected User:</h6>
+                                                                <div className="card">
+                                                                    <div className="card-body p-3">
+                                                                        <div className="d-flex align-items-center">
+                                                                            <div className="user-avatar me-3">
+                                                                                {selectedUser.firstname.charAt(0).toUpperCase()}
+                                                                            </div>
+                                                                            <div>
+                                                                                <div className="fw-bold">{selectedUser.firstname} {selectedUser.lastname}</div>
+                                                                                <div className="text-muted small">{selectedUser.email}</div>
+                                                                                {selectedUser.role && (
+                                                                                    <span className={`badge ${getRoleBadgeClass(selectedUser.role)}`}>
+                                                                                        {selectedUser.role}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {errors.submit && (

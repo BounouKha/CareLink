@@ -51,6 +51,7 @@ class EnhancedTicketSerializer(serializers.ModelSerializer):
     is_overdue = serializers.SerializerMethodField()
     can_access = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
+    user_id = serializers.IntegerField(write_only=True, required=False, help_text="User ID to create ticket for (admin only)")
     
     class Meta:
         model = EnhancedTicket
@@ -59,7 +60,7 @@ class EnhancedTicketSerializer(serializers.ModelSerializer):
             'assigned_team', 'assigned_to', 'assigned_to_name', 'created_by', 'created_by_name', 'created_by_role',
             'created_at', 'updated_at', 'resolved_at', 'cancelled_at',
             'is_urgent', 'internal_notes', 'days_since_created', 'is_overdue',
-            'can_access', 'comments_count'
+            'can_access', 'comments_count', 'user_id'
         ]
         read_only_fields = ['created_at', 'updated_at', 'resolved_at', 'cancelled_at', 
                            'created_by_name', 'created_by_role', 'assigned_to_name', 'days_since_created', 
@@ -97,8 +98,23 @@ class EnhancedTicketSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         request = self.context.get('request')
-        if request and request.user:
+        user_id = validated_data.pop('user_id', None)
+        
+        # Check if user is admin and trying to create ticket for another user
+        if user_id and request and request.user:
+            # Only allow superusers to create tickets for other users
+            if not request.user.is_superuser:
+                raise serializers.ValidationError("Only superusers can create tickets for other users")
+            
+            try:
+                target_user = User.objects.get(id=user_id)
+                validated_data['created_by'] = target_user
+            except User.DoesNotExist:
+                raise serializers.ValidationError(f"User with ID {user_id} does not exist")
+        elif request and request.user:
+            # Regular ticket creation - use current user
             validated_data['created_by'] = request.user
+        
         return super().create(validated_data)
 
 
