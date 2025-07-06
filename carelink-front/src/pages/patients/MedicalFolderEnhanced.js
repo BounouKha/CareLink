@@ -169,6 +169,15 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                         </button>
                                     </li>
                                 )}
+                                <li className="nav-item">
+                                    <button 
+                                        className={`nav-link ${activeTab === 'doctor' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('doctor')}
+                                    >
+                                        <i className="fas fa-user-md me-2"></i>
+                                        {t('patients.doctor')} ({t('patients.generalPractitioner')})
+                                    </button>
+                                </li>
                             </ul>
                         </div>
 
@@ -197,6 +206,97 @@ const MedicalFolderEnhanced = ({ patient, medicalData, onClose, onAddEntry, serv
                                         onNotesCountChange={handleInternalNotesCountChange}
                                         triggerAdd={triggerInternalAdd}
                                     />
+                                </div>
+                            )}
+
+                            {/* Doctor (GP) Tab */}
+                            {activeTab === 'doctor' && (
+                                <div className="tab-pane fade show active">
+                                    <div className="doctor-info-container">
+                                        <div className="row">
+                                            <div className="col-12">
+                                                <h4 className="mb-4">
+                                                    <i className="fas fa-user-md me-2 text-primary"></i>
+                                                    {t('patients.doctorInfo')}
+                                                </h4>
+                                                
+                                                {patient.doctor_name ? (
+                                                    <div className="card border-0 shadow-sm">
+                                                        <div className="card-body">
+                                                            <div className="row">
+                                                                <div className="col-md-6">
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-muted">
+                                                                            <i className="fas fa-user me-2"></i>
+                                                                            {t('patients.doctorName')}
+                                                                        </label>
+                                                                        <p className="form-control-plaintext">{patient.doctor_name}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-md-6">
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-muted">
+                                                                            <i className="fas fa-phone me-2"></i>
+                                                                            {t('patients.doctorPhone')}
+                                                                        </label>
+                                                                        <p className="form-control-plaintext">
+                                                                            {patient.doctor_phone ? (
+                                                                                <a href={`tel:${patient.doctor_phone}`} className="text-decoration-none">
+                                                                                    {patient.doctor_phone}
+                                                                                </a>
+                                                                            ) : (
+                                                                                <span className="text-muted">Not provided</span>
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="row">
+                                                                <div className="col-md-6">
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-muted">
+                                                                            <i className="fas fa-envelope me-2"></i>
+                                                                            {t('patients.doctorEmail')}
+                                                                        </label>
+                                                                        <p className="form-control-plaintext">
+                                                                            {patient.doctor_email ? (
+                                                                                <a href={`mailto:${patient.doctor_email}`} className="text-decoration-none">
+                                                                                    {patient.doctor_email}
+                                                                                </a>
+                                                                            ) : (
+                                                                                <span className="text-muted">Not provided</span>
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-md-6">
+                                                                    <div className="mb-3">
+                                                                        <label className="form-label fw-semibold text-muted">
+                                                                            <i className="fas fa-map-marker-alt me-2"></i>
+                                                                            {t('patients.doctorAddress')}
+                                                                        </label>
+                                                                        <p className="form-control-plaintext">
+                                                                            {patient.doctor_address ? (
+                                                                                <span>{patient.doctor_address}</span>
+                                                                            ) : (
+                                                                                <span className="text-muted">Not provided</span>
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center py-5">
+                                                        <i className="fas fa-user-md text-muted mb-3" style={{fontSize: '3rem'}}></i>
+                                                        <h5 className="text-muted">{t('patients.noDoctorInfo')}</h5>
+                                                        <p className="text-muted">{t('patients.noDoctorInfoDescription')}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>

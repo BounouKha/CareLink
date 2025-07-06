@@ -13,6 +13,7 @@ import PatientSchedule from './pages/schedule/PatientSchedule';
 import ScheduleRouter from './pages/schedule/ScheduleRouter';
 import ProviderManagement from './pages/providers/ProviderManagement';
 import ProviderSchedule from './pages/provider/ProviderSchedule';
+
 import TicketDashboard from './components/EnhancedTicketSystem/TicketDashboard';
 import SubmitTicketPage from './components/EnhancedTicketSystem/SubmitTicketPage';
 import ManageTicketsPage from './components/EnhancedTicketSystem/ManageTicketsPage';
@@ -21,6 +22,7 @@ import CoordinatorHelpdeskPanel from './components/EnhancedTicketSystem/Coordina
 import UserHelpdeskPanel from './components/EnhancedTicketSystem/UserHelpdeskPanel';
 import TestUserAuth from './auth/test/TestUserAuth';
 import TokenTestPage from './pages/test/TokenTestPage';
+
 import TranslationDemo from './components/TranslationDemo';
 import ToastManager from './components/ToastManager';
 import './auth/layout/UnifiedBaseLayout.css';
@@ -80,6 +82,8 @@ function App() {
                             {/* Provider Schedule Route */}
                             <Route path="/provider/schedule" element={<ProviderSchedule />} />
                             
+
+                            
                             {/* Keep the old routes for backward compatibility */}
                             <Route path="/schedule/router" element={<ScheduleRouter />} />
                             <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
@@ -87,6 +91,7 @@ function App() {
                             <Route path="/schedule/family" element={<PatientSchedule />} />
                             <Route path="/test-auth" element={<TestUserAuth />} />
                             <Route path="/test-tokens" element={<TokenTestPage />} />
+
                             <Route path="/translation-demo" element={<TranslationDemo />} />
                             <Route path="/invoices/:patientId?" element={<PatientInvoicesWrapper />} />
                         </Routes>

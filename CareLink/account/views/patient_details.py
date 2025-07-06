@@ -55,6 +55,10 @@ class PatientDetailsView(APIView):
                 'medication': patient.medication,
                 'social_price': patient.social_price,
                 'is_alive': patient.is_alive,
+                'doctor_name': patient.doctor_name,
+                'doctor_address': patient.doctor_address,
+                'doctor_phone': patient.doctor_phone,
+                'doctor_email': patient.doctor_email,
             }
             
             # Log successful access

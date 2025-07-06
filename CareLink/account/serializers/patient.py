@@ -12,7 +12,8 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'gender', 'blood_type', 'katz_score', 'it_score',
             'illness', 'critical_information', 'medication', 'social_price', 'is_alive', 'spouse', 'deletion_requested_at',
-            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship'
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+            'doctor_name', 'doctor_address', 'doctor_phone', 'doctor_email'
         ]
     
     def get_emergency_contact_name(self, obj):
@@ -49,7 +50,8 @@ class PatientWithUserSerializer(serializers.ModelSerializer):
             'id', 'firstname', 'lastname', 'birthdate', 'email', 'national_number',
             'gender', 'blood_type', 'katz_score', 'it_score',
             'illness', 'critical_information', 'medication', 'social_price', 'is_alive',
-            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship'
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+            'doctor_name', 'doctor_address', 'doctor_phone', 'doctor_email'
         ]
     
     def get_emergency_contact_name(self, obj):

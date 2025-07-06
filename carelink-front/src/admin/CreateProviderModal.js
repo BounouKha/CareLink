@@ -46,11 +46,23 @@ const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate form data
+        if (!formData.service) {
+            alert('Please select a service for this provider.');
+            return;
+        }
+        
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
+
+            console.log('Submitting provider data:', {
+                user_id: userId,
+                role_specific_data: formData
+            });
 
             const response = await fetch(`http://localhost:8000/account/users/${userId}/create/provider/`, {
                 method: 'POST',
@@ -61,8 +73,31 @@ const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
                 body: JSON.stringify({ user_id: userId, role_specific_data: formData }),
             });
 
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
             if (!response.ok) {
-                throw new Error('Failed to create provider profile.');
+                let errorData;
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    errorData = await response.json();
+                    console.error('Server error response:', errorData);
+                    
+                    // Handle specific error cases
+                    if (errorData.message === 'Profile for this role already exists.') {
+                        throw new Error('This user already has a provider profile. You cannot create a duplicate profile.');
+                    } else if (errorData.error) {
+                        throw new Error(errorData.error);
+                    } else {
+                        throw new Error(`Failed to create provider profile. Status: ${response.status}`);
+                    }
+                } else {
+                    // Handle HTML responses (server errors)
+                    const errorText = await response.text();
+                    console.error('Server returned HTML error:', errorText.substring(0, 500));
+                    throw new Error(`Server error (${response.status}): The server encountered an internal error. Please check the server logs.`);
+                }
             }
 
             const data = await response.json();
@@ -70,7 +105,7 @@ const CreateProviderModal = ({ userId, onClose, onProfileCreated }) => {
             alert('Provider profile created successfully!');
             onClose();
         } catch (err) {
-            console.error(err);
+            console.error('Error creating provider:', err);
             alert(err.message);
         }
     };    return (

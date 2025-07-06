@@ -73,7 +73,7 @@ const LeftToolbar = ({ userData }) => {
             return null;
         }
 
-        const navigationItems = getNavigationItems(userData.user);
+        const navigationItems = getNavigationItems(userData.user, userData);
         
         const handleNavigationClick = (path) => {
             if (path === '/providers') {

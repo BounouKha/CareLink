@@ -19,13 +19,22 @@ def log_profile_action(user, action_type, target_model, target_id, profile=None,
         description: Optional description of the action
         additional_data: Optional dict with additional context
     """
+    # Ensure additional_data is JSON serializable
+    serializable_data = None
+    if additional_data:
+        try:
+            serializable_data = json.dumps(additional_data)
+        except TypeError:
+            # If serialization fails, convert to string representation
+            serializable_data = str(additional_data)
+    
     log_data = {
         'user': user,
         'action_type': action_type,
         'target_model': target_model,
         'target_id': target_id,
         'description': description,
-        'additional_data': json.dumps(additional_data) if additional_data else None
+        'additional_data': serializable_data
     }
     
     # Extract user and profile information
@@ -150,6 +159,28 @@ class CreateProfileView(APIView):
                 return Response({"error": "Invalid service ID."}, status=400)        # Create the profile with role-specific data
         profile = model.objects.create(user=user, **role_specific_data)
         
+        # Prepare JSON-serializable data for logging
+        log_data = {
+            "role_type": role.lower(),
+            "created_via": "admin_panel",
+            "timestamp": timezone.now().isoformat()
+        }
+        
+        # Convert role_specific_data to JSON-serializable format
+        if role_specific_data:
+            serializable_data = {}
+            for key, value in role_specific_data.items():
+                if hasattr(value, 'id'):
+                    # Handle foreign key objects
+                    serializable_data[key] = f"ID: {value.id}"
+                elif hasattr(value, 'name'):
+                    # Handle objects with name attribute
+                    serializable_data[key] = value.name
+                else:
+                    # Handle primitive types
+                    serializable_data[key] = str(value)
+            log_data["profile_data"] = serializable_data
+        
         # Log the profile creation action with enhanced logging
         log_profile_action(
             user=request.user,
@@ -159,12 +190,7 @@ class CreateProfileView(APIView):
             profile=profile,
             target_user=user,
             description=f"Created {role.lower()} profile for {user.firstname} {user.lastname} ({user.email})",
-            additional_data={
-                "role_type": role.lower(),
-                "created_via": "admin_panel",
-                "profile_data": role_specific_data,
-                "timestamp": timezone.now().isoformat()
-            }
+            additional_data=log_data
         )
         
         return Response({"message": "Profile created successfully."}, status=201)
