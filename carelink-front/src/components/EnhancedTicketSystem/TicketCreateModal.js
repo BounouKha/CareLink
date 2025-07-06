@@ -29,6 +29,8 @@ const TicketCreateModal = ({
     
     const userRole = getUserRole();
     
+
+    
     // Debug logging
     console.log('[TicketCreateModal] User role:', userRole);
     console.log('[TicketCreateModal] Available teams:', teams);
@@ -102,6 +104,8 @@ const TicketCreateModal = ({
         if (!formData.assigned_team) {
             newErrors.assigned_team = 'Team assignment is required';
         }
+        
+
         
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -270,6 +274,8 @@ const TicketCreateModal = ({
                                     </select>
                                     {errors.assigned_team && <div className="invalid-feedback">{errors.assigned_team}</div>}
                                 </div>
+                                
+
                             </div>
                         </div>
                         
