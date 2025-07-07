@@ -6,6 +6,7 @@ import tokenManager from '../../utils/tokenManager';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import { useConflictManager } from '../../hooks/useConflictManager';
 import ConflictManager from '../../components/ConflictManager';
+import InamiMedicalCareModal from '../../components/InamiMedicalCareModal';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -25,9 +26,11 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
     start_time: '',
     end_time: '',
     service_id: '',
-    description: ''
+    description: '',
+    prescription_id: ''
   });  const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPastDateConfirm, setShowPastDateConfirm] = useState(false);
@@ -46,6 +49,10 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
   const [patientSearch, setPatientSearch] = useState('');
   const [showProviderDropdown, setShowProviderDropdown] = useState(false);
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+
+  // INAMI modal states
+  const [showInamiModal, setShowInamiModal] = useState(false);
+  const [inamiData, setInamiData] = useState(null);
 
   // Conflict management
   const {
@@ -115,10 +122,12 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
         start_time: '',
         end_time: '',
         service_id: '',
-        description: ''
+        description: '',
+        prescription_id: ''
       });
       setProviderSearch('');
       setPatientSearch('');
+      setPrescriptions([]);
       setError('');
     }
   }, [isOpen]);
@@ -153,6 +162,27 @@ const fetchPatients = async () => {
       setServices(data || []);
     } catch (err) {
       console.error('Error fetching services:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      }
+    }
+  };
+
+  const fetchPrescriptions = async (patientId = null) => {
+    try {
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
+      }
+
+      const url = patientId 
+        ? `http://localhost:8000/schedule/prescriptions/?patient_id=${patientId}`
+        : 'http://localhost:8000/schedule/prescriptions/';
+      
+      const data = await get(url);
+      setPrescriptions(data.prescriptions || []);
+      console.log('Fetched prescriptions:', data.prescriptions);
+    } catch (err) {
+      console.error('Error fetching prescriptions:', err);
       if (err.message.includes('401') || err.message.includes('Unauthorized')) {
         tokenManager.handleLogout();
       }
@@ -218,15 +248,19 @@ const fetchPatients = async () => {
   };
 
   const selectPatient = (patient) => {
-    setFormData(prev => ({ ...prev, patient_id: patient.id }));
+    setFormData(prev => ({ ...prev, patient_id: patient.id, prescription_id: '' }));
     setPatientSearch(`${patient.firstname || ''} ${patient.lastname || ''}`);
     setShowPatientDropdown(false);
+    
+    // Fetch prescriptions for this patient
+    fetchPrescriptions(patient.id);
   };
 
   const clearPatient = () => {
-    setFormData(prev => ({ ...prev, patient_id: '' }));
+    setFormData(prev => ({ ...prev, patient_id: '', prescription_id: '' }));
     setPatientSearch('');
     setShowPatientDropdown(false);
+    setPrescriptions([]); // Clear prescriptions when patient is cleared
   };
 
   const handleInputChange = (e) => {
@@ -250,6 +284,37 @@ const fetchPatients = async () => {
       console.log(`[QuickSchedule] Date changed to ${value}, checking absence for provider ${formData.provider_id}`);
       checkProviderAbsence(formData.provider_id, value);
     }
+
+    // Show INAMI modal for Service 3 (Soins Infirmiers)
+    if (name === 'service_id' && value === '3') {
+      console.log('[QuickSchedule] Service 3 selected, opening INAMI modal');
+      setShowInamiModal(true);
+    }
+
+    // Clear INAMI data if service changes from 3 to something else
+    if (name === 'service_id' && value !== '3' && inamiData) {
+      setInamiData(null);
+    }
+  };
+
+  // INAMI Modal Handlers
+  const handleInamiSave = (inamiConfigData) => {
+    console.log('[QuickSchedule] INAMI configuration saved:', inamiConfigData);
+    setInamiData(inamiConfigData);
+    setShowInamiModal(false);
+  };
+
+  const handleInamiClose = () => {
+    setShowInamiModal(false);
+    // If no INAMI data is configured, reset service selection
+    if (!inamiData) {
+      setFormData(prev => ({ ...prev, service_id: '' }));
+    }
+  };
+
+  const openInamiConfiguration = () => {
+    console.log('[QuickSchedule] Opening INAMI configuration modal');
+    setShowInamiModal(true);
   };
 
   // Helper function to check if date is in the past
@@ -327,9 +392,22 @@ const fetchPatients = async () => {
       }
       
       // Prepare submission data (include force_schedule if needed)
-      const submitData = forceSchedule 
+      let submitData = forceSchedule 
         ? { ...formData, force_schedule: true } 
-        : formData;      
+        : { ...formData };
+
+      // Include INAMI data for Service 3 appointments
+      if (formData.service_id === '3' && inamiData) {
+        submitData.inami_data = inamiData;
+        console.log('[QuickSchedule] Including INAMI data in submission:', inamiData);
+      }
+
+      // Include prescription data if selected
+      if (formData.prescription_id) {
+        submitData.prescription_id = formData.prescription_id;
+        console.log('[QuickSchedule] Including prescription ID in submission:', formData.prescription_id);
+      }
+      
       // Debug log the form data being sent
       console.log('Submitting form data:', submitData);
         const data = await post('http://localhost:8000/schedule/quick-schedule/', submitData);
@@ -381,9 +459,11 @@ const fetchPatients = async () => {
       start_time: '',
       end_time: '',
       service_id: '',
-      description: ''
+      description: '',
+      prescription_id: ''
     });
     setError('');
+    setPrescriptions([]);
     resetConflicts();
   };
 
@@ -423,7 +503,8 @@ const fetchPatients = async () => {
                   onFocus={() => setShowProviderDropdown(true)}
                   onBlur={() => setTimeout(() => setShowProviderDropdown(false), 200)}
                 />{showProviderDropdown && (
-                  <div className="dropdown-list">                    {isSearchLoading ? (
+                  <div className="dropdown-list">
+                    {isSearchLoading ? (
                       <div style={{ padding: '8px', textAlign: 'center' }}>
                         <SpinnerOnly size="small" />
                       </div>
@@ -437,7 +518,8 @@ const fetchPatients = async () => {
                           <strong>{provider.name}</strong>
                           <span className="provider-service">{provider.service}</span>
                         </div>
-                      ))                    ) : (
+                      ))
+                    ) : (
                       <div className="dropdown-item disabled">{schedule('noProvidersFound')}</div>
                     )}
                   </div>
@@ -538,11 +620,38 @@ const fetchPatients = async () => {
                 <option value="">{schedule('selectServiceOptional')}</option>
                 {services.map(service => (
                   <option key={service.id} value={service.id}>
-                    {service.name} - ${service.price}
+                    {service.id === 3 ? `${service.name} (Soins Infirmiers INAMI)` : service.name} - ${service.price}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Prescription Selector - only show when patient is selected */}
+            {formData.patient_id && prescriptions.length > 0 && (
+              <div className="form-group">
+                <label htmlFor="prescription_id">Link to Prescription (Optional)</label>
+                <select
+                  id="prescription_id"
+                  name="prescription_id"
+                  value={formData.prescription_id}
+                  onChange={handleInputChange}
+                >
+                  <option value="">No Prescription</option>
+                  {prescriptions.map(prescription => (
+                    <option key={prescription.id} value={prescription.id}>
+                      {prescription.title} - {prescription.service_name} 
+                      {prescription.linked_timeslots_count > 0 ? ` (${prescription.linked_timeslots_count} timeslots)` : ''}
+                      {prescription.priority === 'Urgent' ? ' 🔴' : ''}
+                    </option>
+                  ))}
+                </select>
+                {formData.prescription_id && (
+                  <small className="form-hint">
+                    📋 This appointment will be linked to the selected prescription
+                  </small>
+                )}
+              </div>
+            )}
           </div>          <div className="form-row">            <div className="form-group">
               <label htmlFor="start_time">{schedule('startTime')} *</label>              <input
                 type="time"
@@ -568,6 +677,92 @@ const fetchPatients = async () => {
               />
             </div>
           </div>
+
+          {/* INAMI Configuration Section for Service 3 */}
+          {formData.service_id === '3' && (
+            <div className="inami-configuration-section">
+              <div className="inami-header">
+                <h4>Configuration INAMI</h4>
+                <button 
+                  type="button" 
+                  className="configure-inami-btn"
+                  onClick={openInamiConfiguration}
+                >
+                  {inamiData ? 'Reconfigurer INAMI' : 'Configurer INAMI'}
+                </button>
+              </div>
+              
+              {inamiData ? (
+                <div className="inami-summary">
+                  <div className="inami-status">
+                    <span className="status-indicator configured">
+                      ✅ INAMI Configuré
+                    </span>
+                  </div>
+                  <div className="inami-details">
+                    <div className="detail-item">
+                      <strong>Type:</strong> {inamiData.care_type_label}
+                    </div>
+                    <div className="detail-item">
+                      <strong>Code INAMI:</strong> {inamiData.inami_code}
+                    </div>
+                    <div className="detail-item">
+                      <strong>Coût total:</strong> €{inamiData.total_price}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="inami-summary">
+                  <div className="inami-status">
+                    <span className="status-indicator not-configured">
+                      ⚠️ INAMI Non Configuré
+                    </span>
+                  </div>
+                  <p className="configuration-note">
+                    La configuration INAMI est requise pour les soins infirmiers.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Prescription Summary Section */}
+          {formData.prescription_id && (
+            <div className="prescription-summary-section">
+              <div className="prescription-header">
+                <h4>📋 Prescription Linked</h4>
+              </div>
+              {(() => {
+                const selectedPrescription = prescriptions.find(p => p.id.toString() === formData.prescription_id);
+                return selectedPrescription ? (
+                  <div className="prescription-summary">
+                    <div className="prescription-status">
+                      <span className="status-indicator configured">
+                        ✅ Prescription Linked
+                      </span>
+                    </div>
+                    <div className="prescription-details">
+                      <div className="detail-item">
+                        <strong>Title:</strong> {selectedPrescription.title}
+                      </div>
+                      <div className="detail-item">
+                        <strong>Service:</strong> {selectedPrescription.service_name}
+                      </div>
+                      <div className="detail-item">
+                        <strong>Priority:</strong> {selectedPrescription.priority}
+                        {selectedPrescription.priority === 'Urgent' && ' 🔴'}
+                      </div>
+                      {selectedPrescription.instructions && (
+                        <div className="detail-item">
+                          <strong>Instructions:</strong> {selectedPrescription.instructions}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="description">{placeholders('enterDescription')}</label>
@@ -616,13 +811,21 @@ const fetchPatients = async () => {
               </button>
             </div>
           </div>
-        </div>      )}{/* Conflict Management Dialog */}
+        </div>      )}      {/* Conflict Management Dialog */}
       <ConflictManager
         isOpen={showConflictDialog}
         conflicts={conflicts?.conflicts || []}
         onConfirm={() => handleConflictAction('confirm')}
         onCancel={() => handleConflictAction('cancel')}
         schedulingData={conflicts?.schedulingData || formData}
+      />
+
+      {/* INAMI Medical Care Configuration Modal */}
+      <InamiMedicalCareModal
+        isOpen={showInamiModal}
+        onClose={handleInamiClose}
+        onSave={handleInamiSave}
+        initialData={inamiData}
       />
     </div>
   );

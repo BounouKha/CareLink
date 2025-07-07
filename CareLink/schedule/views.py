@@ -6,11 +6,12 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from datetime import datetime, timedelta, date
 from django.db.models import Q, Count, Avg
-from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog
+from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog, Prescription
 from account.serializers.user import UserSerializer
 from account.services.notification_service import NotificationService
 from .conflict_manager import ConflictManager
 import calendar
+import re
 
 def log_schedule_action(user, action_type, target_model, target_id, schedule=None, description=None, additional_data=None):
     """
@@ -107,6 +108,11 @@ class ScheduleCalendarView(APIView):
             
             timeslots = timeslots_query.all()
             
+            # Debug: Print timeslots with INAMI data
+            for ts in timeslots:
+                if hasattr(ts, 'inami_data') and ts.inami_data:
+                    print(f"[ScheduleCalendarView] TimeSlot {ts.id} has INAMI data: {ts.inami_data}")
+            
             # Build calendar data structure
             calendar_data = []
             
@@ -125,7 +131,8 @@ class ScheduleCalendarView(APIView):
                         'id': schedule.patient.id if schedule.patient else None,
                         'name': f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}" if schedule.patient and schedule.patient.user else 'No Patient',
                         'email': schedule.patient.user.email if schedule.patient and schedule.patient.user else None
-                    },                    'created_by': {
+                    },
+                    'created_by': {
                         'id': schedule.created_by.id if schedule.created_by else None,
                         'name': f"{schedule.created_by.firstname} {schedule.created_by.lastname}" if schedule.created_by else 'Unknown',
                         'email': schedule.created_by.email if schedule.created_by else None
@@ -135,18 +142,44 @@ class ScheduleCalendarView(APIView):
                 }
                 
                 for timeslot in schedule_timeslots:
+                    # Debug INAMI data
+                    inami_data = timeslot.inami_data if hasattr(timeslot, 'inami_data') and timeslot.inami_data else None
+                    if inami_data:
+                        print(f"[ScheduleCalendarView] Including INAMI data for timeslot {timeslot.id}: {inami_data}")
+                    
                     timeslot_data = {
                         'id': timeslot.id,
                         'start_time': timeslot.start_time,
                         'end_time': timeslot.end_time,
-                        'description': timeslot.description,                        'service': {
+                        'description': timeslot.description,
+                        'service': {
                             'id': timeslot.service.id if timeslot.service else None,
                             'name': timeslot.service.name if timeslot.service else 'No Service',
                             'price': float(timeslot.service.price) if timeslot.service else 0
                         },
                         'status': timeslot.status if hasattr(timeslot, 'status') and timeslot.status else 'scheduled',
-                        'notes': timeslot.description or ''
+                        'notes': timeslot.description or '',
+                        'inami_data': inami_data,
+                        'prescription': None
                     }
+                    
+                    # Add prescription data if linked
+                    if hasattr(timeslot, 'prescription') and timeslot.prescription:
+                        # Extract service demand ID from prescription note
+                        service_demand_id = self.extract_service_demand_id(timeslot.prescription.note)
+                        
+                        timeslot_data['prescription'] = {
+                            'id': timeslot.prescription.id,
+                            'medication': timeslot.prescription.medication,
+                            'instructions': timeslot.prescription.instructions,
+                            'start_date': timeslot.prescription.start_date,
+                            'end_date': timeslot.prescription.end_date,
+                            'frequency': timeslot.prescription.frequency,
+                            'status': timeslot.prescription.status,
+                            'service_demand_id': service_demand_id,
+                            'note': timeslot.prescription.note
+                        }
+                    
                     schedule_data['timeslots'].append(timeslot_data)
                 
                 calendar_data.append(schedule_data)
@@ -182,6 +215,26 @@ class ScheduleCalendarView(APIView):
             return Response({
                 'error': f'Failed to fetch calendar data: {str(e)}'
             }, status=500)
+    
+    def extract_service_demand_id(self, note):
+        """Extract service demand ID from prescription note"""
+        if not note:
+            print(f"🔍 DEBUG: No note provided for extraction")
+            return None
+        try:
+            # Extract ID from note format: "Created from Service Demand #12: Title"
+            match = re.search(r'Service Demand #(\d+):', note)
+            print(f"🔍 DEBUG: Extracting from note: {note}")
+            print(f"🔍 DEBUG: Regex match: {match}")
+            if match:
+                service_demand_id = int(match.group(1))
+                print(f"🔍 DEBUG: Extracted service_demand_id: {service_demand_id}")
+                return service_demand_id
+        except Exception as e:
+            print(f"🔍 DEBUG: Error extracting service_demand_id: {e}")
+            pass
+        print(f"🔍 DEBUG: No service_demand_id found")
+        return None
     
     def get_calendar_stats(self, start_date, end_date, provider_id=None):
         """Get statistics for the calendar period"""
@@ -302,8 +355,48 @@ class QuickScheduleView(APIView):
                 end_time=end_time,
                 description=description,
                 service=service,
-                user=request.user            )
-            
+                user=request.user
+            )
+
+            # Handle prescription linking from ServiceDemand
+            prescription_id = data.get('prescription_id')
+            if prescription_id:
+                try:
+                    if prescription_id and prescription_id != '':
+                        service_demand = ServiceDemand.objects.get(id=prescription_id)
+                        
+                        # Create or get Prescription object from ServiceDemand
+                        note_text = f"Created from Service Demand #{service_demand.id}: {service_demand.title}"
+                        prescription, created = Prescription.objects.get_or_create(
+                            medication=service_demand.description or service_demand.title,
+                            start_date=service_demand.preferred_start_date or timezone.now().date(),
+                            service=service_demand.service,
+                            defaults={
+                                'end_date': None,
+                                'note': note_text,
+                                'status': 'accepted',
+                                'frequency': 1,
+                                'instructions': service_demand.special_instructions or ''
+                            }
+                        )
+                        
+                        # Set prescription on timeslot
+                        timeslot.prescription = prescription
+                        print(f"[QuickSchedule] Prescription {prescription.id} linked to timeslot {timeslot.id}")
+                except (ServiceDemand.DoesNotExist, ValueError) as e:
+                    print(f"Warning: Could not set prescription {prescription_id}: {e}")
+                except Exception as e:
+                    print(f"Error handling prescription: {e}")
+
+            # Handle INAMI data for Service 3 (Soins Infirmiers)
+            inami_data = data.get('inami_data')
+            if service and service.id == 3 and inami_data:
+                timeslot.inami_data = inami_data
+                print(f"[QuickSchedule] INAMI data saved for timeslot {timeslot.id}: {inami_data}")
+
+            # Save timeslot with all updates
+            timeslot.save()
+
             # Add timeslot to schedule
             schedule.time_slots.add(timeslot)
               # Log the CREATE_SCHEDULE action
@@ -455,6 +548,70 @@ class AppointmentManagementView(APIView):
     """
     permission_classes = [IsAuthenticated]
     
+    def get(self, request, appointment_id):
+        """Get appointment details"""
+        if request.user.role not in ['Coordinator', 'Administrative', 'Provider']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        try:
+            # Get the schedule (appointment)
+            schedule = Schedule.objects.get(id=appointment_id)
+            
+            # Build timeslots data
+            timeslots_data = []
+            for timeslot in schedule.time_slots.all():
+                timeslot_data = {
+                    'id': timeslot.id,
+                    'start_time': timeslot.start_time.strftime('%H:%M') if timeslot.start_time else None,
+                    'end_time': timeslot.end_time.strftime('%H:%M') if timeslot.end_time else None,
+                    'description': timeslot.description or '',
+                    'status': timeslot.status or 'scheduled',
+                    'service': {
+                        'id': timeslot.service.id,
+                        'name': timeslot.service.name
+                    } if timeslot.service else None,
+                    'inami_data': timeslot.inami_data if timeslot.inami_data else None,
+                }
+                
+                # Add prescription data from inami_data if exists
+                if timeslot.inami_data and 'prescription_ref' in timeslot.inami_data:
+                    prescription_ref = timeslot.inami_data['prescription_ref']
+                    timeslot_data['prescription'] = {
+                        'id': prescription_ref.get('id'),
+                        'title': prescription_ref.get('title', ''),
+                        'description': prescription_ref.get('description', ''),
+                        'service_name': prescription_ref.get('service_name'),
+                    }
+                
+                timeslots_data.append(timeslot_data)
+            
+            # Build appointment response
+            appointment_data = {
+                'id': schedule.id,
+                'date': schedule.date.strftime('%Y-%m-%d'),
+                'provider': {
+                    'id': schedule.provider.id,
+                    'name': f"{schedule.provider.user.firstname} {schedule.provider.user.lastname}" if schedule.provider.user else f"Provider {schedule.provider.id}",
+                } if schedule.provider else None,
+                'patient': {
+                    'id': schedule.patient.id,
+                    'name': f"{schedule.patient.user.firstname} {schedule.patient.user.lastname}" if schedule.patient and schedule.patient.user else f"Patient {schedule.patient.id}" if schedule.patient else None,
+                } if schedule.patient else None,
+                'timeslots': timeslots_data,
+                'created_at': schedule.created_at.isoformat() if schedule.created_at else None,
+                'created_by': {
+                    'name': f"{schedule.created_by.firstname} {schedule.created_by.lastname}" if schedule.created_by else None,
+                    'email': schedule.created_by.email if schedule.created_by else None,
+                } if hasattr(schedule, 'created_by') and schedule.created_by else None,
+            }
+            
+            return Response(appointment_data, status=200)
+            
+        except Schedule.DoesNotExist:
+            return Response({'error': 'Appointment not found'}, status=404)
+        except Exception as e:
+            return Response({'error': f'Failed to fetch appointment: {str(e)}'}, status=500)
+    
     def put(self, request, appointment_id):
         """Update an existing appointment"""
         if request.user.role not in ['Coordinator', 'Administrative']:
@@ -473,6 +630,7 @@ class AppointmentManagementView(APIView):
             start_time_str = data.get('start_time')
             end_time_str = data.get('end_time')
             service_id = data.get('service_id')
+            prescription_id = data.get('prescription_id')
             description = data.get('description', '')
             
             # Update schedule fields if provided
@@ -490,7 +648,7 @@ class AppointmentManagementView(APIView):
                 schedule.date = datetime.strptime(date_str, '%Y-%m-%d').date()
               # Handle timeslot updates
             status = data.get('status')
-            if start_time_str or end_time_str or service_id or description or status:
+            if start_time_str or end_time_str or service_id or prescription_id or description or status:
                 # Get the first timeslot (assuming one timeslot per appointment for now)
                 timeslot = schedule.time_slots.first()                
                 if timeslot:
@@ -503,9 +661,56 @@ class AppointmentManagementView(APIView):
                     if service_id:
                         service = Service.objects.get(id=service_id) if service_id else None
                         timeslot.service = service
+                    if prescription_id:
+                        # Handle prescription linking properly
+                        try:
+                            from CareLink.models import ServiceDemand
+                            if prescription_id and prescription_id != '':
+                                service_demand = ServiceDemand.objects.get(id=prescription_id)
+                                
+                                # Create or get Prescription object from ServiceDemand
+                                from CareLink.models import Prescription
+                                
+                                # Use a unique combination to avoid duplicates
+                                note_text = f"Created from Service Demand #{service_demand.id}: {service_demand.title}"
+                                prescription, created = Prescription.objects.get_or_create(
+                                    medication=service_demand.description or service_demand.title,
+                                    start_date=service_demand.preferred_start_date or timezone.now().date(),
+                                    service=service_demand.service,
+                                    defaults={
+                                        'end_date': None,  # Set as needed
+                                        'note': note_text,
+                                        'status': 'accepted',  # Default status
+                                        'frequency': 1,  # Default frequency
+                                        'instructions': service_demand.special_instructions or ''
+                                    }
+                                )
+                                
+                                print(f"🔍 DEBUG: Created prescription with note: {note_text}")
+                                print(f"🔍 DEBUG: Prescription ID: {prescription.id}")
+                                print(f"🔍 DEBUG: Service Demand ID: {service_demand.id}")
+                                
+                                # Set prescription on timeslot only (Schedule model doesn't have prescription field)
+                                timeslot.prescription = prescription
+                            else:
+                                # Clear prescription reference if empty
+                                timeslot.prescription = None
+                        except (ServiceDemand.DoesNotExist, ValueError) as e:
+                            print(f"Warning: Could not set prescription {prescription_id}: {e}")
+                        except Exception as e:
+                            print(f"Error handling prescription: {e}")
                     if status:
                         # Update the status field if provided
-                        timeslot.status = status                    # Check for conflicts before saving using ConflictManager
+                        timeslot.status = status
+
+                    # Handle INAMI data for Service 3 (Soins Infirmiers)
+                    inami_data = data.get('inami_data')
+                    if service_id and service_id == 3 and inami_data:
+                        timeslot.inami_data = inami_data
+                        print(f"[AppointmentManagement] INAMI data updated for timeslot {timeslot.id}: {inami_data}")
+                    elif service_id and service_id != 3:
+                        # Clear INAMI data if service is changed from 3 to something else
+                        timeslot.inami_data = None                    # Check for conflicts before saving using ConflictManager
                     if start_time_str or end_time_str or date_str or provider_id:
                         conflict_result = ConflictManager.check_scheduling_conflicts(
                             provider_id=schedule.provider.id,
@@ -545,6 +750,8 @@ class AppointmentManagementView(APIView):
                     changes.append('time')
                 if service_id:
                     changes.append('service')
+                if prescription_id:
+                    changes.append('prescription')
                 if status:
                     changes.append('status')
                 
@@ -679,7 +886,8 @@ class AppointmentManagementView(APIView):
                         
                 except TimeSlot.DoesNotExist:
                     return Response({'error': 'Timeslot not found'}, status=404)
-            else:                # Delete entire appointment/schedule
+            else:                   
+            # Delete entire appointment/schedule
                 if deletion_strategy == 'timeslot_only':
                     # Delete all timeslots but keep schedule
                     for timeslot in timeslots:
@@ -809,7 +1017,14 @@ class PatientScheduleView(APIView):
                             'id': timeslot.service.id if timeslot.service else None,
                             'name': timeslot.service.name if timeslot.service else 'General Consultation',
                             'description': timeslot.service.description if timeslot.service else 'Standard medical consultation'
-                        },                        'description': timeslot.description or 'No additional notes',
+                        },
+                        'prescription': {
+                            'id': timeslot.prescription.id if timeslot.prescription else None,
+                            'medication': timeslot.prescription.medication if timeslot.prescription else None,
+                            'start_date': timeslot.prescription.start_date if timeslot.prescription else None,
+                            'note': timeslot.prescription.note if timeslot.prescription else None,
+                            'service_demand_id': self.extract_service_demand_id(timeslot.prescription.note) if timeslot.prescription and timeslot.prescription.note else None
+                        } if timeslot.prescription else None,
                         'status': timeslot.status if hasattr(timeslot, 'status') and timeslot.status else 'scheduled'
                     }
                     appointment_data['appointments'].append(appointment_info)
@@ -966,7 +1181,13 @@ class PatientAppointmentDetailView(APIView):
                         'description': timeslot.service.description if timeslot.service else 'Standard medical consultation',
                         'price': float(timeslot.service.price) if timeslot.service else 0
                     },
-                    'description': timeslot.description or 'No additional notes',
+                    'prescription': {
+                        'id': timeslot.prescription.id if timeslot.prescription else None,
+                        'medication': timeslot.prescription.medication if timeslot.prescription else None,
+                        'start_date': timeslot.prescription.start_date if timeslot.prescription else None,
+                        'note': timeslot.prescription.note if timeslot.prescription else None,
+                        'service_demand_id': self.extract_service_demand_id(timeslot.prescription.note) if timeslot.prescription and timeslot.prescription.note else None
+                    } if timeslot.prescription else None,
                     'status': timeslot.status if hasattr(timeslot, 'status') and timeslot.status else 'scheduled'
                 })
             
@@ -1160,7 +1381,13 @@ class FamilyPatientScheduleView(APIView):
                             'name': timeslot.service.name if timeslot.service else 'General Consultation',
                             'description': timeslot.service.description if timeslot.service else 'Standard medical consultation'
                         },
-                        'description': timeslot.description or 'No additional notes',
+                        'prescription': {
+                            'id': timeslot.prescription.id if timeslot.prescription else None,
+                            'medication': timeslot.prescription.medication if timeslot.prescription else None,
+                            'start_date': timeslot.prescription.start_date if timeslot.prescription else None,
+                            'note': timeslot.prescription.note if timeslot.prescription else None,
+                            'service_demand_id': self.extract_service_demand_id(timeslot.prescription.note) if timeslot.prescription and timeslot.prescription.note else None
+                        } if timeslot.prescription else None,
                         'status': timeslot.status if hasattr(timeslot, 'status') and timeslot.status else 'scheduled'
                     }
                     appointment_data['appointments'].append(appointment_info)
@@ -1267,7 +1494,13 @@ class FamilyPatientAppointmentDetailView(APIView):
                         'description': timeslot.service.description if timeslot.service else 'Standard medical consultation',
                         'price': float(timeslot.service.price) if timeslot.service else 0
                     },
-                    'description': timeslot.description or 'No additional notes',
+                    'prescription': {
+                        'id': timeslot.prescription.id if timeslot.prescription else None,
+                        'medication': timeslot.prescription.medication if timeslot.prescription else None,
+                        'start_date': timeslot.prescription.start_date if timeslot.prescription else None,
+                        'note': timeslot.prescription.note if timeslot.prescription else None,
+                        'service_demand_id': self.extract_service_demand_id(timeslot.prescription.note) if timeslot.prescription and timeslot.prescription.note else None
+                    } if timeslot.prescription else None,
                     'status': timeslot.status if hasattr(timeslot, 'status') and timeslot.status else 'scheduled'
                 })
             
@@ -1697,3 +1930,64 @@ class ConflictCheckView(APIView):
             return Response({
                 'error': f'Failed to check conflicts: {str(e)}'
             }, status=500)
+
+class PrescriptionOptionsView(APIView):
+    """
+    Get available prescriptions from ServiceDemand for linking to timeslots
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get list of available prescriptions from ServiceDemands"""
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        try:
+            patient_id = request.query_params.get('patient_id')
+            
+            # Filter ServiceDemands that can be used as prescriptions
+            service_demands = ServiceDemand.objects.filter(
+                status__in=['Approved', 'In Progress']
+            ).select_related('patient__user', 'service', 'sent_by')
+            
+            # Filter by patient if specified
+            if patient_id:
+                service_demands = service_demands.filter(patient_id=patient_id)
+            
+            # Only include demands that don't already have linked timeslots with prescriptions
+            prescriptions_data = []
+            for demand in service_demands:
+                # Check if this ServiceDemand is already linked to a prescription and timeslot
+                existing_prescription = Prescription.objects.filter(
+                    note__contains=f"Service Demand #{demand.id}"
+                ).first()
+                
+                # Allow multiple timeslots to link to the same prescription
+                # We'll track how many timeslots are linked but not block additional ones
+                linked_timeslots_count = 0
+                if existing_prescription:
+                    linked_timeslots_count = TimeSlot.objects.filter(
+                        prescription=existing_prescription
+                    ).count()
+                
+                prescriptions_data.append({
+                    'id': demand.id,
+                    'title': demand.title,
+                    'description': demand.description,
+                    'service_name': demand.service.name if demand.service else 'No Service',
+                    'service_id': demand.service.id if demand.service else None,
+                    'patient_name': f"{demand.patient.user.firstname} {demand.patient.user.lastname}" if demand.patient and demand.patient.user else 'Unknown Patient',
+                    'priority': demand.priority,
+                    'preferred_start_date': demand.preferred_start_date,
+                    'frequency': demand.frequency,
+                    'status': demand.status,
+                    'linked_timeslots_count': linked_timeslots_count,
+                    'instructions': demand.special_instructions
+                })
+            
+            return Response({
+                'prescriptions': prescriptions_data
+            }, status=200)
+            
+        except Exception as e:
+            return Response({'error': f'Failed to fetch prescriptions: {str(e)}'}, status=500)
