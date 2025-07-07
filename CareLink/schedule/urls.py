@@ -9,7 +9,8 @@ from .views import (
     FamilyPatientScheduleView,
     FamilyPatientAppointmentDetailView,
     RecurringScheduleView,
-    ConflictCheckView
+    ConflictCheckView,
+    PrescriptionOptionsView
 )
 
 app_name = 'schedule'
@@ -22,6 +23,7 @@ urlpatterns = [
     path('availability/', ScheduleAvailabilityView.as_view(), name='schedule_availability'),
     path('appointment/<int:appointment_id>/', AppointmentManagementView.as_view(), name='appointment_management'),
     path('check-conflicts/', ConflictCheckView.as_view(), name='check_conflicts'),
+    path('prescriptions/', PrescriptionOptionsView.as_view(), name='prescription_options'),
     
     # Patient Schedule URLs (for Patients)
     path('patient/schedule/', PatientScheduleView.as_view(), name='patient_schedule'),

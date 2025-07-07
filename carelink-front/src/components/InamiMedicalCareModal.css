@@ -1,0 +1,365 @@
+/* INAMI Medical Care Modal - Belgian Healthcare Professional Styling */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1200; /* Higher than QuickSchedule modal (1060) and other modals */
+  backdrop-filter: blur(2px);
+}
+
+.inami-modal {
+  background: white;
+  border-radius: 12px;
+  min-width: 600px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 3px solid #1e40af; /* Made border thicker for better visibility */
+  animation: modalFadeIn 0.3s ease-out; /* Added animation */
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.inami-modal-header {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inami-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.inami-modal-content {
+  padding: 25px;
+  max-height: 70vh; /* Increased from 60vh to 70vh for better visibility */
+  overflow-y: auto;
+}
+
+.inami-form-section {
+  margin-bottom: 30px;
+}
+
+.inami-form-section h3 {
+  color: #1e40af;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500 !important;
+  margin-bottom: 0 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* INAMI Pricing Section */
+.inami-pricing-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 20px;
+}
+
+.inami-pricing-section h3 {
+  color: #1e40af;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pricing-breakdown {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pricing-row:last-child {
+  border-bottom: none;
+}
+
+.pricing-row.total {
+  border-top: 2px solid #1e40af;
+  margin-top: 10px;
+  padding-top: 15px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.pricing-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.pricing-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.pricing-value.mutuelle {
+  color: #059669; /* Green for insurance */
+}
+
+.pricing-value.patient {
+  color: #dc2626; /* Red for patient cost */
+}
+
+.pricing-value.total-price {
+  color: #1e40af; /* Blue for total */
+}
+
+.inami-code-display {
+  background: white;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.inami-code-display h4 {
+  margin: 0;
+  color: #1e40af;
+  font-size: 1.1rem;
+}
+
+.inami-code-display .code {
+  background: #1e40af;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.surcharge-notice {
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  color: #92400e;
+}
+
+/* Modal Footer */
+.inami-modal-footer {
+  background: #f8fafc;
+  padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  .inami-modal {
+    min-width: 95vw;
+    max-height: 95vh;
+    margin: 10px;
+  }
+  
+  .inami-modal-header {
+    padding: 15px;
+  }
+  
+  .inami-modal-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .inami-modal-content {
+    padding: 20px;
+  }
+  
+  .pricing-row {
+    flex-direction: column;
+    text-align: center;
+    gap: 5px;
+  }
+  
+  .pricing-row.total {
+    flex-direction: column;
+  }
+  
+  .inami-modal-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
+  }
+}
+
+/* Professional Healthcare Color Scheme */
+:root {
+  --healthcare-primary: #1e40af;
+  --healthcare-secondary: #3b82f6;
+  --healthcare-success: #059669;
+  --healthcare-warning: #f59e0b;
+  --healthcare-danger: #dc2626;
+  --healthcare-light: #f8fafc;
+  --healthcare-border: #e5e7eb;
+}
+
+/* Accessibility improvements */
+.inami-modal *:focus {
+  outline: 2px solid var(--healthcare-secondary);
+  outline-offset: 2px;
+}
+
+/* Animation for modal appearance */
+.inami-modal {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

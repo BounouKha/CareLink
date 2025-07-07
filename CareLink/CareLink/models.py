@@ -737,6 +737,11 @@ class TimeSlot(models.Model):
     prescription = models.ForeignKey('Prescription', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True, blank=True)
+    inami_data = models.JSONField(
+        blank=True, 
+        null=True, 
+        help_text="INAMI medical care configuration data including care type, pricing, and codes"
+    )
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
