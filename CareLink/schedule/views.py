@@ -1134,6 +1134,26 @@ class PatientScheduleView(APIView):
         except:
             return []
 
+    def extract_service_demand_id(self, note):
+        """Extract service demand ID from prescription note"""
+        if not note:
+            print(f"🔍 DEBUG: No note provided for extraction")
+            return None
+        try:
+            # Extract ID from note format: "Created from Service Demand #12: Title"
+            match = re.search(r'Service Demand #(\d+):', note)
+            print(f"🔍 DEBUG: Extracting from note: {note}")
+            print(f"🔍 DEBUG: Regex match: {match}")
+            if match:
+                service_demand_id = int(match.group(1))
+                print(f"🔍 DEBUG: Extracted service_demand_id: {service_demand_id}")
+                return service_demand_id
+        except Exception as e:
+            print(f"🔍 DEBUG: Error extracting service_demand_id: {e}")
+            pass
+        print(f"🔍 DEBUG: No service_demand_id found")
+        return None
+
 
 class PatientAppointmentDetailView(APIView):
     """
@@ -1264,6 +1284,26 @@ class PatientAppointmentDetailView(APIView):
             return days_until >= 1  # Can cancel if appointment is at least 1 day away
         except:
             return False
+
+    def extract_service_demand_id(self, note):
+        """Extract service demand ID from prescription note"""
+        if not note:
+            print(f"🔍 DEBUG: No note provided for extraction")
+            return None
+        try:
+            # Extract ID from note format: "Created from Service Demand #12: Title"
+            match = re.search(r'Service Demand #(\d+):', note)
+            print(f"🔍 DEBUG: Extracting from note: {note}")
+            print(f"🔍 DEBUG: Regex match: {match}")
+            if match:
+                service_demand_id = int(match.group(1))
+                print(f"🔍 DEBUG: Extracted service_demand_id: {service_demand_id}")
+                return service_demand_id
+        except Exception as e:
+            print(f"🔍 DEBUG: Error extracting service_demand_id: {e}")
+            pass
+        print(f"🔍 DEBUG: No service_demand_id found")
+        return None
 
 
 class FamilyPatientScheduleView(APIView):
@@ -1440,6 +1480,26 @@ class FamilyPatientScheduleView(APIView):
         except:
             return 'unknown'
 
+    def extract_service_demand_id(self, note):
+        """Extract service demand ID from prescription note"""
+        if not note:
+            print(f"🔍 DEBUG: No note provided for extraction")
+            return None
+        try:
+            # Extract ID from note format: "Created from Service Demand #12: Title"
+            match = re.search(r'Service Demand #(\d+):', note)
+            print(f"🔍 DEBUG: Extracting from note: {note}")
+            print(f"🔍 DEBUG: Regex match: {match}")
+            if match:
+                service_demand_id = int(match.group(1))
+                print(f"🔍 DEBUG: Extracted service_demand_id: {service_demand_id}")
+                return service_demand_id
+        except Exception as e:
+            print(f"🔍 DEBUG: Error extracting service_demand_id: {e}")
+            pass
+        print(f"🔍 DEBUG: No service_demand_id found")
+        return None
+
 
 class FamilyPatientAppointmentDetailView(APIView):
     """
@@ -1558,6 +1618,26 @@ class FamilyPatientAppointmentDetailView(APIView):
                 return 'completed'
         except:
             return 'unknown'
+    
+    def extract_service_demand_id(self, note):
+        """Extract service demand ID from prescription note"""
+        if not note:
+            print(f"🔍 DEBUG: No note provided for extraction")
+            return None
+        try:
+            # Extract ID from note format: "Created from Service Demand #12: Title"
+            match = re.search(r'Service Demand #(\d+):', note)
+            print(f"🔍 DEBUG: Extracting from note: {note}")
+            print(f"🔍 DEBUG: Regex match: {match}")
+            if match:
+                service_demand_id = int(match.group(1))
+                print(f"🔍 DEBUG: Extracted service_demand_id: {service_demand_id}")
+                return service_demand_id
+        except Exception as e:
+            print(f"🔍 DEBUG: Error extracting service_demand_id: {e}")
+            pass
+        print(f"🔍 DEBUG: No service_demand_id found")
+        return None
         
 
 class RecurringScheduleView(APIView):
