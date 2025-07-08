@@ -934,6 +934,180 @@ class AppointmentManagementView(APIView):
             return Response({'error': f'Failed to delete appointment: {str(e)}'}, status=500)
 
 
+class BulkDeleteAppointmentsView(APIView):
+    """
+    Bulk delete multiple appointments
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Delete multiple appointments at once"""
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied."}, status=403)
+        
+        try:
+            data = request.data
+            appointment_ids = data.get('appointment_ids', [])
+            deletion_strategy = data.get('deletion_strategy', 'smart')  # smart, aggressive, conservative
+            
+            if not appointment_ids:
+                return Response({'error': 'No appointment IDs provided'}, status=400)
+            
+            if len(appointment_ids) > 50:
+                return Response({'error': 'Cannot delete more than 50 appointments at once'}, status=400)
+            
+            deleted_schedules = []
+            deleted_timeslots = []
+            errors = []
+            
+            # Process each appointment
+            for appointment_id in appointment_ids:
+                try:
+                    schedule = Schedule.objects.get(id=appointment_id)
+                    timeslots = schedule.time_slots.all()
+                    
+                    if deletion_strategy == 'aggressive':
+                        # Always delete schedule when any timeslot is deleted
+                        timeslot_count = timeslots.count()
+                        
+                        # Create notification before deleting schedule
+                        try:
+                            NotificationService.notify_schedule_cancelled(
+                                schedule=schedule,
+                                cancelled_by=request.user,
+                                reason="Appointment cancelled via bulk delete"
+                            )
+                        except Exception as e:
+                            print(f"Failed to create notification for schedule cancellation: {e}")
+                        
+                        for timeslot in timeslots:
+                            timeslot.delete()
+                        schedule.delete()
+                        
+                        # Log the DELETE_APPOINTMENT action
+                        log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule.id, schedule=schedule)
+                        
+                        deleted_schedules.append({
+                            'schedule_id': appointment_id,
+                            'timeslots_deleted': timeslot_count,
+                            'deletion_type': 'complete_deletion'
+                        })
+                        
+                    elif deletion_strategy == 'conservative':
+                        # Delete timeslots but keep schedule (unless no timeslots remain)
+                        timeslot_count = timeslots.count()
+                        
+                        for timeslot in timeslots:
+                            schedule.time_slots.remove(timeslot)
+                            timeslot.delete()
+                        
+                        # Check if any timeslots remain
+                        remaining_timeslots = schedule.time_slots.count()
+                        
+                        if remaining_timeslots == 0:
+                            # Create notification before deleting schedule
+                            try:
+                                NotificationService.notify_schedule_cancelled(
+                                    schedule=schedule,
+                                    cancelled_by=request.user,
+                                    reason="Appointment cancelled via bulk delete (no timeslots remaining)"
+                                )
+                            except Exception as e:
+                                print(f"Failed to create notification for schedule cancellation: {e}")
+                            
+                            schedule.delete()
+                            
+                            # Log the DELETE_APPOINTMENT action
+                            log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule.id, schedule=schedule)
+                            
+                            deleted_schedules.append({
+                                'schedule_id': appointment_id,
+                                'timeslots_deleted': timeslot_count,
+                                'deletion_type': 'schedule_deleted'
+                            })
+                        else:
+                            # Log the DELETE_APPOINTMENT action (timeslots only)
+                            log_schedule_action(
+                                user=request.user,
+                                action_type="DELETE_APPOINTMENT",
+                                target_model="Schedule",
+                                target_id=appointment_id,
+                                schedule=schedule,
+                                description=f"Deleted {timeslot_count} timeslots using conservative strategy"
+                            )
+                            
+                            deleted_timeslots.append({
+                                'schedule_id': appointment_id,
+                                'timeslots_deleted': timeslot_count,
+                                'deletion_type': 'timeslots_only',
+                                'remaining_timeslots': remaining_timeslots
+                            })
+                        
+                    else:  # 'smart' strategy (default)
+                        # Delete schedule only if no timeslots remain after deletion
+                        timeslot_count = timeslots.count()
+                        
+                        for timeslot in timeslots:
+                            timeslot.delete()
+                        
+                        # Create notification before deleting schedule
+                        try:
+                            NotificationService.notify_schedule_cancelled(
+                                schedule=schedule,
+                                cancelled_by=request.user,
+                                reason="Appointment cancelled via bulk delete"
+                            )
+                        except Exception as e:
+                            print(f"Failed to create notification for schedule cancellation: {e}")
+                        
+                        schedule.delete()
+                        
+                        # Log the DELETE_APPOINTMENT action
+                        log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule.id, schedule=schedule)
+                        
+                        deleted_schedules.append({
+                            'schedule_id': appointment_id,
+                            'timeslots_deleted': timeslot_count,
+                            'deletion_type': 'complete_deletion'
+                        })
+                        
+                except Schedule.DoesNotExist:
+                    errors.append(f'Appointment {appointment_id} not found')
+                    continue
+                except Exception as e:
+                    errors.append(f'Failed to delete appointment {appointment_id}: {str(e)}')
+                    continue
+            
+            # Calculate summary
+            total_schedules_deleted = len(deleted_schedules)
+            total_timeslots_deleted = sum(item['timeslots_deleted'] for item in deleted_schedules + deleted_timeslots)
+            
+            result = {
+                'success': True,
+                'message': f'Bulk delete completed: {total_schedules_deleted} schedules deleted, {total_timeslots_deleted} timeslots removed',
+                'summary': {
+                    'total_requested': len(appointment_ids),
+                    'schedules_deleted': total_schedules_deleted,
+                    'timeslots_preserved': len(deleted_timeslots),
+                    'total_timeslots_deleted': total_timeslots_deleted,
+                    'deletion_strategy': deletion_strategy
+                },
+                'details': {
+                    'deleted_schedules': deleted_schedules,
+                    'deleted_timeslots': deleted_timeslots,
+                    'errors': errors
+                }
+            }
+            
+            if errors:
+                result['message'] += f'. {len(errors)} errors occurred.'
+            
+            return Response(result, status=200)
+            
+        except Exception as e:
+            return Response({'error': f'Failed to process bulk delete: {str(e)}'}, status=500)
+
+
 class PatientScheduleView(APIView):
     """
     Patient view to see their own schedules and appointments

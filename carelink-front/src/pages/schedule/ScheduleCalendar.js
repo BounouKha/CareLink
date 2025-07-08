@@ -32,14 +32,28 @@ const ScheduleCalendar = () => {
     executeWithLoading 
   } = useLoading();
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
-  const [isStatsLoading, setIsStatsLoading] = useState(false);const [showQuickSchedule, setShowQuickSchedule] = useState(false);  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-  const [showEditAppointment, setShowEditAppointment] = useState(false);  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+
+  const [showQuickSchedule, setShowQuickSchedule] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [showEditAppointment, setShowEditAppointment] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showRecurringSchedule, setShowRecurringSchedule] = useState(false);
   const [draggedAppointment, setDraggedAppointment] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showRecapModal, setShowRecapModal] = useState(false);
   // Add scroll position preservation
   const [scrollPosition, setScrollPosition] = useState(0);
+  
+  // Week Picker states
+  const [showWeekPicker, setShowWeekPicker] = useState(false);
+  const [weekPickerDate, setWeekPickerDate] = useState('');
+  
+  // Bulk delete states
+  const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
+  const [selectedAppointments, setSelectedAppointments] = useState(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   
   // Function to preserve scroll position
@@ -212,6 +226,97 @@ const ScheduleCalendar = () => {
     }
     
     setCurrentDate(newDate);
+  };
+
+  // Week Picker functions
+  const handleWeekPickerOpen = () => {
+    const currentWeekStart = new Date(currentDate);
+    const day = currentWeekStart.getDay();
+    const diff = currentWeekStart.getDate() - day;
+    currentWeekStart.setDate(diff);
+    setWeekPickerDate(formatDateToString(currentWeekStart));
+    setShowWeekPicker(true);
+  };
+
+  const handleWeekPickerSubmit = () => {
+    if (weekPickerDate) {
+      const selectedDate = new Date(weekPickerDate);
+      setCurrentDate(selectedDate);
+      setShowWeekPicker(false);
+    }
+  };
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Bulk delete functions
+  const toggleBulkDeleteMode = () => {
+    setBulkDeleteMode(!bulkDeleteMode);
+    setSelectedAppointments(new Set());
+  };
+
+  const toggleAppointmentSelection = (appointmentId) => {
+    const newSelected = new Set(selectedAppointments);
+    if (newSelected.has(appointmentId)) {
+      newSelected.delete(appointmentId);
+    } else {
+      newSelected.add(appointmentId);
+    }
+    setSelectedAppointments(newSelected);
+  };
+
+  const selectAllAppointments = () => {
+    const allIds = new Set(calendarData.map(appt => appt.id));
+    setSelectedAppointments(allIds);
+  };
+
+  const clearAllSelections = () => {
+    setSelectedAppointments(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedAppointments.size === 0) return;
+    
+    setIsBulkDeleting(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const appointmentIds = Array.from(selectedAppointments);
+      
+      const response = await fetch('http://localhost:8000/schedule/bulk-delete/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          appointment_ids: appointmentIds,
+          deletion_strategy: 'smart' // Can be 'smart', 'aggressive', or 'conservative'
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Bulk delete result:', result);
+        
+        // Reset bulk delete mode and refresh calendar
+        setBulkDeleteMode(false);
+        setSelectedAppointments(new Set());
+        fetchCalendarData(true);
+        
+        // Show success message
+        setError(''); // Clear any previous errors
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to delete appointments');
+      }
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      setError('Network error occurred while deleting appointments');
+    } finally {
+      setIsBulkDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -472,7 +577,7 @@ const ScheduleCalendar = () => {
     return timeslots;
   };
   // Week View Component
-  const WeekView = ({ calendarData, currentDate, onTimeSlotClick, onAppointmentEdit, onDragStart, onDragEnd, onDragOver, onDrop, isDragging }) => {
+  const WeekView = ({ calendarData, currentDate, onTimeSlotClick, onAppointmentEdit, onDragStart, onDragEnd, onDragOver, onDrop, isDragging, bulkDeleteMode, selectedAppointments, onAppointmentSelect }) => {
     const timeSlots = generateTimeSlots();
     const weekDays = [];
     
@@ -516,27 +621,53 @@ const ScheduleCalendar = () => {
                         {timeslots.map((timeslot, index) => (
                           <div 
                             key={`${timeslot.appointmentId}-${timeslot.id}-${index}`}
-                            className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)} ${getAppointmentClass(timeslot.schedule)}`}
-                            draggable="true"
-                            onDragStart={(e) => onDragStart(e, timeslot.schedule)}
+                            className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)} ${getAppointmentClass(timeslot.schedule)} ${bulkDeleteMode ? 'bulk-delete-mode' : ''} ${bulkDeleteMode && selectedAppointments?.has(timeslot.schedule.id) ? 'selected' : ''}`}
+                            draggable={!bulkDeleteMode ? "true" : "false"}
+                            onDragStart={(e) => !bulkDeleteMode && onDragStart(e, timeslot.schedule)}
                             onDragEnd={onDragEnd}
                             onClick={(e) => { 
                               e.stopPropagation(); 
-                              // Pass both the appointment and the specific timeslot
-                              onAppointmentEdit(timeslot.schedule, timeslot); 
+                              if (bulkDeleteMode) {
+                                onAppointmentSelect && onAppointmentSelect(timeslot.schedule.id);
+                              } else {
+                                // Pass both the appointment and the specific timeslot
+                                onAppointmentEdit(timeslot.schedule, timeslot); 
+                              }
                             }}
                             style={{
                               width: timeslots.length > 1 ? `${100/timeslots.length}%` : '100%',
                               display: 'inline-block',
-                              verticalAlign: 'top'                            }}
-                            title={getAppointmentTitle(timeslot)}
+                              verticalAlign: 'top',
+                              position: 'relative',
+                              cursor: bulkDeleteMode ? 'pointer' : 'default'
+                            }}
+                            title={bulkDeleteMode ? 'Click to select/deselect' : getAppointmentTitle(timeslot)}
                           >
+                            {bulkDeleteMode && (
+                              <div style={{
+                                position: 'absolute',
+                                top: '2px',
+                                left: '2px',
+                                background: 'white',
+                                borderRadius: '2px',
+                                border: '1px solid #ccc',
+                                width: '16px',
+                                height: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '10px',
+                                zIndex: 10
+                              }}>
+                                {selectedAppointments?.has(timeslot.schedule.id) ? '✓' : ''}
+                              </div>
+                            )}
                             <div className="timeslot-patient">{getPatientDisplay(timeslot.schedule)}</div>
                             <div className="timeslot-provider">{getProviderDisplay(timeslot.schedule)}</div>
                             {timeslot.service?.name && (
                               <div className="timeslot-service">{timeslot.service.name}</div>
                             )}
-                            {timeslots.length === 1 && <div className="drag-handle">⋮⋮</div>}
+                            {timeslots.length === 1 && !bulkDeleteMode && <div className="drag-handle">⋮⋮</div>}
                           </div>
                         ))}
                       </div>
@@ -550,7 +681,7 @@ const ScheduleCalendar = () => {
       </div>
     );
   };  // Day View Component
-  const DayView = ({ calendarData, currentDate, onTimeSlotClick, onAppointmentEdit, onDragStart, onDragEnd, onDragOver, onDrop, isDragging }) => {
+  const DayView = ({ calendarData, currentDate, onTimeSlotClick, onAppointmentEdit, onDragStart, onDragEnd, onDragOver, onDrop, isDragging, bulkDeleteMode, selectedAppointments, onAppointmentSelect }) => {
     const timeSlots = generateTimeSlots();
     const dateStr = formatDateToString(currentDate);
 
@@ -581,29 +712,55 @@ const ScheduleCalendar = () => {
                   {timeslots.length > 0 ? (
                     <div className={`timeslots-container ${timeslots.length > 1 ? 'multiple' : ''}`}>
                       {timeslots.map((timeslot, index) => (
-                        <div 
-                          key={`${timeslot.appointmentId}-${timeslot.id}-${index}`}
-                          className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)} ${getAppointmentClass(timeslot.schedule)}`}
-                          draggable="true"
-                          onDragStart={(e) => onDragStart(e, timeslot.schedule)}
+                                                  <div 
+                            key={`${timeslot.appointmentId}-${timeslot.id}-${index}`}
+                            className={`timeslot-item ${timeslots.length > 1 ? 'compact' : ''} ${getStatusClass(timeslot.status)} ${getAppointmentClass(timeslot.schedule)} ${bulkDeleteMode ? 'bulk-delete-mode' : ''} ${bulkDeleteMode && selectedAppointments?.has(timeslot.schedule.id) ? 'selected' : ''}`}
+                            draggable={!bulkDeleteMode ? "true" : "false"}
+                          onDragStart={(e) => !bulkDeleteMode && onDragStart(e, timeslot.schedule)}
                           onDragEnd={onDragEnd}
                           onClick={(e) => { 
                             e.stopPropagation(); 
-                            // Pass both the appointment and the specific timeslot
-                            onAppointmentEdit(timeslot.schedule, timeslot); 
+                            if (bulkDeleteMode) {
+                              onAppointmentSelect && onAppointmentSelect(timeslot.schedule.id);
+                            } else {
+                              // Pass both the appointment and the specific timeslot
+                              onAppointmentEdit(timeslot.schedule, timeslot); 
+                            }
                           }}
                           style={{
                             width: timeslots.length > 1 ? `${100/timeslots.length}%` : '100%',
                             display: 'inline-block',
-                            verticalAlign: 'top'
-                          }}                          title={getAppointmentTitle(timeslot)}
-                        >
-                          <div className="timeslot-patient">{getPatientDisplay(timeslot.schedule)}</div>
+                            verticalAlign: 'top',
+                            position: 'relative',
+                            cursor: bulkDeleteMode ? 'pointer' : 'default'
+                          }}
+                                                     title={bulkDeleteMode ? 'Click to select/deselect' : getAppointmentTitle(timeslot)}
+                          >
+                            {bulkDeleteMode && (
+                              <div style={{
+                                position: 'absolute',
+                                top: '2px',
+                                left: '2px',
+                                background: 'white',
+                                borderRadius: '2px',
+                                border: '1px solid #ccc',
+                                width: '16px',
+                                height: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '10px',
+                                zIndex: 10
+                              }}>
+                                {selectedAppointments?.has(timeslot.schedule.id) ? '✓' : ''}
+                              </div>
+                            )}
+                            <div className="timeslot-patient">{getPatientDisplay(timeslot.schedule)}</div>
                           <div className="timeslot-provider">{getProviderDisplay(timeslot.schedule)}</div>
                           {timeslot.service?.name && (
                             <div className="timeslot-service">{timeslot.service.name}</div>
                           )}
-                          {timeslots.length === 1 && <div className="drag-handle">⋮⋮</div>}
+                                                      {timeslots.length === 1 && !bulkDeleteMode && <div className="drag-handle">⋮⋮</div>}
                         </div>
                       ))}
                     </div>                  ) : (
@@ -1166,41 +1323,109 @@ const ScheduleCalendar = () => {
 
           <div className="date-navigation">
             <button onClick={() => navigateDate(-1)}>‹</button>
-            <span className="current-date">{getViewTitle()}</span>
+            <span className="current-date" onClick={handleWeekPickerOpen} style={{ cursor: 'pointer', textDecoration: 'underline' }} title="Click to choose specific week">
+              {getViewTitle()}
+            </span>
             <button onClick={() => navigateDate(1)}>›</button>
+            <button onClick={goToToday} className="today-btn" title="Go to current week">📍</button>
+            <button onClick={handleWeekPickerOpen} className="week-picker-btn" title="Choose specific week">
+              📅
+            </button>
           </div>          <button 
             className="quick-schedule-btn"
             onClick={() => setShowQuickSchedule(true)}
+            title="Create quick schedule"
           >
-            + {schedule('quickSchedule')}
+            ➕
           </button>
             <button 
             className="recurring-schedule-btn"
             onClick={() => setShowRecurringSchedule(true)}
+            title="Create recurring schedule"
             style={{
               background: '#22C7EE',
               color: 'white',
               border: 'none',
-              padding: '8px 16px',
+              padding: '8px 12px',
               borderRadius: '6px',
               cursor: 'pointer',
               fontWeight: '500',
-              fontSize: '14px',
+              fontSize: '16px',
               transition: 'all 0.2s',
               marginLeft: '8px'
             }}
           >
-            🔄 {schedule('recurringSchedule')}
+            🔄
+          </button>
+          
+          <button 
+            className="bulk-delete-toggle-btn"
+            onClick={toggleBulkDeleteMode}
+            title={bulkDeleteMode ? 'Cancel bulk delete mode' : 'Enable bulk delete mode'}
+            style={{
+              background: bulkDeleteMode ? '#dc3545' : '#6c757d',
+              color: 'white',
+              border: 'none',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: '500',
+              fontSize: '16px',
+              transition: 'all 0.2s',
+              marginLeft: '8px'
+            }}
+          >
+            {bulkDeleteMode ? '✖️' : '🗑️'}
           </button>
           
           <button 
             className="recap-btn"
             onClick={() => setShowRecapModal(true)}
+            title="View summary and statistics"
           >
-            📊 {schedule('viewSummary')}
+            📊
           </button>
         </div>
-      </div>      <div className="calendar-filters">
+      </div>      {/* Bulk Delete Controls */}
+      {bulkDeleteMode && (
+        <div className="bulk-delete-controls" style={{
+          background: '#fff3cd',
+          border: '1px solid #ffeaa7',
+          borderRadius: '8px',
+          padding: '15px',
+          marginBottom: '15px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span style={{ fontWeight: '600', color: '#856404' }}>
+              Bulk Delete Mode: {selectedAppointments.size} appointment{selectedAppointments.size !== 1 ? 's' : ''} selected
+            </span>
+            <button onClick={selectAllAppointments} className="btn-link" style={{ color: '#007bff', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Select All</button>
+            <button onClick={clearAllSelections} className="btn-link" style={{ color: '#007bff', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Clear All</button>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              disabled={selectedAppointments.size === 0}
+              style={{
+                background: '#dc3545',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                cursor: selectedAppointments.size === 0 ? 'not-allowed' : 'pointer',
+                opacity: selectedAppointments.size === 0 ? 0.5 : 1
+              }}
+            >
+              🗑️ Delete Selected ({selectedAppointments.size})
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="calendar-filters">
         <div className="provider-filter">
           <label htmlFor="provider-select">{schedule('filterByProvider')}:</label>
           <select
@@ -1272,6 +1497,9 @@ const ScheduleCalendar = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               isDragging={isDragging}
+              bulkDeleteMode={bulkDeleteMode}
+              selectedAppointments={selectedAppointments}
+              onAppointmentSelect={toggleAppointmentSelection}
             />
           ) : viewType === 'day' ? (
             <DayView 
@@ -1284,6 +1512,9 @@ const ScheduleCalendar = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               isDragging={isDragging}
+              bulkDeleteMode={bulkDeleteMode}
+              selectedAppointments={selectedAppointments}
+              onAppointmentSelect={toggleAppointmentSelection}
             />
           ) : (
             <MonthView 
@@ -1348,6 +1579,123 @@ const ScheduleCalendar = () => {
           onClose={() => setShowRecapModal(false)}
           recapData={generateRecapData()}
         />
+      )}
+
+      {/* Week Picker Modal */}
+      {showWeekPicker && (
+        <div className="modal-overlay" onClick={() => setShowWeekPicker(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            maxWidth: '400px',
+            width: '100%'
+          }}>
+            <h3>Choose Week</h3>
+            <p>Select any date to jump to that week:</p>
+            <input
+              type="date"
+              value={weekPickerDate}
+              onChange={(e) => setWeekPickerDate(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                margin: '10px 0',
+                border: '1px solid #ddd',
+                borderRadius: '4px'
+              }}
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button onClick={() => setShowWeekPicker(false)} style={{
+                padding: '8px 16px',
+                border: '1px solid #ddd',
+                background: '#f8f9fa',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}>
+                Cancel
+              </button>
+              <button onClick={handleWeekPickerSubmit} style={{
+                padding: '8px 16px',
+                border: 'none',
+                background: '#007bff',
+                color: 'white',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}>
+                Go to Week
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="modal-overlay" onClick={() => setShowBulkDeleteConfirm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            maxWidth: '500px',
+            width: '100%'
+          }}>
+            <h3 style={{ color: '#dc3545' }}>⚠️ Confirm Bulk Delete</h3>
+            <p>
+              Are you sure you want to delete <strong>{selectedAppointments.size}</strong> appointment{selectedAppointments.size !== 1 ? 's' : ''}?
+            </p>
+            <div style={{
+              background: '#f8f9fa',
+              padding: '15px',
+              borderRadius: '4px',
+              margin: '15px 0',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }}>
+              <strong>Appointments to delete:</strong>
+              <ul style={{ margin: '10px 0 0 20px' }}>
+                {Array.from(selectedAppointments).map(appointmentId => {
+                  const appointment = calendarData.find(appt => appt.id === appointmentId);
+                  if (!appointment) return null;
+                  return (
+                    <li key={appointmentId}>
+                      {appointment.date} - {getPatientDisplay(appointment)} - {getProviderDisplay(appointment)}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <p style={{ color: '#856404', fontSize: '14px' }}>
+              <strong>Note:</strong> This action cannot be undone. Associated timeslots will also be deleted.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button onClick={() => setShowBulkDeleteConfirm(false)} style={{
+                padding: '8px 16px',
+                border: '1px solid #ddd',
+                background: '#f8f9fa',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}>
+                Cancel
+              </button>
+              <button 
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
+                style={{
+                  padding: '8px 16px',
+                  border: 'none',
+                  background: '#dc3545',
+                  color: 'white',
+                  borderRadius: '4px',
+                  cursor: isBulkDeleting ? 'not-allowed' : 'pointer',
+                  opacity: isBulkDeleting ? 0.7 : 1
+                }}
+              >
+                {isBulkDeleting ? '🔄 Deleting...' : '🗑️ Delete All'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

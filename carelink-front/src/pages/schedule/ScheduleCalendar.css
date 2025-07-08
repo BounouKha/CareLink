@@ -106,20 +106,131 @@
 }
 
 .quick-schedule-btn {
-  padding: 8px 16px;
-  background: #28a745;
+  padding: 8px 12px;
+  background: #2ba4f5;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.2s;
+  min-width: 40px;
 }
 
 .quick-schedule-btn:hover {
-  background: #218838;
+  background: #1e90ff;
   transform: translateY(-1px);
+}
+
+.recap-btn {
+  padding: 8px 12px;
+  background: #6f42c1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 16px;
+  transition: all 0.2s;
+  min-width: 40px;
+}
+
+.recap-btn:hover {
+  background: #5a32a3;
+  transform: translateY(-1px);
+}
+
+/* Week Picker Styles */
+.today-btn, .week-picker-btn {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin-left: 8px;
+  min-width: 40px;
+}
+
+.today-btn:hover, .week-picker-btn:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+.current-date {
+  border-bottom: 1px dashed #007bff;
+}
+
+.current-date:hover {
+  color: #007bff;
+}
+
+/* Bulk Delete Styles */
+.bulk-delete-controls {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.timeslot-item.bulk-delete-mode {
+  border: 2px solid #ffc107 !important;
+  transition: all 0.2s;
+}
+
+.timeslot-item.bulk-delete-mode:hover {
+  border-color: #ffcd39 !important;
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.timeslot-item.bulk-delete-mode.selected {
+  border-color: #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.timeslot-item.bulk-delete-mode .drag-handle {
+  display: none !important;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .calendar-filters {
