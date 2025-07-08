@@ -447,6 +447,10 @@ const PatientInvoices = ({ patientId }) => {
               <div className="modal-body">
                 <div className="invoice-summary">
                   <div className="summary-item">
+                    <label>Patient:</label>
+                    <span>{invoiceDetail.patient_name || 'Unknown Patient'}</span>
+                  </div>
+                  <div className="summary-item">
                     <label>Period:</label>
                     <span>{invoiceDetail.period_start} - {invoiceDetail.period_end}</span>
                   </div>
@@ -457,6 +461,10 @@ const PatientInvoices = ({ patientId }) => {
                     </span>
                   </div>
                   <div className="summary-item">
+                    <label>Total Hours:</label>
+                    <span>{invoiceDetail.total_hours || 0}h</span>
+                  </div>
+                  <div className="summary-item">
                     <label>Total Amount:</label>
                     <span className="amount-highlight">€{invoiceDetail.amount}</span>
                   </div>
@@ -465,11 +473,119 @@ const PatientInvoices = ({ patientId }) => {
                     <span>{new Date(invoiceDetail.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
+
+                {/* Insurance Coverage Summary */}
+                {invoiceDetail.insurance_coverage_summary && (
+                  <div className="insurance-summary">
+                    <h4>🏥 Insurance Coverage Summary</h4>
+                    <div className="coverage-stats">
+                      <div className="coverage-item">
+                        <span className="coverage-label">Total Services:</span>
+                        <span className="coverage-value">{invoiceDetail.insurance_coverage_summary.total_lines}</span>
+                      </div>
+                      <div className="coverage-item">
+                        <span className="coverage-label">Covered by Insurance:</span>
+                        <span className="coverage-value">{invoiceDetail.insurance_coverage_summary.covered_by_insurance}</span>
+                      </div>
+                      <div className="coverage-item">
+                        <span className="coverage-label">Patient Pays:</span>
+                        <span className="coverage-value amount-highlight">€{invoiceDetail.insurance_coverage_summary.patient_amount}</span>
+                      </div>
+                      <div className="coverage-item">
+                        <span className="coverage-label">Coverage:</span>
+                        <span className="coverage-value">{invoiceDetail.insurance_coverage_summary.coverage_percentage}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Service Breakdown */}
+                {invoiceDetail.lines_breakdown && (
+                  <div className="service-breakdown">
+                    <h4>📊 Service Breakdown</h4>
+                    <div className="breakdown-grid">
+                      {invoiceDetail.lines_breakdown.service_1_2.count > 0 && (
+                        <div className="breakdown-card">
+                          <div className="breakdown-header">
+                            <span className="service-icon">🏠</span>
+                            <span className="service-title">Family Help & Housekeeping</span>
+                          </div>
+                          <div className="breakdown-stats">
+                            <div className="stat-item">
+                              <span className="stat-label">Sessions:</span>
+                              <span className="stat-value">{invoiceDetail.lines_breakdown.service_1_2.count}</span>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Hours:</span>
+                              <span className="stat-value">{invoiceDetail.lines_breakdown.service_1_2.total_hours.toFixed(1)}h</span>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Amount:</span>
+                              <span className="stat-value">€{invoiceDetail.lines_breakdown.service_1_2.total_amount.toFixed(2)}</span>
+                            </div>
+                          </div>
+                          <div className="breakdown-note">
+                            <small>💡 Patient always pays for these services</small>
+                          </div>
+                        </div>
+                      )}
+
+                      {invoiceDetail.lines_breakdown.service_3.count > 0 && (
+                        <div className="breakdown-card">
+                          <div className="breakdown-header">
+                            <span className="service-icon">🏥</span>
+                            <span className="service-title">Nursing Care</span>
+                          </div>
+                          <div className="breakdown-stats">
+                            <div className="stat-item">
+                              <span className="stat-label">Sessions:</span>
+                              <span className="stat-value">{invoiceDetail.lines_breakdown.service_3.count}</span>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Hours:</span>
+                              <span className="stat-value">{invoiceDetail.lines_breakdown.service_3.total_hours.toFixed(1)}h</span>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Amount:</span>
+                              <span className="stat-value">€{invoiceDetail.lines_breakdown.service_3.total_amount.toFixed(2)}</span>
+                            </div>
+                          </div>
+                          <div className="breakdown-note">
+                            <small>💡 €0.00 if prescription, INAMI rate if no prescription</small>
+                          </div>
+                        </div>
+                      )}
+
+                      {invoiceDetail.lines_breakdown.other.count > 0 && (
+                        <div className="breakdown-card">
+                          <div className="breakdown-header">
+                            <span className="service-icon">🔧</span>
+                            <span className="service-title">Other Services</span>
+                          </div>
+                          <div className="breakdown-stats">
+                            <div className="stat-item">
+                              <span className="stat-label">Sessions:</span>
+                              <span className="stat-value">{invoiceDetail.lines_breakdown.other.count}</span>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Hours:</span>
+                              <span className="stat-value">{invoiceDetail.lines_breakdown.other.total_hours.toFixed(1)}h</span>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Amount:</span>
+                              <span className="stat-value">€{invoiceDetail.lines_breakdown.other.total_amount.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="invoice-lines-section">
-                  <h4>Invoice Details</h4>
+                  <h4>📋 Detailed Invoice Lines</h4>
                   <div className="lines-table-container">
-                    <table className="invoice-lines-table">
+                    <table className="invoice-lines-table enhanced">
                       <thead>
                         <tr>
                           <th>Date</th>
@@ -477,24 +593,67 @@ const PatientInvoices = ({ patientId }) => {
                           <th>Service</th>
                           <th>Provider</th>
                           <th>Duration</th>
-                          <th>Status</th>
+                          <th>Rate</th>
+                          <th>Coverage</th>
                           <th>Price</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {invoiceDetail.lines?.map(line => (
-                          <tr key={line.id}>
+                          <tr key={line.id} className={line.covered_by_insurance ? 'covered-line' : 'patient-pays-line'}>
                             <td>{line.date}</td>
-                            <td>{line.start_time} - {line.end_time}</td>
-                            <td>{line.service_name}</td>
+                            <td className="time-cell">
+                              <div className="time-range">
+                                <span className="start-time">{line.start_time}</span>
+                                <span className="time-separator">-</span>
+                                <span className="end-time">{line.end_time}</span>
+                              </div>
+                            </td>
+                            <td className="service-cell">
+                              <div className="service-info">
+                                <span className="service-name">{line.service_name}</span>
+                                {line.pricing_explanation && (
+                                  <div className="pricing-explanation" title={line.pricing_explanation}>
+                                    <small>{line.pricing_explanation}</small>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                             <td>{line.provider_name}</td>
-                            <td>{calculateDuration(line.start_time, line.end_time)}h</td>
+                            <td className="duration-cell">
+                              <span className="duration-hours">{line.duration_hours || calculateDuration(line.start_time, line.end_time)}h</span>
+                            </td>
+                            <td className="rate-cell">
+                              {line.hourly_rate && line.hourly_rate > 0 ? (
+                                <span className="hourly-rate">€{line.hourly_rate}/h</span>
+                              ) : (
+                                <span className="no-rate">N/A</span>
+                              )}
+                            </td>
+                            <td className="coverage-cell">
+                              {line.covered_by_insurance ? (
+                                <span className="coverage-badge covered">
+                                  <span className="coverage-icon">🏥</span>
+                                  <span className="coverage-text">INAMI</span>
+                                </span>
+                              ) : (
+                                <span className="coverage-badge patient">
+                                  <span className="coverage-icon">👤</span>
+                                  <span className="coverage-text">Patient</span>
+                                </span>
+                              )}
+                            </td>
+                            <td className="price-cell">
+                              <span className={`price-amount ${line.covered_by_insurance ? 'covered-price' : 'patient-price'}`}>
+                                €{line.price}
+                              </span>
+                            </td>
                             <td>
                               <span className={`status-badge status-${line.status?.toLowerCase()?.replace(' ', '-')}`}>
                                 {line.status}
                               </span>
                             </td>
-                            <td>€{line.price}</td>
                           </tr>
                         ))}
                       </tbody>
