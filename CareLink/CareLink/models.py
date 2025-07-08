@@ -1353,5 +1353,31 @@ class NotificationPreference(models.Model):
     def __str__(self):
         return f"Notification preferences for {self.user.get_full_name()}"
 
+class PatientServicePrice(models.Model):
+    """
+    Stores custom pricing for specific patient-service combinations
+    Used for services with variable pricing (like family help, housekeeping)
+    """
+    patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
+    service = models.ForeignKey('Service', on_delete=models.CASCADE)
+    custom_price = models.DecimalField(max_digits=6, decimal_places=2, help_text="Custom price for this patient-service combination")
+    price_type = models.CharField(max_length=20, choices=[
+        ('hourly', 'Per Hour'),
+        ('session', 'Per Session'),
+        ('fixed', 'Fixed Price')
+    ], default='hourly')
+    created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, help_text="Coordinator who set this price")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(null=True, blank=True, help_text="Notes about why this price was set")
+    
+    class Meta:
+        unique_together = ['patient', 'service']
+        verbose_name = "Patient Service Price"
+        verbose_name_plural = "Patient Service Prices"
+    
+    def __str__(self):
+        return f"{self.patient.user.firstname} {self.patient.user.lastname} - {self.service.name}: €{self.custom_price}/{self.price_type}"
+
 
 

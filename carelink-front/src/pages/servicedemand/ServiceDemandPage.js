@@ -535,9 +535,9 @@ const ServiceDemandPage = () => {
                                     </div>
                                     <div className="card-body pt-2 bg-white">
                                         <div className="row mb-2">                                            <div className="col-md-6">
-                                                <p className="mb-1"><strong>{servicedemands('service')}:</strong> {demand.service_info?.name || 'N/A'}</p>
-                                                {demand.patient_info && (
-                                                    <p className="mb-1"><strong>{servicedemands('patient')}:</strong> {demand.patient_info.firstname} {demand.patient_info.lastname} - {demand.patient_info.birthdate || 'DOB not available'}</p>
+                                                <p className="mb-1"><strong>{servicedemands('service')}:</strong> {demand.service_name || 'N/A'}</p>
+                                                {demand.patient_name && (
+                                                    <p className="mb-1"><strong>{servicedemands('patient')}:</strong> {demand.patient_name}</p>
                                                 )}
                                                 <p className="mb-1"><strong>{servicedemands('description')}:</strong> {demand.description}</p>
                                             </div>
@@ -559,8 +559,8 @@ const ServiceDemandPage = () => {
                                                     {demand.days_since_created} {demand.days_since_created === 1 ? servicedemands('dayAgo') : servicedemands('daysAgo')}
                                                 </small>
                                             )}
-                                            {demand.managed_by_info && (
-                                                <small>{servicedemands('managedBy')}: {demand.managed_by_info.firstname} {demand.managed_by_info.lastname}</small>
+                                            {demand.managed_by_name && (
+                                                <small>{servicedemands('managedBy')}: {demand.managed_by_name}</small>
                                             )}
                                         </div>
                                         {/* Show More Info button for all users to see coordinator notes */}                                        <div>

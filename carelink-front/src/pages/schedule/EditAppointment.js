@@ -68,6 +68,13 @@ const EditAppointment = ({
   const [showInamiModal, setShowInamiModal] = useState(false);
   const [inamiData, setInamiData] = useState(null);
 
+  // Custom pricing states
+  const [showCustomPricing, setShowCustomPricing] = useState(false);
+  const [customPrice, setCustomPrice] = useState('');
+  const [priceType, setPriceType] = useState('hourly');
+  const [hasCustomPrice, setHasCustomPrice] = useState(false);
+  const [priceNotes, setPriceNotes] = useState('');
+
   // Conflict management
   const {
     isCheckingConflicts,
@@ -79,7 +86,7 @@ const EditAppointment = ({
   } = useConflictManager();
   
   // Use modern authentication API
-  const { get, put, delete: del } = useAuthenticatedApi();
+  const { get, post, put, delete: del } = useAuthenticatedApi();
   
   useEffect(() => {
     if (isOpen && appointment) {
@@ -134,15 +141,23 @@ const EditAppointment = ({
       } else {
         setPatientSearch('');
       }        // Load initial data with loading states
-      executeWithLoading(async () => {
-        setIsDataLoading(true);
-        await Promise.all([
-          fetchPatients(), 
-          fetchServices(),
-          appointment.patient?.id ? fetchPrescriptions(appointment.patient.id) : Promise.resolve()
-        ]);
-        setIsDataLoading(false);
-      }, '', 'modal');
+        executeWithLoading(async () => {
+          setIsDataLoading(true);
+          await Promise.all([
+            fetchPatients(), 
+            fetchServices(),
+            appointment.patient?.id ? fetchPrescriptions(appointment.patient.id) : Promise.resolve()
+          ]);
+          
+          // Check custom pricing if patient and service are selected and it's service 1 or 2
+          const serviceId = timeslot?.service?.id;
+          const patientId = appointment.patient?.id;
+          if (patientId && serviceId && (serviceId === 1 || serviceId === '1' || serviceId === 2 || serviceId === '2')) {
+            await checkCustomPricing(patientId, serviceId);
+          }
+          
+          setIsDataLoading(false);
+        }, '', 'modal');
     }
   }, [isOpen, appointment]);
   const fetchPatients = async () => {
@@ -213,6 +228,35 @@ const EditAppointment = ({
     // Clear INAMI data if service changes from 3 to something else
     if (name === 'service_id' && value !== '3' && value !== 3 && inamiData) {
       setInamiData(null);
+    }
+
+    // Check for custom pricing when both patient and service are selected
+    if (name === 'service_id' && formData.patient_id && value) {
+      checkCustomPricing(formData.patient_id, value);
+    }
+    
+    // Clear custom pricing states if service changes away from 1 or 2
+    if (name === 'service_id' && value !== '1' && value !== 1 && value !== '2' && value !== 2) {
+      setShowCustomPricing(false);
+      setHasCustomPrice(false);
+      setCustomPrice('');
+      setPriceNotes('');
+    }
+
+    // Fetch prescriptions and check custom pricing when patient is selected
+    if (name === 'patient_id') {
+      fetchPrescriptions(value);
+      
+      // Clear custom pricing states when patient changes
+      setShowCustomPricing(false);
+      setHasCustomPrice(false);
+      setCustomPrice('');
+      setPriceNotes('');
+      
+      // If service is already selected, check custom pricing
+      if (formData.service_id) {
+        checkCustomPricing(value, formData.service_id);
+      }
     }
   };
 
@@ -289,6 +333,16 @@ const EditAppointment = ({
       if (formData.prescription_id) {
         submitData.prescription_id = formData.prescription_id;
         console.log('[EditAppointment] Including prescription ID in submission:', formData.prescription_id);
+      }
+
+      // Include custom pricing data if available
+      if (hasCustomPrice && customPrice && (formData.service_id === '1' || formData.service_id === 1 || formData.service_id === '2' || formData.service_id === 2)) {
+        submitData.custom_price = customPrice;
+        submitData.price_type = priceType;
+        if (priceNotes) {
+          submitData.price_notes = priceNotes;
+        }
+        console.log('[EditAppointment] Including custom pricing data:', { customPrice, priceType, priceNotes });
       }      // Check for conflicts first (unless forcing update)
       if (!forceUpdate) {
         // Add exclude IDs to exclude current appointment from conflict check
@@ -353,7 +407,6 @@ const EditAppointment = ({
       setShowDeleteConfirm(false);
     }
   };  const handleClose = () => {
-    resetConflicts();
     onClose();
   };
 
@@ -428,6 +481,72 @@ const EditAppointment = ({
     fetchPrescriptions(patient.id);
   };
 
+  // Custom pricing functions (same as QuickSchedule)
+  const checkCustomPricing = async (patientId, serviceId) => {
+    try {
+      const response = await get(`http://localhost:8000/schedule/patient-service-price/?patient_id=${patientId}&service_id=${serviceId}`);
+      
+      if (response.has_custom_price) {
+        setHasCustomPrice(true);
+        setCustomPrice(response.custom_price);
+        setPriceType(response.price_type);
+        setPriceNotes(response.notes || '');
+        console.log('[EditAppointment] Found custom price:', response.custom_price);
+      } else {
+        setHasCustomPrice(false);
+        setCustomPrice('');
+        setPriceNotes('');
+        
+        // For service ID 1 or 2 (family help), show pricing options
+        if (serviceId === '1' || serviceId === 1 || serviceId === '2' || serviceId === 2) {
+          setShowCustomPricing(true);
+        }
+      }
+    } catch (error) {
+      console.error('[EditAppointment] Error checking custom pricing:', error);
+    }
+  };
+
+  const saveCustomPricing = async () => {
+    try {
+      const response = await post('http://localhost:8000/schedule/patient-service-price/', {
+        patient_id: formData.patient_id,
+        service_id: formData.service_id,
+        custom_price: customPrice,
+        price_type: priceType,
+        notes: priceNotes
+      });
+      
+      if (response.success) {
+        setHasCustomPrice(true);
+        setShowCustomPricing(false);
+        console.log('[EditAppointment] Custom price saved:', customPrice);
+      }
+    } catch (error) {
+      console.error('[EditAppointment] Error saving custom price:', error);
+      setError('Failed to save custom pricing');
+    }
+  };
+
+  // Add custom pricing event handlers
+  const handleEditCustomPrice = () => {
+    setShowCustomPricing(true);
+  };
+
+  const handleCancelCustomPricing = () => {
+    setShowCustomPricing(false);
+    // Reset to original values if canceling edit
+    if (hasCustomPrice) {
+      // Keep the existing values if we already have a custom price
+    } else {
+      setCustomPrice('');
+      setPriceNotes('');
+    }
+  };
+
+  const handleSaveCustomPricing = () => {
+    saveCustomPricing();
+  };
   if (!isOpen) return null;
 
   return (
@@ -573,7 +692,7 @@ const EditAppointment = ({
                   <option value="">{schedule('selectService')}</option>
                   {services.map(service => (
                     <option key={service.id} value={service.id}>
-                      {service.id === 3 ? `${service.name} (Soins Infirmiers INAMI)` : service.name} - €{service.price}
+                      {service.id === 3 ? `${service.name} (Soins Infirmiers INAMI)` : service.name}
                     </option>
                   ))}
                 </select>
@@ -645,6 +764,122 @@ const EditAppointment = ({
                 </select>
               </div>
             </div>
+
+            {/* Custom Pricing Section - for service ID 1 or 2 (family help services) */}
+            {(formData.service_id === '1' || formData.service_id === 1 || formData.service_id === '2' || formData.service_id === 2) && formData.patient_id && (
+              <div className="custom-pricing-section">
+                <div className="custom-pricing-header">
+                  <h4>💰 Custom Pricing</h4>
+                  {hasCustomPrice && (
+                    <button 
+                      type="button" 
+                      className="edit-price-btn"
+                      onClick={() => setShowCustomPricing(true)}
+                      title="Edit custom price for this patient-service combination"
+                    >
+                      ✏️ Edit Price
+                    </button>
+                  )}
+                </div>
+                
+                {showCustomPricing ? (
+                  <div className="pricing-configuration">
+                    <div className="pricing-status">
+                      <span className="status-indicator configuring">
+                        ⚙️ {hasCustomPrice ? 'Edit Custom Price' : 'Set Custom Price'}
+                      </span>
+                    </div>
+                    <div className="pricing-form">
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Price (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Enter price"
+                            value={customPrice}
+                            onChange={(e) => setCustomPrice(e.target.value)}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Price Type</label>
+                          <select 
+                            value={priceType} 
+                            onChange={(e) => setPriceType(e.target.value)}
+                          >
+                            <option value="hourly">Per Hour</option>
+                            <option value="fixed">Fixed Price</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Notes (Optional)</label>
+                        <textarea
+                          placeholder="Additional notes about this pricing..."
+                          value={priceNotes}
+                          onChange={(e) => setPriceNotes(e.target.value)}
+                          rows="2"
+                        />
+                      </div>
+                      <div className="pricing-actions">
+                        <button 
+                          type="button" 
+                          className="save-price-btn"
+                          onClick={saveCustomPricing}
+                          disabled={!customPrice}
+                        >
+                          Save Price
+                        </button>
+                        <button 
+                          type="button" 
+                          className="cancel-price-btn"
+                          onClick={() => setShowCustomPricing(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : hasCustomPrice ? (
+                  <div className="pricing-summary">
+                    <div className="pricing-status">
+                      <span className="status-indicator configured">
+                        ✅ Custom Price Set
+                      </span>
+                    </div>
+                    <div className="pricing-details">
+                      <div className="detail-item">
+                        <strong>Price:</strong> €{customPrice} ({priceType})
+                      </div>
+                      {priceNotes && (
+                        <div className="detail-item">
+                          <strong>Notes:</strong> {priceNotes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pricing-summary">
+                    <div className="pricing-status">
+                      <span className="status-indicator not-configured">
+                        ⚠️ No Custom Price Set
+                      </span>
+                    </div>
+                    <p className="pricing-note">
+                      Set a custom price for this patient-service combination.
+                    </p>
+                    <button 
+                      type="button" 
+                      className="set-price-btn"
+                      onClick={() => setShowCustomPricing(true)}
+                    >
+                      Set Custom Price
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* INAMI Configuration Section for Service 3 */}
             {(formData.service_id === '3' || formData.service_id === 3) && (
@@ -735,15 +970,17 @@ const EditAppointment = ({
               </div>
             )}
 
-            <div className="form-group">
-              <label>{schedule('notes')}</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows="3"
-                placeholder={placeholders('addNotesOrInstructions')}
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label>{schedule('notes')}</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows="3"
+                  placeholder={placeholders('addNotesOrInstructions')}
+                />
+              </div>
             </div>            <div className="form-actions">
               <div className="primary-actions">
                 <button type="button" onClick={onClose} className="cancel-btn">
@@ -862,6 +1099,8 @@ const EditAppointment = ({
           onClose={handleInamiClose}
           onSave={handleInamiSave}
           initialData={inamiData}
+          patientData={patients.find(p => p.id === parseInt(formData.patient_id))}
+          prescriptionData={prescriptions.find(p => p.id === parseInt(formData.prescription_id))}
         />
 
         {/* Conflict Management Dialog */}

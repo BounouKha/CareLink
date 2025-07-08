@@ -80,7 +80,7 @@ const ServiceDemandMoreInfo = ({
                                                         {servicedemands('service')}
                                                     </label>
                                                     <div className="form-control-static p-3 bg-light rounded border">
-                                                        {selectedDemand.service_info?.name || 'N/A'}
+                                                        {selectedDemand.service_name || 'N/A'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -91,7 +91,7 @@ const ServiceDemandMoreInfo = ({
                                                         {servicedemands('patient')}
                                                     </label>
                                                     <div className="form-control-static p-3 bg-light rounded border">
-                                                        {selectedDemand.patient_info?.firstname} {selectedDemand.patient_info?.lastname}
+                                                        {selectedDemand.patient_name || 'N/A'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -460,10 +460,10 @@ const ServiceDemandMoreInfo = ({
                                                     <span>{new Date(selectedDemand.completed_at).toLocaleString()}</span>
                                                 </div>
                                             )}
-                                            {selectedDemand.managed_by_info && (
+                                            {selectedDemand.managed_by_name && (
                                                 <div className="d-flex align-items-center mb-2">
                                                     <span className="badge bg-secondary me-3">{servicedemands('managedBy')}</span>
-                                                    <span>{selectedDemand.managed_by_info.firstname} {selectedDemand.managed_by_info.lastname}</span>
+                                                    <span>{selectedDemand.managed_by_name}</span>
                                                 </div>
                                             )}
                                         </div>

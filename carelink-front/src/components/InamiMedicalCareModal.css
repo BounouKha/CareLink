@@ -206,6 +206,20 @@
   color: #1e40af; /* Blue for total */
 }
 
+/* Enhanced pricing styles */
+.pricing-value.free {
+  color: #059669 !important;
+  font-weight: bold;
+}
+
+.pricing-value.patient.free::after {
+  content: " (GRATUIT)";
+  font-size: 0.8em;
+  color: #059669;
+  font-weight: normal;
+  margin-left: 5px;
+}
+
 .inami-code-display {
   background: white;
   border: 2px solid #3b82f6;
@@ -239,6 +253,46 @@
   text-align: center;
   font-weight: 600;
   color: #92400e;
+}
+
+/* BIM/Prescription status styles */
+.payment-status {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #0ea5e9;
+  border-radius: 8px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 5px 5px 10px 0;
+  border: 2px solid;
+}
+
+.status-badge.bim {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.status-badge.prescription {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border-color: #10b981;
+}
+
+.status-explanation {
+  color: #0369a1;
+  font-style: italic;
+  font-size: 0.9em;
+  margin-top: 8px;
+  text-align: center;
+  font-weight: 500;
 }
 
 /* Modal Footer */
