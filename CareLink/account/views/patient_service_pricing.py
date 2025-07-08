@@ -48,7 +48,8 @@ class PatientServicePriceViewSet(APIView):
                     'patient_name': patient_name,
                     'service': record.service.id,
                     'service_name': service_name,
-                    'hourly_rate': str(record.hourly_rate),
+                    'hourly_rate': str(record.custom_price),
+                    'price_type': record.price_type,
                     'notes': record.notes,
                     'created_at': record.created_at.isoformat(),
                     'updated_at': record.updated_at.isoformat() if hasattr(record, 'updated_at') else None,
@@ -135,8 +136,10 @@ class PatientServicePriceViewSet(APIView):
             pricing_record = PatientServicePrice.objects.create(
                 patient=patient,
                 service=service,
-                hourly_rate=hourly_rate_decimal,
-                notes=notes.strip() if notes else None
+                custom_price=hourly_rate_decimal,
+                price_type='hourly',
+                notes=notes.strip() if notes else None,
+                created_by=request.user
             )
 
             # Log the creation
@@ -152,7 +155,8 @@ class PatientServicePriceViewSet(APIView):
                 'patient_name': patient_name,
                 'service': pricing_record.service.id,
                 'service_name': service_name,
-                'hourly_rate': str(pricing_record.hourly_rate),
+                'hourly_rate': str(pricing_record.custom_price),
+                'price_type': pricing_record.price_type,
                 'notes': pricing_record.notes,
                 'created_at': pricing_record.created_at.isoformat(),
             }
@@ -205,7 +209,8 @@ class PatientServicePriceDetailView(APIView):
                 'patient_name': patient_name,
                 'service': pricing_record.service.id,
                 'service_name': service_name,
-                'hourly_rate': str(pricing_record.hourly_rate),
+                'hourly_rate': str(pricing_record.custom_price),
+                'price_type': pricing_record.price_type,
                 'notes': pricing_record.notes,
                 'created_at': pricing_record.created_at.isoformat(),
             }
@@ -294,7 +299,8 @@ class PatientServicePriceDetailView(APIView):
             # Update the record
             pricing_record.patient = patient
             pricing_record.service = service
-            pricing_record.hourly_rate = hourly_rate_decimal
+            pricing_record.custom_price = hourly_rate_decimal
+            pricing_record.price_type = 'hourly'
             pricing_record.notes = notes.strip() if notes else None
             pricing_record.save()
 
@@ -311,7 +317,8 @@ class PatientServicePriceDetailView(APIView):
                 'patient_name': patient_name,
                 'service': pricing_record.service.id,
                 'service_name': service_name,
-                'hourly_rate': str(pricing_record.hourly_rate),
+                'hourly_rate': str(pricing_record.custom_price),
+                'price_type': pricing_record.price_type,
                 'notes': pricing_record.notes,
                 'created_at': pricing_record.created_at.isoformat(),
             }
@@ -377,23 +384,36 @@ def patients_list(request):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        patients = Patient.objects.select_related('user').all().order_by('user__first_name', 'user__last_name')
+        patients = Patient.objects.select_related('user').all().order_by('user__firstname', 'user__lastname')
         
         patients_data = []
         for patient in patients:
-            patient_name = patient.user.get_full_name() if patient.user else f"Patient {patient.id}"
-            patients_data.append({
-                'id': patient.id,
-                'name': patient_name,
-                'social_price': patient.social_price,
-            })
+            try:
+                if hasattr(patient, 'user') and patient.user:
+                    patient_name = patient.user.get_full_name() if hasattr(patient.user, 'get_full_name') else str(patient.user)
+                else:
+                    patient_name = f"Patient {patient.id}"
+                social_price = getattr(patient, 'social_price', False)
+                patients_data.append({
+                    'id': patient.id,
+                    'name': patient_name,
+                    'social_price': social_price,
+                })
+            except Exception as inner_e:
+                logger.error(f"Error serializing patient {patient.id}: {str(inner_e)}")
+                patients_data.append({
+                    'id': patient.id,
+                    'name': f"Patient {patient.id}",
+                    'social_price': False,
+                    'error': str(inner_e)
+                })
 
         return Response(patients_data, status=status.HTTP_200_OK)
 
     except Exception as e:
         logger.error(f"Error fetching patients list: {str(e)}")
         return Response(
-            {'error': 'Failed to fetch patients list'}, 
+            {'error': 'Failed to fetch patients list', 'details': str(e)}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

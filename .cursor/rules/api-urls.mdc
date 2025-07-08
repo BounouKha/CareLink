@@ -1,0 +1,43 @@
+# API URL Configuration
+
+## Django Backend URLs
+The Django backend runs on `http://localhost:8000` and all API calls must use the full URL including this base.
+
+## Frontend API Call Rules
+- Always use full URLs with `http://localhost:8000` prefix for API calls
+- Never use relative URLs like `/account/...` for API calls
+- Use `tokenManager.authenticatedFetch()` for authenticated requests
+- Use regular `fetch()` for unauthenticated requests (like login)
+
+## Examples
+✅ Correct:
+```javascript
+const response = await tokenManager.authenticatedFetch('http://localhost:8000/account/invoices/admin/', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+});
+```
+
+❌ Incorrect:
+```javascript
+const response = await tokenManager.authenticatedFetch('/account/invoices/admin/', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+});
+```
+
+## Token Manager Usage
+The `tokenManager.authenticatedFetch()` function automatically handles:
+- JWT token authentication
+- Token refresh when expired
+- Error handling for authentication failures
+- Automatic logout on authentication errors
+
+## File References
+- [tokenManager.js](mdc:carelink-front/src/utils/tokenManager.js) - Main authentication utility
+- [useAuth.js](mdc:carelink-front/src/hooks/useAuth.js) - React hook for authentication
+- [InvoiceManagement.js](mdc:carelink-front/src/admin/InvoiceManagement.js) - Example of correct API usage
+description:
+globs:
+alwaysApply: false
+---
