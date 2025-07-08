@@ -271,13 +271,13 @@ class ContestInvoiceView(generics.CreateAPIView):
                 description_parts.append("")
                 description_parts.append("Please review this contest and take appropriate action.")
                 
-                # Create Enhanced Ticket for administrator team
+                # Create Enhanced Ticket for coordinator team
                 ticket = EnhancedTicket.objects.create(
                     title=f"Invoice Contest - Invoice #{invoice.id}",
                     description="\n".join(description_parts),
                     category='Billing Issue',
                     priority='Medium',
-                    assigned_team='Administrator',
+                    assigned_team='Coordinator',
                     created_by=request.user,
                     status='New'
                 )
