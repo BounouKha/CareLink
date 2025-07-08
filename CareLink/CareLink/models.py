@@ -412,6 +412,8 @@ class Invoice(models.Model):
     status = models.CharField(max_length=20, choices=[('Paid', 'Paid'), ('In Progress', 'In Progress'), ('Cancelled', 'Cancelled'), ('Contested', 'Contested')])
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     recall_at = models.DateTimeField(null=True, blank=True)
+    # Track if new invoice was created after contest resolution
+    new_invoice_created_after_contest = models.BooleanField(default=False, help_text="True if a new invoice was created after contest resolution")
 
     def calculate_total_amount(self):
         return sum(line.price for line in self.lines.all())

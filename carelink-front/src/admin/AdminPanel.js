@@ -6,6 +6,7 @@ import ProfileList from './ProfileList';
 import LogsManagement from './LogsManagement'; // Import the LogsManagement component
 import ConsentManagement from './ConsentManagement'; // Import the ConsentManagement component
 import PricingManagement from './PricingManagement'; // Import the PricingManagement component
+import InvoiceManagement from './InvoiceManagement'; // Import the InvoiceManagement component
 import SubmitTicketPage from '../components/EnhancedTicketSystem/SubmitTicketPage';
 import ManageTicketsPage from '../components/EnhancedTicketSystem/ManageTicketsPage';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ const AdminPanel = () => {
 
     const tabs = [
         { id: 'users', label: 'Users', icon: '👥', description: 'Manage user accounts and roles' },
+        { id: 'invoices', label: 'Invoices', icon: '🧾', description: 'Manage invoices and handle contests' },
         { id: 'logs', label: 'Logs', icon: '📋', description: 'View system activity logs' },
         { id: 'consent', label: 'Consent', icon: '🔒', description: 'Manage user privacy and consent' },
         { id: 'pricing', label: 'Pricing', icon: '💰', description: 'Manage custom patient service pricing' },
@@ -32,6 +34,8 @@ const AdminPanel = () => {
         switch (selectedTab) {
             case 'users':
                 return <ManageUsers key={refreshKey} />;
+            case 'invoices':
+                return <InvoiceManagement />;
             case 'logs':
                 return <LogsManagement />;
             case 'consent':

@@ -2,9 +2,10 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from CareLink.models import Invoice, Patient, ContestInvoice, EnhancedTicket, InvoiceLine
 from account.serializers.invoice import InvoiceSerializer
-from account.invoice_utils import generate_invoice_for_patient_period
+from account.invoice_utils import generate_invoice_for_patient_period, get_patient_service_price, get_provider_from_schedule
 from django.shortcuts import get_object_or_404
 from datetime import datetime
+from decimal import Decimal
 import logging
 from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
@@ -14,6 +15,7 @@ from django.core.management import call_command
 from django.conf import settings
 from io import StringIO
 import sys
+from CareLink.models import Schedule, TimeSlot
 
 logger = logging.getLogger(__name__)
 
@@ -382,5 +384,384 @@ class CronGenerateInvoicesView(generics.GenericAPIView):
             logger.error(f"Cron invoice generation failed: {str(e)}")
             return Response(
                 {"success": False, "error": f"Invoice generation failed: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ) 
+
+from rest_framework.pagination import PageNumberPagination
+
+class InvoicePagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class AdminInvoiceListView(generics.ListAPIView):
+    """Admin view to see all invoices with detailed information"""
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = InvoiceSerializer
+    pagination_class = InvoicePagination
+    
+    def get_queryset(self):
+        queryset = Invoice.objects.select_related(
+            'patient', 
+            'patient__user'
+        ).prefetch_related(
+            'lines',
+            'lines__service',
+            'lines__provider',
+            'lines__provider__user'
+        ).order_by('-created_at')
+        
+        # Apply filters
+        status = self.request.query_params.get('status')
+        if status and status != 'all':
+            queryset = queryset.filter(status=status)
+            
+        patient_name = self.request.query_params.get('patient')
+        if patient_name:
+            queryset = queryset.filter(
+                patient__user__firstname__icontains=patient_name
+            ) | queryset.filter(
+                patient__user__lastname__icontains=patient_name
+            )
+        
+        # Month filter
+        month = self.request.query_params.get('month')
+        if month:
+            try:
+                # Parse month in format YYYY-MM
+                year, month_num = month.split('-')
+                queryset = queryset.filter(
+                    created_at__year=year,
+                    created_at__month=month_num
+                )
+            except (ValueError, AttributeError):
+                pass  # Invalid month format, ignore filter
+            
+        return queryset
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        
+        # Serialize with enhanced data
+        invoices_data = []
+        for invoice in queryset:
+            invoice_data = InvoiceSerializer(invoice).data
+            
+            # Add patient name
+            if invoice.patient and invoice.patient.user:
+                invoice_data['patient_name'] = f"{invoice.patient.user.firstname} {invoice.patient.user.lastname}"
+            else:
+                invoice_data['patient_name'] = "Unknown Patient"
+            
+            # Add line count
+            invoice_data['line_count'] = invoice.lines.count()
+            
+            # Add new invoice creation status
+            invoice_data['new_invoice_created_after_contest'] = invoice.new_invoice_created_after_contest
+            
+            # Add contest information if contested
+            if invoice.status == 'Contested':
+                contest = ContestInvoice.objects.filter(
+                    invoice=invoice,
+                    status__in=['In Progress', 'Accepted']
+                ).first()
+                if contest:
+                    invoice_data['contest_reason'] = contest.reason
+                    invoice_data['contest'] = {
+                        'reason': contest.reason,
+                        'user_name': f"{contest.user.firstname} {contest.user.lastname}" if contest.user else "Unknown",
+                        'created_at': contest.created_at.isoformat()
+                    }
+            
+            # Add detailed line information
+            lines_data = []
+            for line in invoice.lines.all():
+                line_data = {
+                    'id': line.id,
+                    'service_name': line.service.name if line.service else "Unknown Service",
+                    'price': float(line.price),
+                    'date': line.date.isoformat(),
+                    'start_time': line.start_time.strftime('%H:%M'),
+                    'end_time': line.end_time.strftime('%H:%M'),
+                    'status': line.status
+                }
+                
+                if line.provider and line.provider.user:
+                    line_data['provider_name'] = f"{line.provider.user.firstname} {line.provider.user.lastname}"
+                else:
+                    line_data['provider_name'] = "Unknown Provider"
+                    
+                lines_data.append(line_data)
+            
+            invoice_data['lines'] = lines_data
+            invoices_data.append(invoice_data)
+        
+        return Response(invoices_data) 
+
+class RegenerateInvoiceView(generics.GenericAPIView):
+    """Regenerate an invoice with updated pricing logic"""
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    
+    def post(self, request, *args, **kwargs):
+        invoice_id = kwargs.get('invoice_id')
+        logger.info(f"🔄 Regenerate invoice request received for invoice {invoice_id} by user {request.user.id}")
+        
+        invoice = get_object_or_404(Invoice, id=invoice_id)
+        
+        try:
+            with transaction.atomic():
+                # Delete existing invoice lines
+                invoice.lines.all().delete()
+                
+                # Get the period from the original invoice
+                period_start = invoice.period_start
+                period_end = invoice.period_end
+                patient = invoice.patient
+                
+                # Get all schedules for this patient in the period
+                schedules = Schedule.objects.filter(
+                    patient=patient,
+                    date__gte=period_start,
+                    date__lte=period_end
+                )
+                
+                logger.info(f"Found {schedules.count()} schedules for patient {patient.id} in period {period_start} to {period_end}")
+                
+                # Get all timeslots from these schedules that are completed or confirmed
+                timeslots = TimeSlot.objects.filter(
+                    schedule__in=schedules,
+                    status__in=["completed", "confirmed"]
+                ).distinct()
+                
+                logger.info(f"Found {timeslots.count()} completed/confirmed timeslots for regeneration")
+                
+                # Debug: show all timeslots for this patient in the period
+                all_timeslots = TimeSlot.objects.filter(schedule__in=schedules).distinct()
+                logger.info(f"Total timeslots in period: {all_timeslots.count()}")
+                for ts in all_timeslots:
+                    logger.info(f"Timeslot {ts.id}: status='{ts.status}', date={ts.schedule.date if ts.schedule else 'unknown'}")
+                
+                # Regenerate invoice with new pricing logic
+                new_invoice = generate_invoice_for_patient_period(
+                    patient=patient,
+                    period_start=period_start,
+                    period_end=period_end,
+                    timeslots=timeslots
+                )
+                
+                # Update the original invoice with new data
+                invoice.amount = new_invoice.amount
+                invoice.save()
+                
+                logger.info(f"✅ Invoice {invoice_id} regenerated successfully by admin {request.user.id}")
+                
+                response_data = {
+                    "message": "Invoice regenerated successfully",
+                    "invoice_id": invoice.id,
+                    "new_amount": float(invoice.amount),
+                    "lines_count": invoice.lines.count()
+                }
+                logger.info(f"📊 Regenerate response data: {response_data}")
+                
+                return Response(response_data, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            logger.error(f"❌ Failed to regenerate invoice {invoice_id}: {str(e)}")
+            error_response = {"error": f"Failed to regenerate invoice: {str(e)}"}
+            logger.error(f"📊 Regenerate error response: {error_response}")
+            return Response(error_response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ResolveContestView(generics.GenericAPIView):
+    """Resolve an invoice contest (accept or reject)"""
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    
+    def post(self, request, *args, **kwargs):
+        invoice_id = kwargs.get('invoice_id')
+        invoice = get_object_or_404(Invoice, id=invoice_id)
+        resolution = request.data.get('resolution')  # 'accepted' or 'rejected'
+        
+        if resolution not in ['accepted', 'rejected']:
+            return Response(
+                {"error": "Resolution must be 'accepted' or 'rejected'"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            with transaction.atomic():
+                # Find the contest
+                contest = ContestInvoice.objects.filter(
+                    invoice=invoice,
+                    status='In Progress'
+                ).first()
+                
+                if not contest:
+                    return Response(
+                        {"error": "No active contest found for this invoice"}, 
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                
+                # Update contest status
+                contest.status = 'Accepted' if resolution == 'accepted' else 'Cancelled'
+                contest.save()
+                
+                # Update invoice status
+                if resolution == 'accepted':
+                    invoice.status = 'Cancelled'  # Invoice is cancelled due to accepted contest
+                else:
+                    invoice.status = 'In Progress'  # Invoice is back to normal
+                invoice.save()
+                
+                # Create a ticket comment about the resolution
+                if contest:
+                    from CareLink.models import TicketComment
+                    ticket = EnhancedTicket.objects.filter(
+                        title__icontains=f"Invoice Contest - Invoice #{invoice_id}"
+                    ).first()
+                    
+                    if ticket:
+                        TicketComment.objects.create(
+                            ticket=ticket,
+                            comment=f"Contest {resolution} by administrator. Invoice status updated to '{invoice.status}'.",
+                            created_by=request.user,
+                            is_internal=True
+                        )
+                
+                logger.info(f"Invoice contest {contest.id} resolved as {resolution} by admin {request.user.id}")
+                
+                return Response({
+                    "message": f"Contest {resolution} successfully",
+                    "invoice_id": invoice.id,
+                    "contest_id": contest.id,
+                    "resolution": resolution,
+                    "new_invoice_status": invoice.status
+                }, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            logger.error(f"Failed to resolve contest for invoice {invoice_id}: {str(e)}")
+            return Response(
+                {"error": f"Failed to resolve contest: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class CreateNewInvoiceAfterContestView(generics.GenericAPIView):
+    """Create a new invoice after contest resolution"""
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    
+    def post(self, request, *args, **kwargs):
+        original_invoice_id = kwargs.get('invoice_id')
+        original_invoice = get_object_or_404(Invoice, id=original_invoice_id)
+        
+        # Check if this invoice was cancelled due to contest acceptance
+        if original_invoice.status != 'Cancelled':
+            return Response(
+                {"error": "Can only create new invoice for cancelled invoices"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if a new invoice was already created
+        if original_invoice.new_invoice_created_after_contest:
+            return Response(
+                {"error": "New invoice already created for this contest"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            with transaction.atomic():
+                # Create new invoice with same period and patient
+                new_invoice = Invoice.objects.create(
+                    patient=original_invoice.patient,
+                    period_start=original_invoice.period_start,
+                    period_end=original_invoice.period_end,
+                    status="In Progress",
+                    amount=0,  # Will be calculated
+                    new_invoice_created_after_contest=True
+                )
+                
+                # Get all schedules for this patient in the period
+                schedules = Schedule.objects.filter(
+                    patient=original_invoice.patient,
+                    date__gte=original_invoice.period_start,
+                    date__lte=original_invoice.period_end
+                )
+                
+                # Get all timeslots from these schedules that are completed or confirmed
+                timeslots = TimeSlot.objects.filter(
+                    schedule__in=schedules,
+                    status__in=["completed", "confirmed"]
+                ).distinct()
+                
+                total_amount = Decimal('0.00')
+                lines_created = 0
+                
+                for ts in timeslots:
+                    service = ts.service or (ts.prescription.service if ts.prescription else None)
+                    if not service:
+                        continue
+
+                    provider = get_provider_from_schedule(ts)
+                    
+                    # Use new pricing logic
+                    pricing_info = get_patient_service_price(original_invoice.patient, service, ts)
+                    price = pricing_info['price']
+
+                    # Get the date from the schedule
+                    schedule = Schedule.objects.filter(time_slots=ts).first()
+                    if not schedule:
+                        date = original_invoice.period_start
+                    else:
+                        date = schedule.date
+
+                    # Create invoice line
+                    line = InvoiceLine.objects.create(
+                        invoice=new_invoice,
+                        timeslot=ts,
+                        service=service,
+                        provider=provider,
+                        date=date,
+                        start_time=ts.start_time,
+                        end_time=ts.end_time,
+                        price=price,
+                        status=ts.status
+                    )
+                    
+                    total_amount += price
+                    lines_created += 1
+                
+                # Update new invoice amount
+                new_invoice.amount = total_amount
+                new_invoice.save()
+                
+                # Mark original invoice as having new invoice created
+                original_invoice.new_invoice_created_after_contest = True
+                original_invoice.save()
+                
+                # Create a ticket comment about the new invoice
+                from CareLink.models import TicketComment
+                ticket = EnhancedTicket.objects.filter(
+                    title__icontains=f"Invoice Contest - Invoice #{original_invoice_id}"
+                ).first()
+                
+                if ticket:
+                    TicketComment.objects.create(
+                        ticket=ticket,
+                        comment=f"New invoice #{new_invoice.id} created after contest resolution. Amount: €{total_amount:.2f}",
+                        created_by=request.user,
+                        is_internal=True
+                    )
+                
+                logger.info(f"New invoice {new_invoice.id} created after contest resolution for original invoice {original_invoice_id}")
+                
+                return Response({
+                    "message": "New invoice created successfully",
+                    "new_invoice_id": new_invoice.id,
+                    "new_invoice_amount": float(new_invoice.amount),
+                    "lines_count": lines_created,
+                    "original_invoice_id": original_invoice_id
+                }, status=status.HTTP_201_CREATED)
+                
+        except Exception as e:
+            logger.error(f"Failed to create new invoice after contest for invoice {original_invoice_id}: {str(e)}")
+            return Response(
+                {"error": f"Failed to create new invoice: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             ) 

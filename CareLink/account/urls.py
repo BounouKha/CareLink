@@ -35,7 +35,7 @@ from account.views.provider import (
     provider_all_absences, provider_absence_check, ContractViewSet, my_contracts, my_schedule, my_absences
 )
 from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
-from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView, GenerateInvoicesView, CronGenerateInvoicesView
+from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView, GenerateInvoicesView, CronGenerateInvoicesView, AdminInvoiceListView, RegenerateInvoiceView, ResolveContestView, CreateNewInvoiceAfterContestView
 from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView
 from .views.appointment_comments import AppointmentCommentAPIView, CheckCommentPermissionAPIView, CoordinatorViewCommentsAPIView
 from .views.patient_details import PatientDetailsView
@@ -130,6 +130,10 @@ urlpatterns += [
     path('invoices/<int:id>/', InvoiceDetailView.as_view(), name='invoice-detail'),
     path('invoices/<int:invoice_id>/lines/', InvoiceLinesView.as_view(), name='invoice-lines'),
     path('invoices/<int:invoice_id>/contest/', ContestInvoiceView.as_view(), name='invoice-contest'),
+    path('invoices/<int:invoice_id>/regenerate/', RegenerateInvoiceView.as_view(), name='regenerate-invoice'),
+    path('invoices/<int:invoice_id>/resolve-contest/', ResolveContestView.as_view(), name='resolve-contest'),
+    path('invoices/<int:invoice_id>/create-new-after-contest/', CreateNewInvoiceAfterContestView.as_view(), name='create-new-invoice-after-contest'),
+    path('invoices/admin/', AdminInvoiceListView.as_view(), name='admin-invoices'),
     path('invoices/generate/', GenerateInvoicesView.as_view(), name='generate-invoices'),
     path('invoices/cron-generate/', CronGenerateInvoicesView.as_view(), name='cron-generate-invoices'),
     path('profile/change-password/', ChangePasswordView.as_view(), name='change_password'),

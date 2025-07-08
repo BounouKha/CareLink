@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import tokenManager from '../utils/tokenManager';
 import './PricingManagement.css';
 
 const PricingManagement = () => {
@@ -22,26 +23,52 @@ const PricingManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterService, setFilterService] = useState('');
   const [sortBy, setSortBy] = useState('patient_name');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Debounced search effect
+  useEffect(() => {
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Set new timeout for search
+    const timeoutId = setTimeout(() => {
+      setIsSearching(false);
+    }, 500); // 500ms delay
+    
+    setSearchTimeout(timeoutId);
+    setIsSearching(true);
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [searchTerm, filterService]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
       
       // Fetch pricing records, patients, and services in parallel
       const [pricingRes, patientsRes, servicesRes] = await Promise.all([
-        fetch('http://localhost:8000/account/patient-service-prices/', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        tokenManager.authenticatedFetch('http://localhost:8000/account/patient-service-prices/', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
         }),
-        fetch('http://localhost:8000/account/pricing/patients/', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        tokenManager.authenticatedFetch('http://localhost:8000/account/pricing/patients/', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
         }),
-        fetch('http://localhost:8000/account/pricing/services/', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        tokenManager.authenticatedFetch('http://localhost:8000/account/pricing/services/', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
         })
       ]);
 
@@ -70,16 +97,14 @@ const PricingManagement = () => {
     e.preventDefault();
     
     try {
-      const token = localStorage.getItem('accessToken');
       const method = editingRecord ? 'PUT' : 'POST';
       const url = editingRecord 
         ? `http://localhost:8000/account/patient-service-prices/${editingRecord.id}/`
         : 'http://localhost:8000/account/patient-service-prices/';
 
-      const response = await fetch(url, {
+      const response = await tokenManager.authenticatedFetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -121,10 +146,9 @@ const PricingManagement = () => {
     }
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/account/patient-service-prices/${recordId}/`, {
+      const response = await tokenManager.authenticatedFetch(`http://localhost:8000/account/patient-service-prices/${recordId}/`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (response.ok) {
@@ -210,13 +234,21 @@ const PricingManagement = () => {
       <div className="filters-section">
         <div className="search-group">
           <label htmlFor="search">🔍 Search:</label>
-          <input
-            id="search"
-            type="text"
-            placeholder="Search by patient or service name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="search-input-container">
+            <input
+              id="search"
+              type="text"
+              placeholder="Search by patient or service name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                  }
+              }}
+            />
+            {isSearching && <div className="search-spinner"></div>}
+          </div>
         </div>
         
         <div className="filter-group">
