@@ -2,7 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import './InamiMedicalCareModal.css';
 import { useCareTranslation } from '../hooks/useCareTranslation';
 
-const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) => {
+const InamiMedicalCareModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  initialData = null, 
+  patientData = null, 
+  prescriptionData = null 
+}) => {
   const { schedule, common, placeholders } = useCareTranslation();
   const modalRef = useRef(null);
 
@@ -22,12 +29,27 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
   });
 
   // Care type options based on Belgian INAMI nursing codes
+  // Updated with codes from domiris.be and Belgian healthcare pricing
   const careTypeOptions = [
     { 
-      id: 'plaie_simple', 
-      label: 'Plaie simple', 
-      mutuelle_price: 22.40, 
-      patient_copay: 4.48,
+      id: 'toilette', 
+      label: 'Toilette', 
+      mutuelle_price: 4.85, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '428016',
+        home_weekend: '428031',
+        office: '428053',
+        disability_home_weekday: '428075',
+        disability_home_weekend: '428090',
+        day_center: '428112'
+      }
+    },
+    { 
+      id: 'pansement_simple', 
+      label: 'Pansement simple', 
+      mutuelle_price: 6.30, 
+      patient_copay: 0,
       codes: {
         home_weekday: '424336',
         home_weekend: '424491',
@@ -38,10 +60,10 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
       }
     },
     { 
-      id: 'plaie_complexe', 
-      label: 'Plaie complexe', 
-      mutuelle_price: 42.80, 
-      patient_copay: 8.56,
+      id: 'pansement_complexe', 
+      label: 'Pansement complexe', 
+      mutuelle_price: 9.15, 
+      patient_copay: 0,
       codes: {
         home_weekday: '424255',
         home_weekend: '424410',
@@ -55,7 +77,7 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
       id: 'surveillance_plaie', 
       label: 'Surveillance plaie', 
       mutuelle_price: 15.20, 
-      patient_copay: 3.04,
+      patient_copay: 0,
       codes: {
         home_weekday: '424351',
         home_weekend: '424513',
@@ -63,6 +85,118 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
         disability_home_weekday: '427954',
         disability_home_weekend: '430172',
         day_center: '424815'
+      }
+    },
+    { 
+      id: 'injection_im_sc', 
+      label: 'Injection intramusculaire/sous-cutanée', 
+      mutuelle_price: 4.75, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '422275',
+        home_weekend: '422290',
+        office: '422312',
+        disability_home_weekday: '422334',
+        disability_home_weekend: '422356',
+        day_center: '422371'
+      }
+    },
+    { 
+      id: 'perfusion', 
+      label: 'Perfusion', 
+      mutuelle_price: 37.12, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '423336',
+        home_weekend: '423351',
+        office: '423373',
+        disability_home_weekday: '423395',
+        disability_home_weekend: '423410',
+        day_center: '423432'
+      }
+    },
+    { 
+      id: 'prise_sang', 
+      label: 'Prise de sang', 
+      mutuelle_price: 10.00, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '422512',
+        home_weekend: '422534',
+        office: '422556',
+        disability_home_weekday: '422571',
+        disability_home_weekend: '422593',
+        day_center: '422615'
+      }
+    },
+    { 
+      id: 'soins_forfait_a', 
+      label: 'Soins journaliers Forfait A', 
+      mutuelle_price: 15.90, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '425011',
+        home_weekend: '425033',
+        office: '425055',
+        disability_home_weekday: '425070',
+        disability_home_weekend: '425092',
+        day_center: '425114'
+      }
+    },
+    { 
+      id: 'soins_forfait_b', 
+      label: 'Soins journaliers Forfait B', 
+      mutuelle_price: 36.75, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '425136',
+        home_weekend: '425151',
+        office: '425173',
+        disability_home_weekday: '425195',
+        disability_home_weekend: '425210',
+        day_center: '425232'
+      }
+    },
+    { 
+      id: 'soins_forfait_c', 
+      label: 'Soins journaliers Forfait C', 
+      mutuelle_price: 50.28, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '425254',
+        home_weekend: '425276',
+        office: '425291',
+        disability_home_weekday: '425313',
+        disability_home_weekend: '425335',
+        day_center: '425350'
+      }
+    },
+    { 
+      id: 'soins_palliatifs_legers', 
+      label: 'Soins palliatifs légers', 
+      mutuelle_price: 36.39, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '426372',
+        home_weekend: '426394',
+        office: '426416',
+        disability_home_weekday: '426431',
+        disability_home_weekend: '426453',
+        day_center: '426475'
+      }
+    },
+    { 
+      id: 'soins_palliatifs_lourds', 
+      label: 'Soins palliatifs lourds', 
+      mutuelle_price: 79.89, 
+      patient_copay: 0,
+      codes: {
+        home_weekday: '426490',
+        home_weekend: '426512',
+        office: '426534',
+        disability_home_weekday: '426556',
+        disability_home_weekend: '426571',
+        day_center: '426593'
       }
     }
   ];
@@ -107,10 +241,10 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
     }
   }, [isOpen]);
 
-  // Calculate pricing whenever form data changes
+  // Calculate pricing whenever form data, patient data, or prescription data changes
   useEffect(() => {
     calculatePricing();
-  }, [formData]);
+  }, [formData, patientData, prescriptionData]);
 
   const calculatePricing = () => {
     if (!formData.care_type) {
@@ -124,19 +258,53 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
     let mutuelle_price = baseType.mutuelle_price;
     let patient_copay = baseType.patient_copay;
 
-    // Duration fees for complex care only
-    if (formData.care_type === 'plaie_complexe' && formData.care_duration !== '30-59') {
+    // BIM Logic Implementation:
+    // 1. If patient has social_price (BIM) → patient pays 0
+    // 2. If patient has prescription → patient pays 0 (free with prescription)
+    // 3. If no social_price and no prescription → normal pricing (patient copay applies)
+    
+    const hasSocialPrice = patientData?.social_price === true;
+    const hasPrescription = prescriptionData !== null && prescriptionData !== undefined;
+    
+    console.log('[InamiModal] Pricing calculation:', {
+      hasSocialPrice,
+      hasPrescription,
+      patientData,
+      prescriptionData,
+      basePatientCopay: patient_copay
+    });
+
+    if (hasSocialPrice) {
+      // BIM patients pay nothing
+      patient_copay = 0;
+      console.log('[InamiModal] BIM patient - copay set to 0');
+    } else if (hasPrescription) {
+      // Patients with prescription pay nothing
+      patient_copay = 0;
+      console.log('[InamiModal] Patient with prescription - copay set to 0');
+    }
+    // If no social_price and no prescription, use original patient_copay
+
+    // Duration fees for complex care types
+    const complexCareTypes = ['pansement_complexe', 'surveillance_plaie', 'soins_forfait_b', 'soins_forfait_c', 'soins_palliatifs_legers', 'soins_palliatifs_lourds'];
+    if (complexCareTypes.includes(formData.care_type) && formData.care_duration !== '30-59') {
       const duration = durationOptions.find(d => d.id === formData.care_duration);
       if (duration && duration.extra_fee > 0) {
         mutuelle_price += duration.extra_fee;
-        patient_copay += duration.extra_fee * 0.25; // 25% copay on extra fees
+        // Duration fees also follow BIM rules
+        if (!hasSocialPrice && !hasPrescription) {
+          patient_copay += duration.extra_fee * 0.25; // 25% copay on extra fees
+        }
       }
     }
 
     // Weekend/holiday surcharge (25% increase)
     if (formData.is_weekend || formData.is_holiday) {
       mutuelle_price *= 1.25;
-      patient_copay *= 1.25;
+      // Surcharge also follows BIM rules
+      if (!hasSocialPrice && !hasPrescription) {
+        patient_copay *= 1.25;
+      }
     }
 
     // Round to 2 decimal places
@@ -148,6 +316,13 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
     const inami_code = generateInamiCode(baseType, formData);
 
     setPricing({
+      mutuelle_price,
+      patient_copay,
+      total_price,
+      inami_code
+    });
+
+    console.log('[InamiModal] Final pricing:', {
       mutuelle_price,
       patient_copay,
       total_price,
@@ -256,7 +431,12 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
               </select>
             </div>
 
-            {formData.care_type === 'plaie_complexe' && (
+            {(formData.care_type === 'pansement_complexe' || 
+              formData.care_type === 'surveillance_plaie' || 
+              formData.care_type === 'soins_forfait_b' || 
+              formData.care_type === 'soins_forfait_c' ||
+              formData.care_type === 'soins_palliatifs_legers' ||
+              formData.care_type === 'soins_palliatifs_lourds') && (
               <div className="form-group">
                 <label>Durée des soins</label>
                 <select
@@ -298,13 +478,34 @@ const InamiMedicalCareModal = ({ isOpen, onClose, onSave, initialData = null }) 
                 </div>
                 <div className="pricing-row">
                   <span className="pricing-label">👤 Patient paie:</span>
-                  <span className="pricing-value patient">€{pricing.patient_copay.toFixed(2)}</span>
+                  <span className={`pricing-value patient ${pricing.patient_copay === 0 ? 'free' : ''}`}>
+                    €{pricing.patient_copay.toFixed(2)}
+                  </span>
                 </div>
                 <div className="pricing-row total">
                   <span className="pricing-label">💰 Total:</span>
                   <span className="pricing-value total-price">€{pricing.total_price.toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* BIM/Prescription Status */}
+              {(patientData?.social_price || prescriptionData) && (
+                <div className="payment-status">
+                  {patientData?.social_price && (
+                    <div className="status-badge bim">
+                      🏥 BIM - Patient avec statut social préférentiel
+                    </div>
+                  )}
+                  {prescriptionData && (
+                    <div className="status-badge prescription">
+                      📋 Prescription médicale - Soins remboursés intégralement
+                    </div>
+                  )}
+                  <div className="status-explanation">
+                    Les soins sont entièrement pris en charge par la mutuelle.
+                  </div>
+                </div>
+              )}
 
               <div className="inami-code-display">
                 <h4>Code INAMI: <span className="code">{pricing.inami_code}</span></h4>

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from datetime import datetime, timedelta, date
 from django.db.models import Q, Count, Avg
-from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog, Prescription
+from CareLink.models import Schedule, TimeSlot, Provider, Patient, Service, ServiceDemand, UserActionLog, Prescription, PatientServicePrice
 from account.serializers.user import UserSerializer
 from account.services.notification_service import NotificationService
 from .conflict_manager import ConflictManager
@@ -2071,3 +2071,92 @@ class PrescriptionOptionsView(APIView):
             
         except Exception as e:
             return Response({'error': f'Failed to fetch prescriptions: {str(e)}'}, status=500)
+
+class PatientServicePriceView(APIView):
+    """
+    Handle custom pricing for patient-service combinations
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get custom price for a patient-service combination"""
+        patient_id = request.query_params.get('patient_id')
+        service_id = request.query_params.get('service_id')
+        
+        if not patient_id or not service_id:
+            return Response({"error": "patient_id and service_id required"}, status=400)
+        
+        try:
+            # Check if custom price exists
+            custom_price = PatientServicePrice.objects.get(
+                patient_id=patient_id, 
+                service_id=service_id
+            )
+            
+            return Response({
+                "has_custom_price": True,
+                "custom_price": custom_price.custom_price,
+                "price_type": custom_price.price_type,
+                "notes": custom_price.notes,
+                "created_by": custom_price.created_by.get_full_name() if custom_price.created_by else None,
+                "created_at": custom_price.created_at
+            })
+            
+        except PatientServicePrice.DoesNotExist:
+            # No custom price, return service default
+            try:
+                service = Service.objects.get(id=service_id)
+                return Response({
+                    "has_custom_price": False,
+                    "default_price": service.price,
+                    "price_range": {
+                        "min": 0.94,
+                        "max": 9.97
+                    } if service_id == '1' or service_id == '2' else None  # For family help services
+                })
+            except Service.DoesNotExist:
+                return Response({"error": "Service not found"}, status=404)
+    
+    def post(self, request):
+        """Set custom price for a patient-service combination"""
+        if request.user.role not in ['Coordinator', 'Administrative']:
+            return Response({"error": "Permission denied"}, status=403)
+        
+        patient_id = request.data.get('patient_id')
+        service_id = request.data.get('service_id')
+        custom_price = request.data.get('custom_price')
+        price_type = request.data.get('price_type', 'hourly')
+        notes = request.data.get('notes', '')
+        
+        if not all([patient_id, service_id, custom_price]):
+            return Response({"error": "patient_id, service_id, and custom_price required"}, status=400)
+        
+        try:
+            # Validate price range for family help services (aide menager and aide familial)
+            if service_id == '1' or service_id == 1 or service_id == '2' or service_id == 2:
+                if float(custom_price) < 0.94 or float(custom_price) > 9.97:
+                    return Response({
+                        "error": "Price must be between €0.94 and €9.97 for family help services"
+                    }, status=400)
+            
+            # Create or update custom price
+            custom_price_obj, created = PatientServicePrice.objects.update_or_create(
+                patient_id=patient_id,
+                service_id=service_id,
+                defaults={
+                    'custom_price': custom_price,
+                    'price_type': price_type,
+                    'notes': notes,
+                    'created_by': request.user
+                }
+            )
+            
+            return Response({
+                "success": True,
+                "message": "Custom price saved" if created else "Custom price updated",
+                "custom_price": custom_price_obj.custom_price,
+                "price_type": custom_price_obj.price_type
+            })
+            
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

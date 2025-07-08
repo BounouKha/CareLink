@@ -54,6 +54,13 @@ const QuickSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [], pre
   const [showInamiModal, setShowInamiModal] = useState(false);
   const [inamiData, setInamiData] = useState(null);
 
+  // Custom pricing states
+  const [showCustomPricing, setShowCustomPricing] = useState(false);
+  const [customPrice, setCustomPrice] = useState('');
+  const [priceType, setPriceType] = useState('hourly');
+  const [hasCustomPrice, setHasCustomPrice] = useState(false);
+  const [priceNotes, setPriceNotes] = useState('');
+
   // Conflict management
   const {
     isCheckingConflicts,
@@ -170,6 +177,8 @@ const fetchPatients = async () => {
 
   const fetchPrescriptions = async (patientId = null) => {
     try {
+      console.log('[QuickSchedule] fetchPrescriptions called with patientId:', patientId);
+      
       if (!tokenManager.isAuthenticated()) {
         throw new Error('User not authenticated. Please log in.');
       }
@@ -178,14 +187,64 @@ const fetchPatients = async () => {
         ? `http://localhost:8000/schedule/prescriptions/?patient_id=${patientId}`
         : 'http://localhost:8000/schedule/prescriptions/';
       
+      console.log('[QuickSchedule] Fetching prescriptions from URL:', url);
       const data = await get(url);
+      console.log('[QuickSchedule] Prescription API response:', data);
+      
       setPrescriptions(data.prescriptions || []);
-      console.log('Fetched prescriptions:', data.prescriptions);
+      console.log('[QuickSchedule] Set prescriptions state:', data.prescriptions || []);
     } catch (err) {
-      console.error('Error fetching prescriptions:', err);
+      console.error('[QuickSchedule] Error fetching prescriptions:', err);
       if (err.message.includes('401') || err.message.includes('Unauthorized')) {
         tokenManager.handleLogout();
       }
+    }
+  };
+
+  // Custom pricing functions
+  const checkCustomPricing = async (patientId, serviceId) => {
+    try {
+      const response = await get(`http://localhost:8000/schedule/patient-service-price/?patient_id=${patientId}&service_id=${serviceId}`);
+      
+      if (response.has_custom_price) {
+        setHasCustomPrice(true);
+        setCustomPrice(response.custom_price);
+        setPriceType(response.price_type);
+        setPriceNotes(response.notes || '');
+        console.log('[QuickSchedule] Found custom price:', response.custom_price);
+      } else {
+        setHasCustomPrice(false);
+        setCustomPrice('');
+        setPriceNotes('');
+        
+        // For service ID 1 or 2 (family help), show pricing options
+        if (serviceId === '1' || serviceId === 1 || serviceId === '2' || serviceId === 2) {
+          setShowCustomPricing(true);
+        }
+      }
+    } catch (error) {
+      console.error('[QuickSchedule] Error checking custom pricing:', error);
+    }
+  };
+
+  const saveCustomPricing = async () => {
+    try {
+      const response = await post('http://localhost:8000/schedule/patient-service-price/', {
+        patient_id: formData.patient_id,
+        service_id: formData.service_id,
+        custom_price: customPrice,
+        price_type: priceType,
+        notes: priceNotes
+      });
+      
+      if (response.success) {
+        setHasCustomPrice(true);
+        setShowCustomPricing(false);
+        console.log('[QuickSchedule] Custom price saved:', customPrice);
+      }
+    } catch (error) {
+      console.error('[QuickSchedule] Error saving custom price:', error);
+      setError('Failed to save custom pricing');
     }
   };
 
@@ -248,11 +307,13 @@ const fetchPatients = async () => {
   };
 
   const selectPatient = (patient) => {
+    console.log('[QuickSchedule] Patient selected:', patient);
     setFormData(prev => ({ ...prev, patient_id: patient.id, prescription_id: '' }));
     setPatientSearch(`${patient.firstname || ''} ${patient.lastname || ''}`);
     setShowPatientDropdown(false);
     
     // Fetch prescriptions for this patient
+    console.log('[QuickSchedule] Fetching prescriptions for patient ID:', patient.id);
     fetchPrescriptions(patient.id);
   };
 
@@ -265,10 +326,7 @@ const fetchPatients = async () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     // Auto-calculate end time if start time is set (default 30 minute duration)
     if (name === 'start_time' && value && !formData.end_time) {
@@ -294,6 +352,21 @@ const fetchPatients = async () => {
     // Clear INAMI data if service changes from 3 to something else
     if (name === 'service_id' && value !== '3' && inamiData) {
       setInamiData(null);
+    }
+
+    // Check for custom pricing when both patient and service are selected
+    if (name === 'service_id' && formData.patient_id && value) {
+      checkCustomPricing(formData.patient_id, value);
+    }
+
+    // Fetch prescriptions when patient is selected
+    if (name === 'patient_id') {
+      fetchPrescriptions(value);
+      
+      // If service is already selected, check custom pricing
+      if (formData.service_id) {
+        checkCustomPricing(value, formData.service_id);
+      }
     }
   };
 
@@ -579,7 +652,10 @@ const fetchPatients = async () => {
                           <div
                             key={patient.id}
                             className="dropdown-item"
-                            onClick={() => selectPatient(patient)}
+                            onClick={() => {
+                              console.log('[QuickSchedule] Dropdown clicked for patient:', patient);
+                              selectPatient(patient);
+                            }}
                           >
                             <strong>{patient.firstname} {patient.lastname}</strong>
                             <span className="patient-info">ID: {patient.national_number}</span>
@@ -620,31 +696,135 @@ const fetchPatients = async () => {
                 <option value="">{schedule('selectServiceOptional')}</option>
                 {services.map(service => (
                   <option key={service.id} value={service.id}>
-                    {service.id === 3 ? `${service.name} (Soins Infirmiers INAMI)` : service.name} - ${service.price}
+                    {service.id === 3 ? `${service.name} (Soins Infirmiers INAMI)` : service.name}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Custom Pricing Section - show when service 1 or 2 (aide menager/aide familial) is selected and patient is selected */}
+            {formData.patient_id && (formData.service_id === '1' || formData.service_id === '2') && (
+              <div className="form-group">
+                <label>Service Pricing (Family Help / Aide Familial)</label>
+                
+                {hasCustomPrice ? (
+                  <div style={{ padding: '10px', background: '#e8f5e8', border: '1px solid #4caf50', borderRadius: '4px' }}>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>€{customPrice}/{priceType}</strong>
+                        {priceNotes && <small className="d-block text-muted">{priceNotes}</small>}
+                      </div>
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => setShowCustomPricing(true)}
+                      >
+                        Edit Price
+                      </button>
+                    </div>
+                  </div>
+                ) : showCustomPricing ? (
+                  <div style={{ padding: '10px', background: '#fff8e1', border: '1px solid #ff9800', borderRadius: '4px' }}>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <label>Price (€0.94 - €9.97)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.94"
+                          max="9.97"
+                          className="form-control"
+                          value={customPrice}
+                          onChange={(e) => setCustomPrice(e.target.value)}
+                          placeholder="Enter price"
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label>Price Type</label>
+                        <select
+                          className="form-control"
+                          value={priceType}
+                          onChange={(e) => setPriceType(e.target.value)}
+                        >
+                          <option value="hourly">Per Hour</option>
+                          <option value="session">Per Session</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <label>Notes (Optional)</label>
+                      <textarea
+                        className="form-control"
+                        rows="2"
+                        value={priceNotes}
+                        onChange={(e) => setPriceNotes(e.target.value)}
+                        placeholder="Why this price? (e.g., social benefits, income level)"
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-success me-2"
+                        onClick={saveCustomPricing}
+                        disabled={!customPrice || customPrice < 0.94 || customPrice > 9.97}
+                      >
+                        Save Price
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => setShowCustomPricing(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '10px', background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+                    <em>First time scheduling family help for this patient</em>
+                    <button 
+                      type="button" 
+                      className="btn btn-sm btn-outline-primary ms-2"
+                      onClick={() => setShowCustomPricing(true)}
+                    >
+                      Set Price
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Prescription Selector - only show when patient is selected */}
-            {formData.patient_id && prescriptions.length > 0 && (
+            {formData.patient_id && (
               <div className="form-group">
                 <label htmlFor="prescription_id">Link to Prescription (Optional)</label>
-                <select
-                  id="prescription_id"
-                  name="prescription_id"
-                  value={formData.prescription_id}
-                  onChange={handleInputChange}
-                >
-                  <option value="">No Prescription</option>
-                  {prescriptions.map(prescription => (
-                    <option key={prescription.id} value={prescription.id}>
-                      {prescription.title} - {prescription.service_name} 
-                      {prescription.linked_timeslots_count > 0 ? ` (${prescription.linked_timeslots_count} timeslots)` : ''}
-                      {prescription.priority === 'Urgent' ? ' 🔴' : ''}
-                    </option>
-                  ))}
-                </select>
+                {/* Debug info */}
+                <small style={{color: 'blue', display: 'block'}}>
+                  Debug: Patient ID: {formData.patient_id}, Prescriptions found: {prescriptions.length}
+                </small>
+                
+                {prescriptions.length > 0 ? (
+                  <select
+                    id="prescription_id"
+                    name="prescription_id"
+                    value={formData.prescription_id}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">No Prescription</option>
+                    {prescriptions.map(prescription => (
+                      <option key={prescription.id} value={prescription.id}>
+                        {prescription.title} - {prescription.service_name} 
+                        {prescription.linked_timeslots_count > 0 ? ` (${prescription.linked_timeslots_count} timeslots)` : ''}
+                        {prescription.priority === 'Urgent' ? ' 🔴' : ''}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div style={{padding: '8px', background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px'}}>
+                    <em>No prescriptions available for this patient</em>
+                  </div>
+                )}
+                
                 {formData.prescription_id && (
                   <small className="form-hint">
                     📋 This appointment will be linked to the selected prescription
@@ -826,6 +1006,8 @@ const fetchPatients = async () => {
         onClose={handleInamiClose}
         onSave={handleInamiSave}
         initialData={inamiData}
+        patientData={patients.find(p => p.id === parseInt(formData.patient_id))}
+        prescriptionData={prescriptions.find(p => p.id === parseInt(formData.prescription_id))}
       />
     </div>
   );
