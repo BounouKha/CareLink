@@ -528,6 +528,189 @@
   padding: 10px 0;
 }
 
+/* Custom Pricing Styles - matching RecurringSchedule */
+.pricing-summary {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.pricing-status {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.status-indicator {
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.status-indicator.configured {
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.status-indicator.not-configured {
+  color: #856404;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+}
+
+.status-indicator.configuring {
+  color: #004085;
+  background-color: #cce5ff;
+  border: 1px solid #b8daff;
+}
+
+.pricing-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  font-size: 14px;
+  color: #495057;
+}
+
+.pricing-note {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 16px;
+}
+
+.edit-price-btn, .set-price-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-price-btn:hover, .set-price-btn:hover {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+}
+
+/* Custom pricing header styling */
+.custom-pricing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.custom-pricing-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Pricing configuration form */
+.pricing-configuration {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  margin-top: 12px;
+}
+
+.pricing-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pricing-form-group {
+  flex: 1 1 calc(50% - 8px);
+  min-width: 150px;
+}
+
+.pricing-form-group.full-width {
+  flex: 1 1 100%;
+}
+
+.pricing-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.pricing-form-group input,
+.pricing-form-group select,
+.pricing-form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.pricing-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.save-price-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+}
+
+.cancel-price-btn {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #ced4da;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+}
+
+.save-price-btn:hover {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+}
+
+.cancel-price-btn:hover {
+  background: #e9ecef;
+}
+
+.save-price-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
 /* Mobile responsive for INAMI section */
 @media (max-width: 768px) {
   .inami-header {

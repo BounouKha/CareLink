@@ -705,44 +705,61 @@ const fetchPatients = async () => {
             {/* Custom Pricing Section - show when service 1 or 2 (aide menager/aide familial) is selected and patient is selected */}
             {formData.patient_id && (formData.service_id === '1' || formData.service_id === '2') && (
               <div className="form-group">
-                <label>Service Pricing (Family Help / Aide Familial)</label>
+                <div className="custom-pricing-header">
+                  <h4>💰 Custom Pricing</h4>
+                </div>
                 
-                {hasCustomPrice ? (
-                  <div style={{ padding: '10px', background: '#e8f5e8', border: '1px solid #4caf50', borderRadius: '4px' }}>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>€{customPrice}/{priceType}</strong>
-                        {priceNotes && <small className="d-block text-muted">{priceNotes}</small>}
-                      </div>
-                      <button 
-                        type="button" 
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => setShowCustomPricing(true)}
-                      >
-                        Edit Price
-                      </button>
+                {hasCustomPrice ? (                    <div className="pricing-summary">
+                    <div className="pricing-status">
+                      <span className="status-indicator configured">
+                        ✅ Custom Price Set
+                      </span>
                     </div>
+                    <div className="pricing-details">
+                      <div className="detail-item">
+                        <strong>Price:</strong> €{customPrice} ({priceType})
+                      </div>
+                      {priceNotes && (
+                        <div className="detail-item">
+                          <strong>Notes:</strong> {priceNotes}
+                        </div>
+                      )}
+                    </div>
+                    <button 
+                      type="button" 
+                      className="edit-price-btn"
+                      onClick={() => setShowCustomPricing(true)}
+                      title="Edit custom price for this patient-service combination"
+                    >
+                      ✏️ Edit Price
+                    </button>
                   </div>
                 ) : showCustomPricing ? (
-                  <div style={{ padding: '10px', background: '#fff8e1', border: '1px solid #ff9800', borderRadius: '4px' }}>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <label>Price (€0.94 - €9.97)</label>
+                  <div className="pricing-configuration">
+                    <div className="pricing-status">
+                      <span className="status-indicator configuring">
+                        ⚙️ Setting Custom Price
+                      </span>
+                    </div>
+                    <div className="pricing-form">
+                      <div className="pricing-form-group">
+                        <label htmlFor="custom-price">Price (€0.94 - €9.97)</label>
                         <input
                           type="number"
+                          id="custom-price"
                           step="0.01"
                           min="0.94"
                           max="9.97"
-                          className="form-control"
                           value={customPrice}
                           onChange={(e) => setCustomPrice(e.target.value)}
                           placeholder="Enter price"
                         />
                       </div>
-                      <div className="col-md-6">
-                        <label>Price Type</label>
+                      
+                      <div className="pricing-form-group">
+                        <label htmlFor="price-type">Price Type</label>
                         <select
-                          className="form-control"
+                          id="price-type"
                           value={priceType}
                           onChange={(e) => setPriceType(e.target.value)}
                         >
@@ -750,44 +767,52 @@ const fetchPatients = async () => {
                           <option value="session">Per Session</option>
                         </select>
                       </div>
-                    </div>
-                    <div className="mt-2">
-                      <label>Notes (Optional)</label>
-                      <textarea
-                        className="form-control"
-                        rows="2"
-                        value={priceNotes}
-                        onChange={(e) => setPriceNotes(e.target.value)}
-                        placeholder="Why this price? (e.g., social benefits, income level)"
-                      />
-                    </div>
-                    <div className="mt-2">
-                      <button 
-                        type="button" 
-                        className="btn btn-sm btn-success me-2"
-                        onClick={saveCustomPricing}
-                        disabled={!customPrice || customPrice < 0.94 || customPrice > 9.97}
-                      >
-                        Save Price
-                      </button>
-                      <button 
-                        type="button" 
-                        className="btn btn-sm btn-secondary"
-                        onClick={() => setShowCustomPricing(false)}
-                      >
-                        Cancel
-                      </button>
+                      
+                      <div className="pricing-form-group full-width">
+                        <label htmlFor="price-notes">Notes (Optional)</label>
+                        <textarea
+                          id="price-notes"
+                          placeholder="Why this price? (e.g., social benefits, income level)"
+                          value={priceNotes}
+                          onChange={(e) => setPriceNotes(e.target.value)}
+                          rows="2"
+                        />
+                      </div>
+                      <div className="pricing-actions">
+                        <button 
+                          type="button" 
+                          className="save-price-btn"
+                          onClick={saveCustomPricing}
+                          disabled={!customPrice || customPrice < 0.94 || customPrice > 9.97}
+                        >
+                          Save Price
+                        </button>
+                        <button 
+                          type="button" 
+                          className="cancel-price-btn"
+                          onClick={() => setShowCustomPricing(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ padding: '10px', background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-                    <em>First time scheduling family help for this patient</em>
+                  <div className="pricing-summary">
+                    <div className="pricing-status">
+                      <span className="status-indicator not-configured">
+                        ⚠️ No Custom Price Set
+                      </span>
+                    </div>
+                    <p className="pricing-note">
+                      Set a custom price for this patient-service combination.
+                    </p>
                     <button 
                       type="button" 
-                      className="btn btn-sm btn-outline-primary ms-2"
+                      className="set-price-btn"
                       onClick={() => setShowCustomPricing(true)}
                     >
-                      Set Price
+                      Set Custom Price
                     </button>
                   </div>
                 )}
