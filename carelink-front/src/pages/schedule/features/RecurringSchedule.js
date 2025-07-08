@@ -6,6 +6,7 @@ import tokenManager from '../../../utils/tokenManager';
 import { useCareTranslation } from '../../../hooks/useCareTranslation';
 import { useConflictManager } from '../../../hooks/useConflictManager';
 import ConflictManager from '../../../components/ConflictManager';
+import InamiMedicalCareModal from '../../../components/InamiMedicalCareModal';
 import { 
   ModalLoadingOverlay, 
   ButtonLoading, 
@@ -51,7 +52,8 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     start_time: '',
     end_time: '',
     service_id: '',
-    description: ''
+    description: '',
+    prescription_id: ''
   });
 
   // Recurring settings
@@ -89,6 +91,20 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
   const [validationErrors, setValidationErrors] = useState({});
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [showAllPreviews, setShowAllPreviews] = useState(false);
+
+  // INAMI modal states
+  const [showInamiModal, setShowInamiModal] = useState(false);
+  const [inamiData, setInamiData] = useState(null);
+  
+  // Prescription states
+  const [prescriptions, setPrescriptions] = useState([]);
+  
+  // Custom pricing states
+  const [showCustomPricing, setShowCustomPricing] = useState(false);
+  const [customPrice, setCustomPrice] = useState('');
+  const [priceType, setPriceType] = useState('hourly');
+  const [hasCustomPrice, setHasCustomPrice] = useState(false);
+  const [priceNotes, setPriceNotes] = useState('');
 
   // Use modern authentication API
   const { get, post } = useAuthenticatedApi();
@@ -145,7 +161,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
   useEffect(() => {
     if (isOpen) {      executeWithLoading(async () => {
         setIsDataLoading(true);
-        await Promise.all([fetchPatients(), fetchServices()]);
+        await Promise.all([fetchPatients(), fetchServices(), fetchPrescriptions()]);
         setIsDataLoading(false);
       }, '', 'modal');
       
@@ -387,15 +403,11 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
       }
 
       const data = await get('http://localhost:8000/account/views_patient/');
-      const patientList = data.results || [];
-      setPatients(patientList);
+      setPatients(data.results || []);
     } catch (err) {
       console.error('Error fetching patients:', err);
       if (err.message.includes('401') || err.message.includes('Unauthorized')) {
         tokenManager.handleLogout();
-        setError('Please log in to access patients.');
-      } else {
-        setError('Network error occurred while loading patients.');
       }
     }
   };
@@ -406,7 +418,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
       }
 
       const data = await get('http://localhost:8000/account/services/');
-      setServices(data.results || data || []);
+      setServices(data || []);
     } catch (err) {
       console.error('Error fetching services:', err);
       if (err.message.includes('401') || err.message.includes('Unauthorized')) {
@@ -415,11 +427,102 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     }
   };
 
+  const fetchPrescriptions = async (patientId = null) => {
+    try {
+      if (!tokenManager.isAuthenticated()) {
+        throw new Error('User not authenticated. Please log in.');
+      }
+
+      const url = patientId 
+        ? `http://localhost:8000/schedule/prescriptions/?patient_id=${patientId}`
+        : 'http://localhost:8000/schedule/prescriptions/';
+      
+      const data = await get(url);
+      setPrescriptions(data.prescriptions || []);
+      console.log('Fetched prescriptions:', data.prescriptions);
+    } catch (err) {
+      console.error('Error fetching prescriptions:', err);
+      if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+        tokenManager.handleLogout();
+      }
+    }
+  };
+
+  // Custom pricing functions
+  const checkCustomPricing = async (patientId, serviceId) => {
+    try {
+      console.log('[RecurringSchedule] Checking custom pricing for patient:', patientId, 'service:', serviceId);
+      const response = await get(`http://localhost:8000/schedule/patient-service-price/?patient_id=${patientId}&service_id=${serviceId}`);
+      
+      console.log('[RecurringSchedule] Custom pricing response:', response);
+      
+      if (response.has_custom_price) {
+        setHasCustomPrice(true);
+        setCustomPrice(response.custom_price);
+        setPriceType(response.price_type);
+        setPriceNotes(response.notes || '');
+        setShowCustomPricing(false); // Don't show the form if we already have a price
+        console.log('[RecurringSchedule] Found custom price:', response.custom_price);
+      } else {
+        setHasCustomPrice(false);
+        setCustomPrice('');
+        setPriceNotes('');
+        setShowCustomPricing(false); // Don't automatically show the form
+        console.log('[RecurringSchedule] No custom price found for this patient-service combination');
+      }
+    } catch (error) {
+      console.error('[RecurringSchedule] Error checking custom pricing:', error);
+      setHasCustomPrice(false);
+      setCustomPrice('');
+      setPriceNotes('');
+      setShowCustomPricing(false);
+    }
+  };
+
+  const saveCustomPricing = async () => {
+    try {
+      const response = await post('http://localhost:8000/schedule/patient-service-price/', {
+        patient_id: formData.patient_id,
+        service_id: formData.service_id,
+        custom_price: customPrice,
+        price_type: priceType,
+        notes: priceNotes
+      });
+      
+      if (response.success) {
+        setHasCustomPrice(true);
+        setShowCustomPricing(false);
+        console.log('[RecurringSchedule] Custom price saved:', customPrice);
+      }
+    } catch (error) {
+      console.error('[RecurringSchedule] Error saving custom price:', error);
+      setError('Failed to save custom pricing');
+    }
+  };
+
+  // INAMI Modal Handlers
+  const handleInamiSave = (inamiConfigData) => {
+    console.log('[RecurringSchedule] INAMI configuration saved:', inamiConfigData);
+    setInamiData(inamiConfigData);
+    setShowInamiModal(false);
+  };
+
+  const handleInamiClose = () => {
+    setShowInamiModal(false);
+  };
+
+  // Fix missing INAMI configuration function
+  const openInamiConfiguration = () => {
+    console.log('[RecurringSchedule] Opening INAMI configuration modal');
+    setShowInamiModal(true);
+  };
+
+  // Search and filter functions (missing in RecurringSchedule)
   const filteredProviders = providers.filter(provider =>
     provider.name.toLowerCase().includes(providerSearch.toLowerCase()) ||
     provider.service.toLowerCase().includes(providerSearch.toLowerCase())
   );
-
+  
   const filteredPatients = patients.filter(patient =>
     `${patient.firstname || ''} ${patient.lastname || ''}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
     patient.national_number?.toLowerCase().includes(patientSearch.toLowerCase())
@@ -429,287 +532,130 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
     setFormData(prev => ({ ...prev, provider_id: provider.id }));
     setProviderSearch(`${provider.name} - ${provider.service}`);
     setShowProviderDropdown(false);
-    
-    // Check for provider absences across the recurring period if we have dates
-    if (formData.start_date && recurringData.end_date) {
-      checkProviderAbsencesForPeriod(provider.id, formData.start_date, recurringData.end_date);
-    }
-  };
-
-  const checkProviderAbsencesForPeriod = async (providerId, startDate, endDate) => {
-    try {
-      console.log(`[RecurringSchedule] Checking absences for provider ${providerId} from ${startDate} to ${endDate}`);
-      
-      // Generate all dates in the period to check
-      const dates = [];
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        dates.push(d.toISOString().split('T')[0]);
-      }
-      
-      const datesString = dates.join(',');
-      const response = await get(`http://localhost:8000/account/providers/${providerId}/absence-check/?dates=${datesString}`);
-      
-      if (response.absence_data) {
-        const absences = [];
-        
-        // Find all dates where the provider is absent
-        Object.entries(response.absence_data).forEach(([date, absenceData]) => {
-          if (absenceData.is_absent) {
-            absences.push({
-              date,
-              type: absenceData.absence_type || 'absence',
-              reason: absenceData.absence_reason || 'No reason provided'
-            });
-          }
-        });
-        
-        if (absences.length > 0) {
-          const providerName = providers.find(p => p.id === providerId)?.name || 'Provider';
-          
-          // Group absences by type
-          const absencesByType = absences.reduce((acc, absence) => {
-            if (!acc[absence.type]) {
-              acc[absence.type] = [];
-            }
-            acc[absence.type].push(absence);
-            return acc;
-          }, {});
-          
-          // Function to merge consecutive dates into periods
-          const mergeConsecutiveDates = (dateList) => {
-            if (dateList.length === 0) return [];
-            
-            // Sort dates
-            const sortedDates = dateList.sort((a, b) => new Date(a.date) - new Date(b.date));
-            const periods = [];
-            let currentPeriod = {
-              start: sortedDates[0].date,
-              end: sortedDates[0].date,
-              reason: sortedDates[0].reason
-            };
-            
-            for (let i = 1; i < sortedDates.length; i++) {
-              const currentDate = new Date(sortedDates[i].date);
-              const previousDate = new Date(sortedDates[i - 1].date);
-              const dayDiff = (currentDate - previousDate) / (1000 * 60 * 60 * 24);
-              
-              if (dayDiff === 1) {
-                // Consecutive date, extend the period
-                currentPeriod.end = sortedDates[i].date;
-                // Keep the reason from the first date in the period
-              } else {
-                // Non-consecutive date, save current period and start new one
-                periods.push({ ...currentPeriod });
-                currentPeriod = {
-                  start: sortedDates[i].date,
-                  end: sortedDates[i].date,
-                  reason: sortedDates[i].reason
-                };
-              }
-            }
-            
-            // Don't forget the last period
-            periods.push(currentPeriod);
-            return periods;
-          };
-          
-          // Create a comprehensive message
-          let message = `⚠️ ${providerName} has absences during the recurring period:\n\n`;
-          
-          Object.entries(absencesByType).forEach(([type, typeAbsences]) => {
-            message += `📅 ${type.charAt(0).toUpperCase() + type.slice(1)}:\n`;
-            
-            // Merge consecutive dates into periods
-            const periods = mergeConsecutiveDates(typeAbsences);
-            
-            periods.forEach(period => {
-              const startDate = new Date(period.start);
-              const endDate = new Date(period.end);
-              
-              if (period.start === period.end) {
-                // Single date
-                const formattedDate = startDate.toLocaleDateString();
-                message += `   • ${formattedDate}${period.reason ? ` - ${period.reason}` : ''}\n`;
-              } else {
-                // Date range
-                const startFormatted = startDate.toLocaleDateString();
-                const endFormatted = endDate.toLocaleDateString();
-                message += `   • ${startFormatted} - ${endFormatted}${period.reason ? ` - ${period.reason}` : ''}\n`;
-              }
-            });
-            
-            message += '\n';
-          });
-          
-          message += 'Please review the schedule or consider adjusting the recurring period.';
-          
-          // Show toast without auto-dismiss for recurring schedules
-          if (window.showToast) {
-            window.showToast(message, 'warning', 0); // 0 = no auto-dismiss
-          }
-          
-          console.log(`[RecurringSchedule] Provider absences detected:`, absences);
-        } else {
-          console.log(`[RecurringSchedule] Provider is available for the entire period`);
-        }
-      }
-    } catch (error) {
-      console.error('[RecurringSchedule] Error checking provider absences:', error);
-    }
+    console.log('[RecurringSchedule] Provider selected:', provider);
   };
 
   const selectPatient = (patient) => {
-    setFormData(prev => ({ ...prev, patient_id: patient.id }));
+    console.log('[RecurringSchedule] Patient selected:', patient);
+    setFormData(prev => ({ ...prev, patient_id: patient.id, prescription_id: '' }));
     setPatientSearch(`${patient.firstname || ''} ${patient.lastname || ''}`);
     setShowPatientDropdown(false);
-  };  // Enhanced input handling with validation
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
     
-    try {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-
-      // Clear validation errors for this field
-      if (validationErrors[name]) {
-        setValidationErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
-      }
-
-      // Auto-calculate end time if start time is set and end time is empty
-      if (name === 'start_time' && value && !formData.end_time) {
-        const endTime = calculateEndTime(value);
-        setFormData(prev => ({
-          ...prev,
-          end_time: endTime
-        }));
-      }
-
-      // Smart end date calculation when start date changes
-      if (name === 'start_date' && value) {
-        try {
-          const newStartDate = new Date(value);
-          if (!isNaN(newStartDate.getTime())) {
-            const newEndDate = new Date(newStartDate);
-            newEndDate.setDate(newEndDate.getDate() + 28); // 4 weeks later
-            
-            // Update end_date if it wasn't manually set or if it's before the new start date
-            if (!recurringData.end_date || new Date(recurringData.end_date) < newStartDate) {
-              setRecurringData(prev => ({
-                ...prev,
-                end_date: formatDateToString(newEndDate)
-              }));
-            }
-            
-            // Auto-select the day of week for the start date
-            const dayOfWeek = newStartDate.getDay();
-            if (!recurringData.weekdays.includes(dayOfWeek)) {
-              setRecurringData(prev => ({
-                ...prev,
-                weekdays: [...prev.weekdays, dayOfWeek]
-              }));
-            }
-            
-            // Check for absences when start date changes and we have provider and end date
-            if (formData.provider_id && recurringData.end_date) {
-              setTimeout(() => {
-                checkProviderAbsencesForPeriod(formData.provider_id, value, recurringData.end_date);
-              }, 100);
-            }
-          }
-        } catch (dateError) {
-          console.error('Error handling start date change:', dateError);
-        }
-      }
-    } catch (error) {
-      console.error('Error handling input change:', error);
+    // Fetch prescriptions for this patient
+    console.log('[RecurringSchedule] Fetching prescriptions for patient ID:', patient.id);
+    fetchPrescriptions(patient.id);
+    
+    // If service is already selected, check custom pricing
+    if (formData.service_id) {
+      checkCustomPricing(patient.id, formData.service_id);
     }
   };
 
-  // Enhanced recurring data handling
+  // Enhanced input handling with INAMI and custom pricing
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Show INAMI modal for Service 3 (Soins Infirmiers)
+    if (name === 'service_id' && (value === '3' || value === 3) && !inamiData) {
+      console.log('[RecurringSchedule] Service 3 selected, opening INAMI modal');
+      setShowInamiModal(true);
+    }
+
+    // Clear INAMI data if service changes from 3 to something else
+    if (name === 'service_id' && value !== '3' && value !== 3 && inamiData) {
+      setInamiData(null);
+    }
+
+    // Check for custom pricing when both patient and service are selected
+    if (name === 'service_id' && formData.patient_id && value) {
+      checkCustomPricing(formData.patient_id, value);
+    }
+
+    // Fetch prescriptions and check custom pricing when patient is selected
+    if (name === 'patient_id') {
+      fetchPrescriptions(value);
+      
+      // If service is already selected, check custom pricing
+      if (formData.service_id) {
+        checkCustomPricing(value, formData.service_id);
+      }
+    }
+
+    // Auto-calculate end time if start time is set and end time is empty
+    if (name === 'start_time' && value && !formData.end_time) {
+      const endTime = calculateEndTime(value);
+      setFormData(prev => ({
+        ...prev,
+        end_time: endTime
+      }));
+    }
+
+    // Clear validation errors for this field
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    // Smart end date calculation when start date changes
+    if (name === 'start_date' && value) {
+      try {
+        const newStartDate = new Date(value);
+        if (!isNaN(newStartDate.getTime())) {
+          const newEndDate = new Date(newStartDate);
+          newEndDate.setDate(newEndDate.getDate() + 28); // 4 weeks later
+          
+          // Update end_date if it wasn't manually set or if it's before the new start date
+          if (!recurringData.end_date || new Date(recurringData.end_date) < newStartDate) {
+            setRecurringData(prev => ({
+              ...prev,
+              end_date: formatDateToString(newEndDate)
+            }));
+          }
+          
+          // Auto-select the day of week for the start date
+          const dayOfWeek = newStartDate.getDay();
+          if (!recurringData.weekdays.includes(dayOfWeek)) {
+            setRecurringData(prev => ({
+              ...prev,
+              weekdays: [...prev.weekdays, dayOfWeek]
+            }));
+          }
+        }
+      } catch (dateError) {
+        console.error('Error handling start date change:', dateError);
+      }
+    }
+  };
+  // Handle recurring schedule form changes
   const handleRecurringChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    try {
-      if (name === 'weekdays') {
-        const dayValue = parseInt(value);
-        if (!isNaN(dayValue)) {
-          setRecurringData(prev => ({
-            ...prev,
-            weekdays: checked 
-              ? [...prev.weekdays, dayValue]
-              : prev.weekdays.filter(day => day !== dayValue)
-          }));
-          
-          // Clear weekdays validation error
-          if (validationErrors.weekdays) {
-            setValidationErrors(prev => {
-              const newErrors = { ...prev };
-              delete newErrors.weekdays;
-              return newErrors;
-            });
-          }
-        }
-      } else {
-        const newValue = type === 'number' ? (isNaN(parseInt(value)) ? 1 : parseInt(value)) : value;
-        
-        setRecurringData(prev => ({
-          ...prev,
-          [name]: newValue
-        }));
-        
-        // Clear validation errors for this field
-        if (validationErrors[name]) {
-          setValidationErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors[name];
-            return newErrors;
-          });
-        }
-        
-        // Smart defaults when frequency changes
-        if (name === 'frequency') {
-          if (value === 'monthly') {
-            setRecurringData(prev => ({
-              ...prev,
-              interval: 1,
-              occurrences: 12
-            }));
-          } else if (value === 'bi-weekly') {
-            setRecurringData(prev => ({
-              ...prev,
-              interval: 2,
-              occurrences: 8
-            }));
-          } else if (value === 'weekly') {
-            setRecurringData(prev => ({
-              ...prev,
-              interval: 1,
-              occurrences: 4
-            }));
-          }
-        }
-        
-        // Check for absences when end_date changes
-        if (name === 'end_date' && value && formData.provider_id && formData.start_date) {
-          // Use setTimeout to ensure the state is updated before checking
-          setTimeout(() => {
-            checkProviderAbsencesForPeriod(formData.provider_id, formData.start_date, value);
-          }, 100);
-        }
-      }
-    } catch (error) {
-      console.error('Error handling recurring change:', error);
+    if (name === 'weekdays') {
+      // Handle checkbox for days of week
+      const dayValue = parseInt(value);
+      setRecurringData(prev => ({
+        ...prev,
+        weekdays: checked 
+          ? [...prev.weekdays, dayValue]
+          : prev.weekdays.filter(day => day !== dayValue)
+      }));
+    } else {
+      // Handle regular inputs (frequency, interval, end_type, end_date, occurrences)
+      const newValue = type === 'number' ? parseInt(value) : value;
+      setRecurringData(prev => ({
+        ...prev,
+        [name]: newValue
+      }));
     }
-  };  // Enhanced form submission with validation and loading states
+  };
+  // Enhanced form submission with validation and loading states
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -738,6 +684,28 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
         pattern_summary: generatePatternSummary()
       }
     };
+
+    // Include INAMI data for Service 3 appointments
+    if ((formData.service_id === '3' || formData.service_id === 3) && inamiData) {
+      recurringScheduleData.inami_data = inamiData;
+      console.log('[RecurringSchedule] Including INAMI data in submission:', inamiData);
+    }
+
+    // Include prescription data if selected
+    if (formData.prescription_id) {
+      recurringScheduleData.prescription_id = formData.prescription_id;
+      console.log('[RecurringSchedule] Including prescription ID in submission:', formData.prescription_id);
+    }
+
+    // Include custom pricing data if available
+    if (hasCustomPrice && customPrice && (formData.service_id === '1' || formData.service_id === 1 || formData.service_id === '2' || formData.service_id === 2)) {
+      recurringScheduleData.custom_price = customPrice;
+      recurringScheduleData.price_type = priceType;
+      if (priceNotes) {
+        recurringScheduleData.price_notes = priceNotes;
+      }
+      console.log('[RecurringSchedule] Including custom pricing data:', { customPrice, priceType, priceNotes });
+    }
 
     await executeWithLoading(async () => {
       setError('');
@@ -819,6 +787,7 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
 
       // If no conflicts or conflict check failed, proceed with submission
       try {
+        console.log('[RecurringSchedule] About to send request with data:', JSON.stringify(recurringScheduleData, null, 2));
         const data = await post('http://localhost:8000/schedule/recurring-schedule/', recurringScheduleData);
         
         // Show success message with details
@@ -914,8 +883,31 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
           },
           force_schedule: true // Add this flag
         };
+
+        // Include INAMI data for Service 3 appointments
+        if ((formData.service_id === '3' || formData.service_id === 3) && inamiData) {
+          recurringScheduleData.inami_data = inamiData;
+          console.log('[RecurringSchedule - Conflict Resolution] Including INAMI data in submission:', inamiData);
+        }
+
+        // Include prescription data if selected
+        if (formData.prescription_id) {
+          recurringScheduleData.prescription_id = formData.prescription_id;
+          console.log('[RecurringSchedule - Conflict Resolution] Including prescription ID in submission:', formData.prescription_id);
+        }
+
+        // Include custom pricing data if available
+        if (hasCustomPrice && customPrice && (formData.service_id === '1' || formData.service_id === 1 || formData.service_id === '2' || formData.service_id === 2)) {
+          recurringScheduleData.custom_price = customPrice;
+          recurringScheduleData.price_type = priceType;
+          if (priceNotes) {
+            recurringScheduleData.price_notes = priceNotes;
+          }
+          console.log('[RecurringSchedule - Conflict Resolution] Including custom pricing data:', { customPrice, priceType, priceNotes });
+        }
         
         try {
+          console.log('[RecurringSchedule - Conflict Resolution] About to send request with data:', JSON.stringify(recurringScheduleData, null, 2));
           const data = await post('http://localhost:8000/schedule/recurring-schedule/', recurringScheduleData);
           
           // Show success message
@@ -1102,12 +1094,281 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
                   <option value="">{schedule('selectServiceOptional')}</option>
                   {services.map(service => (
                     <option key={service.id} value={service.id}>
-                      {service.name} - ${service.price}
+                      {service.name}
                     </option>
                   ))}
                 </select>
               </div>
-            </div>            <div className="form-group">
+            </div>
+
+            {/* Prescription Selection - show when patient is selected */}
+            {formData.patient_id && (
+              <div className="form-group">
+                <label htmlFor="prescription_id">📋 Link to Prescription (Optional)</label>
+                {/* Debug info */}
+                <small style={{color: 'blue', display: 'block'}}>
+                  Debug: Patient ID: {formData.patient_id}, Prescriptions found: {prescriptions.length}
+                </small>
+                
+                {prescriptions.length > 0 ? (
+                  <select
+                    id="prescription_id"
+                    name="prescription_id"
+                    value={formData.prescription_id}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">No Prescription</option>
+                    {prescriptions.map(prescription => (
+                      <option key={prescription.id} value={prescription.id}>
+                        {prescription.title} - {prescription.service_name} 
+                        {prescription.linked_timeslots_count > 0 ? ` (${prescription.linked_timeslots_count} timeslots)` : ''}
+                        {prescription.priority === 'Urgent' ? ' 🔴' : ''}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div style={{ 
+                    padding: '8px', 
+                    background: '#f8f9fa', 
+                    border: '1px solid #dee2e6', 
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    color: '#6c757d'
+                  }}>
+                    No prescriptions available for this patient
+                  </div>
+                )}
+                
+                {formData.prescription_id && (
+                  <small className="form-hint">
+                    📋 This appointment will be linked to the selected prescription
+                  </small>
+                )}
+              </div>
+            )}
+
+            {/* Custom Pricing Section - for service ID 1 or 2 (family help services) */}
+            {(formData.service_id === '1' || formData.service_id === 1 || formData.service_id === '2' || formData.service_id === 2) && formData.patient_id && (
+              <div className="custom-pricing-section">
+                <div className="custom-pricing-header">
+                  <h4>💰 Custom Pricing</h4>
+                  {hasCustomPrice && (
+                    <button 
+                      type="button" 
+                      className="edit-price-btn"
+                      onClick={() => setShowCustomPricing(true)}
+                      title="Edit custom price for this patient-service combination"
+                    >
+                      ✏️ Edit Price
+                    </button>
+                  )}
+                </div>
+                
+                {showCustomPricing ? (
+                  <div className="pricing-configuration">
+                    <div className="pricing-status">
+                      <span className="status-indicator configuring">
+                        ⚙️ {hasCustomPrice ? 'Edit Custom Price' : 'Set Custom Price'}
+                      </span>
+                    </div>
+                    <div className="pricing-form">
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Price (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Enter price"
+                            value={customPrice}
+                            onChange={(e) => setCustomPrice(e.target.value)}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Price Type</label>
+                          <select 
+                            value={priceType} 
+                            onChange={(e) => setPriceType(e.target.value)}
+                          >
+                            <option value="hourly">Per Hour</option>
+                            <option value="fixed">Fixed Price</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Notes (Optional)</label>
+                        <textarea
+                          placeholder="Additional notes about this pricing..."
+                          value={priceNotes}
+                          onChange={(e) => setPriceNotes(e.target.value)}
+                          rows="2"
+                        />
+                      </div>
+                      <div className="pricing-actions">
+                        <button 
+                          type="button" 
+                          className="save-price-btn"
+                          onClick={saveCustomPricing}
+                          disabled={!customPrice}
+                        >
+                          Save Price
+                        </button>
+                        <button 
+                          type="button" 
+                          className="cancel-price-btn"
+                          onClick={() => setShowCustomPricing(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : hasCustomPrice ? (
+                  <div className="pricing-summary">
+                    <div className="pricing-status">
+                      <span className="status-indicator configured">
+                        ✅ Custom Price Set
+                      </span>
+                    </div>
+                    <div className="pricing-details">
+                      <div className="detail-item">
+                        <strong>Price:</strong> €{customPrice} ({priceType})
+                      </div>
+                      {priceNotes && (
+                        <div className="detail-item">
+                          <strong>Notes:</strong> {priceNotes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pricing-summary">
+                    <div className="pricing-status">
+                      <span className="status-indicator not-configured">
+                        ⚠️ No Custom Price Set
+                      </span>
+                    </div>
+                    <p className="pricing-note">
+                      Set a custom price for this patient-service combination.
+                    </p>
+                    <button 
+                      type="button" 
+                      className="set-price-btn"
+                      onClick={() => setShowCustomPricing(true)}
+                    >
+                      Set Custom Price
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* INAMI Configuration Section for Service 3 */}
+            {(formData.service_id === '3' || formData.service_id === 3) && (
+              <div className="inami-configuration-section">
+                <div className="inami-header">
+                  <h4>Configuration INAMI</h4>
+                  <button 
+                    type="button" 
+                    className="configure-inami-btn"
+                    onClick={openInamiConfiguration}
+                  >
+                    {inamiData ? 'Reconfigurer INAMI' : 'Configurer INAMI'}
+                  </button>
+                </div>
+                
+                {inamiData ? (
+                  <div className="inami-summary">
+                    <div className="inami-status">
+                      <span className="status-indicator configured">
+                        ✅ INAMI Configured
+                      </span>
+                    </div>
+                    <div className="inami-details">
+                      <div className="detail-item">
+                        <strong>Type:</strong> {inamiData.care_type}
+                      </div>
+                      <div className="detail-item">
+                        <strong>Location:</strong> {inamiData.care_location}
+                      </div>
+                      <div className="detail-item">
+                        <strong>Duration:</strong> {inamiData.care_duration} minutes
+                      </div>
+                      <div className="detail-item">
+                        <strong>Code INAMI:</strong> {inamiData.inami_code}
+                      </div>
+                      <div className="detail-item">
+                        <strong>Patient Payment:</strong> €{inamiData.patient_copay}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="inami-summary">
+                    <div className="inami-status">
+                      <span className="status-indicator not-configured">
+                        ⚠️ INAMI Not Configured
+                      </span>
+                    </div>
+                    <p className="inami-note">
+                      INAMI configuration is required for nursing care services (Service 3).
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Prescription Summary Section */}
+            {formData.prescription_id && (
+              <div className="prescription-summary-section">
+                <div className="prescription-header">
+                  <h4>📋 Prescription Linked</h4>
+                </div>
+                {(() => {
+                  const selectedPrescription = prescriptions.find(p => p.id.toString() === formData.prescription_id);
+                  return selectedPrescription ? (
+                    <div className="prescription-summary">
+                      <div className="prescription-status">
+                        <span className="status-indicator configured">
+                          ✅ Prescription Linked
+                        </span>
+                      </div>
+                      <div className="prescription-details">
+                        <div className="detail-item">
+                          <strong>Title:</strong> {selectedPrescription.title}
+                        </div>
+                        <div className="detail-item">
+                          <strong>Service:</strong> {selectedPrescription.service_name}
+                        </div>
+                        {selectedPrescription.priority && (
+                          <div className="detail-item">
+                            <strong>Priority:</strong> {selectedPrescription.priority}
+                            {selectedPrescription.priority === 'Urgent' && ' 🔴'}
+                          </div>
+                        )}
+                        {selectedPrescription.linked_timeslots_count > 0 && (
+                          <div className="detail-item">
+                            <strong>Linked Timeslots:</strong> {selectedPrescription.linked_timeslots_count}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="prescription-summary">
+                      <div className="prescription-status">
+                        <span className="status-indicator not-configured">
+                          ⚠️ Prescription Not Found
+                        </span>
+                      </div>
+                      <p className="prescription-note">
+                        The selected prescription could not be found.
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            <div className="form-group">
               <label htmlFor="description">{placeholders('enterDescription')}</label>
               <textarea
                 id="description"
@@ -1503,6 +1764,16 @@ const RecurringSchedule = ({ isOpen, onClose, onScheduleCreated, providers = [],
             patternSummary: conflictData?.scheduling_data?.pattern_summary || generatePatternSummary(),
             conflictedDates: conflictData?.conflicts?.map(c => c.conflictDate).filter((date, index, self) => self.indexOf(date) === index) || []
           }}
+        />
+
+        {/* INAMI Medical Care Modal */}
+        <InamiMedicalCareModal
+          isOpen={showInamiModal}
+          onClose={handleInamiClose}
+          onSave={handleInamiSave}
+          initialData={inamiData}
+          patientData={patients.find(p => p.id === formData.patient_id)}
+          prescriptionData={prescriptions.find(p => p.id === formData.prescription_id)}
         />
       </div>
     </div>
