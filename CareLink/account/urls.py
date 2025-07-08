@@ -39,6 +39,7 @@ from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView
 from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView
 from .views.appointment_comments import AppointmentCommentAPIView, CheckCommentPermissionAPIView, CoordinatorViewCommentsAPIView
 from .views.patient_details import PatientDetailsView
+from .views.patient_service_pricing import PatientServicePriceViewSet, PatientServicePriceDetailView, patients_list, services_list
 from .views.notification_views import (
     NotificationListView, NotificationDetailView, NotificationStatsView,
     ScheduleChangeRequestView, NotificationPreferenceView,
@@ -152,4 +153,10 @@ urlpatterns += [
     # Schedule Change Request API endpoints
     path('schedule-change-requests/', ScheduleChangeRequestView.as_view(), name='schedule-change-request'),
     path('schedule-change-requests/my-requests/', get_user_schedule_change_requests, name='my-schedule-change-requests'),
+    
+    # Patient Service Pricing API endpoints
+    path('patient-service-prices/', PatientServicePriceViewSet.as_view(), name='patient-service-prices'),
+    path('patient-service-prices/<int:pk>/', PatientServicePriceDetailView.as_view(), name='patient-service-price-detail'),
+    path('pricing/patients/', patients_list, name='pricing-patients-list'),
+    path('pricing/services/', services_list, name='pricing-services-list'),
 ]
