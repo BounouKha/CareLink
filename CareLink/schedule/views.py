@@ -1654,6 +1654,9 @@ class RecurringScheduleView(APIView):
             return Response({"error": "Permission denied."}, status=403)
         
         try:
+            print(f"🔍 DEBUG RecurringSchedule: Raw request data: {request.data}")
+            print(f"🔍 DEBUG RecurringSchedule: Request data keys: {list(request.data.keys()) if hasattr(request.data, 'keys') else 'Not a dict'}")
+            
             data = request.data
             
             # Extract basic schedule data
@@ -1687,6 +1690,41 @@ class RecurringScheduleView(APIView):
                 return Response({"error": "Provider not found"}, status=404)
             except Patient.DoesNotExist:
                 return Response({"error": "Patient not found"}, status=404)
+            
+            # Extract additional fields for timeslot creation
+            prescription_id = data.get('prescription_id')
+            inami_data = data.get('inami_data')
+            
+            print(f"🔍 DEBUG RecurringSchedule: Received inami_data from request: {inami_data}")
+            print(f"🔍 DEBUG RecurringSchedule: inami_data type: {type(inami_data)}")
+            print(f"🔍 DEBUG RecurringSchedule: prescription_id: {prescription_id}")
+            
+            # Handle prescription linking from ServiceDemand (like QuickSchedule)
+            prescription = None
+            if prescription_id:
+                try:
+                    if prescription_id and prescription_id != '':
+                        service_demand = ServiceDemand.objects.get(id=prescription_id)
+                        
+                        # Create or get Prescription object from ServiceDemand
+                        note_text = f"Created from Service Demand #{service_demand.id}: {service_demand.title}"
+                        prescription, created = Prescription.objects.get_or_create(
+                            medication=service_demand.description or service_demand.title,
+                            start_date=service_demand.preferred_start_date or timezone.now().date(),
+                            service=service_demand.service,
+                            defaults={
+                                'end_date': None,
+                                'note': note_text,
+                                'status': 'accepted',
+                                'frequency': 1,
+                                'instructions': service_demand.special_instructions or ''
+                            }
+                        )
+                        print(f"[RecurringSchedule] Prescription {prescription.id} created/found for ServiceDemand {service_demand.id}")
+                except (ServiceDemand.DoesNotExist, ValueError) as e:
+                    print(f"Warning: Could not set prescription {prescription_id}: {e}")
+                except Exception as e:
+                    print(f"Error handling prescription: {e}")
             
             # Validate service if provided
             service = None
@@ -1774,14 +1812,27 @@ class RecurringScheduleView(APIView):
                             # Log notification error but don't fail the creation
                             print(f"Failed to create notification for new recurring schedule: {e}")
                     
-                    # Create timeslot
+                    # Create timeslot with all fields including INAMI data and prescription
+                    print(f"🔍 DEBUG RecurringSchedule: About to create timeslot with inami_data: {inami_data}")
+                    print(f"🔍 DEBUG RecurringSchedule: inami_data type: {type(inami_data)}")
+                    print(f"🔍 DEBUG RecurringSchedule: inami_data is None: {inami_data is None}")
+                    
                     timeslot = TimeSlot.objects.create(
                         start_time=start_time_obj,
                         end_time=end_time_obj,
                         service=service,
                         status='scheduled',
-                        description=description
+                        description=description,
+                        prescription=prescription,
+                        inami_data=inami_data
                     )
+                    
+                    print(f"🔍 DEBUG RecurringSchedule: Created timeslot {timeslot.id} with inami_data: {timeslot.inami_data}")
+                    if prescription:
+                        print(f"🔍 DEBUG RecurringSchedule: Timeslot {timeslot.id} linked to prescription {prescription.id}")
+                    
+                    # Save timeslot with all updates (prescription, inami_data)
+                    timeslot.save()
                     
                     # Link timeslot to schedule
                     schedule.time_slots.add(timeslot)

@@ -1260,3 +1260,266 @@
   font-style: italic;
 }
 
+/* Custom Pricing Section Styles - Same as EditAppointment */
+.custom-pricing-section {
+  margin: 20px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e8f4ff 100%);
+  border: 1px solid rgba(0, 123, 191, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 123, 191, 0.08);
+}
+
+.custom-pricing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.custom-pricing-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.edit-price-btn, .set-price-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-price-btn:hover, .set-price-btn:hover {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+}
+
+.pricing-summary {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.pricing-configuration {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.pricing-status {
+  margin-bottom: 8px;
+}
+
+.status-indicator {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-indicator.configured {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.status-indicator.configuring {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+  border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.status-indicator.not-configured {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.pricing-details {
+  margin-top: 8px;
+}
+
+.detail-item {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #495057;
+}
+
+.pricing-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.save-price-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+}
+
+.save-price-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+}
+
+.save-price-btn:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cancel-price-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);
+}
+
+.cancel-price-btn:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.35);
+}
+
+.pricing-note {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* INAMI Configuration Section Styles */
+.inami-configuration-section {
+  margin: 20px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff8f0 0%, #fff0e0 100%);
+  border: 1px solid rgba(255, 140, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.08);
+}
+
+.inami-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.inami-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.configure-inami-btn {
+  background: linear-gradient(135deg, #ff8c00 0%, #ff7700 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.25);
+}
+
+.configure-inami-btn:hover {
+  background: linear-gradient(135deg, #ff7700 0%, #ff6600 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.35);
+}
+
+.inami-summary {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 140, 0, 0.2);
+}
+
+.inami-details {
+  margin-top: 8px;
+}
+
+.inami-note {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Prescription Summary Section Styles */
+.prescription-summary-section {
+  background: #f8f9ff;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid rgba(75, 85, 198, 0.2);
+}
+
+.prescription-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.prescription-header h4 {
+  margin: 0;
+  color: #4b55c6;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.prescription-summary {
+  background: white;
+  border-radius: 4px;
+  padding: 12px;
+  border: 1px solid rgba(75, 85, 198, 0.2);
+}
+
+.prescription-details {
+  margin-top: 8px;
+}
+
+.prescription-note {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #6c757d;
+  font-style: italic;
+}
+
