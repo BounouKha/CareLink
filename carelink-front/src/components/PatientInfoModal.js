@@ -249,7 +249,7 @@ const PatientInfoModal = ({ appointment, onClose, providerService }) => {
                                 </div>
 
                                 {/* Doctor Information - Only for Service 3 providers */}
-                                {providerService && providerService.id === 3 && (
+                                {(providerService?.id === 3 || providerService?.id === '3') && (
                                     <div className="mb-4">
                                         <h6 className="border-bottom pb-2 mb-3">
                                             <i className="fas fa-user-md me-2 text-primary"></i>
@@ -269,26 +269,6 @@ const PatientInfoModal = ({ appointment, onClose, providerService }) => {
                                                 <strong>Doctor Address:</strong> {patientDetails?.doctor_address || 'Not provided'}
                                             </div>
                                         </div>
-                                        {patientDetails?.doctor_name && patientDetails?.doctor_phone && (
-                                            <div className="mt-2">
-                                                <a 
-                                                    href={`tel:${patientDetails.doctor_phone}`}
-                                                    className="btn btn-sm btn-outline-primary me-2"
-                                                >
-                                                    <i className="fas fa-phone me-1"></i>
-                                                    Call Doctor
-                                                </a>
-                                                {patientDetails?.doctor_email && (
-                                                    <a 
-                                                        href={`mailto:${patientDetails.doctor_email}`}
-                                                        className="btn btn-sm btn-outline-primary"
-                                                    >
-                                                        <i className="fas fa-envelope me-1"></i>
-                                                        Email Doctor
-                                                    </a>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                             </>
