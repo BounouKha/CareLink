@@ -316,5 +316,31 @@
     "export": "Export data",
     "print": "Print",
     "help": "Get help"
+  },
+  "inami": {
+    "title": "Search INAMI Healthcare Providers",
+    "search_form": "Search Criteria",
+    "name": "Last Name",
+    "name_placeholder": "Enter last name",
+    "firstname": "First Name",
+    "firstname_placeholder": "Enter first name",
+    "profession": "Profession",
+    "profession_placeholder": "e.g., Médecin, Dentiste",
+    "inami_number": "INAMI Number",
+    "inami_number_placeholder": "Enter INAMI number",
+    "location": "Location",
+    "location_placeholder": "Enter city or postal code",
+    "search": "Search",
+    "searching": "Searching...",
+    "clear": "Clear",
+    "error": {
+      "no_search_params": "Please enter at least one search parameter",
+      "search_failed": "Search failed",
+      "network": "Network error occurred. Please try again.",
+      "no_results": "No healthcare providers found with the specified criteria. Try different search terms."
+    },
+    "success": {
+      "found_providers": "Found {{count}} healthcare providers"
+    }
   }
 }

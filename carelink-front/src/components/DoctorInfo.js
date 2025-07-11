@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCareTranslation } from '../hooks/useCareTranslation';
 import tokenManager from '../utils/tokenManager';
+import InamiSearchModal from './InamiSearchModal';
 
 const DoctorInfo = ({ patientId, userData, userRole }) => {
     const { t } = useCareTranslation();
@@ -14,6 +15,7 @@ const DoctorInfo = ({ patientId, userData, userRole }) => {
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [showInamiModal, setShowInamiModal] = useState(false);
 
     useEffect(() => {
         if (patientId) {
@@ -94,6 +96,21 @@ const DoctorInfo = ({ patientId, userData, userRole }) => {
         }));
     };
 
+    const handleSelectProvider = (provider) => {
+        console.log('Selected INAMI provider:', provider);
+        setDoctorInfo({
+            doctor_name: provider.name || '',
+            doctor_address: provider.work_address || '',
+            doctor_phone: provider.phone || '',
+            doctor_email: provider.email || ''
+        });
+        setShowInamiModal(false);
+        // Automatically switch to edit mode if not already
+        if (!isEditing) {
+            setIsEditing(true);
+        }
+    };
+
     if (loading) {
         return (
             <div className="card shadow-sm border-0">
@@ -133,15 +150,31 @@ const DoctorInfo = ({ patientId, userData, userRole }) => {
                     </h5>
                     <div>
                         {!isEditing ? (
-                            <button 
-                                className="btn btn-outline-info btn-sm text-white"
-                                onClick={() => setIsEditing(true)}
-                            >
-                                <i className="fas fa-edit me-1"></i>
-                                Edit
-                            </button>
+                            <div className="btn-group">
+                                <button 
+                                    className="btn btn-outline-primary btn-sm me-2"
+                                    onClick={() => setShowInamiModal(true)}
+                                >
+                                    <i className="fas fa-search me-1"></i>
+                                    Search INAMI
+                                </button>
+                                <button 
+                                    className="btn btn-outline-info btn-sm text-white"
+                                    onClick={() => setIsEditing(true)}
+                                >
+                                    <i className="fas fa-edit me-1"></i>
+                                    Edit
+                                </button>
+                            </div>
                         ) : (
                             <div className="btn-group">
+                                <button 
+                                    className="btn btn-outline-primary btn-sm me-2"
+                                    onClick={() => setShowInamiModal(true)}
+                                >
+                                    <i className="fas fa-search me-1"></i>
+                                    Search INAMI
+                                </button>
                                 <button 
                                     className="btn btn-success btn-sm"
                                     onClick={handleSave}
@@ -207,9 +240,16 @@ const DoctorInfo = ({ patientId, userData, userRole }) => {
                         {!doctorInfo.doctor_name && !doctorInfo.doctor_phone && !doctorInfo.doctor_email && !doctorInfo.doctor_address ? (
                             <div className="col-12">
                                 <div className="text-center py-4">
-                                    <i className="fas fa-user-md text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">No doctor information available.</p>
-                                    <p className="text-muted small">Click "Edit" to add your doctor's information.</p>
+                                    <i className="fas fa-user-md text-muted mb-3" style={{fontSize: '2rem'}}></i>
+                                    <p className="text-muted mb-3">No doctor information available.</p>
+                                    <button 
+                                        className="btn btn-primary"
+                                        onClick={() => setShowInamiModal(true)}
+                                    >
+                                        <i className="fas fa-search me-2"></i>
+                                        Search and Add Doctor
+                                    </button>
+                                    <p className="text-muted small mt-2">Or click "Edit" to add your doctor's information manually.</p>
                                 </div>
                             </div>
                         ) : null}
@@ -263,6 +303,13 @@ const DoctorInfo = ({ patientId, userData, userRole }) => {
                     </div>
                 )}
             </div>
+            
+            {/* INAMI Search Modal */}
+            <InamiSearchModal
+                show={showInamiModal}
+                onHide={() => setShowInamiModal(false)}
+                onSelectProvider={handleSelectProvider}
+            />
         </div>
     );
 };

@@ -172,16 +172,6 @@
     "selectPatientFirst": "Veuillez d'abord sélectionner un patient",
     "viewMedicalFolder": "Dossiers des patients",
     "patientRecords": "Dossiers des patients",
-    "doctor": "Médecin",
-    "doctorInfo": "Informations du médecin",
-    "generalPractitioner": "Médecin généraliste",
-    "doctorName": "Nom du médecin",
-    "doctorPhone": "Numéro de téléphone",
-    "doctorEmail": "Adresse e-mail",
-    "doctorAddress": "Adresse",
-    "noDoctorInfo": "Aucune information médicale disponible",
-    "noDoctorInfoDescription": "Les informations du médecin généraliste du patient n'ont pas encore été enregistrées.",
-    "addDoctorInfo": "Ajouter les informations du médecin",
     "addMedicalEntry": "Ajouter une entrée médicale",
     "email": "E-mail",
     "phone": "Téléphone",
@@ -247,16 +237,7 @@
     "validation": "Veuillez vérifier votre saisie et réessayer.",
     "server": "Erreur serveur. Veuillez réessayer plus tard.",
     "timeout": "Délai d'attente de la requête dépassé. Veuillez réessayer.",
-    "required": "Ce champ est obligatoire",
-    "invalidCredentials": "Email ou mot de passe invalide",
-    "networkError": "Erreur réseau",
-    "serverError": "Erreur serveur",
-    "validationError": "Erreur de validation",
-    "accountLocked": "Votre compte est bloqué, contactez l'administrateur",
-    "accountBlockedBadInfo": "Compte bloqué en raison de nombreuses mauvaises informations",
-    "tooManyAttempts": "Trop de tentatives échouées. Veuillez attendre avant de réessayer.",
-    "tryAgainIn": "Réessayez dans {minutes} minutes",
-    "remainingAttempts": "Le compte sera bloqué après {attempts} tentatives échouées supplémentaires"
+    "required": "Ce champ est obligatoire"
   },
   "success": {
     "saved": "Sauvegardé avec succès",
@@ -608,7 +589,84 @@
     "loadingSchedule": "Chargement du planning...",
     "errorLoadingSchedule": "Erreur de Chargement du Planning",
     "retrySchedule": "Réessayer",
-    "thisWeek": "Cette Semaine"
+    "thisWeek": "Cette Semaine",
+    "status": "Statut",
+    "scheduled": "Planifié",
+    "confirmed": "Confirmé",
+    "inProgress": "En cours",
+    "description": "Description",
+    "enterDescription": "Entrez la description...",
+    "cancel": "Annuler",
+    "inami": {
+      "title": "Configuration INAMI",
+      "subtitle": "Paramètres de Remboursement de Santé Belge",
+      "configure": "Configurer INAMI",
+      "quickConfig": "Configuration Rapide",
+      "reconfigure": "Reconfigurer",
+      "configured": "Configuré",
+      "careType": "Type de Soins",
+      "careLocation": "Lieu de Soins",
+      "careDuration": "Durée des Soins",
+      "inamiCode": "Code INAMI",
+      "mutuelle": "Mutuelle/Assurance",
+      "patientCopay": "Ticket Modérateur",
+      "total": "Montant Total",
+      "search": {
+        "title": "Recherche de Prestataires de Soins INAMI",
+        "search_form": "Critères de Recherche",
+        "name": "Nom de famille",
+        "name_placeholder": "Entrez le nom de famille",
+        "firstname": "Prénom",
+        "firstname_placeholder": "Entrez le prénom",
+        "profession": "Profession",
+        "profession_placeholder": "ex. Médecin, Dentiste",
+        "inami_number": "Numéro INAMI",
+        "inami_number_placeholder": "Entrez le numéro INAMI",
+        "location": "Localisation",
+        "location_placeholder": "Entrez ville ou code postal",
+        "search": "Rechercher",
+        "searching": "Recherche en cours...",
+        "clear": "Effacer",
+        "results": "Résultats de recherche",
+        "select": "Sélectionner ce prestataire",
+        "error": {
+          "no_search_params": "Veuillez entrer au moins un paramètre de recherche",
+          "search_failed": "La recherche a échoué",
+          "network": "Erreur réseau. Veuillez réessayer.",
+          "no_results": "Aucun prestataire de soins trouvé avec les critères spécifiés. Essayez des termes de recherche différents."
+        },
+        "success": {
+          "found_providers": "prestataires de soins trouvés"
+        }
+      }
+    }
+  },
+  "doctor_info": {
+    "title": "Informations du Médecin Généraliste",
+    "search_inami": "Rechercher INAMI",
+    "name": "Nom du Médecin",
+    "name_placeholder": "Entrez le nom du médecin",
+    "phone": "Numéro de Téléphone",
+    "phone_placeholder": "Entrez le numéro de téléphone",
+    "email": "Adresse Email",
+    "email_placeholder": "Entrez l'adresse email",
+    "inami_number": "Numéro INAMI",
+    "inami_placeholder": "Depuis la recherche INAMI",
+    "inami_help": "Utilisez la recherche INAMI pour remplir automatiquement ce champ",
+    "profession": "Profession",
+    "profession_placeholder": "Depuis la recherche INAMI",
+    "convention_status": "Statut de Convention",
+    "convention_placeholder": "Depuis la recherche INAMI",
+    "address": "Adresse",
+    "address_placeholder": "Entrez l'adresse du médecin",
+    "no_info": "Aucune information de médecin disponible",
+    "search_add": "Rechercher et Ajouter un Médecin",
+    "success": {
+      "updated": "Informations du médecin mises à jour avec succès"
+    },
+    "error": {
+      "update_failed": "Échec de la mise à jour des informations du médecin"
+    }
   },
   "providers": {
     "title": "Gestion des Prestataires",
@@ -1265,52 +1323,6 @@
       "end_date_invalid": "La date de fin doit être après la date de début."
     }
   },
-  "profile": {
-    "settings": "Paramètres",
-    "changePassword": "Changer le mot de passe",
-    "loginHistory": "Historique de connexion",
-    "contactPreferences": "Préférences de contact",
-    "accountDeletion": "Suppression de compte",
-    "currentPassword": "Mot de passe actuel",
-    "newPassword": "Nouveau mot de passe",
-    "confirmNewPassword": "Confirmer le nouveau mot de passe",
-    "passwordStrength": "Force du mot de passe",
-    "passwordChangeSuccess": "Mot de passe changé avec succès",
-    "passwordChangeError": "Échec du changement de mot de passe",
-    "passwordRequirements": "Le mot de passe doit contenir au moins 8 caractères et inclure majuscules, minuscules, chiffres et caractères spéciaux",
-    "dateTime": "Date/Heure",
-    "userAgent": "Agent utilisateur",
-    "success": "Succès",
-    "loadingHistory": "Chargement de l'historique...",
-    "noLoginHistory": "Aucun historique de connexion disponible",
-    "notificationTypes": "Types de notifications",
-    "emailNotifications": "Notifications par e-mail",
-    "smsNotifications": "Notifications SMS",
-    "appointmentReminders": "Rappels de rendez-vous",
-    "billingNotifications": "Notifications de facturation",
-    "medicalAlerts": "Alertes médicales",
-    "marketingCommunications": "Communications marketing",
-    "contactPreferencesTitle": "Préférences de contact",
-    "preferredContactMethod": "Méthode de contact préférée",
-    "primaryPhoneContact": "Contact téléphonique principal",
-    "noPrimaryPhone": "Aucun téléphone principal sélectionné",
-    "emergencyContactTitle": "Contact d'urgence",
-    "emergencyContactName": "Nom",
-    "emergencyContactPhone": "Téléphone",
-    "emergencyContactRelationship": "Relation",
-    "emergencyContactNamePlaceholder": "Nom du contact d'urgence",
-    "emergencyContactPhonePlaceholder": "Téléphone du contact d'urgence",
-    "emergencyContactRelationshipPlaceholder": "Relation (ex: époux/épouse, parent)",
-    "preferencesLoading": "Chargement des préférences...",
-    "preferencesError": "Échec du chargement des préférences",
-    "preferencesSaved": "Préférences sauvegardées avec succès",
-    "savingPreferences": "Sauvegarde...",
-    "savePreferences": "Sauvegarder les préférences",
-    "deleteAccountTitle": "Supprimer le compte",
-    "deleteAccountReason": "Raison de la suppression (optionnel)",
-    "confirmDeleteAccount": "Je confirme vouloir supprimer mon compte",
-    "requestAccountDeletion": "Demander la suppression du compte"
-  },
   "helpdeskTickets": "Tickets d'assistance",
   "helpdeskTicketsDescription": "Soumettre des demandes d'assistance à l'équipe d'administration",
   "mySubmittedTickets": "Mes tickets soumis",
@@ -1353,32 +1365,6 @@
   "inProgress": "En Cours",
   "assignedToMe": "Assigné à Moi",
   "manageCoordinatorTickets": "Gérer les tickets du coordinateur",
-  "manageCoordinatorTicketsDescription": "Afficher et gérer les tickets assignés à l'équipe de coordination",
-  "homepage": {
-    "title": "Bienvenue sur CareLink",
-    "subtitle": "Connecter les familles avec des prestataires d'assistance ménagère et familiale exceptionnels grâce à des outils innovants de planification et de communication.",
-    "getStarted": "Commencer",
-    "learnMore": "En savoir plus",
-    "goToProfile": "Aller au Profil",
-    "whyChooseTitle": "Pourquoi choisir CareLink ?",
-    "features": {
-      "household": {
-        "title": "Aide ménagère & familiale",
-        "description": "Conçu spécifiquement pour l'assistance ménagère, le soutien familial et la coordination des soins."
-      },
-      "family": {
-        "title": "Centré sur la famille",
-        "description": "Connectez des familles entières avec leurs prestataires d'assistance de manière transparente."
-      },
-      "easyToUse": {
-        "title": "Facile à utiliser",
-        "description": "Interface intuitive conçue pour les utilisateurs de tous niveaux techniques."
-      },
-      "secure": {
-        "title": "Sécurisé et privé",
-        "description": "Plateforme sécurisée garantissant la protection de vos données familiales."
-      }
-    }
-  }
+  "manageCoordinatorTicketsDescription": "Afficher et gérer les tickets assignés à l'équipe de coordination"
 }
 

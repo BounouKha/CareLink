@@ -234,7 +234,7 @@ def generate_invoice_for_patient_period(patient, period_start, period_end, times
                 continue
 
             provider = get_provider_from_schedule(ts)
-            
+
             # Use new pricing logic
             pricing_info = get_patient_service_price(patient, service, ts)
             price = pricing_info['price']
@@ -262,7 +262,7 @@ def generate_invoice_for_patient_period(patient, period_start, period_end, times
             
             total_amount += price
             lines_created += 1
-            
+
             logger.debug(f"Created invoice line for timeslot {ts.id}: €{price} - {pricing_info['reasoning']}")
 
         invoice.amount = total_amount
