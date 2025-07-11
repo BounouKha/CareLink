@@ -28,6 +28,7 @@ from account.views.servicedemand import ServiceDemandListCreateView, ServiceDema
 from account.views.logs import LogsView, LogStatsView
 from account.views.consent import ConsentStorageView, UserConsentHistoryView, ConsentWithdrawalView, consent_audit_export, consent_stats, AdminConsentListView, admin_revoke_consent, user_consent_status
 from account.views.patient_timeline import patient_timeline
+from account.views.inami_search import InamiSearchAPIView, InamiConnectionTestAPIView, InamiQuickSearchAPIView
 from account.views.provider import (
     provider_list, provider_detail, provider_contracts, provider_stats, 
     available_users_for_provider, check_user_contract_status, 
@@ -163,4 +164,9 @@ urlpatterns += [
     path('patient-service-prices/<int:pk>/', PatientServicePriceDetailView.as_view(), name='patient-service-price-detail'),
     path('pricing/patients/', patients_list, name='pricing-patients-list'),
     path('pricing/services/', services_list, name='pricing-services-list'),
+    
+    # INAMI Healthcare Provider Search API endpoints
+    path('inami/search/', InamiSearchAPIView.as_view(), name='inami-search'),
+    path('inami/quick-search/', InamiQuickSearchAPIView.as_view(), name='inami-quick-search'),
+    path('inami/test-connection/', InamiConnectionTestAPIView.as_view(), name='inami-test-connection'),
 ]
