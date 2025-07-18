@@ -29,7 +29,7 @@ class InamiSearchService:
         self.session = requests.Session()
         self.delay = delay
         self.headers = {
-            'User-Agent': 'CareLink Healthcare Provider Search/1.0 (contact@carelink.be)',
+            'User-Agent': 'CareLink Healthcare Provider Search/1.0 (khalidbounou@gmail.com)',
             'Accept': 'text/html,application/xhtml+xml,application/xml',
             'Accept-Language': 'fr-BE,fr;q=0.9,en-US;q=0.8,en;q=0.7',
             'Referer': 'https://webappsa.riziv-inami.fgov.be/silverpages/Home',
