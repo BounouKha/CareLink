@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 from datetime import timedelta
 from pathlib import Path
+import secrets
+from cryptography.fernet import Fernet
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -318,3 +320,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Cron Service Configuration
 CRON_SECRET_TOKEN = 'carelink-invoice-2024-secret-token-change-this-in-production'
+
+# Field-level encryption key for django-encrypted-model-fields
+FIELD_ENCRYPTION_KEY = Fernet.generate_key().decode()

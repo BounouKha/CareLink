@@ -6,6 +6,7 @@ import datetime
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission, Group
 from django.utils import timezone
+from encrypted_model_fields.fields import EncryptedCharField
 
 
 ##Attention la base de données doit être en UTF-8 pour éviter les problèmes d'encodage
@@ -437,7 +438,7 @@ class MedicalFolder(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True) 
-    note = models.CharField(max_length=1000, null=True, blank=True)
+    note = EncryptedCharField(max_length=1000, null=True, blank=True)
     service = models.ForeignKey('Service', on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, help_text="User who created this medical note")
 
