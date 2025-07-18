@@ -467,3 +467,131 @@ class AccountDeletionRequestView(APIView):
             return Response({
                 'error': 'Failed to process account deletion request.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+
+class AnonymizePatientView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Anonymize a patient and their user account"""
+        patient_id = request.data.get('patient_id')
+        
+        if not patient_id:
+            return Response({
+                'success': False,
+                'error': 'Patient ID is required.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from CareLink.models import Patient, User, MedicalFolder, UserActionLog, Invoice
+            
+            print(f"[ANONYMIZATION] Received patient_id: {patient_id}")
+            
+            patient = Patient.objects.get(id=patient_id)
+            user = patient.user
+            
+            print(f"[ANONYMIZATION] Found patient: {patient.id}, user: {user.id if user else None}")
+            
+            if not user:
+                return Response({
+                    'success': False,
+                    'error': 'Patient has no associated user account.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check for open invoices
+            open_invoices = Invoice.objects.filter(
+                patient=patient,
+                status__in=['In Progress', 'Contested']
+            )
+            
+            if open_invoices.exists():
+                invoice_details = []
+                for invoice in open_invoices:
+                    invoice_details.append({
+                        'id': invoice.id,
+                        'status': invoice.status,
+                        'amount': str(invoice.amount),
+                        'created_at': invoice.created_at.isoformat()
+                    })
+                
+                return Response({
+                    'success': False,
+                    'error': 'Cannot anonymize patient with open invoices.',
+                    'details': f'Patient has {open_invoices.count()} open invoice(s)',
+                    'invoices': invoice_details
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Anonymize User
+            user.firstname = 'Anonymized'
+            user.lastname = 'User'
+            user.email = f"anon{user.id}@example.com"
+            user.address = ''
+            user.national_number = None
+            user.birthdate = None
+            user.is_active = False
+            # Set a random password
+            import random
+            import string
+            user.set_password(''.join(random.choices(string.ascii_letters + string.digits, k=32)))
+            user.save()
+            
+            print(f"[ANONYMIZATION] User {user.id} anonymized: {user.firstname} {user.lastname}, email: {user.email}, is_active: {user.is_active}")
+            
+            # Anonymize Patient
+            patient.gender = None
+            patient.blood_type = None
+            patient.katz_score = None
+            patient.it_score = None
+            patient.illness = ''
+            patient.critical_information = ''
+            patient.medication = ''
+            patient.doctor_name = ''
+            patient.doctor_address = ''
+            patient.doctor_phone = ''
+            patient.doctor_email = ''
+            patient.is_anonymized = True
+            patient.save()
+            
+            print(f"[ANONYMIZATION] Patient {patient.id} anonymized: is_anonymized={patient.is_anonymized}")
+            
+            # Anonymize MedicalFolder notes
+            MedicalFolder.objects.filter(patient=patient).update(note='[ANONYMIZED]')
+            
+            print(f"[ANONYMIZATION] MedicalFolder notes anonymized for patient {patient.id}")
+            
+            # Verify the anonymization worked by re-fetching from database
+            user.refresh_from_db()
+            patient.refresh_from_db()
+            
+            print(f"[ANONYMIZATION] VERIFICATION - User {user.id}: {user.firstname} {user.lastname}, email: {user.email}, is_active: {user.is_active}")
+            print(f"[ANONYMIZATION] VERIFICATION - Patient {patient.id}: is_anonymized={patient.is_anonymized}")
+            
+            # Log the action
+            UserActionLog.objects.create(
+                user=request.user,  # The admin who performed the action
+                action_type='PROFILE_ANONYMIZED',
+                target_model='Patient',
+                target_id=patient.id,
+                description=f'Patient {patient.id} and user account anonymized for GDPR compliance by {request.user.email}',
+                additional_data={
+                    'anonymized_patient_id': patient.id,
+                    'anonymized_user_id': user.id,
+                    'anonymized_by': request.user.email,
+                    'timestamp': timezone.now().isoformat()
+                }
+            )
+            
+            return Response({
+                'success': True,
+                'message': f'Patient {patient_id} and user account anonymized successfully.'
+            })
+            
+        except Patient.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': f'Patient with ID {patient_id} does not exist.'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': f'Failed to anonymize patient: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 

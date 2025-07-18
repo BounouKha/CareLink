@@ -522,6 +522,8 @@ class Patient(models.Model):
     doctor_address = models.TextField(null=True, blank=True, help_text="Address of the patient's general practitioner")
     doctor_phone = models.CharField(max_length=20, null=True, blank=True, help_text="Phone number of the patient's general practitioner")
     doctor_email = models.EmailField(null=True, blank=True, help_text="Email address of the patient's general practitioner")
+    # Anonymization flag
+    is_anonymized = models.BooleanField(default=False, help_text="True if the patient profile has been anonymized for GDPR compliance")
 
 class Payment(models.Model):
     patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)

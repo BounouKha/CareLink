@@ -18,8 +18,10 @@ const ProfileList = () => {
     const [isShowModalOpen, setIsShowModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [anonymizingProfile, setAnonymizingProfile] = useState(null);
 
-    const { get } = useAuthenticatedApi();    const fetchProfiles = useCallback(async (pageNum = 1, search = '') => {
+    const { get, post } = useAuthenticatedApi();
+    const fetchProfiles = useCallback(async (pageNum = 1, search = '') => {
         try {
             if (!tokenManager.isAuthenticated()) {
                 throw new Error('User not authenticated. Please log in.');
@@ -33,9 +35,13 @@ const ProfileList = () => {
             console.log(`[ProfileList] Fetching page ${pageNum} with search: "${search}"`);
             const data = await get(`http://localhost:8000/account/profiles/?${params.toString()}`);
 
+            console.log('[ProfileList] Raw API response:', data);
+            
             const profilesData = data.results || [];
             const validProfiles = profilesData.filter(profile => profile.id !== null);
 
+            console.log('[ProfileList] Processed profiles:', validProfiles);
+            
             setProfiles(validProfiles);
             setPage(pageNum);
             const count = data.count || 0;
@@ -51,7 +57,8 @@ const ProfileList = () => {
             if (err.message.includes('401') || err.message.includes('Unauthorized') || err.message.includes('not authenticated')) {
                 tokenManager.handleLogout();
             }
-        }    }, [get]);
+        }
+    }, [get]);
 
     // Load initial data on component mount ONLY
     useEffect(() => {
@@ -90,6 +97,73 @@ const ProfileList = () => {
     const handleEditProfile = (profile) => {
         setSelectedProfile(profile);
         setIsEditModalOpen(true);
+    };
+
+    const handleAnonymizeProfile = async (profile) => {
+        if (profile.role !== 'Patient') {
+            alert('Anonymization is only available for Patient profiles.');
+            return;
+        }
+
+        const confirmMessage = `Are you sure you want to anonymize this patient?\n\nThis will:\n- Anonymize all personal information\n- Disable the user account\n- Overwrite medical notes\n- This action is IRREVERSIBLE\n\nPatient: ${profile.firstname} ${profile.lastname}`;
+        
+        if (!window.confirm(confirmMessage)) {
+            return;
+        }
+
+        setAnonymizingProfile(profile.id);
+        
+        try {
+            // First, get the patient ID for this user
+            console.log('[ProfileList] Getting patient ID for user:', profile.id);
+            const patientData = await get(`http://localhost:8000/account/profiles/${profile.id}/fetch/Patient/`);
+            console.log('[ProfileList] Patient data:', patientData);
+            
+            if (!patientData || !patientData.id) {
+                alert('Could not find patient data for this user.');
+                return;
+            }
+            
+            const patientId = patientData.id;
+            console.log('[ProfileList] Starting anonymization for patient:', patientId);
+            
+            const response = await post('http://localhost:8000/account/anonymize-patient/', {
+                patient_id: patientId
+            });
+            
+            console.log('[ProfileList] Anonymization response:', response);
+            
+            if (response.success) {
+                alert('Patient anonymized successfully.');
+                console.log('[ProfileList] Refreshing profiles list...');
+                // Refresh the profiles list
+                await fetchProfiles(page, searchTerm);
+                console.log('[ProfileList] Profiles list refreshed');
+            } else {
+                // Handle specific error cases
+                if (response.error && response.error.includes('open invoices')) {
+                    let errorMessage = `Cannot anonymize patient: ${response.error}\n\n`;
+                    if (response.details) {
+                        errorMessage += `${response.details}\n\n`;
+                    }
+                    if (response.invoices && response.invoices.length > 0) {
+                        errorMessage += 'Open invoices:\n';
+                        response.invoices.forEach(invoice => {
+                            errorMessage += `- Invoice #${invoice.id}: ${invoice.status} (€${invoice.amount})\n`;
+                        });
+                        errorMessage += '\nPlease resolve all open invoices before anonymizing.';
+                    }
+                    alert(errorMessage);
+                } else {
+                    alert('Failed to anonymize patient: ' + (response.error || 'Unknown error'));
+                }
+            }
+        } catch (err) {
+            console.error('Error anonymizing patient:', err);
+            alert('Error anonymizing patient: ' + err.message);
+        } finally {
+            setAnonymizingProfile(null);
+        }
     };
 
     const getRoleBadgeClass = (role) => {
@@ -215,6 +289,21 @@ const ProfileList = () => {
                                             >
                                                 <i className="fas fa-edit"></i> Edit
                                             </button>
+                                            {profile.role === 'Patient' && (
+                                                <button 
+                                                    className="btn btn-warning btn-sm action-btn"
+                                                    onClick={() => handleAnonymizeProfile(profile)}
+                                                    disabled={anonymizingProfile === profile.id}
+                                                    title="Anonymize Patient (GDPR)"
+                                                >
+                                                    {anonymizingProfile === profile.id ? (
+                                                        <i className="fas fa-spinner fa-spin"></i>
+                                                    ) : (
+                                                        <i className="fas fa-user-secret"></i>
+                                                    )}
+                                                    {anonymizingProfile === profile.id ? ' Anonymizing...' : ' Anonymize'}
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
