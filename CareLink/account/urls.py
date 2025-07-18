@@ -37,7 +37,7 @@ from account.views.provider import (
 )
 from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
 from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView, GenerateInvoicesView, CronGenerateInvoicesView, AdminInvoiceListView, RegenerateInvoiceView, ResolveContestView, CreateNewInvoiceAfterContestView
-from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView
+from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView, AnonymizePatientView
 from .views.appointment_comments import AppointmentCommentAPIView, CheckCommentPermissionAPIView, CoordinatorViewCommentsAPIView
 from .views.patient_details import PatientDetailsView
 from .views.patient_service_pricing import PatientServicePriceViewSet, PatientServicePriceDetailView, patients_list, services_list
@@ -169,4 +169,7 @@ urlpatterns += [
     path('inami/search/', InamiSearchAPIView.as_view(), name='inami-search'),
     path('inami/quick-search/', InamiQuickSearchAPIView.as_view(), name='inami-quick-search'),
     path('inami/test-connection/', InamiConnectionTestAPIView.as_view(), name='inami-test-connection'),
+    
+    # Patient Anonymization API endpoint
+    path('anonymize-patient/', AnonymizePatientView.as_view(), name='anonymize-patient'),
 ]

@@ -38,6 +38,21 @@ class ProfileListView(APIView):
                     for profile in model.objects.select_related('user').all():
                         user = profile.user if hasattr(profile, 'user') else None
                         if user and user.id not in user_profiles_map:
+                            # Force refresh from database to avoid caching issues
+                            user.refresh_from_db()
+                            
+                            # Debug logging for specific user (Emma Clark)
+                            if user.id == 14:
+                                logger.info(f"DEBUG: User 14 data - firstname='{user.firstname}', lastname='{user.lastname}', email='{user.email}', is_active={user.is_active}")
+                                
+                                # Direct database query to bypass ORM caching
+                                from django.db import connection
+                                with connection.cursor() as cursor:
+                                    cursor.execute("SELECT firstname, lastname, email, is_active FROM CareLink_user WHERE id = 14")
+                                    row = cursor.fetchone()
+                                    if row:
+                                        logger.info(f"DIRECT DB QUERY for User 14: firstname='{row[0]}', lastname='{row[1]}', email='{row[2]}', is_active={row[3]}")
+                            
                             user_profiles_map[user.id] = {
                                 "id": user.id,
                                 "firstname": user.firstname,
@@ -46,7 +61,11 @@ class ProfileListView(APIView):
                                 "role": role_name,
                                 "is_active": user.is_active,
                                 "relations": []  # For future compatibility
-                            }                
+                            }
+                            
+                            # Debug logging for anonymized users
+                            if user.firstname == 'Anonymized' and user.lastname == 'User':
+                                logger.info(f"Found anonymized user: ID={user.id}, email={user.email}, is_active={user.is_active}")
                 except Exception as e:
                     logger.warning(f"Error processing {role_name} profiles: {str(e)}")
                     continue
