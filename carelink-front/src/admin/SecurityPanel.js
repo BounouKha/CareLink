@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './SecurityPanel.css';
 import './IDSNotifications.css';
+import tokenManager from '../utils/tokenManager';
 
 const SecurityPanel = () => {
     const [notifications, setNotifications] = useState([]);
@@ -11,6 +12,15 @@ const SecurityPanel = () => {
     const [actionType, setActionType] = useState('');
     const [ipAddress, setIpAddress] = useState('');
     const [reason, setReason] = useState('');
+    
+    // IP Audit states
+    const [auditIpAddress, setAuditIpAddress] = useState('');
+    const [auditResults, setAuditResults] = useState([]);
+    const [auditLoading, setAuditLoading] = useState(false);
+    const [auditError, setAuditError] = useState(null);
+    const [showAuditResults, setShowAuditResults] = useState(false);
+    const [auditPagination, setAuditPagination] = useState(null);
+    const [currentAuditPage, setCurrentAuditPage] = useState(1);
 
     // Fetch security notifications
     const fetchNotifications = async () => {
@@ -18,7 +28,7 @@ const SecurityPanel = () => {
         setError(null);
         
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = await tokenManager.getValidAccessToken();
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
@@ -48,7 +58,7 @@ const SecurityPanel = () => {
     // Fetch security statistics
     const fetchStats = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = await tokenManager.getValidAccessToken();
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
@@ -81,7 +91,7 @@ const SecurityPanel = () => {
         }
 
         try {
-            const token = localStorage.getItem('accessToken');
+            const token = await tokenManager.getValidAccessToken();
             if (!token) {
                 throw new Error('No access token found. Please log in.');
             }
@@ -116,6 +126,77 @@ const SecurityPanel = () => {
         } catch (err) {
             alert(`Error: ${err.message}`);
         }
+    };
+
+    // IP Address Audit Function
+    const performIpAudit = async (page = 1) => {
+        if (!auditIpAddress) {
+            alert('Please enter an IP address to audit');
+            return;
+        }
+
+        // Validate IP address format
+        const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        if (!ipRegex.test(auditIpAddress)) {
+            alert('Please enter a valid IP address format (e.g., 127.0.0.1)');
+            return;
+        }
+
+        setAuditLoading(true);
+        setAuditError(null);
+        
+        // Only clear results if it's a new search (page 1)
+        if (page === 1) {
+            setAuditResults([]);
+            setCurrentAuditPage(1);
+        }
+
+        try {
+            const token = await tokenManager.getValidAccessToken();
+            if (!token) {
+                throw new Error('No access token found. Please log in.');
+            }
+
+            const response = await fetch(`http://localhost:8000/account/security/audit/ip/${auditIpAddress}/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('No security events found for this IP address');
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch IP audit data');
+            }
+
+            const data = await response.json();
+            setAuditResults(data.events || []);
+            setAuditPagination(data.pagination || null);
+            setCurrentAuditPage(page);
+            setShowAuditResults(true);
+            
+            if (data.events && data.events.length === 0 && page === 1) {
+                alert('No security events found for this IP address');
+            }
+        } catch (err) {
+            setAuditError(err.message);
+            alert(`Audit Error: ${err.message}`);
+        } finally {
+            setAuditLoading(false);
+        }
+    };
+
+    const clearAuditResults = () => {
+        setAuditResults([]);
+        setAuditIpAddress('');
+        setShowAuditResults(false);
+        setAuditError(null);
+        setAuditPagination(null);
+        setCurrentAuditPage(1);
     };
 
     useEffect(() => {
@@ -234,6 +315,174 @@ const SecurityPanel = () => {
                         Execute Action
                     </button>
                 </div>
+            </div>
+
+            {/* IP Address Audit */}
+            <div className="ip-audit-section">
+                <h3>🔍 IP Address Audit</h3>
+                <p>Search security events by IP address to view complete audit trail</p>
+                
+                <div className="audit-form">
+                    <input
+                        type="text"
+                        placeholder="Enter IP address (e.g., 127.0.0.1)"
+                        value={auditIpAddress}
+                        onChange={(e) => setAuditIpAddress(e.target.value)}
+                        className="audit-ip-input"
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                performIpAudit(1);
+                            }
+                        }}
+                    />
+                    
+                    <button 
+                        onClick={() => performIpAudit(1)}
+                        disabled={!auditIpAddress || auditLoading}
+                        className="audit-button"
+                    >
+                        {auditLoading ? '🔄 Auditing...' : '🔍 Audit IP'}
+                    </button>
+                    
+                    {showAuditResults && (
+                        <button 
+                            onClick={clearAuditResults}
+                            className="clear-audit-button"
+                        >
+                            Clear Results
+                        </button>
+                    )}
+                </div>
+
+                {/* Audit Results */}
+                {showAuditResults && (
+                    <div className="audit-results">
+                        <h4>📊 Audit Results for {auditIpAddress}</h4>
+                        
+                        {auditResults.length === 0 ? (
+                            <div className="no-audit-results">
+                                <p>✅ No security events found for this IP address</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="audit-summary">
+                                    <span className="audit-count">
+                                        {auditPagination ? (
+                                            <>
+                                                Showing {((auditPagination.current_page - 1) * auditPagination.page_size) + 1}-{Math.min(auditPagination.current_page * auditPagination.page_size, auditPagination.total_events)} 
+                                                of {auditPagination.total_events} security event(s)
+                                            </>
+                                        ) : (
+                                            `Found ${auditResults.length} security event(s)`
+                                        )}
+                                    </span>
+                                </div>
+                                
+                                {/* Pagination Controls */}
+                                {auditPagination && auditPagination.total_pages > 1 && (
+                                    <div className="pagination-controls">
+                                        <button 
+                                            onClick={() => performIpAudit(auditPagination.previous_page)}
+                                            disabled={!auditPagination.has_previous || auditLoading}
+                                            className="pagination-btn"
+                                        >
+                                            ← Previous
+                                        </button>
+                                        
+                                        <span className="pagination-info">
+                                            Page {auditPagination.current_page} of {auditPagination.total_pages}
+                                        </span>
+                                        
+                                        <button 
+                                            onClick={() => performIpAudit(auditPagination.next_page)}
+                                            disabled={!auditPagination.has_next || auditLoading}
+                                            className="pagination-btn"
+                                        >
+                                            Next →
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                <div className="audit-events-list">
+                                    {auditResults.map((event, index) => (
+                                        <div 
+                                            key={event.id || index} 
+                                            className="audit-event-item"
+                                            style={{ borderLeftColor: getThreatLevelColor(event.threat_level) }}
+                                        >
+                                            <div className="audit-event-header">
+                                                <span className={`threat-level-${event.threat_level.toLowerCase()}`}>
+                                                    {event.threat_level}
+                                                </span>
+                                                <span className="audit-event-time">
+                                                    {event.formatted_date}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="audit-event-content">
+                                                <div className="audit-event-title">{event.title}</div>
+                                                <div className="audit-event-details">
+                                                    <strong>Path:</strong> {event.path}<br/>
+                                                    <strong>Method:</strong> {event.method || 'N/A'}<br/>
+                                                    <strong>User Agent:</strong> {event.user_agent || 'N/A'}
+                                                </div>
+                                                
+                                                {event.threats && event.threats.length > 0 && (
+                                                    <div className="audit-threat-details">
+                                                        <strong>Threat Details:</strong>
+                                                        <ul>
+                                                            {event.threats.map((threat, idx) => (
+                                                                <li key={idx}>
+                                                                    <span className="threat-type">{threat.type}</span>
+                                                                    {threat.field && (
+                                                                        <span className="threat-field">
+                                                                            : {threat.field}
+                                                                        </span>
+                                                                    )}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                                
+                                                {event.description && (
+                                                    <div className="audit-event-description">
+                                                        <strong>Description:</strong> {event.description}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                {/* Bottom Pagination Controls */}
+                                {auditPagination && auditPagination.total_pages > 1 && (
+                                    <div className="pagination-controls bottom-pagination">
+                                        <button 
+                                            onClick={() => performIpAudit(auditPagination.previous_page)}
+                                            disabled={!auditPagination.has_previous || auditLoading}
+                                            className="pagination-btn"
+                                        >
+                                            ← Previous
+                                        </button>
+                                        
+                                        <span className="pagination-info">
+                                            Page {auditPagination.current_page} of {auditPagination.total_pages}
+                                        </span>
+                                        
+                                        <button 
+                                            onClick={() => performIpAudit(auditPagination.next_page)}
+                                            disabled={!auditPagination.has_next || auditLoading}
+                                            className="pagination-btn"
+                                        >
+                                            Next →
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Security Notifications */}

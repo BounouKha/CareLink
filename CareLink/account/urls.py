@@ -46,7 +46,7 @@ from .views.notification_views import (
     ScheduleChangeRequestView, NotificationPreferenceView,
     mark_all_notifications_read, clear_all_notifications, get_user_schedule_change_requests
 )
-from .views.security_admin import SecurityNotificationsView, SecurityActionsView, SecurityStatsView
+from .views.security_admin import SecurityNotificationsView, SecurityActionsView, SecurityStatsView, IPAuditView
 
 
 
@@ -178,4 +178,5 @@ urlpatterns += [
     path('security/notifications/', SecurityNotificationsView.as_view(), name='security-notifications'),
     path('security/actions/', SecurityActionsView.as_view(), name='security-actions'),
     path('security/stats/', SecurityStatsView.as_view(), name='security-stats'),
+    path('security/audit/ip/<str:ip_address>/', IPAuditView.as_view(), name='ip-audit'),
 ]

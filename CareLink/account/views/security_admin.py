@@ -225,4 +225,143 @@ class SecurityStatsView(APIView):
         except Exception as e:
             return Response({
                 'error': f'Failed to retrieve security statistics: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class IPAuditView(APIView):
+    """
+    Audit security events for a specific IP address
+    """
+    permission_classes = [IsAuthenticated, IsSuperuser]
+    
+    def get(self, request, ip_address):
+        """Get all security events for a specific IP address with pagination"""
+        try:
+            # Validate IP address format
+            import ipaddress
+            try:
+                ipaddress.ip_address(ip_address)
+            except ValueError:
+                return Response({
+                    'error': 'Invalid IP address format'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get pagination parameters
+            try:
+                page = int(request.GET.get('page', 1))
+                if page < 1:
+                    page = 1
+            except (ValueError, TypeError):
+                page = 1
+                
+            page_size = 50  # Fixed page size of 50
+            offset = (page - 1) * page_size
+            
+            # Get all security events for this IP address
+            security_events = UserActionLog.objects.filter(
+                action_type__in=[
+                    'SECURITY_ALERT', 
+                    'SECURITY_THREAT_DETECTED', 
+                    'SECURITY_IP_BANNED', 
+                    'SECURITY_IP_UNBANNED', 
+                    'SECURITY_IP_WHITELISTED',
+                    'LOGIN_ATTEMPT',
+                    'LOGIN_SUCCESS',
+                    'LOGIN_FAILED',
+                    'LOGOUT'
+                ]
+            ).order_by('-created_at')
+            
+            # Filter events by IP address in additional_data
+            matching_events = []
+            for event in security_events:
+                try:
+                    additional_data = json.loads(event.additional_data) if event.additional_data else {}
+                    event_ip = additional_data.get('client_ip') or additional_data.get('ip_address')
+                    
+                    if event_ip == ip_address:
+                        # Format date in European format (dd/mm/yyyy HH:MM:SS)
+                        formatted_date = event.created_at.strftime("%d/%m/%Y %H:%M:%S")
+                        
+                        matching_events.append({
+                            'id': event.id,
+                            'timestamp': event.created_at.isoformat(),
+                            'formatted_date': formatted_date,  # European format
+                            'title': event.description,
+                            'threat_level': additional_data.get('threat_level', 'INFO'),
+                            'action_type': event.action_type,
+                            'path': additional_data.get('path', ''),
+                            'method': additional_data.get('method', ''),
+                            'user_agent': additional_data.get('user_agent', ''),
+                            'threats': additional_data.get('threats', []),
+                            'description': additional_data.get('description', event.description),
+                            'user': event.user.email if event.user else 'System',
+                            'additional_info': {
+                                'target_model': event.target_model,
+                                'target_id': event.target_id,
+                                'session_id': additional_data.get('session_id'),
+                                'blocked_by': additional_data.get('blocked_by') or additional_data.get('banned_by'),
+                                'reason': additional_data.get('reason')
+                            }
+                        })
+                except (json.JSONDecodeError, TypeError):
+                    # Skip events with malformed additional_data
+                    continue
+            
+            # Sort by timestamp (most recent first)
+            matching_events.sort(key=lambda x: x['timestamp'], reverse=True)
+            
+            # Apply pagination
+            total_events = len(matching_events)
+            total_pages = (total_events + page_size - 1) // page_size  # Ceiling division
+            paginated_events = matching_events[offset:offset + page_size]
+            
+            # Get current IP status (banned, whitelisted, etc.)
+            ip_status = {
+                'blocked': cache.get(f"blocked_ip_{ip_address}") is not None,
+                'whitelisted': cache.get(f"whitelisted_ip_{ip_address}") is not None,
+                'blocked_info': cache.get(f"blocked_ip_{ip_address}"),
+                'whitelisted_info': cache.get(f"whitelisted_ip_{ip_address}")
+            }
+            
+            # Security summary for this IP
+            summary = {
+                'total_events': total_events,
+                'threat_levels': {},
+                'action_types': {},
+                'date_range': {
+                    'first_seen': matching_events[-1]['formatted_date'] if matching_events else None,
+                    'last_seen': matching_events[0]['formatted_date'] if matching_events else None
+                }
+            }
+            
+            # Count threat levels and action types (from all events, not just current page)
+            for event in matching_events:
+                level = event['threat_level']
+                summary['threat_levels'][level] = summary['threat_levels'].get(level, 0) + 1
+                
+                action = event['action_type']
+                summary['action_types'][action] = summary['action_types'].get(action, 0) + 1
+            
+            return Response({
+                'ip_address': ip_address,
+                'events': paginated_events,
+                'pagination': {
+                    'current_page': page,
+                    'total_pages': total_pages,
+                    'page_size': page_size,
+                    'total_events': total_events,
+                    'has_next': page < total_pages,
+                    'has_previous': page > 1,
+                    'next_page': page + 1 if page < total_pages else None,
+                    'previous_page': page - 1 if page > 1 else None
+                },
+                'summary': summary,
+                'ip_status': ip_status,
+                'total_found': total_events
+            })
+            
+        except Exception as e:
+            return Response({
+                'error': f'Failed to retrieve IP audit data: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
