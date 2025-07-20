@@ -9,6 +9,7 @@ import PricingManagement from './PricingManagement'; // Import the PricingManage
 import InvoiceManagement from './InvoiceManagement'; // Import the InvoiceManagement component
 import SubmitTicketPage from '../components/EnhancedTicketSystem/SubmitTicketPage';
 import ManageTicketsPage from '../components/EnhancedTicketSystem/ManageTicketsPage';
+import SecurityPanel from './SecurityPanel'; // Import the Security Panel component
 import { useNavigate } from 'react-router-dom';
 
 import './AdminPanel.css';
@@ -24,6 +25,7 @@ const AdminPanel = () => {
         { id: 'logs', label: 'Logs', icon: '📋', description: 'View system activity logs' },
         { id: 'consent', label: 'Consent', icon: '🔒', description: 'Manage user privacy and consent' },
         { id: 'pricing', label: 'Pricing', icon: '💰', description: 'Manage custom patient service pricing' },
+        { id: 'security', label: 'Security', icon: '🛡️', description: 'Security monitoring and threat response' },
         { id: 'submit-tickets', label: 'Submit Tickets', icon: '📝', description: 'Create new support tickets' },
         { id: 'manage-tickets', label: 'Manage Tickets', icon: '🎫', description: 'Handle and manage existing tickets' },
         { id: 'settings', label: 'Settings', icon: '⚙️', description: 'Configure system settings' },
@@ -42,6 +44,8 @@ const AdminPanel = () => {
                 return <ConsentManagement />;
             case 'pricing':
                 return <PricingManagement />;
+            case 'security':
+                return <SecurityPanel />;
             case 'submit-tickets':
                 return <SubmitTicketPage />;
             case 'manage-tickets':

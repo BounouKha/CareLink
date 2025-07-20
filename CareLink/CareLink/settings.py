@@ -49,16 +49,17 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # CORS middleware must be first
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'account.middleware.SecurityMiddleware',  # Lightweight security middleware
     'account.middleware.SecurityLoggingMiddleware',  # Re-enabled with optimizations
     'django.contrib.messages.middleware.MessageMiddleware',
     'account.middleware.AdminActionLoggingMiddleware',  # Re-enabled with optimizations
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Add CORS middleware
 ]
 
 ROOT_URLCONF = 'CareLink.urls'
@@ -146,6 +147,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Authentication settings
+LOGIN_URL = '/account/login/'
+LOGIN_REDIRECT_URL = '/account/profile/'
+LOGOUT_REDIRECT_URL = '/account/login/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type

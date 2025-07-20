@@ -1,0 +1,431 @@
+/* IDS Security Notifications - Dedicated Styles */
+
+/* IDS Notification Container */
+.ids-notification-center-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: idsFadeIn 0.3s ease-out;
+}
+
+.ids-notification-center {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: idsSlideIn 0.3s ease-out;
+}
+
+@keyframes idsFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes idsSlideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* IDS Notification Header */
+.ids-notification-header {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ids-notification-header h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* IDS Notification Filters */
+.ids-notification-filters {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* IDS Notification List */
+.ids-notification-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    max-height: 60vh;
+}
+
+/* IDS Notification Item */
+.ids-notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    background: #fff;
+}
+
+.ids-notification-item:hover {
+    background: #f8f9fa;
+}
+
+.ids-notification-item.unread {
+    background: #fff5f5;
+    border-left: 4px solid #dc3545;
+}
+
+.ids-notification-item.unread:hover {
+    background: #fed7d7;
+}
+
+/* IDS Notification Icon */
+.ids-notification-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 50%;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.ids-notification-icon i {
+    font-size: 1.2rem;
+}
+
+/* IDS Notification Content */
+.ids-notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.ids-notification-header-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.ids-notification-title {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+
+.ids-notification-time {
+    color: #6c757d;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    margin-left: 1rem;
+}
+
+.ids-notification-message {
+    color: #495057;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+/* IDS Notification Meta */
+.ids-notification-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.ids-notification-type {
+    background: #e9ecef;
+    color: #495057;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.ids-notification-sender {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+/* IDS Notification Priority */
+.ids-notification-priority {
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.ids-notification-priority.text-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.ids-notification-priority.text-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.ids-notification-priority.text-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.ids-notification-priority.text-critical {
+    background: #f8d7da;
+    color: #721c24;
+    animation: idsPulse 2s infinite;
+}
+
+@keyframes idsPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* IDS Unread Indicator */
+.ids-notification-unread-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.ids-unread-dot {
+    width: 8px;
+    height: 8px;
+    background: #dc3545;
+    border-radius: 50%;
+    animation: idsPulse 2s infinite;
+}
+
+/* IDS Threat Level Colors */
+.ids-threat-level-critical {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+.ids-threat-level-high {
+    color: #fd7e14 !important;
+    font-weight: bold;
+}
+
+.ids-threat-level-medium {
+    color: #ffc107 !important;
+    font-weight: bold;
+}
+
+.ids-threat-level-low {
+    color: #28a745 !important;
+    font-weight: bold;
+}
+
+/* IDS Security Specific Styles */
+.ids-security-alert {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.ids-security-threat {
+    border-left: 4px solid #fd7e14;
+    background: #fff8f0;
+}
+
+.ids-admin-access {
+    border-left: 4px solid #ffc107;
+    background: #fffbf0;
+}
+
+/* IDS Threat Details */
+.ids-threat-details {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.ids-threat-details strong {
+    color: #495057;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.ids-threat-details ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.ids-threat-details li {
+    color: #6c757d;
+    margin-bottom: 3px;
+    font-size: 0.8rem;
+}
+
+/* IDS Responsive Design */
+@media (max-width: 768px) {
+    .ids-notification-center {
+        width: 95%;
+        max-height: 95vh;
+        margin: 1rem;
+    }
+    
+    .ids-notification-header {
+        padding: 1rem;
+    }
+    
+    .ids-notification-filters {
+        padding: 0.75rem;
+    }
+    
+    .ids-notification-item {
+        padding: 0.75rem;
+    }
+    
+    .ids-notification-icon {
+        width: 35px;
+        height: 35px;
+        margin-right: 0.75rem;
+    }
+    
+    .ids-notification-header-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ids-notification-time {
+        margin-left: 0;
+        margin-top: 0.25rem;
+    }
+}
+
+/* IDS Scroll Styling */
+.ids-notification-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ids-notification-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.ids-notification-list::-webkit-scrollbar-thumb {
+    background: #dc3545;
+    border-radius: 3px;
+}
+
+.ids-notification-list::-webkit-scrollbar-thumb:hover {
+    background: #c82333;
+}
+
+/* IDS Loading and Empty States */
+.ids-notification-list .spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+.ids-notification-list .text-center {
+    padding: 2rem;
+}
+
+.ids-notification-list .fa-shield-exclamation {
+    color: #dee2e6;
+}
+
+/* IDS Filter Buttons */
+.ids-notification-filters .btn {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.ids-notification-filters .form-select {
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+/* IDS Header Buttons */
+.ids-notification-header .btn {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* IDS Load More Button */
+.ids-notification-list .btn-outline-danger {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+}
+
+/* IDS Animation for New Notifications */
+@keyframes idsNewNotification {
+    0% {
+        background: #fff5f5;
+        transform: translateX(-10px);
+    }
+    100% {
+        background: transparent;
+        transform: translateX(0);
+    }
+}
+
+.ids-notification-item.new-notification {
+    animation: idsNewNotification 0.5s ease-out;
+}
+
+/* IDS Focus Styles for Accessibility */
+.ids-notification-item:focus {
+    outline: 2px solid #dc3545;
+    outline-offset: -2px;
+}
+
+.ids-notification-center button:focus {
+    outline: 2px solid #dc3545;
+    outline-offset: 2px;
+}
+
+/* IDS High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .ids-notification-item {
+        border: 1px solid #333;
+    }
+    
+    .ids-notification-item.unread {
+        border-left: 4px solid #000;
+    }
+    
+    .ids-notification-header {
+        background: #000;
+        color: #fff;
+    }
+} 

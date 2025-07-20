@@ -296,7 +296,7 @@ const NotificationCenter = ({ isOpen, onClose, currentUser }) => {
                                 {stats.unread_notifications} {t('notifications.unread', 'unread')} of {stats.total_notifications} {t('notifications.total', 'total')}
                             </small>
                         </div>
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-2 notification-header-buttons">
                             <button 
                                 className="btn btn-sm btn-outline-info"
                                 onClick={refreshNotifications}

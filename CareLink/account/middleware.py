@@ -3,6 +3,7 @@ from django.utils.deprecation import MiddlewareMixin
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
 from CareLink.models import UserActionLog
+from .services.lightweight_ids import lightweight_ids
 
 logger = logging.getLogger('carelink.admin')
 
@@ -89,3 +90,74 @@ class SecurityLoggingMiddleware(MiddlewareMixin):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+
+class SecurityMiddleware(MiddlewareMixin):
+    """
+    Lightweight Security Middleware
+    Integrates IDS analysis with request processing
+    """
+    
+    def process_request(self, request):
+        """Process request through security analysis"""
+        
+        # Skip analysis for certain paths
+        skip_paths = [
+            '/static/',
+            '/media/',
+            '/favicon.ico',
+            '/robots.txt',
+            '/health/',
+        ]
+        
+        path = request.path.lower()
+        if any(skip_path in path for skip_path in skip_paths):
+            return None
+        
+        try:
+            logger.debug(f"SecurityMiddleware: Analyzing request {request.method} {request.path} from {request.META.get('REMOTE_ADDR', 'unknown')}")
+            
+            # Analyze request for threats
+            analysis = lightweight_ids.analyze_request(request)
+            
+            # Store analysis results for potential use in process_response
+            request._security_analysis = analysis
+            
+            # Log security events
+            if analysis['threats']:
+                logger.warning(
+                    f"Security threats detected - Level: {analysis['level']} - "
+                    f"IP: {analysis['client_ip']} - Path: {request.path} - "
+                    f"Threats: {len(analysis['threats'])}"
+                )
+            else:
+                logger.debug(f"SecurityMiddleware: No threats detected for {request.path}")
+            
+            # For critical threats, we could block the request
+            # For now, we just log and notify
+            if analysis['level'] == 'CRITICAL':
+                logger.critical(
+                    f"CRITICAL security threat from {analysis['client_ip']} - "
+                    f"Path: {request.path}"
+                )
+            
+        except Exception as e:
+            logger.error(f"Error in security middleware: {e}")
+        
+        return None
+    
+    def process_response(self, request, response):
+        """Process response and log security events"""
+        try:
+            # Log security analysis results if available
+            if hasattr(request, '_security_analysis'):
+                analysis = request._security_analysis
+                if analysis['threats']:
+                    logger.info(
+                        f"Security analysis completed - Threats: {len(analysis['threats'])} - "
+                        f"Level: {analysis['level']} - Response: {response.status_code}"
+                    )
+        except Exception as e:
+            logger.error(f"Error in security middleware response processing: {e}")
+        
+        return response

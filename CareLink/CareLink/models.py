@@ -1209,6 +1209,11 @@ class Notification(models.Model):
         # System notifications
         ('profile_updated', 'Profile Updated'),
         ('system_announcement', 'System Announcement'),
+        
+        # Security notifications
+        ('security_alert', 'Security Alert'),
+        ('security_threat_detected', 'Security Threat Detected'),
+        ('admin_access_attempt', 'Admin Access Attempt'),
     ]
     
     PRIORITY_LEVELS = [

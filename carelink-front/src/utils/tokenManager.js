@@ -264,7 +264,7 @@ class TokenManager {
         console.log('🚪 Session expired, redirecting to login...');
         
         // Redirect to login page
-        window.location.href = '/login';
+        window.location.href = '/account/login/';
     }
 
     /**
