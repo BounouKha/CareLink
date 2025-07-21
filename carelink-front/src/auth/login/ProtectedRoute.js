@@ -1,16 +1,50 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AdminContext } from './AdminContext';
+import tokenManager from '../../utils/tokenManager';
 
 const ProtectedRoute = ({ children }) => {
     const { isSuperUser } = useContext(AdminContext);
     const [showDeniedMessage, setShowDeniedMessage] = useState(false);
     const [redirectCountdown, setRedirectCountdown] = useState(3);
 
+    // Function to send security alert to backend
+    const sendSecurityAlert = async () => {
+        try {
+            const response = await fetch('http://localhost:8000/account/security/frontend-intrusion/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenManager.getAccessToken() || ''}`,
+                },
+                body: JSON.stringify({
+                    alert_type: 'frontend_admin_access_attempt',
+                    path: window.location.pathname,
+                    timestamp: new Date().toISOString(),
+                    user_agent: navigator.userAgent,
+                    referrer: document.referrer || 'direct',
+                    ip_info: 'client-side', // Backend will get actual IP
+                })
+            });
+
+            if (response.ok) {
+                console.log('🔍 Security alert sent to backend');
+            } else {
+                console.warn('⚠️ Failed to send security alert:', response.status);
+            }
+        } catch (error) {
+            console.error('🚨 Error sending security alert:', error);
+        }
+    };
+
     useEffect(() => {
         // If user is not a superuser (and not still loading), show denial message
         if (isSuperUser === false) {
             setShowDeniedMessage(true);
+            
+            // 🔒 Send security alert for unauthorized admin access attempt
+            console.log('🚨 Unauthorized admin access attempt detected - sending security alert');
+            sendSecurityAlert();
             
             // Start countdown
             const interval = setInterval(() => {
