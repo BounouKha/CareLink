@@ -51,6 +51,17 @@ const ProfilePage = () => {
     const [preferencesMsg, setPreferencesMsg] = useState('');
     const [savingPreferences, setSavingPreferences] = useState(false);
     
+    // Phone number management
+    const [phoneNumbers, setPhoneNumbers] = useState([]);
+    const [phoneLoading, setPhoneLoading] = useState(false);
+    const [phoneError, setPhoneError] = useState('');
+    const [showPhoneForm, setShowPhoneForm] = useState(false);
+    const [editingPhone, setEditingPhone] = useState(null);
+    const [phoneForm, setPhoneForm] = useState({
+        phone_number: '',
+        name: ''
+    });
+    
     // Settings tab state
     const [selectedSettingsTab, setSelectedSettingsTab] = useState('security');
     // Use translation hooks
@@ -192,6 +203,147 @@ const ProfilePage = () => {
             setSavingPreferences(false);
         }
     }, [preferences]);
+
+    // Phone number management functions
+    const fetchPhoneNumbers = useCallback(async () => {
+        console.log('[DEBUG] fetchPhoneNumbers called');
+        setPhoneLoading(true);
+        setPhoneError('');
+        try {
+            const token = tokenManager.getAccessToken();
+            const response = await fetch('http://localhost:8000/account/phoneuser/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[DEBUG] Fetched phone numbers from API:', data);
+                
+                // Extract results array from paginated response
+                const phoneNumbersArray = data.results || data;
+                console.log('[DEBUG] Setting phone numbers state:', phoneNumbersArray);
+                console.log('[DEBUG] Array length:', phoneNumbersArray.length);
+                
+                // Set phone numbers state directly
+                setPhoneNumbers(phoneNumbersArray);
+            } else {
+                const errorData = await response.json();
+                console.error('[DEBUG] Error fetching phone numbers:', errorData);
+                setPhoneError(errorData.error || 'Failed to load phone numbers.');
+            }
+        } catch (err) {
+            console.error('[DEBUG] Network error fetching phone numbers:', err);
+            setPhoneError('Network error. Please try again.');
+        } finally {
+            setPhoneLoading(false);
+        }
+    }, []);
+
+    const handlePhoneSubmit = async (e) => {
+        e.preventDefault();
+        setPhoneError('');
+        
+        // Validation
+        if (!phoneForm.phone_number.trim() || !phoneForm.name.trim()) {
+            setPhoneError('Both phone number and description are required.');
+            return;
+        }
+        
+        if (phoneNumbers.length >= 3 && !editingPhone) {
+            setPhoneError('Maximum 3 phone numbers allowed.');
+            return;
+        }
+        
+        try {
+            const token = tokenManager.getAccessToken();
+            const url = editingPhone 
+                ? `http://localhost:8000/account/phoneuser/${editingPhone.id}/`
+                : 'http://localhost:8000/account/phoneuser/';
+            
+            const method = editingPhone ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(phoneForm)
+            });
+            
+            if (response.ok) {
+                console.log('[DEBUG] Phone number saved successfully');
+                
+                // Reset form state
+                setShowPhoneForm(false);
+                setEditingPhone(null);
+                setPhoneForm({ phone_number: '', name: '' });
+                setPhoneError('');
+                
+                // Immediately refresh the phone numbers list
+                await fetchPhoneNumbers();
+            } else {
+                const errorData = await response.json();
+                setPhoneError(errorData.error || Object.values(errorData).flat().join(', ') || 'Failed to save phone number.');
+            }
+        } catch (err) {
+            setPhoneError('Network error. Please try again.');
+        }
+    };
+
+    const handleEditPhone = (phone) => {
+        setEditingPhone(phone);
+        setPhoneForm({ phone_number: phone.phone_number, name: phone.name });
+        setShowPhoneForm(true);
+        setPhoneError('');
+    };
+
+    const handleDeletePhone = async (phoneId) => {
+        if (!confirm('Are you sure you want to delete this phone number?')) return;
+        
+        try {
+            const token = tokenManager.getAccessToken();
+            const response = await fetch(`http://localhost:8000/account/phoneuser/${phoneId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                await fetchPhoneNumbers(); // Refresh list
+            } else {
+                const errorData = await response.json();
+                setPhoneError(errorData.error || 'Failed to delete phone number.');
+            }
+        } catch (err) {
+            setPhoneError('Network error. Please try again.');
+        }
+    };
+
+    const cancelPhoneForm = () => {
+        setShowPhoneForm(false);
+        setEditingPhone(null);
+        setPhoneForm({ phone_number: '', name: '' });
+        setPhoneError('');
+    };
+
+    // Fetch phone numbers when contact tab is selected
+    useEffect(() => {
+        if (selectedTab === 'contact') {
+            // Always fetch fresh data from API when contact tab is selected
+            fetchPhoneNumbers();
+        }
+    }, [selectedTab, fetchPhoneNumbers]);
+
+    // Debug: Log phoneNumbers state changes
+    useEffect(() => {
+        console.log('[DEBUG] phoneNumbers state changed:', phoneNumbers);
+    }, [phoneNumbers]);
+
     // --- End hooks ---
 
     useEffect(() => {
@@ -573,21 +725,111 @@ const ProfilePage = () => {
             case 'contact':
                 return (
                     <div className="card shadow-sm border-0">
-                        <div className="card-header bg-secondary bg-opacity-10 border-0">
+                        <div className="card-header bg-secondary bg-opacity-10 border-0 d-flex justify-content-between align-items-center">
                             <h5 className="card-title mb-0">
                                 <i className="fas fa-phone me-2 text-secondary"></i>
-                                {profile('contactInfo')}
+                                Contact Numbers
                             </h5>
+                            {phoneNumbers.length < 3 && !showPhoneForm && (
+                                <button 
+                                    className="btn btn-sm btn-primary"
+                                    onClick={() => setShowPhoneForm(true)}
+                                >
+                                    <i className="fas fa-plus me-1"></i>
+                                    Add Number
+                                </button>
+                            )}
                         </div>
                         <div className="card-body">
-                            {userData.phone_numbers && userData.phone_numbers.length > 0 ? (
-                                <div className="row g-3">
-                                    {userData.phone_numbers.map((phone, index) => (
-                                        <div key={index} className="col-md-6">
+                            {phoneError && (
+                                <div className="alert alert-danger">
+                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                    {phoneError}
+                                </div>
+                            )}
+
+                            {/* Phone Number Form */}
+                            {showPhoneForm && (
+                                <div className="card bg-light border mb-3">
+                                    <div className="card-body">
+                                        <h6 className="card-title">
+                                            {editingPhone ? 'Edit Phone Number' : 'Add New Phone Number'}
+                                        </h6>
+                                        <form onSubmit={handlePhoneSubmit}>
+                                            <div className="row g-3">
+                                                <div className="col-md-6">
+                                                    <label className="form-label">Phone Number <span className="text-danger">*</span></label>
+                                                    <input
+                                                        type="tel"
+                                                        className="form-control"
+                                                        value={phoneForm.phone_number}
+                                                        onChange={(e) => setPhoneForm({...phoneForm, phone_number: e.target.value})}
+                                                        placeholder="e.g., +32 123 456 789"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <label className="form-label">Description <span className="text-danger">*</span></label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        value={phoneForm.name}
+                                                        onChange={(e) => setPhoneForm({...phoneForm, name: e.target.value})}
+                                                        placeholder="e.g., Mobile Phone, Home Phone"
+                                                        maxLength={50}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="col-12">
+                                                    <button type="submit" className="btn btn-primary me-2">
+                                                        <i className="fas fa-save me-1"></i>
+                                                        {editingPhone ? 'Update' : 'Add'} Phone Number
+                                                    </button>
+                                                    <button type="button" className="btn btn-secondary" onClick={cancelPhoneForm}>
+                                                        <i className="fas fa-times me-1"></i>
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Phone Numbers List */}
+                            {phoneLoading ? (
+                                <div className="text-center py-4">
+                                    <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    Loading phone numbers...
+                                </div>
+                            ) : phoneNumbers.length > 0 ? (
+                                <div className="row g-3">{console.log('[DEBUG] Rendering phone numbers list, count:', phoneNumbers.length, 'data:', phoneNumbers)}
+                                    {phoneNumbers.map((phone) => (
+                                        <div key={phone.id} className="col-md-6">
                                             <div className="card bg-light border-0">
-                                                <div className="card-body py-3">
-                                                    <label className="form-label text-muted">{phone.name}:</label>
-                                                    <p className="fs-6 fw-medium mb-0">{phone.phone_number}</p>
+                                                <div className="card-body">
+                                                    <div className="d-flex justify-content-between align-items-start">
+                                                        <div className="flex-grow-1">
+                                                            <label className="form-label text-muted mb-1">{phone.name}</label>
+                                                            <p className="fs-6 fw-medium mb-0">{phone.phone_number}</p>
+                                                        </div>
+                                                        <div className="btn-group btn-group-sm">
+                                                            <button 
+                                                                className="btn btn-outline-primary btn-sm"
+                                                                onClick={() => handleEditPhone(phone)}
+                                                                title="Edit phone number"
+                                                            >
+                                                                ✏️
+                                                            </button>
+                                                            <button 
+                                                                className="btn btn-outline-danger btn-sm"
+                                                                onClick={() => handleDeletePhone(phone.id)}
+                                                                title="Delete phone number"
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -596,7 +838,25 @@ const ProfilePage = () => {
                             ) : (
                                 <div className="text-center py-4">
                                     <i className="fas fa-phone-slash text-muted mb-2" style={{fontSize: '2rem'}}></i>
-                                    <p className="text-muted mb-0">{profile('noContactInfo')}</p>
+                                    <p className="text-muted mb-3">No phone numbers added yet</p>
+                                    {!showPhoneForm && (
+                                        <button 
+                                            className="btn btn-primary"
+                                            onClick={() => setShowPhoneForm(true)}
+                                        >
+                                            <i className="fas fa-plus me-1"></i>
+                                            Add Your First Phone Number
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {phoneNumbers.length > 0 && phoneNumbers.length < 3 && (
+                                <div className="mt-3 text-muted">
+                                    <small>
+                                        <i className="fas fa-info-circle me-1"></i>
+                                        You can add up to {3 - phoneNumbers.length} more phone number{phoneNumbers.length < 2 ? 's' : ''}.
+                                    </small>
                                 </div>
                             )}
                         </div>
