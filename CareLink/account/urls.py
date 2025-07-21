@@ -38,6 +38,7 @@ from account.views.provider import (
 from account.views.ticket import EnhancedTicketViewSet, TicketCommentViewSet, TicketStatusHistoryViewSet
 from .views.invoice import InvoiceListView, InvoiceDetailView, InvoiceCreateView, MyInvoicesView, ContestInvoiceView, InvoiceLinesView, GenerateInvoicesView, CronGenerateInvoicesView, AdminInvoiceListView, RegenerateInvoiceView, ResolveContestView, CreateNewInvoiceAfterContestView
 from account.views.profile_settings import ChangePasswordView, LoginHistoryView, PreferredContactMethodsView, AccountDeletionRequestView, AnonymizePatientView
+from account.views.frontend_security import frontend_intrusion_alert
 from .views.appointment_comments import AppointmentCommentAPIView, CheckCommentPermissionAPIView, CoordinatorViewCommentsAPIView
 from .views.patient_details import PatientDetailsView
 from .views.patient_service_pricing import PatientServicePriceViewSet, PatientServicePriceDetailView, patients_list, services_list
@@ -179,4 +180,5 @@ urlpatterns += [
     path('security/actions/', SecurityActionsView.as_view(), name='security-actions'),
     path('security/stats/', SecurityStatsView.as_view(), name='security-stats'),
     path('security/audit/ip/<str:ip_address>/', IPAuditView.as_view(), name='ip-audit'),
+    path('security/frontend-intrusion/', frontend_intrusion_alert, name='frontend-intrusion-alert'),
 ]
