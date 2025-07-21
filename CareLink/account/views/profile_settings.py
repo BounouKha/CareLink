@@ -138,10 +138,11 @@ class LoginHistoryView(APIView):
                     
                 history.append({
                     'timestamp': log.created_at.isoformat(),
-                    'ip_address': additional_data.get('ip_address', 'Unknown'),
-                    'user_agent': additional_data.get('user_agent', 'Unknown')[:100],
+                    'user_agent': additional_data.get('user_agent', 'Not available')[:100],
                     'success': True,  # Since we're only getting successful logins
-                    'location': additional_data.get('location', 'Unknown')
+                    'user_email': request.user.email,
+                    'user_name': f"{request.user.firstname} {request.user.lastname}".strip(),
+                    'user_id': request.user.id
                 })
             
             return Response({

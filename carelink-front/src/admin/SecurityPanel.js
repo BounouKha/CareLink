@@ -424,6 +424,14 @@ const SecurityPanel = () => {
                                                 <div className="audit-event-details">
                                                     <strong>Path:</strong> {event.path}<br/>
                                                     <strong>Method:</strong> {event.method || 'N/A'}<br/>
+                                                    <strong>User:</strong> {
+                                                        event.user_full_name || 
+                                                        event.user || 
+                                                        event.username || 
+                                                        event.user_id || 
+                                                        (event.additional_info?.user_email) ||
+                                                        'Anonymous'
+                                                    }<br/>
                                                     <strong>User Agent:</strong> {event.user_agent || 'N/A'}
                                                 </div>
                                                 

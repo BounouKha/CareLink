@@ -880,10 +880,15 @@ const ProfilePage = () => {
                                                                 </div>
                                                                 <div className="flex-grow-1">
                                                                     <div className="fw-medium">{new Date(log.timestamp).toLocaleDateString()}</div>
-                                                                    <small className="text-muted">{new Date(log.timestamp).toLocaleTimeString()}</small>
+                                                                    <small className="text-muted d-block">{new Date(log.timestamp).toLocaleTimeString()}</small>
+                                                                    <small className="text-muted">
+                                                                        User: {log.user_name || log.user_email || 'Current User'}
+                                                                    </small>
                                                                 </div>
                                                                 <div className="text-end">
-                                                                    <small className="text-muted d-block">{log.user_agent.substring(0, 30)}...</small>
+                                                                    {log.user_agent && log.user_agent !== 'Not available' && (
+                                                                        <small className="text-muted d-block">{log.user_agent.substring(0, 30)}...</small>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>

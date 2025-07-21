@@ -296,6 +296,8 @@ class IPAuditView(APIView):
                             'threats': additional_data.get('threats', []),
                             'description': additional_data.get('description', event.description),
                             'user': event.user.email if event.user else 'System',
+                            'user_full_name': f"{event.user.firstname} {event.user.lastname}" if event.user else 'System',
+                            'user_id': event.user.id if event.user else None,
                             'additional_info': {
                                 'target_model': event.target_model,
                                 'target_id': event.target_id,
