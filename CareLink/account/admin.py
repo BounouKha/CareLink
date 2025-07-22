@@ -540,9 +540,15 @@ class TimelineEventPatientAdmin(admin.ModelAdmin):
 
 @admin.register(TimeSlot)
 class TimeSlotAdmin(admin.ModelAdmin):
-    list_display = ('start_time', 'end_time', 'status', 'service_name', 'user_name', 'description_short')
-    list_filter = ('status', 'start_time', 'service')
-    search_fields = ('description', 'user__firstname', 'user__lastname', 'service__name')
+    list_display = ('start_time', 'end_time', 'status', 'service_name', 'user_name', 'prescription_info', 'description_short')
+    list_filter = ('status', 'start_time', 'service', 'prescription')
+    search_fields = ('description', 'user__firstname', 'user__lastname', 'service__name', 'prescription__medication')
+    
+    def prescription_info(self, obj):
+        if obj.prescription:
+            return f"{obj.prescription.medication[:30]}..." if len(obj.prescription.medication) > 30 else obj.prescription.medication
+        return "No Prescription"
+    prescription_info.short_description = 'Prescription'
     
     def service_name(self, obj):
         return obj.service.name if obj.service else "No Service"

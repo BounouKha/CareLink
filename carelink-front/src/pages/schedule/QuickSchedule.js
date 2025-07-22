@@ -354,6 +354,11 @@ const fetchPatients = async () => {
       setInamiData(null);
     }
 
+    // Clear prescription selection if service changes away from Service 3
+    if (name === 'service_id' && value !== '3' && formData.prescription_id) {
+      setFormData(prev => ({ ...prev, prescription_id: '' }));
+    }
+
     // Check for custom pricing when both patient and service are selected
     if (name === 'service_id' && formData.patient_id && value) {
       checkCustomPricing(formData.patient_id, value);
@@ -819,8 +824,8 @@ const fetchPatients = async () => {
               </div>
             )}
 
-            {/* Prescription Selector - only show when patient is selected */}
-            {formData.patient_id && (
+            {/* Prescription Selector - only show for Service 3 (infirmier) when patient is selected */}
+            {formData.patient_id && (formData.service_id === '3' || formData.service_id === 3) && (
               <div className="form-group">
                 <label htmlFor="prescription_id">Link to Prescription (Optional)</label>
                 {/* Debug info */}

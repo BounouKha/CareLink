@@ -148,6 +148,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Authentication settings
 LOGIN_URL = '/account/login/'
 LOGIN_REDIRECT_URL = '/account/profile/'

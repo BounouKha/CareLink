@@ -5,6 +5,7 @@ import BaseLayout from '../../auth/layout/BaseLayout';
 import ServiceDemandMoreInfo from './ServiceDemandMoreInfo';
 import { SpinnerOnly } from '../../components/LoadingComponents';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import tokenManager from '../../utils/tokenManager';
 
 const ServiceDemandPage = () => {
     const [demands, setDemands] = useState([]);
@@ -40,6 +41,11 @@ const ServiceDemandPage = () => {
     });
     const [patientSearch, setPatientSearch] = useState('');
     const [linkedPatients, setLinkedPatients] = useState([]); // For Family Patients - now array
+    
+    // Prescription file upload state
+    const [prescriptionFiles, setPrescriptionFiles] = useState([]);
+    const [showPrescriptionSection, setShowPrescriptionSection] = useState(false);
+    const [prescriptionUploading, setPrescriptionUploading] = useState(false);
 
     useEffect(() => {
         fetchUserData();
@@ -75,6 +81,90 @@ const ServiceDemandPage = () => {
         });
         setPatientSearch('');
         setError('');
+        // Reset prescription state
+        setPrescriptionFiles([]);
+        setShowPrescriptionSection(false);
+        setPrescriptionUploading(false);
+    };
+
+    // Prescription file handling functions
+    const handlePrescriptionFileSelect = (e) => {
+        const files = Array.from(e.target.files);
+        const validFiles = [];
+        
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        
+        for (const file of files) {
+            if (!allowedTypes.includes(file.type)) {
+                setError(`File "${file.name}" is not a supported format. Please upload PDF or image files.`);
+                continue;
+            }
+            
+            if (file.size > maxSize) {
+                setError(`File "${file.name}" is too large. Maximum size is 10MB.`);
+                continue;
+            }
+            
+            validFiles.push({
+                file: file,
+                id: Date.now() + Math.random(),
+                name: file.name,
+                size: file.size,
+                description: ''
+            });
+        }
+        
+        setPrescriptionFiles(prev => [...prev, ...validFiles]);
+        // Clear the input
+        e.target.value = '';
+    };
+    
+    const handleRemovePrescriptionFile = (fileId) => {
+        setPrescriptionFiles(prev => prev.filter(f => f.id !== fileId));
+    };
+    
+    const handlePrescriptionDescriptionChange = (fileId, description) => {
+        setPrescriptionFiles(prev => 
+            prev.map(f => f.id === fileId ? { ...f, description } : f)
+        );
+    };
+    
+    const uploadPrescriptionFiles = async (serviceDemandId) => {
+        if (prescriptionFiles.length === 0) return;
+        
+        setPrescriptionUploading(true);
+        
+        try {
+            const token = await tokenManager.getValidAccessToken();
+            
+            for (const prescFile of prescriptionFiles) {
+                const formData = new FormData();
+                formData.append('file', prescFile.file);
+                formData.append('description', prescFile.description);
+                
+                // Use fetch directly for file uploads, not tokenManager.authenticatedFetch
+                // because FormData needs special handling
+                const response = await fetch(`http://localhost:8000/account/service-demands/${serviceDemandId}/prescriptions/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // Don't set Content-Type for FormData - browser will set it automatically
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Failed to upload prescription:', errorData);
+                    // Continue with other files even if one fails
+                }
+            }
+        } catch (error) {
+            console.error('Error uploading prescriptions:', error);
+        } finally {
+            setPrescriptionUploading(false);
+        }
     };
 
     const fetchUserData = async () => {
@@ -225,6 +315,13 @@ const ServiceDemandPage = () => {
                 },
                 body: JSON.stringify(demandData)
             });            if (response.ok) {
+                const createdDemand = await response.json();
+                
+                // Upload prescription files if any
+                if (prescriptionFiles.length > 0) {
+                    await uploadPrescriptionFiles(createdDemand.id);
+                }
+                
                 resetCreateForm();
                 fetchDemands();
             } else {
@@ -295,6 +392,14 @@ const ServiceDemandPage = () => {
                     ...prev,
                     coordinator_notes: data.coordinator_notes
                 }));
+                
+                // Also update the main demands list to ensure consistency
+                setDemands(prev => prev.map(demand => 
+                    demand.id === demandId 
+                        ? { ...demand, coordinator_notes: data.coordinator_notes }
+                        : demand
+                ));
+                
                 setNewComment('');
                 setError('');
                 alert(data.message);
@@ -988,6 +1093,116 @@ const ServiceDemandPage = () => {
                                                                                 onChange={(e) => setNewDemand({...newDemand, special_instructions: e.target.value})}
                                                                                 placeholder="📋 Any special instructions or requirements..."
                                                                             />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                {/* Prescription Upload Section */}
+                                                                <div className="row mt-4">
+                                                                    <div className="col-12">
+                                                                        <div className="card border-0 shadow-sm" style={{borderRadius: '15px', backgroundColor: '#f8f9fa'}}>
+                                                                            <div className="card-header border-0 bg-transparent p-3">
+                                                                                <div className="d-flex align-items-center justify-content-between">
+                                                                                    <h6 className="mb-0 fw-semibold text-muted">
+                                                                                        <i className="bi bi-file-earmark-medical me-2" style={{color: '#22C7EE'}}></i>
+                                                                                        Prescription Files (Optional)
+                                                                                    </h6>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        className="btn btn-sm btn-outline-primary"
+                                                                                        style={{borderRadius: '8px'}}
+                                                                                        onClick={() => setShowPrescriptionSection(!showPrescriptionSection)}
+                                                                                    >
+                                                                                        <i className={`bi bi-${showPrescriptionSection ? 'chevron-up' : 'chevron-down'} me-1`}></i>
+                                                                                        {showPrescriptionSection ? 'Hide' : 'Add Prescription'}
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                            
+                                                                            {showPrescriptionSection && (
+                                                                                <div className="card-body p-3 pt-0">
+                                                                                    <div className="mb-3">
+                                                                                        <div 
+                                                                                            className="border-2 border-dashed rounded p-4 text-center"
+                                                                                            style={{borderColor: '#22C7EE', backgroundColor: '#f0f9ff'}}
+                                                                                        >
+                                                                                            <i className="bi bi-cloud-upload display-6" style={{color: '#22C7EE'}}></i>
+                                                                                            <p className="mb-2 text-muted">
+                                                                                                Upload prescription files, medical reports, or lab results
+                                                                                            </p>
+                                                                                            <input
+                                                                                                type="file"
+                                                                                                id="prescriptionFileInput"
+                                                                                                className="d-none"
+                                                                                                multiple
+                                                                                                accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp"
+                                                                                                onChange={handlePrescriptionFileSelect}
+                                                                                            />
+                                                                                            <label 
+                                                                                                htmlFor="prescriptionFileInput"
+                                                                                                className="btn btn-outline-primary btn-sm"
+                                                                                                style={{borderRadius: '8px'}}
+                                                                                            >
+                                                                                                <i className="bi bi-plus-circle me-2"></i>
+                                                                                                Choose Files
+                                                                                            </label>
+                                                                                            <small className="d-block text-muted mt-2">
+                                                                                                Supported: PDF, JPG, PNG, GIF (max 10MB each)
+                                                                                            </small>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    
+                                                                                    {/* Display selected files */}
+                                                                                    {prescriptionFiles.length > 0 && (
+                                                                                        <div className="mt-3">
+                                                                                            <h6 className="text-muted mb-2">Selected Files:</h6>
+                                                                                            {prescriptionFiles.map((file) => (
+                                                                                                <div key={file.id} className="card mb-2 border-1">
+                                                                                                    <div className="card-body p-3">
+                                                                                                        <div className="row align-items-center">
+                                                                                                            <div className="col-auto">
+                                                                                                                <i className={`bi bi-${file.file.type.includes('pdf') ? 'file-earmark-pdf' : 'image'} fs-4`} 
+                                                                                                                   style={{color: file.file.type.includes('pdf') ? '#dc3545' : '#28a745'}}></i>
+                                                                                                            </div>
+                                                                                                            <div className="col">
+                                                                                                                <div className="fw-semibold">{file.name}</div>
+                                                                                                                <small className="text-muted">
+                                                                                                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                                                                                                </small>
+                                                                                                                <input
+                                                                                                                    type="text"
+                                                                                                                    className="form-control form-control-sm mt-1"
+                                                                                                                    placeholder="Description (optional)"
+                                                                                                                    value={file.description}
+                                                                                                                    onChange={(e) => handlePrescriptionDescriptionChange(file.id, e.target.value)}
+                                                                                                                />
+                                                                                                            </div>
+                                                                                                            <div className="col-auto">
+                                                                                                                <button
+                                                                                                                    type="button"
+                                                                                                                    className="btn btn-sm btn-outline-danger"
+                                                                                                                    onClick={() => handleRemovePrescriptionFile(file.id)}
+                                                                                                                >
+                                                                                                                    <i className="bi bi-trash"></i>
+                                                                                                                </button>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    )}
+                                                                                    
+                                                                                    {prescriptionUploading && (
+                                                                                        <div className="text-center mt-3">
+                                                                                            <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                                                                                <span className="visually-hidden">Loading...</span>
+                                                                                            </div>
+                                                                                            <small className="text-muted">Uploading prescription files...</small>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>

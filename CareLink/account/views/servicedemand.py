@@ -2,10 +2,13 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.paginator import Paginator
 from django.utils import timezone
-from CareLink.models import ServiceDemand, Patient, Service, UserActionLog
-from account.serializers.servicedemand import ServiceDemandSerializer, ServiceDemandCreateSerializer
+from django.http import Http404
+from CareLink.models import ServiceDemand, Patient, Service, UserActionLog, ServiceDemandPrescription
+from account.serializers.servicedemand import ServiceDemandSerializer, ServiceDemandCreateSerializer, ServiceDemandPrescriptionSerializer
+from account.services.notification_service import NotificationService
 import json
 
 def log_service_demand_action(user, action_type, target_model, target_id, service_demand=None, description=None, additional_data=None):
@@ -209,6 +212,9 @@ class ServiceDemandListCreateView(APIView):
             
             demand = serializer.save()
             
+            # Send notification to coordinators
+            NotificationService.notify_service_demand_created(demand, request.user)
+            
             # Enhanced logging for service demand creation
             log_service_demand_action(
                 user=request.user,
@@ -222,6 +228,9 @@ class ServiceDemandListCreateView(APIView):
             response_serializer = ServiceDemandSerializer(demand)
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         
+        # Add detailed error logging
+        print(f"ServiceDemand validation errors: {serializer.errors}")
+        print(f"Request data: {request.data}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ServiceDemandDetailView(APIView):
@@ -459,6 +468,17 @@ class ServiceDemandCommentView(APIView):
         
         demand.save()
         
+        # Send notification to patient about the new comment
+        try:
+            NotificationService.notify_service_demand_comment(
+                service_demand=demand,
+                comment_author=request.user,
+                comment_text=comment
+            )
+        except Exception as e:
+            # Log the error but don't fail the comment addition
+            print(f"Error sending notification for service demand comment: {e}")
+        
         # Enhanced logging for comment addition
         log_service_demand_action(
             user=request.user,
@@ -510,3 +530,127 @@ class FamilyPatientLinkedView(APIView):
             
         except Exception as e:
             return Response({"error": "Error fetching linked patients."}, status=500)
+
+
+class ServiceDemandPrescriptionView(APIView):
+    """
+    Handle prescription file uploads for service demands
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def get(self, request, service_demand_id):
+        """Get all prescription files for a service demand"""
+        try:
+            # Check if service demand exists and user has access
+            service_demand = ServiceDemand.objects.get(id=service_demand_id)
+            
+            # Basic access control - users can only see their own service demands or if they're coordinators/admin
+            if (service_demand.sent_by != request.user and 
+                service_demand.patient.user != request.user and 
+                request.user.role not in ['Coordinator', 'Administrative']):
+                return Response({"error": "Access denied."}, status=403)
+            
+            prescriptions = ServiceDemandPrescription.objects.filter(service_demand=service_demand)
+            serializer = ServiceDemandPrescriptionSerializer(prescriptions, many=True, context={'request': request})
+            
+            return Response({
+                "prescriptions": serializer.data,
+                "count": prescriptions.count()
+            })
+            
+        except ServiceDemand.DoesNotExist:
+            return Response({"error": "Service demand not found."}, status=404)
+        except Exception as e:
+            return Response({"error": "Error fetching prescriptions."}, status=500)
+    
+    def post(self, request, service_demand_id):
+        """Upload a new prescription file"""
+        try:
+            # Check if service demand exists and user has access
+            service_demand = ServiceDemand.objects.get(id=service_demand_id)
+            
+            # Access control - only the requester, patient, or coordinators/admin can upload
+            if (service_demand.sent_by != request.user and 
+                service_demand.patient.user != request.user and 
+                request.user.role not in ['Coordinator', 'Administrative']):
+                return Response({"error": "Access denied."}, status=403)
+            
+            # Prepare data for serializer
+            data = request.data.copy()
+            data['service_demand'] = service_demand_id
+            
+            serializer = ServiceDemandPrescriptionSerializer(data=data, context={'request': request})
+            
+            if serializer.is_valid():
+                prescription = serializer.save()
+                
+                # Log the upload action
+                log_service_demand_action(
+                    user=request.user,
+                    action_type="UPLOAD_PRESCRIPTION",
+                    target_model="ServiceDemandPrescription",
+                    target_id=prescription.id,
+                    service_demand=service_demand,
+                    description=f"Uploaded prescription file: {prescription.file_name}",
+                    additional_data={
+                        'file_name': prescription.file_name,
+                        'file_size': prescription.file_size,
+                        'description': prescription.description
+                    }
+                )
+                
+                return Response({
+                    "message": "Prescription uploaded successfully.",
+                    "prescription": serializer.data
+                }, status=201)
+            else:
+                return Response({
+                    "error": "Invalid data.",
+                    "details": serializer.errors
+                }, status=400)
+                
+        except ServiceDemand.DoesNotExist:
+            return Response({"error": "Service demand not found."}, status=404)
+        except Exception as e:
+            return Response({"error": f"Error uploading prescription: {str(e)}"}, status=500)
+    
+    def delete(self, request, service_demand_id, prescription_id=None):
+        """Delete a prescription file"""
+        if not prescription_id:
+            return Response({"error": "Prescription ID required."}, status=400)
+            
+        try:
+            prescription = ServiceDemandPrescription.objects.get(
+                id=prescription_id, 
+                service_demand_id=service_demand_id
+            )
+            
+            # Access control - only the uploader or coordinators/admin can delete
+            if (prescription.uploaded_by != request.user and 
+                request.user.role not in ['Coordinator', 'Administrative']):
+                return Response({"error": "Access denied."}, status=403)
+            
+            file_name = prescription.file_name
+            service_demand = prescription.service_demand
+            
+            # Delete the file and record
+            prescription.delete()
+            
+            # Log the deletion
+            log_service_demand_action(
+                user=request.user,
+                action_type="DELETE_PRESCRIPTION",
+                target_model="ServiceDemandPrescription",
+                target_id=prescription_id,
+                service_demand=service_demand,
+                description=f"Deleted prescription file: {file_name}",
+                additional_data={'file_name': file_name}
+            )
+            
+            return Response({"message": "Prescription deleted successfully."})
+            
+        except ServiceDemandPrescription.DoesNotExist:
+            return Response({"error": "Prescription not found."}, status=404)
+        except Exception as e:
+            return Response({"error": "Error deleting prescription."}, status=500)

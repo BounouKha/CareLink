@@ -705,6 +705,40 @@ class ServiceDemand(models.Model):
     def days_since_created(self):
         return (datetime.datetime.now().date() - self.created_at.date()).days
 
+
+class ServiceDemandPrescription(models.Model):
+    """
+    Simple model to store prescription files related to service demands
+    """
+    service_demand = models.ForeignKey('ServiceDemand', on_delete=models.CASCADE, related_name='prescription_files')
+    file = models.FileField(upload_to='service_demand_prescriptions/%Y/%m/', max_length=255)
+    file_name = models.CharField(max_length=255, blank=True, help_text="Original filename")
+    file_size = models.PositiveIntegerField(blank=True, null=True, help_text="File size in bytes")
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True, help_text="Optional description of the document")
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Service Demand Prescription"
+        verbose_name_plural = "Service Demand Prescriptions"
+    
+    def __str__(self):
+        return f"Prescription for {self.service_demand.title}"
+    
+    @property
+    def file_extension(self):
+        return self.file_name.split('.')[-1].lower() if '.' in self.file_name else ''
+    
+    @property
+    def is_image(self):
+        return self.file_extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+    
+    @property
+    def is_pdf(self):
+        return self.file_extension == 'pdf'
+
+
 class SocialAssistant(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
     is_internal = models.BooleanField(default=False)
@@ -1200,6 +1234,7 @@ class Notification(models.Model):
         ('demand_new', 'New Service Demand'),
         ('demand_approved', 'Service Demand Approved'),
         ('demand_rejected', 'Service Demand Rejected'),
+        ('service_demand_update', 'Service Demand Updated'),
         
         # Comments and communication
         ('appointment_comment', 'New Appointment Comment'),

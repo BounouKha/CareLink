@@ -493,6 +493,47 @@ class NotificationService:
                 )
     
     @staticmethod
+    def notify_service_demand_comment(service_demand, comment_author, comment_text):
+        """Send notification to patient when coordinator adds a comment to their service demand"""
+        try:
+            # Get the patient who created the service demand
+            patient_user = None
+            
+            # Check if the service demand was sent by a patient directly
+            if service_demand.sent_by and service_demand.sent_by.role == 'Patient':
+                patient_user = service_demand.sent_by
+            # Or if it was sent by a family member for a patient
+            elif service_demand.patient and service_demand.patient.user:
+                patient_user = service_demand.patient.user
+            
+            # Only send notification if we have a patient and the comment author is not the patient
+            if patient_user and patient_user != comment_author:
+                # Check if the comment author is a coordinator/admin
+                if comment_author.role in ['Coordinator', 'Administrative']:
+                    NotificationService.create_notification(
+                        recipient=patient_user,
+                        sender=comment_author,
+                        notification_type='service_demand_update',
+                        title='Update on Your Service Request',
+                        message=f'Your care team has added an update to your service request: {service_demand.title}',
+                        priority='normal',
+                        service_demand=service_demand,
+                        extra_data={
+                            'service_name': service_demand.service.name if service_demand.service else 'Unknown',
+                            'coordinator_name': f"{comment_author.firstname} {comment_author.lastname}",
+                            'comment_preview': comment_text[:100] + "..." if len(comment_text) > 100 else comment_text
+                        }
+                    )
+                    logger.info(f"Service demand comment notification sent to {patient_user.email}")
+                else:
+                    logger.info(f"Comment author {comment_author.email} is not a coordinator, skipping notification")
+            else:
+                logger.info(f"No patient found or comment author is patient, skipping notification")
+                
+        except Exception as e:
+            logger.error(f"Error sending service demand comment notification: {str(e)}")
+    
+    @staticmethod
     def get_notification_count(user, unread_only=True):
         """Get notification count for a user"""
         queryset = Notification.objects.filter(recipient=user)

@@ -24,7 +24,7 @@ from account.views.refresh import CustomTokenRefreshView
 from account.views.coordinator.update_patient import UpdatePatientView
 from account.views.coordinator.medicalfolder_simple import MedicalFolderSimpleView
 from account.views.coordinator.internalnote import InternalNoteView
-from account.views.servicedemand import ServiceDemandListCreateView, ServiceDemandDetailView, ServiceDemandStatsView, ServiceDemandStatusUpdateView, ServiceDemandCommentView, FamilyPatientLinkedView
+from account.views.servicedemand import ServiceDemandListCreateView, ServiceDemandDetailView, ServiceDemandStatsView, ServiceDemandStatusUpdateView, ServiceDemandCommentView, FamilyPatientLinkedView, ServiceDemandPrescriptionView
 from account.views.logs import LogsView, LogStatsView
 from account.views.consent import ConsentStorageView, UserConsentHistoryView, ConsentWithdrawalView, consent_audit_export, consent_stats, AdminConsentListView, admin_revoke_consent, user_consent_status
 from account.views.patient_timeline import patient_timeline
@@ -97,6 +97,8 @@ urlpatterns += [
     path('service-demands/stats/', ServiceDemandStatsView.as_view(), name='service_demand_stats'),
     path('service-demands/<int:pk>/status/', ServiceDemandStatusUpdateView.as_view(), name='service_demand_status_update'),
     path('service-demands/<int:pk>/comment/', ServiceDemandCommentView.as_view(), name='service_demand_comment'),
+    path('service-demands/<int:service_demand_id>/prescriptions/', ServiceDemandPrescriptionView.as_view(), name='service_demand_prescriptions'),
+    path('service-demands/<int:service_demand_id>/prescriptions/<int:prescription_id>/', ServiceDemandPrescriptionView.as_view(), name='service_demand_prescription_detail'),
     path('family-patient/linked-patient/', FamilyPatientLinkedView.as_view(), name='family_patient_linked'),    # Logs API endpoints
     path('logs/', LogsView.as_view(), name='logs'),
     path('logs/stats/', LogStatsView.as_view(), name='logs_stats'),

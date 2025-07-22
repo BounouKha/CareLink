@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
+import tokenManager from '../../utils/tokenManager';
 
 const ServiceDemandMoreInfo = ({ 
     selectedDemand, 
@@ -13,6 +14,68 @@ const ServiceDemandMoreInfo = ({
 }) => {
     // Use translation hooks
     const { servicedemands, common } = useCareTranslation();
+    
+    // Prescription state
+    const [prescriptions, setPrescriptions] = useState([]);
+    const [prescriptionLoading, setPrescriptionLoading] = useState(false);
+    
+    // Fetch prescriptions when component mounts or selectedDemand changes
+    useEffect(() => {
+        if (selectedDemand?.id) {
+            fetchPrescriptions();
+        }
+    }, [selectedDemand?.id]);
+    
+    const fetchPrescriptions = async () => {
+        if (!selectedDemand?.id) return;
+        
+        setPrescriptionLoading(true);
+        try {
+            const response = await tokenManager.authenticatedFetch(`http://localhost:8000/account/service-demands/${selectedDemand.id}/prescriptions/`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                setPrescriptions(data.prescriptions || []);
+            } else {
+                console.error('Failed to fetch prescriptions');
+            }
+        } catch (error) {
+            console.error('Error fetching prescriptions:', error);
+        } finally {
+            setPrescriptionLoading(false);
+        }
+    };
+    
+    const handleDownloadPrescription = (prescription) => {
+        if (prescription.file_url) {
+            window.open(prescription.file_url, '_blank');
+        }
+    };
+    
+    const handleDeletePrescription = async (prescriptionId) => {
+        if (!window.confirm('Are you sure you want to delete this prescription file?')) return;
+        
+        try {
+            const token = await tokenManager.getValidAccessToken();
+            const response = await fetch(`http://localhost:8000/account/service-demands/${selectedDemand.id}/prescriptions/${prescriptionId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Remove from local state
+                setPrescriptions(prev => prev.filter(p => p.id !== prescriptionId));
+            } else {
+                alert('Failed to delete prescription file');
+            }
+        } catch (error) {
+            console.error('Error deleting prescription:', error);
+            alert('Error deleting prescription file');
+        }
+    };
 
     const getStatusBadgeClass = (status) => {
         switch (status?.toLowerCase()) {
@@ -286,55 +349,32 @@ const ServiceDemandMoreInfo = ({
                             </div>
                         )}
 
-                        {/* Coordinator Notes */}
-                        {selectedDemand.coordinator_notes && (
-                            <div className="row mb-4">
-                                <div className="col-12">
-                                    <div className="card border shadow-sm bg-white">
-                                        <div className="card-body p-4 bg-white">
-                                            <div className="d-flex align-items-center mb-3">
-                                                <div className="bg-success bg-opacity-10 rounded-circle p-2 me-3">
-                                                    <i className="bi bi-chat-square-text-fill text-success"></i>
-                                                </div>
-                                                <h5 className="mb-0 text-dark fw-bold">
-                                                    {userData?.user?.role === 'Patient' ? servicedemands('updatesFromCareTeam') : servicedemands('coordinatorNotes')}
-                                                </h5>
-                                            </div>
-                                            <div className="bg-light p-3 rounded border">
-                                                {selectedDemand.coordinator_notes.split('\n\n').map((note, index) => (
-                                                    <div key={index} className="mb-2 p-3 bg-white rounded border-start border-success border-3 shadow-sm">
-                                                        {note}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Comments Section */}
+                        {/* Coordinator Notes / Updates from Care Team */}
                         <div className="row mb-4">
                             <div className="col-12">
                                 <div className="card border shadow-sm bg-white">
                                     <div className="card-body p-4 bg-white">
                                         <div className="d-flex align-items-center mb-3">
-                                            <div className="bg-secondary bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i className="bi bi-chat-dots-fill text-secondary"></i>
+                                            <div className="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                                <i className="bi bi-chat-square-text-fill text-success"></i>
                                             </div>
-                                            <h5 className="mb-0 text-dark fw-bold">Comments</h5>
+                                            <h5 className="mb-0 text-dark fw-bold">
+                                                {userData?.user?.role === 'Patient' ? servicedemands('updatesFromCareTeam') : servicedemands('coordinatorNotes')}
+                                            </h5>
                                         </div>
                                         
-                                        {/* Existing Comments */}
+                                        {/* Existing Notes */}
                                         <div className="mb-3">
-                                            {selectedDemand.comments && selectedDemand.comments.length > 0 ? (
-                                                selectedDemand.comments.map((comment, index) => (
-                                                    <div key={index} className="mb-2 p-3 bg-light rounded border shadow-sm">
-                                                        {comment}
-                                                    </div>
-                                                ))
+                                            {selectedDemand.coordinator_notes ? (
+                                                <div className="bg-light p-3 rounded border">
+                                                    {selectedDemand.coordinator_notes.split('\n\n').map((note, index) => (
+                                                        <div key={index} className="mb-2 p-3 bg-white rounded border-start border-success border-3 shadow-sm">
+                                                            {note}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             ) : (
-                                                <p className="text-muted">No comments yet.</p>
+                                                <p className="text-muted">No notes or updates yet.</p>
                                             )}
                                         </div>
 
@@ -343,7 +383,7 @@ const ServiceDemandMoreInfo = ({
                                             <div className="border-top pt-3">
                                                 <label className="form-label fw-semibold text-muted">
                                                     <i className="bi bi-plus-circle me-2" style={{color: '#22C7EE'}}></i>
-                                                    Add Comment
+                                                    Add Note
                                                 </label>
                                                 <textarea
                                                     className="form-control border-2 shadow-sm mb-3"
@@ -351,15 +391,11 @@ const ServiceDemandMoreInfo = ({
                                                     rows="3"
                                                     value={newComment}
                                                     onChange={(e) => setNewComment(e.target.value)}
-                                                    placeholder="Add a comment or note about this demand..."
-                                                />
+                                                    placeholder="Add a note or update about this demand..."
+                                                ></textarea>
                                                 <button 
-                                                    className="btn btn-sm text-white fw-bold"
-                                                    style={{
-                                                        background: 'linear-gradient(135deg, #22C7EE 0%, #1BA8CA 100%)',
-                                                        border: 'none',
-                                                        borderRadius: '8px'
-                                                    }}
+                                                    className="btn btn-sm"
+                                                    style={{backgroundColor: '#22C7EE', color: '#FFF', borderRadius: '8px'}}
                                                     onClick={() => {
                                                         if (newComment.trim()) {
                                                             onAddComment(selectedDemand.id, newComment);
@@ -367,9 +403,91 @@ const ServiceDemandMoreInfo = ({
                                                     }}
                                                     disabled={!newComment.trim()}
                                                 >
-                                                    <i className="bi bi-send-fill me-2"></i>
-                                                    {servicedemands('addComment')}
+                                                    <i className="bi bi-plus-circle me-2"></i>Add Note
                                                 </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Prescription Files Section */}
+                        <div className="row mb-4">
+                            <div className="col-12">
+                                <div className="card border shadow-sm bg-white">
+                                    <div className="card-body p-4 bg-white">
+                                        <div className="d-flex align-items-center mb-3">
+                                            <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                                <i className="bi bi-file-earmark-medical-fill text-primary"></i>
+                                            </div>
+                                            <h5 className="mb-0 text-dark fw-bold">Prescription Files</h5>
+                                            {prescriptionLoading && (
+                                                <div className="spinner-border spinner-border-sm ms-2" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {prescriptions && prescriptions.length > 0 ? (
+                                            <div className="row">
+                                                {prescriptions.map((prescription) => (
+                                                    <div key={prescription.id} className="col-md-6 mb-3">
+                                                        <div className="card border-1 h-100">
+                                                            <div className="card-body p-3">
+                                                                <div className="d-flex align-items-start">
+                                                                    <div className="me-3">
+                                                                        <i 
+                                                                            className={`bi bi-${prescription.is_pdf ? 'file-earmark-pdf' : 'image'} fs-2`}
+                                                                            style={{color: prescription.is_pdf ? '#dc3545' : '#28a745'}}
+                                                                        ></i>
+                                                                    </div>
+                                                                    <div className="flex-grow-1">
+                                                                        <h6 className="card-title mb-1">{prescription.file_name}</h6>
+                                                                        <p className="card-text text-muted small mb-2">
+                                                                            <i className="bi bi-calendar me-1"></i>
+                                                                            {new Date(prescription.uploaded_at).toLocaleDateString()}
+                                                                        </p>
+                                                                        {prescription.description && (
+                                                                            <p className="card-text small text-muted mb-2">
+                                                                                <i className="bi bi-chat-dots me-1"></i>
+                                                                                {prescription.description}
+                                                                            </p>
+                                                                        )}
+                                                                        <p className="card-text small text-muted mb-2">
+                                                                            <i className="bi bi-person me-1"></i>
+                                                                            {prescription.uploaded_by_name}
+                                                                        </p>
+                                                                        <div className="d-flex gap-2">
+                                                                            <button
+                                                                                className="btn btn-sm btn-outline-primary"
+                                                                                onClick={() => handleDownloadPrescription(prescription)}
+                                                                                title="Download file"
+                                                                            >
+                                                                                <i className="bi bi-download me-1"></i>
+                                                                                Download
+                                                                            </button>
+                                                                            {(userData?.user?.is_staff || prescription.uploaded_by === userData?.user?.id) && (
+                                                                                <button
+                                                                                    className="btn btn-sm btn-outline-danger"
+                                                                                    onClick={() => handleDeletePrescription(prescription.id)}
+                                                                                    title="Delete file"
+                                                                                >
+                                                                                    <i className="bi bi-trash"></i>
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-4">
+                                                <i className="bi bi-file-earmark-x display-4 text-muted"></i>
+                                                <p className="text-muted mb-0">No prescription files uploaded</p>
                                             </div>
                                         )}
                                     </div>
