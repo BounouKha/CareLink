@@ -12,7 +12,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import secrets
+import os
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -333,3 +338,12 @@ CRON_SECRET_TOKEN = 'carelink-invoice-2024-secret-token-change-this-in-productio
 
 # Field-level encryption key for django-encrypted-model-fields
 FIELD_ENCRYPTION_KEY = Fernet.generate_key().decode()
+
+# Twilio Configuration for SMS
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
+
+# SMS Configuration
+SMS_ENABLED = os.environ.get('SMS_ENABLED', 'True').lower() == 'true'
+SMS_DEFAULT_COUNTRY_CODE = '+32'  # Belgium country code
