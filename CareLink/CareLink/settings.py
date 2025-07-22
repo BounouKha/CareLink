@@ -279,6 +279,13 @@ LOGGING = {
             'formatter': 'detailed',
             'encoding': 'utf-8',
         },
+        'sms_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'sms_operations.log',
+            'formatter': 'detailed',
+            'encoding': 'utf-8',
+        },
     },
     'loggers': {
         'django': {
@@ -308,6 +315,16 @@ LOGGING = {
         },
         'account.views.invoice': {
             'handlers': ['console', 'admin_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'sms_operations': {
+            'handlers': ['console', 'sms_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'account.services.weekly_sms_service': {
+            'handlers': ['console', 'sms_file'],
             'level': 'INFO',
             'propagate': False,
         },

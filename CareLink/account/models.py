@@ -92,3 +92,90 @@ class Command(BaseCommand):
         except Patient.DoesNotExist:
             self.stdout.write(self.style.ERROR(f'Patient with ID {patient_id} does not exist.'))
 
+
+class NotificationLog(models.Model):
+    """
+    Model to track all email and SMS notifications sent by the system
+    """
+    NOTIFICATION_TYPES = [
+        ('email', 'Email'),
+        ('sms', 'SMS'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('sent', 'Sent'),
+        ('failed', 'Failed'),
+        ('delivered', 'Delivered'),
+        ('bounced', 'Bounced'),
+    ]
+    
+    notification_type = models.CharField(max_length=10, choices=NOTIFICATION_TYPES)
+    recipient = models.CharField(max_length=255, help_text="Email address or phone number")
+    subject = models.CharField(max_length=255, blank=True, help_text="Email subject or SMS title")
+    message = models.TextField(help_text="Email body or SMS message")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Tracking information
+    sent_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="User who triggered the notification"
+    )
+    sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Error tracking
+    error_message = models.TextField(blank=True, help_text="Error details if notification failed")
+    retry_count = models.IntegerField(default=0)
+    
+    # External service tracking
+    external_id = models.CharField(
+        max_length=255, 
+        blank=True, 
+        help_text="ID from external service (Twilio, SendGrid, etc.)"
+    )
+    
+    # Additional metadata
+    metadata = models.JSONField(
+        default=dict, 
+        blank=True,
+        help_text="Additional data like template used, campaign info, etc."
+    )
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['notification_type', 'status']),
+            models.Index(fields=['recipient']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['sent_by']),
+        ]
+    
+    def __str__(self):
+        return f"{self.notification_type.upper()} to {self.recipient} - {self.status}"
+    
+    def mark_as_sent(self, external_id=None):
+        """Mark notification as sent"""
+        from django.utils import timezone
+        self.status = 'sent'
+        self.sent_at = timezone.now()
+        if external_id:
+            self.external_id = external_id
+        self.save()
+    
+    def mark_as_failed(self, error_message):
+        """Mark notification as failed"""
+        self.status = 'failed'
+        self.error_message = error_message
+        self.retry_count += 1
+        self.save()
+    
+    def mark_as_delivered(self):
+        """Mark notification as delivered (for SMS delivery confirmations)"""
+        self.status = 'delivered'
+        self.save()
+

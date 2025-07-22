@@ -183,7 +183,7 @@ const BaseLayout = ({ children }) => {
         }, delay);
     };    const isMemberArea = [
         '/profile', '/patients', '/service-demands', '/schedule', '/providers', '/tickets',
-        '/coordinator/helpdesk', '/coordinator/tickets', '/user/helpdesk', '/provider/schedule', '/invoices'
+        '/coordinator/helpdesk', '/coordinator/tickets', '/coordinator/communication', '/user/helpdesk', '/provider/schedule', '/invoices'
     ].some(path => window.location.pathname.startsWith(path));
 
     // Remove any automatic authentication redirects for public pages

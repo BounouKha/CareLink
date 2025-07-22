@@ -67,6 +67,10 @@ const LeftToolbar = ({ userData }) => {
         navigateWithLoading('/invoices');
     };
 
+    const handleCommunicationClick = () => {
+        navigateWithLoading('/coordinator/communication');
+    };
+
     const renderRoleSpecificToolbar = () => {
         if (!userData || !userData.user) {
             console.warn('[LeftToolbar] userData or user is undefined');
@@ -92,6 +96,8 @@ const LeftToolbar = ({ userData }) => {
                 handleHelpdeskClick();
             } else if (path === '/coordinator/tickets') {
                 handleManageTicketsClick();
+            } else if (path === '/coordinator/communication') {
+                handleCommunicationClick();
             } else if (path === '/provider/schedule') {
                 handleProviderScheduleClick();
             } else if (path === '/invoices') {

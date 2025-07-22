@@ -20,6 +20,8 @@ import ManageTicketsPage from './components/EnhancedTicketSystem/ManageTicketsPa
 import CoordinatorTicketPanel from './components/EnhancedTicketSystem/CoordinatorTicketPanel';
 import CoordinatorHelpdeskPanel from './components/EnhancedTicketSystem/CoordinatorHelpdeskPanel';
 import UserHelpdeskPanel from './components/EnhancedTicketSystem/UserHelpdeskPanel';
+import CommunicationPanel from './pages/communication/CommunicationPanel';
+import TestCommunicationPanel from './pages/communication/TestCommunicationPanel';
 import TestUserAuth from './auth/test/TestUserAuth';
 import TokenTestPage from './pages/test/TokenTestPage';
 
@@ -75,6 +77,7 @@ function App() {
                             {/* Coordinator Specific Routes */}
                             <Route path="/coordinator/tickets" element={<CoordinatorTicketPanel />} />
                             <Route path="/coordinator/helpdesk" element={<CoordinatorHelpdeskPanel />} />
+                            <Route path="/coordinator/communication" element={<CommunicationPanel />} />
                             
                             {/* User Helpdesk Route */}
                             <Route path="/user/helpdesk" element={<UserHelpdeskPanel />} />

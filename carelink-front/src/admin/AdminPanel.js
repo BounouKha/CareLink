@@ -10,6 +10,7 @@ import InvoiceManagement from './InvoiceManagement'; // Import the InvoiceManage
 import SubmitTicketPage from '../components/EnhancedTicketSystem/SubmitTicketPage';
 import ManageTicketsPage from '../components/EnhancedTicketSystem/ManageTicketsPage';
 import SecurityPanel from './SecurityPanel'; // Import the Security Panel component
+import CommunicationPanel from '../pages/communication/CommunicationPanel'; // Import the Communication Panel component
 import { useNavigate } from 'react-router-dom';
 
 import './AdminPanel.css';
@@ -21,6 +22,7 @@ const AdminPanel = () => {
 
     const tabs = [
         { id: 'users', label: 'Users', icon: '👥', description: 'Manage user accounts and roles' },
+        { id: 'communication', label: 'Communication', icon: '📧', description: 'Manage email and SMS notifications' },
         { id: 'invoices', label: 'Invoices', icon: '🧾', description: 'Manage invoices and handle contests' },
         { id: 'logs', label: 'Logs', icon: '📋', description: 'View system activity logs' },
         { id: 'consent', label: 'Consent', icon: '🔒', description: 'Manage user privacy and consent' },
@@ -36,6 +38,8 @@ const AdminPanel = () => {
         switch (selectedTab) {
             case 'users':
                 return <ManageUsers key={refreshKey} />;
+            case 'communication':
+                return <CommunicationPanel />;
             case 'invoices':
                 return <InvoiceManagement />;
             case 'logs':

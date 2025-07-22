@@ -208,6 +208,13 @@ export const getNavigationItems = (user, userData = null) => {
             { key: 'schedule-calendar', label: 'Schedule Calendar', path: '/schedule', roles: [ROLES.COORDINATOR, ROLES.ADMINISTRATIVE] }
         );
         
+        // Communication panel for coordinators and administrators
+        if (hasRole(user, ROLES.COORDINATOR) || isAdmin(user)) {
+            items.push(
+                { key: 'communication', label: 'Communication', path: '/coordinator/communication', roles: [ROLES.COORDINATOR, ROLES.ADMINISTRATIVE, ROLES.ADMINISTRATOR] }
+            );
+        }
+        
         // Coordinator-specific ticket management
         if (hasRole(user, ROLES.COORDINATOR)) {
             items.push(
