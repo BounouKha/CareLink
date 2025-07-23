@@ -39,18 +39,43 @@ class WeeklySMSService:
             sms_logger.info(f"Week range: {week_start} to {week_end}")
             sms_logger.info(f"Week offset: {week_offset} ({'next week' if week_offset == 1 else 'current week' if week_offset == 0 else f'{week_offset} weeks'})")
             
-            # Get all schedules for the week
+            # Get all schedules for the week - filter out inactive and anonymized users
+            # Only include schedules with confirmed or scheduled timeslots
             schedules = Schedule.objects.filter(
                 date__range=[week_start, week_end],
                 patient__isnull=False,
-                provider__isnull=False
-            ).select_related('patient__user', 'provider__user').prefetch_related('time_slots__service')
+                provider__isnull=False,
+                patient__user__is_active=True,
+                provider__user__is_active=True,
+                time_slots__status__in=['confirmed', 'scheduled']  # Only confirmed and scheduled appointments
+            ).select_related('patient__user', 'provider__user').prefetch_related('time_slots__service').distinct()
             
-            sms_logger.info(f"Found {schedules.count()} schedules with appointments")
+            sms_logger.info(f"Found {schedules.count()} schedules with confirmed/scheduled appointments")
+            
+            # Filter out anonymized users
+            filtered_schedules = []
+            for schedule in schedules:
+                # Check patient
+                if (schedule.patient.user.firstname and 
+                    schedule.patient.user.firstname.lower() == "anonymized"):
+                    sms_logger.info(f"  ⏭️ Skipping anonymized patient: {schedule.patient.user.email}")
+                    continue
+                
+                # Check provider
+                if (schedule.provider.user.firstname and 
+                    schedule.provider.user.firstname.lower() == "anonymized"):
+                    sms_logger.info(f"  ⏭️ Skipping anonymized provider: {schedule.provider.user.email}")
+                    continue
+                
+                # Only include schedules that have time slots (actual appointments)
+                if schedule.time_slots.exists():
+                    filtered_schedules.append(schedule)
+            
+            sms_logger.info(f"Found {len(filtered_schedules)} valid schedules after filtering")
             
             # Group appointments by patient and provider
-            patient_appointments = self._group_appointments_by_patient(schedules)
-            provider_appointments = self._group_appointments_by_provider(schedules)
+            patient_appointments = self._group_appointments_by_patient(filtered_schedules)
+            provider_appointments = self._group_appointments_by_provider(filtered_schedules)
             
             sms_logger.info(f"Grouped into {len(patient_appointments)} patients and {len(provider_appointments)} providers")
             
@@ -103,8 +128,8 @@ class WeeklySMSService:
                     'appointments': []
                 }
             
-            # Add each timeslot as appointment
-            for timeslot in schedule.time_slots.all():
+            # Add each timeslot as appointment (only confirmed and scheduled)
+            for timeslot in schedule.time_slots.filter(status__in=['confirmed', 'scheduled']):
                 start_datetime = timezone.make_aware(
                     datetime.combine(schedule.date, timeslot.start_time)
                 )
@@ -137,8 +162,8 @@ class WeeklySMSService:
                     'appointments': []
                 }
             
-            # Add each timeslot as appointment
-            for timeslot in schedule.time_slots.all():
+            # Add each timeslot as appointment (only confirmed and scheduled)
+            for timeslot in schedule.time_slots.filter(status__in=['confirmed', 'scheduled']):
                 start_datetime = timezone.make_aware(
                     datetime.combine(schedule.date, timeslot.start_time)
                 )

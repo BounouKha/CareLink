@@ -42,6 +42,7 @@ class EmailService:
                 subject=subject,
                 message=message[:1000],  # Truncate for storage
                 status='pending',
+                external_id=f"EMAIL-PENDING-{timezone.now().strftime('%Y%m%d-%H%M%S')}-{hash(to_email) % 10000}",
                 sent_by_id=sender_info.get('user_id') if sender_info else None,
                 metadata=sender_info or {}
             )
@@ -73,7 +74,8 @@ class EmailService:
                 )
             
             if result:
-                # Mark as sent
+                # Mark as sent and update external_id
+                log_entry.external_id = f"EMAIL-SENT-{timezone.now().strftime('%Y%m%d-%H%M%S')}-{log_entry.id}"
                 log_entry.mark_as_sent()
                 logger.info(f"Email sent successfully to {to_email}: {subject}")
                 
@@ -83,7 +85,8 @@ class EmailService:
                     'message': 'Email sent successfully'
                 }
             else:
-                # Mark as failed
+                # Mark as failed and update external_id
+                log_entry.external_id = f"EMAIL-FAILED-{timezone.now().strftime('%Y%m%d-%H%M%S')}-{log_entry.id}"
                 log_entry.mark_as_failed('Failed to send email - no result returned')
                 logger.error(f"Failed to send email to {to_email}: {subject}")
                 
@@ -97,8 +100,9 @@ class EmailService:
             error_message = str(e)
             logger.error(f"Error sending email to {to_email}: {error_message}")
             
-            # Update log entry with error
+            # Update log entry with error and external_id
             if 'log_entry' in locals():
+                log_entry.external_id = f"EMAIL-ERROR-{timezone.now().strftime('%Y%m%d-%H%M%S')}-{log_entry.id}"
                 log_entry.mark_as_failed(error_message)
                 
             return {
@@ -129,7 +133,7 @@ class EmailService:
             sender_info={'type': 'appointment_reminder', 'appointment_id': appointment.id}
         )
     
-    def send_weekly_summary(self, patient, appointments, week_start, week_end):
+    def send_weekly_summary(self, patient, schedules, week_start, week_end):
         """
         Send weekly appointments summary email
         """
@@ -137,14 +141,14 @@ class EmailService:
         
         context = {
             'patient': patient,
-            'appointments': appointments,
+            'schedules': schedules,
             'week_start': week_start,
             'week_end': week_end,
             'site_name': 'CareLink'
         }
         
         return self.send_email(
-            to_email=patient.email,
+            to_email=patient.user.email,
             subject=subject,
             message=self._generate_weekly_summary_text(context),
             template_name='emails/weekly_summary.html',
@@ -183,7 +187,7 @@ class EmailService:
         patient = context['patient']
         
         return f"""
-Dear {patient.first_name},
+Dear {patient.user.firstname},
 
 This is a reminder of your upcoming appointment:
 
@@ -202,26 +206,41 @@ CareLink Team
     def _generate_weekly_summary_text(self, context):
         """Generate plain text version of weekly summary"""
         patient = context['patient']
-        appointments = context['appointments']
+        schedules = context['schedules']  # This is now a list of schedule data, not QuerySet
         week_start = context['week_start']
         week_end = context['week_end']
         
         text = f"""
-Dear {patient.first_name},
+Dear {patient.user.firstname},
 
 Here's your weekly appointments summary for {week_start.strftime('%B %d')} to {week_end.strftime('%B %d, %Y')}:
 
 """
         
-        for appointment in appointments:
-            text += f"• {appointment.start_time.strftime('%A, %B %d at %I:%M %p')} - {appointment.service_demand.service_type if appointment.service_demand else 'Healthcare Service'}\n"
+        total_appointments = 0
+        # schedules is now a list of schedule data dictionaries
+        for schedule_data in schedules:
+            appointments = schedule_data.get('appointments', [])
+            if appointments:
+                schedule_date = appointments[0]['date']  # All appointments in this schedule have same date
+                text += f"\n📅 {schedule_date.strftime('%A, %B %d')}:\n"
+                
+                for appointment in appointments:
+                    total_appointments += 1
+                    text += f"  • {appointment['start_time'].strftime('%I:%M %p')} - {appointment['end_time'].strftime('%I:%M %p')}\n"
+                    text += f"    Service: {appointment['service_name']}\n"
+                    text += f"    Provider: {appointment['provider_name']}\n"
+                    if appointment.get('description'):
+                        text += f"    Notes: {appointment['description']}\n"
+                    text += "\n"
         
-        text += f"""
-Total appointments: {len(appointments)}
-
-Please make sure to arrive 15 minutes early for each appointment.
-
-Best regards,
+        if total_appointments == 0:
+            text += "✅ No appointments scheduled for this week.\n\n"
+        else:
+            text += f"Total appointments: {total_appointments}\n\n"
+            text += "Please make sure to arrive 15 minutes early for each appointment.\n\n"
+        
+        text += """Best regards,
 CareLink Team
 """
         return text
@@ -234,7 +253,7 @@ CareLink Team
         
         if comment:
             return f"""
-Dear {patient.first_name},
+Dear {patient.user.firstname},
 
 A new comment has been added to your service request #{service_demand.id}:
 
@@ -247,7 +266,7 @@ CareLink Team
 """
         else:
             return f"""
-Dear {patient.first_name},
+Dear {patient.user.firstname},
 
 Your service request #{service_demand.id} has been updated.
 

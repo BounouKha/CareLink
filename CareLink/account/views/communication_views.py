@@ -15,6 +15,7 @@ from CareLink.models import User, Patient, Provider, Schedule, TimeSlot
 from account.services.email_service import EmailService
 from account.services.sms_service import sms_service
 from account.services.weekly_sms_service import weekly_sms_service
+from account.services.weekly_email_service import weekly_email_service
 from account.services.sms_service import SMSService
 from account.services.notification_service import NotificationService
 import logging
@@ -173,7 +174,7 @@ def send_test_email(request):
             to_email=recipient_email,
             subject=subject,
             message=message,
-            from_name=f"{user.first_name} {user.last_name}",
+            from_name=f"{user.firstname} {user.lastname}",
             sender_info={'user_id': user.id, 'type': 'test'}
         )
         
@@ -708,3 +709,117 @@ def generate_provider_weekly_sms(provider, week_start, week_end):
             'success': False,
             'error': f'Error generating provider SMS: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_weekly_emails(request):
+    """
+    Send weekly email notifications to all patients and providers
+    """
+    try:
+        user = request.user
+        
+        # Check permissions
+        if not (user.role in ['Coordinator', 'Administrative']):
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get week offset from request (default to next week)
+        week_offset = request.data.get('week_offset', 1)
+        
+        # Send weekly emails
+        result = weekly_email_service.send_weekly_notifications(week_offset=week_offset)
+        
+        if result['success']:
+            return Response({
+                'success': True,
+                'message': 'Weekly emails sent successfully',
+                'results': result['results']
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['error']
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': f'Error sending weekly emails: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def communication_notifications(request):
+    """
+    Get communication notifications with filtering
+    """
+    try:
+        user = request.user
+        
+        # Check if user has permission (coordinator or administrative only)
+        if not (user.role in ['Coordinator', 'Administrative']):
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get filter parameters
+        notification_type = request.GET.get('type', 'all')  # 'email', 'sms', or 'all'
+        status_filter = request.GET.get('status', 'all')    # 'sent', 'failed', or 'all'
+        days = int(request.GET.get('days', 7))              # Default to last 7 days
+        
+        # Calculate date range
+        today = timezone.now().date()
+        start_date = today - timedelta(days=days)
+        start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+        end_datetime = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+        
+        # Build query
+        query = Q(created_at__range=[start_datetime, end_datetime])
+        
+        if notification_type != 'all':
+            query &= Q(notification_type=notification_type)
+            
+        if status_filter != 'all':
+            query &= Q(status=status_filter)
+        
+        # Get notifications
+        notifications = NotificationLog.objects.filter(query).order_by('-created_at')
+        
+        # Paginate
+        page_size = int(request.GET.get('page_size', 50))
+        page = int(request.GET.get('page', 1))
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        
+        paginated_notifications = notifications[start_idx:end_idx]
+        
+        # Format response
+        notifications_data = []
+        for notification in paginated_notifications:
+            notifications_data.append({
+                'id': notification.id,
+                'type': notification.notification_type,
+                'recipient': notification.recipient,
+                'subject': notification.subject,
+                'message': notification.message[:100] + '...' if len(notification.message) > 100 else notification.message,
+                'status': notification.status,
+                'error_message': notification.error_message,
+                'created_at': notification.created_at.isoformat(),
+                'external_id': notification.external_id
+            })
+        
+        return Response({
+            'notifications': notifications_data,
+            'total_count': notifications.count(),
+            'page': page,
+            'page_size': page_size,
+            'has_next': end_idx < notifications.count(),
+            'filters': {
+                'type': notification_type,
+                'status': status_filter,
+                'days': days
+            }
+        }, status=status.HTTP_200_OK)
+            
+    except Exception as e:
+        logger.error(f"Error fetching communication notifications: {str(e)}")
+        return Response({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

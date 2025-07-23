@@ -50,7 +50,7 @@ from .views.notification_views import (
 from .views.security_admin import SecurityNotificationsView, SecurityActionsView, SecurityStatsView, IPAuditView
 from .views.communication_views import (
     communication_stats, communication_logs, send_test_email, send_test_sms,
-    weekly_appointments, send_weekly_notifications, send_individual_sms, get_sms_logs, test_sms_with_phone
+    weekly_appointments, send_weekly_notifications, send_individual_sms, get_sms_logs, test_sms_with_phone, send_weekly_emails, communication_notifications
 )
 
 
@@ -191,11 +191,14 @@ urlpatterns += [
     # Communication Panel API endpoints
     path('communication/stats/', communication_stats, name='communication-stats'),
     path('communication/logs/', communication_logs, name='communication-logs'),
+    path('communication/notifications/', communication_notifications, name='communication-notifications'),
     path('communication/test-email/', send_test_email, name='send-test-email'),
+    path('communication/send-test-email/', send_test_email, name='send-test-email-alt'),
     path('communication/test-sms/', send_test_sms, name='send-test-sms'),
     path('communication/weekly-appointments/', weekly_appointments, name='weekly-appointments'),
     path('communication/send-weekly/', send_weekly_notifications, name='send-weekly-notifications'),
     path('communication/send-individual-sms/', send_individual_sms, name='send-individual-sms'),
     path('communication/sms-logs/', get_sms_logs, name='get-sms-logs'),
     path('communication/test-sms-phone/', test_sms_with_phone, name='test-sms-with-phone'),
+    path('communication/send-weekly-emails/', send_weekly_emails, name='send-weekly-emails'),
 ]

@@ -56,12 +56,37 @@ const CommunicationPanel = () => {
         result: null
     });
 
+    // Email Management state
+    const [emailLogs, setEmailLogs] = useState([]);
+    const [loadingEmailLogs, setLoadingEmailLogs] = useState(false);
+    const [selectedEmailLog, setSelectedEmailLog] = useState(null);
+    const [selectedErrorLog, setSelectedErrorLog] = useState(null);
+    const [showFailedEmailsOnly, setShowFailedEmailsOnly] = useState(false);
+    const [testEmail, setTestEmail] = useState({
+        email: '',
+        subject: 'Test Email from CareLink',
+        message: 'This is a test email to verify the email system is working correctly.',
+        loading: false,
+        result: null
+    });
+    const [individualEmail, setIndividualEmail] = useState({
+        userEmail: '',
+        subject: '',
+        message: '',
+        loading: false,
+        result: null
+    });
+    const [weeklyEmailResults, setWeeklyEmailResults] = useState(null);
+
     // Close notification handlers
     const closeError = () => setError('');
     const closeIndividualSmsResult = () => setIndividualSms(prev => ({ ...prev, result: null }));
     const closeRetryWeeklyResult = () => setRetryWeekly(prev => ({ ...prev, result: null }));
     const closeWeeklyResults = () => setWeeklyResults(null);
     const closeTestPhoneResult = () => setTestPhone(prev => ({ ...prev, result: null }));
+    const closeTestEmailResult = () => setTestEmail(prev => ({ ...prev, result: null }));
+    const closeIndividualEmailResult = () => setIndividualEmail(prev => ({ ...prev, result: null }));
+    const closeWeeklyEmailResults = () => setWeeklyEmailResults(null);
 
     // Test error generator
     const generateTestError = () => {
@@ -156,6 +181,42 @@ const CommunicationPanel = () => {
         } catch (error) {
             console.error('Error sending weekly notifications:', error);
             setError('Failed to send weekly notifications');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendWeeklyEmails = async (weekOffset = 1) => {
+        try {
+            setLoading(true);
+            setError('');
+            
+            const response = await TokenManager.authenticatedFetch('http://localhost:8000/account/communication/send-weekly-emails/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    week_offset: weekOffset
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    setWeeklyEmailResults(data.results);
+                    // Refresh stats after sending
+                    fetchCommunicationStats();
+                } else {
+                    setError(data.error || 'Failed to send weekly emails');
+                }
+            } else {
+                const errorData = await response.json();
+                setError(errorData.error || 'Failed to send weekly emails');
+            }
+        } catch (error) {
+            console.error('Error sending weekly emails:', error);
+            setError('Failed to send weekly emails');
         } finally {
             setLoading(false);
         }
@@ -293,6 +354,111 @@ const CommunicationPanel = () => {
     useEffect(() => {
         if (activeTab === 'sms') {
             fetchSmsLogs();
+        }
+    }, [activeTab]);
+
+    // Email Functions
+    const fetchEmailLogs = async () => {
+        try {
+            setLoadingEmailLogs(true);
+            const response = await TokenManager.authenticatedFetch('http://localhost:8000/account/communication/notifications/?type=email');
+            if (response.ok) {
+                const data = await response.json();
+                // The notifications endpoint doesn't have a 'success' field
+                // It directly returns the notifications array
+                if (data.notifications) {
+                    setEmailLogs(data.notifications);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching email logs:', error);
+        } finally {
+            setLoadingEmailLogs(false);
+        }
+    };
+
+    const handleTestEmail = async () => {
+        try {
+            setTestEmail(prev => ({ ...prev, loading: true, result: null }));
+            
+            const response = await TokenManager.authenticatedFetch('http://localhost:8000/account/communication/send-test-email/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: testEmail.email,
+                    subject: testEmail.subject,
+                    message: testEmail.message
+                })
+            });
+
+            const data = await response.json();
+            setTestEmail(prev => ({ 
+                ...prev, 
+                result: data
+            }));
+            
+            if (data.success) {
+                // Refresh email logs and stats
+                fetchEmailLogs();
+                fetchCommunicationStats();
+            }
+        } catch (error) {
+            console.error('Error testing email:', error);
+            setTestEmail(prev => ({ 
+                ...prev, 
+                result: { success: false, error: 'Failed to test email' }
+            }));
+        } finally {
+            setTestEmail(prev => ({ ...prev, loading: false }));
+        }
+    };
+
+    const handleSendIndividualEmail = async () => {
+        try {
+            setIndividualEmail(prev => ({ ...prev, loading: true, result: null }));
+            
+            const response = await TokenManager.authenticatedFetch('http://localhost:8000/account/communication/send-test-email/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: individualEmail.userEmail,
+                    subject: individualEmail.subject,
+                    message: individualEmail.message
+                })
+            });
+
+            const data = await response.json();
+            setIndividualEmail(prev => ({ 
+                ...prev, 
+                result: data,
+                userEmail: data.success ? '' : prev.userEmail,
+                subject: data.success ? '' : prev.subject,
+                message: data.success ? '' : prev.message
+            }));
+            
+            if (data.success) {
+                fetchEmailLogs();
+                fetchCommunicationStats();
+            }
+        } catch (error) {
+            console.error('Error sending individual email:', error);
+            setIndividualEmail(prev => ({ 
+                ...prev, 
+                result: { success: false, error: 'Failed to send email' }
+            }));
+        } finally {
+            setIndividualEmail(prev => ({ ...prev, loading: false }));
+        }
+    };
+
+    // Load email logs when email tab is activated
+    useEffect(() => {
+        if (activeTab === 'email') {
+            fetchEmailLogs();
         }
     }, [activeTab]);
 
@@ -630,8 +796,375 @@ const CommunicationPanel = () => {
 
     const renderEmailPanel = () => (
         <div className="comm-email-panel">
-            <h2>📧 Email Management</h2>
-            <p>Email functionality will be implemented here</p>
+            <h2>📧 Email Management Center</h2>
+            <p>Comprehensive email operations, logs, and individual message sending</p>
+            
+            {/* Email Statistics Overview */}
+            <div className="comm-email-stats">
+                <h3>📊 Email Statistics (Today)</h3>
+                <div className="comm-stats-row">
+                    <div className="comm-stat-box success">
+                        <strong>{stats.emails.sent}</strong>
+                        <span>Sent</span>
+                    </div>
+                    <div className="comm-stat-box error">
+                        <strong>{stats.emails.failed}</strong>
+                        <span>Failed</span>
+                    </div>
+                    <div className="comm-stat-box warning">
+                        <strong>{stats.emails.pending}</strong>
+                        <span>Pending</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Test Email Section */}
+            <div className="comm-test-email">
+                <h3>🧪 Test Email</h3>
+                <p>Send a test email to verify your Microsoft email configuration</p>
+                
+                <div className="comm-test-form">
+                    <div className="form-group">
+                        <label htmlFor="testEmailAddress">Email Address:</label>
+                        <input
+                            type="email"
+                            id="testEmailAddress"
+                            className="form-control"
+                            placeholder="Enter recipient email"
+                            value={testEmail.email}
+                            onChange={(e) => setTestEmail(prev => ({ ...prev, email: e.target.value }))}
+                            disabled={testEmail.loading}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="testEmailSubject">Subject:</label>
+                        <input
+                            type="text"
+                            id="testEmailSubject"
+                            className="form-control"
+                            value={testEmail.subject}
+                            onChange={(e) => setTestEmail(prev => ({ ...prev, subject: e.target.value }))}
+                            disabled={testEmail.loading}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="testEmailMessage">Message:</label>
+                        <textarea
+                            id="testEmailMessage"
+                            className="form-control"
+                            rows="4"
+                            value={testEmail.message}
+                            onChange={(e) => setTestEmail(prev => ({ ...prev, message: e.target.value }))}
+                            disabled={testEmail.loading}
+                        />
+                    </div>
+                    <button 
+                        className="btn btn-warning" 
+                        onClick={handleTestEmail}
+                        disabled={!testEmail.email || testEmail.loading}
+                    >
+                        {testEmail.loading ? '📤 Sending...' : '📧 Send Test Email'}
+                    </button>
+                </div>
+
+                {/* Test Email Result */}
+                {testEmail.result && (
+                    <div className={`comm-result ${testEmail.result.success ? 'success' : 'error'}`}>
+                        {testEmail.result.success ? (
+                            <div>
+                                <h4>✅ Email Sent Successfully!</h4>
+                                <p>Test email sent to {testEmail.email}</p>
+                            </div>
+                        ) : (
+                            <div>
+                                <h4>❌ Email Failed</h4>
+                                <p className="comm-error-detail">
+                                    <strong>Error:</strong> {testEmail.result.error}
+                                </p>
+                            </div>
+                        )}
+                        <button 
+                            type="button" 
+                            className="comm-notification-close" 
+                            onClick={closeTestEmailResult}
+                            aria-label="Close notification"
+                        >
+                            ×
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Individual Email Section */}
+            <div className="comm-individual-email">
+                <h3>📤 Send Individual Email</h3>
+                <p>Send a custom email to a specific user</p>
+                
+                <div className="comm-individual-form">
+                    <div className="form-group">
+                        <label htmlFor="individualUserEmail">User Email:</label>
+                        <input
+                            type="email"
+                            id="individualUserEmail"
+                            className="form-control"
+                            placeholder="Enter user email"
+                            value={individualEmail.userEmail}
+                            onChange={(e) => setIndividualEmail(prev => ({ ...prev, userEmail: e.target.value }))}
+                            disabled={individualEmail.loading}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="individualEmailSubject">Subject:</label>
+                        <input
+                            type="text"
+                            id="individualEmailSubject"
+                            className="form-control"
+                            placeholder="Enter email subject"
+                            value={individualEmail.subject}
+                            onChange={(e) => setIndividualEmail(prev => ({ ...prev, subject: e.target.value }))}
+                            disabled={individualEmail.loading}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="individualEmailMessage">Message:</label>
+                        <textarea
+                            id="individualEmailMessage"
+                            className="form-control"
+                            rows="6"
+                            placeholder="Enter your email message"
+                            value={individualEmail.message}
+                            onChange={(e) => setIndividualEmail(prev => ({ ...prev, message: e.target.value }))}
+                            disabled={individualEmail.loading}
+                        />
+                    </div>
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={handleSendIndividualEmail}
+                        disabled={!individualEmail.userEmail || !individualEmail.subject || !individualEmail.message || individualEmail.loading}
+                    >
+                        {individualEmail.loading ? '📤 Sending...' : '📧 Send Email'}
+                    </button>
+                </div>
+
+                {/* Individual Email Result */}
+                {individualEmail.result && (
+                    <div className={`comm-result ${individualEmail.result.success ? 'success' : 'error'}`}>
+                        {individualEmail.result.success ? (
+                            <div>
+                                <h4>✅ Email Sent Successfully!</h4>
+                                <p>Email sent to {individualEmail.result.recipient || individualEmail.userEmail}</p>
+                            </div>
+                        ) : (
+                            <div>
+                                <h4>❌ Email Failed</h4>
+                                <p className="comm-error-detail">
+                                    <strong>Error:</strong> {individualEmail.result.error}
+                                </p>
+                            </div>
+                        )}
+                        <button 
+                            type="button" 
+                            className="comm-notification-close" 
+                            onClick={closeIndividualEmailResult}
+                            aria-label="Close notification"
+                        >
+                            ×
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Email Logs Section */}
+            <div className="comm-email-logs">
+                <div className="comm-logs-header">
+                    <h3>📋 Email Logs & Activity</h3>
+                    <div className="comm-logs-meta">
+                        <span className="comm-logs-count">
+                            {emailLogs.length} total emails • {emailLogs.filter(log => log.status === 'failed').length} failed
+                        </span>
+                    </div>
+                    <div className="comm-logs-actions">
+                        <button 
+                            className="btn btn-sm btn-secondary"
+                            onClick={fetchEmailLogs}
+                            disabled={loadingEmailLogs}
+                        >
+                            {loadingEmailLogs ? '🔄 Refreshing...' : '🔄 Refresh'}
+                        </button>
+                        <label className="comm-filter-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={showFailedEmailsOnly}
+                                onChange={(e) => setShowFailedEmailsOnly(e.target.checked)}
+                            />
+                            <span className="filter-label">Show failures only</span>
+                        </label>
+                    </div>
+                </div>
+
+                {loadingEmailLogs ? (
+                    <div className="comm-loading-container">
+                        <div className="comm-loading-spinner"></div>
+                        <p className="comm-loading">📧 Loading email logs...</p>
+                    </div>
+                ) : (
+                    <div className="comm-logs-container">
+                        <div className="comm-logs-table">
+                            <div className="comm-logs-table-header">
+                                <div className="comm-col-status">Status</div>
+                                <div className="comm-col-recipient">Recipient</div>
+                                <div className="comm-col-subject">Subject</div>
+                                <div className="comm-col-time">Time</div>
+                                <div className="comm-col-actions">Actions</div>
+                            </div>
+                            
+                            {emailLogs
+                                .filter(log => !showFailedEmailsOnly || log.status === 'failed')
+                                .map(log => (
+                                <div key={log.id} className={`comm-log-row ${log.status}`}>
+                                    <div className="comm-col-status">
+                                        <span className={`comm-status-badge ${log.status}`}>
+                                            {log.status === 'sent' ? '✅ Sent' : 
+                                             log.status === 'failed' ? '❌ Failed' : 
+                                             log.status === 'pending' ? '⏳ Pending' : '📧 Unknown'}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="comm-col-recipient">
+                                        <div className="comm-recipient-info">
+                                            <strong>{log.recipient}</strong>
+                                            {log.user_type && (
+                                                <span className={`comm-user-type ${log.user_type}`}>
+                                                    {log.user_type}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="comm-col-subject">
+                                        <div className="comm-subject-container">
+                                            <div className="comm-subject-text" title={log.subject}>
+                                                {log.subject || 'No subject'}
+                                            </div>
+                                            <div className="comm-message-preview">
+                                                {log.message ? log.message.substring(0, 60) + (log.message.length > 60 ? '...' : '') : 'No content'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="comm-col-time">
+                                        <div className="comm-time-info">
+                                            <div className="comm-date">
+                                                {new Date(log.created_at).toLocaleDateString()}
+                                            </div>
+                                            <div className="comm-time">
+                                                {new Date(log.created_at).toLocaleTimeString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="comm-col-actions">
+                                        <div className="comm-action-buttons">
+                                            <button
+                                                className="btn btn-sm btn-outline-info"
+                                                onClick={() => setSelectedEmailLog(selectedEmailLog === log.id ? null : log.id)}
+                                                title="View full message"
+                                            >
+                                                {selectedEmailLog === log.id ? '👁️‍🗨️ Hide' : '👁️ View'}
+                                            </button>
+                                            
+                                            {log.status === 'failed' && log.error_message && (
+                                                <button
+                                                    className="btn btn-sm btn-outline-danger"
+                                                    onClick={() => setSelectedErrorLog(selectedErrorLog === log.id ? null : log.id)}
+                                                    title="View error details"
+                                                >
+                                                    {selectedErrorLog === log.id ? '🔍 Hide Error' : '🔍 Error Details'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Expandable Error Details */}
+                                    {selectedErrorLog === log.id && log.error_message && (
+                                        <div className="comm-error-details-expanded">
+                                            <div className="comm-error-container">
+                                                <div className="comm-error-header">
+                                                    <h5>🚨 Error Details</h5>
+                                                    <button 
+                                                        className="comm-error-close"
+                                                        onClick={() => setSelectedErrorLog(null)}
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                                <div className="comm-error-content">
+                                                    <div className="comm-error-message">
+                                                        <strong>Error Message:</strong>
+                                                        <pre className="comm-error-text">{log.error_message}</pre>
+                                                    </div>
+                                                    {log.attempt_count && (
+                                                        <div className="comm-error-attempts">
+                                                            <strong>Attempts:</strong> {log.attempt_count}
+                                                        </div>
+                                                    )}
+                                                    <div className="comm-error-timestamp">
+                                                        <strong>Failed at:</strong> {new Date(log.created_at).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Expandable Full Message */}
+                                    {selectedEmailLog === log.id && (
+                                        <div className="comm-message-details-expanded">
+                                            <div className="comm-message-container">
+                                                <div className="comm-message-header">
+                                                    <h5>📧 Full Email Content</h5>
+                                                    <button 
+                                                        className="comm-message-close"
+                                                        onClick={() => setSelectedEmailLog(null)}
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                                <div className="comm-message-content">
+                                                    <div className="comm-message-meta">
+                                                        <div><strong>To:</strong> {log.recipient}</div>
+                                                        <div><strong>Subject:</strong> {log.subject}</div>
+                                                        <div><strong>Sent:</strong> {new Date(log.created_at).toLocaleString()}</div>
+                                                    </div>
+                                                    <div className="comm-message-body">
+                                                        <strong>Message:</strong>
+                                                        <div className="comm-message-text">
+                                                            {log.message}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            
+                            {emailLogs.filter(log => !showFailedEmailsOnly || log.status === 'failed').length === 0 && (
+                                <div className="comm-no-logs">
+                                    <div className="comm-no-logs-icon">📧</div>
+                                    <div className="comm-no-logs-text">
+                                        <h4>No email logs found</h4>
+                                        <p>
+                                            {showFailedEmailsOnly 
+                                                ? 'No failed emails found. That\'s good news!' 
+                                                : 'No emails have been sent yet. Start by sending a test email above.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 
@@ -861,7 +1394,7 @@ const CommunicationPanel = () => {
                             </div>
                         </div>
                     ) : smsLogs.length > 0 ? (
-                        <table className="table table-striped comm-logs-table">
+                        <table className="sms-logs-table sms-table-striped">
                             <thead>
                                 <tr>
                                     <th>Time</th>
@@ -879,50 +1412,50 @@ const CommunicationPanel = () => {
                                     .map((log) => (
                                     <React.Fragment key={log.id}>
                                         <tr 
-                                            className="comm-log-row"
+                                            className="sms-log-row"
                                             onClick={() => setSelectedLog(selectedLog === log.id ? null : log.id)}
                                             style={{ cursor: 'pointer' }}
                                         >
-                                            <td className="comm-log-time">
+                                            <td className="sms-log-time">
                                                 {new Date(log.created_at).toLocaleString()}
                                             </td>
-                                            <td className="comm-log-recipient">
+                                            <td className="sms-log-recipient">
                                                 {log.recipient}
                                             </td>
                                             <td>
-                                                <span className={`comm-status-badge ${log.status}`}>
+                                                <span className={`sms-status-badge ${log.status}`}>
                                                     {log.status === 'sent' ? '✅' : log.status === 'failed' ? '❌' : '⏳'} 
                                                     {log.status}
                                                 </span>
                                             </td>
-                                            <td className="comm-log-message">
+                                            <td className="sms-log-message">
                                                 {log.message_preview}
                                                 {log.full_message && log.full_message.length > 100 && (
                                                     <small className="text-muted"> (click to expand)</small>
                                                 )}
                                             </td>
                                             <td>
-                                                <span className="comm-type-badge">
+                                                <span className="sms-type-badge">
                                                     {log.metadata?.notification_type === 'weekly_summary' ? '📅 Weekly' : 
                                                      log.metadata?.notification_type === 'manual_individual' ? '📲 Manual' : 
                                                      '📱 SMS'}
                                                 </span>
                                             </td>
-                                            <td className="comm-log-error">
+                                            <td className="sms-log-error">
                                                 {log.error_message ? (
-                                                    <span className="comm-error-detail" title={log.error_message}>
-                                                        <span className="comm-error-icon">🚨</span>
-                                                        <span className="comm-error-text">
+                                                    <span className="sms-error-detail" title={log.error_message}>
+                                                        <span className="sms-error-icon">🚨</span>
+                                                        <span className="sms-error-text">
                                                             {log.error_message.length > 50 
                                                                 ? log.error_message.substring(0, 47) + '...' 
                                                                 : log.error_message}
                                                         </span>
                                                     </span>
                                                 ) : (
-                                                    <span className="comm-success-indicator">✓</span>
+                                                    <span className="sms-success-indicator">✓</span>
                                                 )}
                                             </td>
-                                            <td className="comm-log-sid">
+                                            <td className="sms-log-sid">
                                                 {log.external_id ? (
                                                     <code>{log.external_id.substring(0, 10)}...</code>
                                                 ) : '-'}
@@ -931,8 +1464,8 @@ const CommunicationPanel = () => {
                                         {/* Expandable full message row */}
                                         {selectedLog === log.id && log.full_message && (
                                             <tr key={`${log.id}-details`}>
-                                                <td colSpan="7" className="comm-log-details">
-                                                    <div className="comm-full-message">
+                                                <td colSpan="7" className="sms-log-details">
+                                                    <div className="sms-full-message">
                                                         <strong>📱 Full SMS Message:</strong>
                                                         <pre className="sms-full-content">{log.full_message}</pre>
                                                         <div className="sms-actions">
@@ -998,35 +1531,53 @@ const CommunicationPanel = () => {
     const renderWeeklyPanel = () => (
         <div className="comm-weekly-panel">
             <h2>📅 Weekly Appointment Notifications</h2>
-            <p>Send weekly SMS summaries to patients and providers</p>
+            <p>Send weekly summaries to patients and providers via SMS and Email</p>
             
             <div className="comm-weekly-controls">
                 <div className="comm-weekly-info">
                     <h4>How it works:</h4>
                     <ul>
-                        <li>📱 <strong>Patients:</strong> Receive SMS with their appointments for next week</li>
-                        <li>👩‍⚕️ <strong>Providers:</strong> Receive SMS with their patient appointments for next week</li>
-                        <li>⚙️ <strong>SMS Preference:</strong> Only users with SMS preference will receive messages</li>
+                        <li>📱 <strong>SMS Patients:</strong> Receive SMS with their appointments for next week (SMS preference enabled)</li>
+                        <li>� <strong>Email Patients:</strong> Receive email with their appointments for next week (Email preference enabled)</li>
+                        <li>👩‍⚕️ <strong>Providers:</strong> Receive SMS and email with their patient appointments for next week</li>
                         <li>⏰ <strong>Timing:</strong> Typically sent Saturday 6:00 PM for the following week</li>
                     </ul>
                 </div>
                 
                 <div className="comm-weekly-actions">
-                    <h4>Send Weekly Notifications:</h4>
+                    <h4>📱 Send Weekly SMS Notifications:</h4>
                     <div className="comm-action-buttons">
                         <button 
                             className="btn btn-primary comm-send-weekly-btn"
                             onClick={() => handleSendWeeklyNotifications(1)}
                             disabled={loading}
                         >
-                            📅 Send for Next Week
+                            � Send SMS for Next Week
                         </button>
                         <button 
                             className="btn btn-outline-secondary"
                             onClick={() => handleSendWeeklyNotifications(0)}
                             disabled={loading}
                         >
-                            📅 Send for Current Week (Test)
+                            📱 Send SMS for Current Week (Test)
+                        </button>
+                    </div>
+                    
+                    <h4 style={{marginTop: '20px'}}>📧 Send Weekly Email Notifications:</h4>
+                    <div className="comm-action-buttons">
+                        <button 
+                            className="btn btn-success comm-send-weekly-btn"
+                            onClick={() => handleSendWeeklyEmails(1)}
+                            disabled={loading}
+                        >
+                            📧 Send Emails for Next Week
+                        </button>
+                        <button 
+                            className="btn btn-outline-success"
+                            onClick={() => handleSendWeeklyEmails(0)}
+                            disabled={loading}
+                        >
+                            � Send Emails for Current Week (Test)
                         </button>
                     </div>
                     
@@ -1080,6 +1631,51 @@ const CommunicationPanel = () => {
                             <div className="comm-result-section">
                                 <h5>📅 Week:</h5>
                                 <span>{weeklyResults.week_start} to {weeklyResults.week_end}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                {weeklyEmailResults && (
+                    <div className="comm-weekly-results">
+                        <div className="comm-results-header">
+                            <h4>📧 Last Email Sending Results:</h4>
+                            <button 
+                                type="button" 
+                                className="comm-notification-close" 
+                                onClick={closeWeeklyEmailResults}
+                                aria-label="Close email results"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="comm-results-summary">
+                            <div className="comm-result-card success">
+                                <strong>{weeklyEmailResults.patients.sent + weeklyEmailResults.providers.sent}</strong>
+                                <span>Emails Sent</span>
+                            </div>
+                            <div className="comm-result-card error">
+                                <strong>{weeklyEmailResults.patients.failed + weeklyEmailResults.providers.failed}</strong>
+                                <span>Failed</span>
+                            </div>
+                            <div className="comm-result-card warning">
+                                <strong>{weeklyEmailResults.patients.no_email + weeklyEmailResults.providers.no_email}</strong>
+                                <span>No Email Address</span>
+                            </div>
+                        </div>
+                        
+                        <div className="comm-results-details">
+                            <div className="comm-result-section">
+                                <h5>👤 Patients:</h5>
+                                <span>Sent: {weeklyEmailResults.patients.sent}, Failed: {weeklyEmailResults.patients.failed}, No Email: {weeklyEmailResults.patients.no_email}</span>
+                            </div>
+                            <div className="comm-result-section">
+                                <h5>👩‍⚕️ Providers:</h5>
+                                <span>Sent: {weeklyEmailResults.providers.sent}, Failed: {weeklyEmailResults.providers.failed}, No Email: {weeklyEmailResults.providers.no_email}</span>
+                            </div>
+                            <div className="comm-result-section">
+                                <h5>📅 Week:</h5>
+                                <span>{weeklyEmailResults.week_start} to {weeklyEmailResults.week_end}</span>
                             </div>
                         </div>
                     </div>
