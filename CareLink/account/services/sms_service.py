@@ -1,24 +1,26 @@
 import logging
 import os
+import requests
+import base64
+import json
 from django.conf import settings
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioException
 import re
 
 logger = logging.getLogger(__name__)
 
 class SMSService:
     """
-    Service for sending SMS notifications using Twilio
+    Service for sending SMS notifications using LabsMobile
     """
     
     def __init__(self):
-        self.client = None
-        self.from_number = None
+        self.api_url = "https://api.labsmobile.com/json/send"
+        self.username = None
+        self.token = None
         self._initialize_client()
     
     def _initialize_client(self):
-        """Initialize Twilio client following official documentation"""
+        """Initialize LabsMobile client"""
         try:
             # Check if SMS is enabled
             sms_enabled = getattr(settings, 'SMS_ENABLED', True)
@@ -26,22 +28,22 @@ class SMSService:
                 logger.info("SMS service is disabled")
                 return
                 
-            # Get Twilio credentials from environment variables (official way)
+            # Get LabsMobile credentials from environment variables
             try:
-                account_sid = os.environ["TWILIO_ACCOUNT_SID"]
-                auth_token = os.environ["TWILIO_AUTH_TOKEN"]
-                from_number = os.environ["TWILIO_PHONE_NUMBER"]
-            except KeyError as e:
-                logger.error(f"Missing required environment variable: {e}")
+                self.username = os.environ.get("LABSMOBILE_USERNAME")
+                self.token = os.environ.get("LABSMOBILE_TOKEN")
+            except Exception as e:
+                logger.error(f"Error getting LabsMobile credentials: {e}")
                 return
             
-            # Initialize Twilio client (official way)
-            self.client = Client(account_sid, auth_token)
-            self.from_number = from_number
-            logger.info(f"Twilio SMS client initialized successfully with number: {from_number}")
+            if not self.username or not self.token:
+                logger.error("LabsMobile credentials not found")
+                return
+                
+            logger.info(f"LabsMobile SMS client initialized successfully with username: {self.username}")
             
         except Exception as e:
-            logger.error(f"Failed to initialize Twilio client: {str(e)}")
+            logger.error(f"Failed to initialize LabsMobile client: {str(e)}")
     
     def _format_phone_number(self, phone_number, country_code=None):
         """
@@ -68,7 +70,7 @@ class SMSService:
     
     def send_sms(self, to_number, message, country_code=None):
         """
-        Send SMS to a phone number
+        Send SMS to a phone number using LabsMobile API
         
         Args:
             to_number (str): Phone number to send SMS to
@@ -79,60 +81,92 @@ class SMSService:
             dict: Result with success status and message_sid or error
         """
         try:
-            if not self.client:
+            if not self.username or not self.token:
                 return {
-                    'success': False,
-                    'error': 'SMS service not initialized',
-                    'message_sid': None
+                    'status': 'failed',
+                    'error_message': 'LabsMobile service not initialized',
+                    'external_id': None
                 }
             
             # Format phone number
             formatted_number = self._format_phone_number(to_number, country_code)
             if not formatted_number:
                 return {
-                    'success': False,
-                    'error': 'Invalid phone number format',
-                    'message_sid': None
+                    'status': 'failed',
+                    'error_message': 'Invalid phone number format',
+                    'external_id': None
                 }
+            
+            # Remove the + from phone number for LabsMobile API
+            clean_number = formatted_number.replace('+', '')
             
             # Truncate message if too long (SMS limit is 1600 characters)
             if len(message) > 1600:
                 message = message[:1597] + "..."
             
-            # Send SMS via Twilio
-            twilio_message = self.client.messages.create(
-                body=message,
-                from_=self.from_number,
-                to=formatted_number
-            )
+            # Create Basic Auth credentials (username:token)
+            user_token = f"{self.username}:{self.token}"
+            credentials = base64.b64encode(user_token.encode()).decode()
             
-            logger.info(f"SMS sent successfully to {formatted_number}. SID: {twilio_message.sid}")
+            # Prepare LabsMobile API payload
+            payload = json.dumps({
+                "message": message,
+                "tpoa": "CareLink",  # Sender name (max 11 chars)
+                "recipient": [
+                    {
+                        "msisdn": clean_number
+                    }
+                ]
+            })
             
-            return {
-                'success': True,
-                'message_sid': twilio_message.sid,
-                'error': None,
-                'to_number': formatted_number
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Basic {credentials}',
+                'Cache-Control': 'no-cache'
             }
             
-        except TwilioException as e:
-            logger.error(f"Twilio error sending SMS to {to_number}: {str(e)}")
+            # Send SMS via LabsMobile API
+            response = requests.post(self.api_url, headers=headers, data=payload, timeout=30)
+            response_data = response.json()
+            
+            logger.info(f"LabsMobile API Response: {response_data}")
+            
+            if response.status_code == 200 and response_data.get("code") == "0":
+                message_id = response_data.get("subid", "unknown")
+                logger.info(f"SMS sent successfully to {formatted_number}. Message ID: {message_id}")
+                
+                return {
+                    'status': 'sent',
+                    'external_id': message_id,
+                    'error_message': None
+                }
+            else:
+                error_msg = response_data.get("message", f"HTTP {response.status_code}")
+                logger.error(f"LabsMobile error sending SMS to {to_number}: {error_msg}")
+                return {
+                    'status': 'failed',
+                    'error_message': f'LabsMobile error: {error_msg}',
+                    'external_id': None
+                }
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error sending SMS to {to_number}: {str(e)}")
             return {
-                'success': False,
-                'error': f'Twilio error: {str(e)}',
-                'message_sid': None
+                'status': 'failed',
+                'error_message': f'Network error: {str(e)}',
+                'external_id': None
             }
         except Exception as e:
             logger.error(f"Unexpected error sending SMS to {to_number}: {str(e)}")
             return {
-                'success': False,
-                'error': f'Unexpected error: {str(e)}',
-                'message_sid': None
+                'status': 'failed',
+                'error_message': f'Unexpected error: {str(e)}',
+                'external_id': None
             }
     
     def send_bulk_sms(self, phone_numbers, message, country_code=None):
         """
-        Send SMS to multiple phone numbers
+        Send SMS to multiple phone numbers using LabsMobile bulk API
         
         Args:
             phone_numbers (list): List of phone numbers
@@ -142,41 +176,122 @@ class SMSService:
         Returns:
             dict: Results for each phone number
         """
-        results = {}
-        
-        for phone_number in phone_numbers:
-            result = self.send_sms(phone_number, message, country_code)
-            results[phone_number] = result
+        try:
+            if not self.username or not self.token:
+                return {'success': False, 'error': 'LabsMobile service not initialized'}
             
-        return results
+            if len(phone_numbers) == 0:
+                return {'success': False, 'error': 'No phone numbers provided'}
+            
+            # Prepare recipients list
+            recipients = []
+            for phone_number in phone_numbers:
+                formatted_number = self._format_phone_number(phone_number, country_code)
+                if formatted_number:
+                    clean_number = formatted_number.replace('+', '')
+                    recipients.append({"msisdn": clean_number})
+            
+            if not recipients:
+                return {'success': False, 'error': 'No valid phone numbers found'}
+            
+            # Truncate message if too long
+            if len(message) > 1600:
+                message = message[:1597] + "..."
+            
+            # Create Basic Auth credentials
+            user_token = f"{self.username}:{self.token}"
+            credentials = base64.b64encode(user_token.encode()).decode()
+            
+            # Prepare bulk SMS payload
+            payload = json.dumps({
+                "message": message,
+                "tpoa": "CareLink",
+                "recipient": recipients
+            })
+            
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Basic {credentials}',
+                'Cache-Control': 'no-cache'
+            }
+            
+            # Send bulk SMS
+            response = requests.post(self.api_url, headers=headers, data=payload, timeout=60)
+            response_data = response.json()
+            
+            logger.info(f"LabsMobile Bulk SMS Response: {response_data}")
+            
+            if response.status_code == 200 and response_data.get("code") == "0":
+                return {
+                    'success': True,
+                    'message_id': response_data.get("subid", "unknown"),
+                    'sent_count': len(recipients),
+                    'error': None
+                }
+            else:
+                error_msg = response_data.get("message", f"HTTP {response.status_code}")
+                logger.error(f"LabsMobile bulk SMS error: {error_msg}")
+                return {
+                    'success': False,
+                    'error': f'LabsMobile error: {error_msg}'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error sending bulk SMS: {str(e)}")
+            return {'success': False, 'error': str(e)}
     
-    def get_message_status(self, message_sid):
+    def get_message_status(self, message_id):
         """
         Get the delivery status of a sent message
         
         Args:
-            message_sid (str): Twilio message SID
+            message_id (str): LabsMobile message ID
             
         Returns:
             dict: Message status information
         """
         try:
-            if not self.client:
-                return {'success': False, 'error': 'SMS service not initialized'}
-                
-            message = self.client.messages(message_sid).fetch()
+            if not self.username or not self.token:
+                return {'success': False, 'error': 'LabsMobile service not initialized'}
             
-            return {
-                'success': True,
-                'status': message.status,
-                'error_code': message.error_code,
-                'error_message': message.error_message,
-                'date_sent': message.date_sent,
-                'date_updated': message.date_updated
+            # Create Basic Auth credentials
+            user_token = f"{self.username}:{self.token}"
+            credentials = base64.b64encode(user_token.encode()).decode()
+            
+            # LabsMobile status check endpoint
+            status_url = "https://api.labsmobile.com/json/status"
+            
+            payload = json.dumps({
+                "subid": message_id
+            })
+            
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Basic {credentials}',
+                'Cache-Control': 'no-cache'
             }
             
-        except TwilioException as e:
-            logger.error(f"Error fetching message status for {message_sid}: {str(e)}")
+            response = requests.post(status_url, headers=headers, data=payload, timeout=30)
+            response_data = response.json()
+            
+            if response.status_code == 200 and response_data.get("code") == "0":
+                return {
+                    'success': True,
+                    'status': response_data.get("status", "unknown"),
+                    'error_code': response_data.get("error_code"),
+                    'error_message': response_data.get("error_message"),
+                    'date_sent': response_data.get("date_sent"),
+                    'date_updated': response_data.get("date_updated")
+                }
+            else:
+                error_msg = response_data.get("message", f"HTTP {response.status_code}")
+                return {'success': False, 'error': error_msg}
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching message status for {message_id}: {str(e)}")
+            return {'success': False, 'error': str(e)}
+        except Exception as e:
+            logger.error(f"Unexpected error fetching message status for {message_id}: {str(e)}")
             return {'success': False, 'error': str(e)}
     
     def is_configured(self):
@@ -186,7 +301,7 @@ class SMSService:
         Returns:
             bool: True if configured, False otherwise
         """
-        return self.client is not None
+        return self.username is not None and self.token is not None
 
 # Create a singleton instance
 sms_service = SMSService()

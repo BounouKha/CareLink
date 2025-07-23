@@ -356,10 +356,9 @@ CRON_SECRET_TOKEN = 'carelink-invoice-2024-secret-token-change-this-in-productio
 # Field-level encryption key for django-encrypted-model-fields
 FIELD_ENCRYPTION_KEY = Fernet.generate_key().decode()
 
-# Twilio Configuration for SMS
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
-TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
+# LabsMobile Configuration for SMS
+LABSMOBILE_USERNAME = os.environ.get('LABSMOBILE_USERNAME', 'REMOVED_EMAIL')
+LABSMOBILE_TOKEN = os.environ.get('LABSMOBILE_TOKEN', 'REMOVED')
 
 # SMS Configuration
 SMS_ENABLED = os.environ.get('SMS_ENABLED', 'True').lower() == 'true'

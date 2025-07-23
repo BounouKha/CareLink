@@ -237,28 +237,28 @@ class WeeklySMSService:
                 sms_logger.info(f"  - Sending SMS...")
                 result = self.sms_service.send_sms(phone_number, message)
                 
-                if result['success']:
+                if result['status'] == 'sent':
                     sent += 1
-                    sms_logger.info(f"  - SUCCESS: SMS sent (SID: {result.get('message_sid')})")
+                    sms_logger.info(f"  - SUCCESS: SMS sent (ID: {result.get('external_id')})")
                     # Log successful notification
                     NotificationLog.objects.create(
                         notification_type='sms',
                         recipient=patient.user.email,
                         message=message,
                         status='sent',
-                        external_id=result.get('message_sid'),
+                        external_id=result.get('external_id'),
                         metadata={'notification_type': 'weekly_summary'}
                     )
                 else:
                     failed += 1
-                    sms_logger.error(f"  - FAILED: {result.get('error')}")
+                    sms_logger.error(f"  - FAILED: {result.get('error_message')}")
                     # Log failed notification
                     NotificationLog.objects.create(
                         notification_type='sms',
                         recipient=patient.user.email,
                         message=message,
                         status='failed',
-                        error_message=result.get('error'),
+                        error_message=result.get('error_message'),
                         external_id=f"FAILED-{timezone.now().strftime('%Y%m%d-%H%M%S')}-P{patient.id}",
                         metadata={'notification_type': 'weekly_summary'}
                     )
@@ -325,28 +325,28 @@ class WeeklySMSService:
                 sms_logger.info(f"  - Sending SMS...")
                 result = self.sms_service.send_sms(phone_number, message)
                 
-                if result['success']:
+                if result['status'] == 'sent':
                     sent += 1
-                    sms_logger.info(f"  - SUCCESS: SMS sent (SID: {result.get('message_sid')})")
+                    sms_logger.info(f"  - SUCCESS: SMS sent (ID: {result.get('external_id')})")
                     # Log successful notification
                     NotificationLog.objects.create(
                         notification_type='sms',
                         recipient=provider.user.email,
                         message=message,
                         status='sent',
-                        external_id=result.get('message_sid'),
+                        external_id=result.get('external_id'),
                         metadata={'notification_type': 'weekly_summary'}
                     )
                 else:
                     failed += 1
-                    sms_logger.error(f"  - FAILED: {result.get('error')}")
+                    sms_logger.error(f"  - FAILED: {result.get('error_message')}")
                     # Log failed notification
                     NotificationLog.objects.create(
                         notification_type='sms',
                         recipient=provider.user.email,
                         message=message,
                         status='failed',
-                        error_message=result.get('error'),
+                        error_message=result.get('error_message'),
                         external_id=f"FAILED-{timezone.now().strftime('%Y%m%d-%H%M%S')}-R{provider.id}",
                         metadata={'notification_type': 'weekly_summary'}
                     )
