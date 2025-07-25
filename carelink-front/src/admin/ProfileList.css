@@ -1,0 +1,757 @@
+/* Import ManageUsers styles for consistent visual design */
+@import url('./ManageUsers.css');
+
+/* ProfileList specific overrides and table styling */
+.admin-users-container {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.admin-users-header h1 {
+    font-size: 1.75rem;
+}
+
+/* Search Container */
+.search-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.search-input-wrapper {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 14px;
+    z-index: 2;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f9fafb;
+}
+
+.search-input:focus {
+    border-color: #3b82f6;
+    background-color: white;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6b7280;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.search-results-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.results-count {
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+.total-count {
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Table Container */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+
+/* Custom scrollbar styling */
+.table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Profiles Table */
+.profiles-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.profiles-table thead {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.profiles-table thead th {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    white-space: nowrap;
+}
+
+.profiles-table thead th i {
+    color: #64748b;
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.profiles-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.profiles-table tbody tr:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.profiles-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.profiles-table tbody td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    border: none;
+}
+
+/* Profile Info Column */
+.profile-info {
+    min-width: 220px;
+}
+
+.profile-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.name-details {
+    flex: 1;
+}
+
+.full-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+
+.profile-subtitle {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+/* ID Info Column */
+.id-info {
+    min-width: 120px;
+}
+
+.id-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 3px;
+}
+
+.id-row:last-child {
+    margin-bottom: 0;
+}
+
+.id-label {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 45px;
+}
+
+.id-value {
+    color: #374151;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Role Info Column */
+.role-info {
+    min-width: 140px;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid transparent;
+}
+
+.role-badge.bg-warning {
+    background: #fef3c7;
+    color: #d97706;
+    border-color: #fed7aa;
+}
+
+.role-badge.bg-primary {
+    background: #dbeafe;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+.role-badge.bg-success {
+    background: #dcfce7;
+    color: #16a34a;
+    border-color: #bbf7d0;
+}
+
+.role-badge.bg-info {
+    background: #e0f2fe;
+    color: #0891b2;
+    border-color: #bae6fd;
+}
+
+.role-badge.bg-secondary {
+    background: #f1f5f9;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+.role-badge.no-role {
+    background: #f9fafb;
+    color: #6b7280;
+    border-color: #e5e7eb;
+}
+
+/* Birth Date Column */
+.birthdate-info {
+    min-width: 110px;
+}
+
+.date-value {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.no-data {
+    color: #9ca3af;
+    font-size: 12px;
+    font-style: italic;
+}
+
+/* Actions Column */
+.actions-cell {
+    min-width: 160px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+}
+
+.action-btn i {
+    font-size: 11px;
+}
+
+.btn-info.action-btn {
+    background: #06b6d4;
+    color: white;
+    border-color: #0891b2;
+}
+
+.btn-info.action-btn:hover {
+    background: #0891b2;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(6, 182, 212, 0.3);
+}
+
+.btn-secondary.action-btn {
+    background: #f8fafc;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+.btn-secondary.action-btn:hover {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* No Profiles Found */
+.no-profiles-found {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.no-data-icon {
+    font-size: 48px;
+    color: #d1d5db;
+    margin-bottom: 16px;
+}
+
+.no-profiles-found h3 {
+    margin: 0 0 8px 0;
+    color: #374151;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.no-profiles-found p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Enhanced Pagination styling */
+.admin-pagination {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.pagination-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #374151;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #1f2937;
+}
+
+.pagination-btn:disabled {
+    background: #f9fafb;
+    color: #d1d5db;
+    border-color: #f3f4f6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.page-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.current-page {
+    background: #3b82f6;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.page-separator {
+    color: #6b7280;
+}
+
+.total-pages {
+    color: #374151;
+    font-weight: 600;
+}
+
+.pagination-info {
+    text-align: center;
+    font-size: 13px;
+    color: #6b7280;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
+}
+
+/* Relations Column Styles */
+.relations-info {
+    padding: 12px 16px;
+    max-width: 250px;
+}
+
+.relations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.relation-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.relation-link {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.link-text {
+    font-weight: 600;
+    color: #1e40af;
+    text-transform: capitalize;
+}
+
+.relation-patient {
+    display: flex;
+    align-items: center;
+    color: #64748b;
+}
+
+.patient-name {
+    font-weight: 500;
+}
+
+.no-relations {
+    color: #64748b;
+    font-style: italic;
+    font-size: 13px;
+}
+
+.not-applicable {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+.relation-item i {
+    color: #64748b;
+    font-size: 11px;
+}
+
+.relation-link i {
+    color: #1e40af;
+}
+
+/* ===== MODAL RELATION STYLES ===== */
+/* Styles for displaying relations in ShowProfileModal */
+.modal-content .relation-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.modal-content .relation-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.modal-content .relation-item .badge {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+.modal-content .relation-item .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.modal-content .relation-item .fs-6 {
+    font-size: 14px !important;
+    color: #374151;
+}
+
+/* Modal Relations Styles */
+.modal-relations-card {
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.modal-relations-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    color: white !important;
+}
+
+.modal-relations-card .card-header h5 {
+    color: white !important;
+    font-weight: 600;
+}
+
+.modal-relations-card .card-header i {
+    color: white !important;
+}
+
+.modal-relations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-relation-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.modal-relation-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-relation-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.modal-relation-patient-name {
+    color: #1f2937 !important;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.modal-relation-patient-id {
+    color: #6b7280 !important;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.modal-no-relations {
+    text-align: center;
+    padding: 24px;
+    color: #6b7280 !important;
+    font-style: italic;
+}
+
+.modal-no-relations i {
+    color: #d1d5db !important;
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .admin-users-container {
+        padding: 24px;
+        margin: 15px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .admin-users-container {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .profiles-table thead th,
+    .profiles-table tbody td {
+        padding: 12px 16px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .action-btn {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-users-container {
+        padding: 16px;
+        margin: 5px;
+        border-radius: 8px;
+    }
+    
+    .search-container {
+        margin: 0 -16px 20px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .search-results-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        margin: 0 -16px 24px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .profiles-table {
+        min-width: 700px;
+    }
+    
+    .profiles-table thead th,
+    .profiles-table tbody td {
+        padding: 10px 12px;
+    }
+    
+    .profile-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+    
+    .full-name {
+        font-size: 14px;
+    }
+      .admin-pagination {
+        padding: 15px 16px;
+        margin: 20px -16px 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .pagination-controls {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .pagination-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .page-info {
+        order: -1;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+}

@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Run Backend Tests",
+			"command": "pytest",
+			"args": [
+				"--maxfail=5",
+				"--disable-warnings"
+			],
+			"group": "test",
+			"isBackground": false,
+			"problemMatcher": [
+				"$pytest"
+			]
+		}
+	]
+}

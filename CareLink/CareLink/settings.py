@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',  # Add token authentication
     'rest_framework_simplejwt.token_blacklist',  # Enable token blacklisting
     'corsheaders',  # Add corsheaders to installed apps
+    'schedule'
 ]
 
 MIDDLEWARE = [
@@ -51,7 +52,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'account.middleware.SecurityLoggingMiddleware',  # Re-enabled with optimizations
     'django.contrib.messages.middleware.MessageMiddleware',
+    'account.middleware.AdminActionLoggingMiddleware',  # Re-enabled with optimizations
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # Add CORS middleware
 ]
@@ -61,7 +64,7 @@ ROOT_URLCONF = 'CareLink.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Add templates directory
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -114,6 +117,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Password hashers - optimized for healthcare performance
+# Using Argon2 as primary (faster and more secure than PBKDF2)
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',  # Primary - fast and secure
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',  # Fallback
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.ScryptPasswordHasher',
+]
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -130,6 +144,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -145,15 +160,47 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '5/minute',  # 5 requests per minute for anonymous users
-        'user': '10/minute',  # 10 requests per minute for authenticated users
-    }
+        'anon': '25/minute',  # 25 requests per minute for anonymous users
+        'user': '100/minute',  # 100 requests per minute for authenticated users
+    },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,  # Set the page size to 50
 }
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Set token expiration to 5 minutes
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Refresh token valid for 1 day
+    # Healthcare Security Best Practices for JWT Tokens
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),   # Short-lived access tokens (15 minutes)
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=12),    # 12-hour refresh tokens (healthcare standard)
+    
+    # Security Settings
+    'ROTATE_REFRESH_TOKENS': True,                    # Generate new refresh token on each refresh
+    'BLACKLIST_AFTER_ROTATION': True,                 # Blacklist old refresh tokens
+    'ALGORITHM': 'HS256',                             # Use secure algorithm
+    'SIGNING_KEY': SECRET_KEY,                        # Use Django secret key
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JSON_ENCODER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+    
+    # Token Claims
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    
+    # Token Refresh Settings
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    
+    # Additional Security
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=15),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
 }
 
 
@@ -168,7 +215,82 @@ CSRF_COOKIE_SECURE = True
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',  # Allow requests from the React frontend
+    'http://localhost:3000', 'http://127.0.0.1:3000'  # Allow requests from the React frontend
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'admin': {
+            'format': '[ADMIN] {levelname} {asctime} {module} - {message}',
+            'style': '{',
+        },
+    },    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'carelink.log',
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        'admin_file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'admin.log',
+            'formatter': 'admin',
+            'encoding': 'utf-8',
+        },
+        'error_file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'errors.log',
+            'formatter': 'verbose',
+            'level': 'ERROR',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['file', 'error_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'carelink': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'carelink.admin': {
+            'handlers': ['admin_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'rest_framework': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}

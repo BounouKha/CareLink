@@ -1,0 +1,494 @@
+/* Accessibility Controls Styles */
+.accessibility-controls-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.accessibility-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 80px;
+  padding: 6px 12px;
+  border: 1px solid #22C7EE;
+  background: #22C7EE;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(34,199,238,0.3);
+}
+
+.accessibility-btn:hover {
+  background: #1fb8d9;
+  border-color: #1fb8d9;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(34,199,238,0.4);
+}
+
+.accessibility-btn:focus {
+  outline: none;
+  border-color: #1fb8d9;
+  box-shadow: 0 0 0 3px rgba(34,199,238,0.25);
+}
+
+.accessibility-btn.show {
+  background: #1fb8d9;
+  border-color: #1fb8d9;
+  color: #ffffff;
+}
+
+.accessibility-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.accessibility-text {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.accessibility-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1050;
+  min-width: 280px;
+  max-width: 320px;
+  max-height: 80vh; /* Limit height to 80% of viewport */
+  padding: 12px 0;
+  margin: 4px 0 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+}
+
+.accessibility-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.accessibility-dropdown .dropdown-header {
+  padding: 8px 16px;
+  margin-bottom: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f8f9fa;
+  border-radius: 6px 6px 0 0;
+}
+
+.accessibility-dropdown .dropdown-divider {
+  margin: 8px 0;
+  border-color: #e9ecef;
+}
+
+.accessibility-section {
+  padding: 8px 0;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 16px;
+  margin-bottom: 4px;
+}
+
+.section-subtitle {
+  font-size: 10px;
+  color: #6c757d;
+  padding: 0 16px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.accessibility-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 16px;
+  margin: 0;
+  border: none;
+  background: none;
+  color: #495057;
+  text-align: left;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.accessibility-option:hover {
+  background: #f8f9fa;
+  color: #007bff;
+  padding-left: 20px;
+}
+
+.accessibility-option.active {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.accessibility-option.active:hover {
+  background: #bbdefb;
+}
+
+.option-icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  margin-left: 8px;
+}
+
+.option-label {
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.option-detail {
+  font-size: 10px;
+  color: #6c757d;
+  line-height: 1.2;
+}
+
+.accessibility-reset {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.accessibility-reset:hover {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+
+
+
+.contrast-high {
+  --bg-primary: #ffffff;
+  --text-primary: #000000;
+  --bg-secondary: #000000;
+  --text-secondary: #ffffff;
+  --border-color: #000000;
+}
+
+.contrast-high * {
+  border-color: var(--border-color) !important;
+}
+
+.contrast-high .btn-primary,
+.contrast-high .language-btn,
+.contrast-high .zoom-btn,
+.contrast-high .accessibility-btn {
+  background: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+  border-width: 2px !important;
+  font-weight: 700 !important;
+}
+
+.contrast-high .btn-primary:hover,
+.contrast-high .language-btn:hover,
+.contrast-high .zoom-btn:hover,
+.contrast-high .accessibility-btn:hover {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.contrast-yellow-black {
+  --bg-primary: #ffff00;
+  --text-primary: #000000;
+  --bg-secondary: #000000;
+  --text-secondary: #ffff00;
+  --border-color: #000000;
+}
+
+.contrast-yellow-black body {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.contrast-yellow-black .btn-primary,
+.contrast-yellow-black .language-btn,
+.contrast-yellow-black .zoom-btn,
+.contrast-yellow-black .accessibility-btn {
+  background: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+  border-width: 3px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 0 0 2px var(--border-color) !important;
+}
+
+.contrast-yellow-black .btn-primary:hover,
+.contrast-yellow-black .language-btn:hover,
+.contrast-yellow-black .zoom-btn:hover,
+.contrast-yellow-black .accessibility-btn:hover {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 0 0 2px var(--text-primary) !important;
+}
+
+.contrast-white-blue {
+  --bg-primary: #ffffff;
+  --text-primary: #000080;
+  --bg-secondary: #000080;
+  --text-secondary: #ffffff;
+  --border-color: #000080;
+}
+
+.contrast-white-blue body {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.contrast-white-blue .btn-primary,
+.contrast-white-blue .language-btn,
+.contrast-white-blue .zoom-btn,
+.contrast-white-blue .accessibility-btn {
+  background: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+  border-width: 2px !important;
+  font-weight: 700 !important;
+}
+
+.contrast-white-blue .btn-primary:hover,
+.contrast-white-blue .language-btn:hover,
+.contrast-white-blue .zoom-btn:hover,
+.contrast-white-blue .accessibility-btn:hover {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Custom scrollbar for accessibility dropdown */
+.accessibility-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.accessibility-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.accessibility-dropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.accessibility-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* For Firefox */
+.accessibility-dropdown {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .accessibility-btn {
+    min-width: 60px;
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  
+  .accessibility-text {
+    display: none;
+  }
+  
+  .accessibility-dropdown {
+    right: -20px;
+    min-width: 250px;
+    max-width: 280px;
+    max-height: 70vh; /* Smaller max height on mobile */
+    border-radius: 12px;
+  }
+  
+  .accessibility-section {
+    padding: 6px 0;
+  }
+  
+  .accessibility-option {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .section-title {
+    font-size: 12px;
+    padding: 6px 16px;
+  }
+  
+  .section-subtitle {
+    font-size: 11px;
+    padding: 0 16px;
+    margin-bottom: 6px;
+  }
+}
+
+/* Very small screens */
+@media (max-height: 600px) {
+  .accessibility-dropdown {
+    max-height: 60vh; /* Even smaller on very short screens */
+  }
+}
+
+/* Landscape phones */
+@media (max-width: 768px) and (orientation: landscape) {
+  .accessibility-dropdown {
+    max-height: 50vh; /* Smaller height in landscape mode */
+  }
+}
+
+/* Hamburger menu styles - Enhanced scrolling */
+.homepage-buttons.open .accessibility-controls-dropdown {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.homepage-buttons.open .accessibility-btn {
+  width: 100%;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.homepage-buttons.open .accessibility-text {
+  display: inline;
+}
+
+.homepage-buttons.open .accessibility-dropdown {
+  position: static;
+  width: 100%;
+  max-height: 40vh; /* Limit height in hamburger menu */
+  margin: 8px 0 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  overflow-y: auto; /* Ensure scrolling works in hamburger menu too */
+}
+
+/* Focus improvements for accessibility */
+.accessibility-option:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: -2px;
+  background: #e3f2fd;
+}
+
+/* Animation for dropdown */
+@keyframes accessibilityDropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accessibility-dropdown.show {
+  animation: accessibilityDropdownSlide 0.2s ease-out;
+}
+
+/* Smooth scroll behavior */
+.accessibility-dropdown {
+  scroll-behavior: smooth;
+}
+
+/* Ensure sections have proper spacing for scrolling */
+.accessibility-section:first-of-type {
+  padding-top: 8px;
+}
+
+.accessibility-section:last-of-type {
+  padding-bottom: 8px;
+}
+
+/* Add visual indicator when content is scrollable */
+.accessibility-dropdown::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(34,199,238,0.3), transparent);
+  z-index: 1;
+  display: none;
+}
+
+.accessibility-dropdown:hover::before {
+  display: block;
+}
+
+/* Add visual indicator at bottom when scrollable */
+.accessibility-dropdown::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(34,199,238,0.3), transparent);
+  z-index: 1;
+  display: none;
+}
+
+.accessibility-dropdown:hover::after {
+  display: block;
+}
+
+/* Improve touch scrolling on mobile */
+.accessibility-dropdown {
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Better focus handling during scroll */
+.accessibility-option:focus {
+  outline: 2px solid #007bff;
+  outline-offset: -2px;
+  background: #e3f2fd;
+  z-index: 2;
+  position: relative;
+}
+
+/* Ensure keyboard navigation works well with scrolling */
+.accessibility-option:focus-visible {
+  scroll-margin-top: 10px;
+  scroll-margin-bottom: 10px;
+}
+
+/* Add padding for better scroll experience */
+.accessibility-dropdown .dropdown-header:first-child {
+  margin-top: 4px;
+}
+
+.accessibility-reset {
+  margin-bottom: 4px;
+}

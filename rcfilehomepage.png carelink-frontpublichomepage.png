@@ -1,0 +1,97 @@
+[33mcommit fa2c902a047b7ceb0e78911ddb111c1b13cffe5b[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Wed May 28 12:43:14 2025 +0200
+
+    Implement Folder Views + Serializers
+
+[33mcommit 74c817a3f290fe861ea5133cd33aa95f15094177[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Wed May 28 12:41:14 2025 +0200
+
+    Add Contact + Medical Folder
+
+[33mcommit 453b72ef0a72fe9297661a6339b2e135b8ff77be[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Wed May 28 10:54:52 2025 +0200
+
+     Add Patient Profile Views
+
+[33mcommit 8fb0f0d31c6b87e3642602f3486e7eeca4f2651c[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Wed May 28 10:54:08 2025 +0200
+
+    Add new Role for User - Implement Api Views for Patient
+
+[33mcommit 5313073fef99f1fc6f87f8fc3673bb50c5c6f548[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Wed May 28 00:45:29 2025 +0200
+
+    Add the Profile information - Communication with Backend
+
+[33mcommit 3644db7bbcc382de774ebc3f270bcbad0933354d[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Wed May 28 00:44:45 2025 +0200
+
+    Implement Phone Number - Correct Bug of Token for Login - Begining of relationship in profile
+
+[33mcommit a030d040b138f84122014d9960fe0dea1017acc8[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Mon May 26 23:41:49 2025 +0200
+
+    Add RGPD consent / Apply Condition for birthday
+
+[33mcommit 4c87510493b2c77845bb77dedc0c7306ad65a713[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Mon May 26 23:34:51 2025 +0200
+
+    Add Fonction for zoom / Hamburger menu implement
+
+[33mcommit ee28500024e0f506b7484ec502ec09e7fb65c413[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Mon May 26 16:53:07 2025 +0200
+
+    Add Layout
+
+[33mcommit 53f707564ee20eb8b6bcbd715445c45af3d3dec2[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Mon May 26 16:52:11 2025 +0200
+
+    Add Layout for Register & Login - Init Front(React)
+
+[33mcommit 3d00708d21aca6b15d24a55940ce53ed3f5294e5[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Mon May 26 13:07:46 2025 +0200
+
+    Security renforcement - Implement scripts Fixtures - Add URL/View (Login , LogOut, Register)
+
+[33mcommit 46023c9cf3af1e3303f8c0455e1e81a3af987be3[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Mon May 26 10:19:49 2025 +0200
+
+    Create Files for testing - Init of frontend React - correct of models
+
+[33mcommit d7c984def5f1805e6342a40814f26c3a8ce50cc8[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Mon May 26 01:20:02 2025 +0200
+
+    Correct of Schemas DB - Add of fixtures
+
+[33mcommit 20e3cdf975bc4f41c4460152e3756921c0413755[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Sun May 25 22:57:17 2025 +0200
+
+    Update Schema - Adapting for my table User instead of auth_user
+
+[33mcommit d4694e885113ca52847800154a8bd54620d3206c[m
+Author: Bounou Khalid (ZPZ PolBru) <Khalidbounou@gmail.com>
+Date:   Sun May 25 19:51:57 2025 +0200
+
+    New Setting (Local Init) + Set Up Database
+
+[33mcommit 43690db1a67d911db32e0c46fe663b718862f683[m
+Author: BounouKha <khalidbounou@gmail.com>
+Date:   Sun May 25 19:22:31 2025 +0200
+
+    Add files via upload
+    
+    Initialization of project

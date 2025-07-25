@@ -1,0 +1,219 @@
+/* AdminPanel.css - Page-specific styles only
+   Base layout styles are handled by UnifiedBaseLayout.css */
+
+/* Admin Panel Container */
+.admin-panel-container {
+    width: 100% !important;
+    max-width: none;
+    margin: 0;
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.admin-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Admin Panel Header */
+.admin-panel-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #007bbf, #00bcd4);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 8px 32px rgba(0, 123, 191, 0.2);
+}
+
+.admin-panel-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-panel-subtitle {
+    font-size: 1.1rem;
+    margin: 0;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+/* Admin Tabs - Small Compact Style (ONLY VERSION) */
+.admin-tabs {
+  display: flex;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 3px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  width: fit-content;
+}
+
+.admin-tab {
+  padding: 6px 12px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.admin-tab:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.admin-tab.active {
+  background: #007bbf;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 123, 191, 0.3);
+}
+
+/* Fix active tab text visibility */
+.admin-tab.active,
+.admin-tab.active *,
+.admin-tab.active span,
+.admin-tab.active .tab-label {
+  color: #ffffff !important;
+}
+
+/* Override old tab styles completely for small tabs */
+.admin-tab .tab-icon {
+  display: none !important;
+}
+
+.admin-tab .tab-content {
+  display: contents !important;
+}
+
+.admin-tab .tab-label {
+  display: inline !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: inherit !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.admin-tab .tab-description {
+  display: none !important;
+}
+
+/* Ensure ALL text in tabs is visible */
+.admin-tab,
+.admin-tab *,
+.admin-tab span,
+.admin-tab div,
+.admin-tab .tab-label {
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: inherit !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+/* Admin Content Area */
+.admin-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.admin-section-placeholder {
+    background: white;
+    border-radius: 16px;
+    padding: 60px 40px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    opacity: 0.7;
+}
+
+.admin-section-placeholder h2 {
+    color: #1f2937;
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+}
+
+.admin-section-placeholder p {
+    color: #6b7280;
+    font-size: 1rem;
+    margin: 0 0 24px 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+.coming-soon {
+    display: inline-block;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-panel-container {
+        padding: 10px;
+    }
+    
+    .admin-panel-header {
+        padding: 30px 20px;
+        margin-bottom: 30px;
+    }
+    
+    .admin-panel-header h1 {
+        font-size: 2rem;
+    }
+    
+    /* Small tabs responsive */
+    .admin-tabs {
+        width: 100%;
+        justify-content: space-around;
+    }
+    
+    .admin-tab {
+        flex: 1;
+        padding: 6px 8px;
+        font-size: 12px;
+        height: 28px;
+    }
+    
+    .admin-section-placeholder {
+        padding: 40px 20px;
+    }
+    
+    .admin-section-placeholder h2 {
+        font-size: 1.5rem;
+    }
+}
+

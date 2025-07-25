@@ -1,0 +1,255 @@
+/* 
+ * PageTemplate.css - Reusable page layout template
+ * Use this template for consistent layout across all pages
+ * Based on ProfilePage.css design patterns
+ */
+
+/* Main Page Container - Use this for all pages */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    background: 
+        radial-gradient(circle at 20% 20%, rgba(0, 123, 191, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 188, 212, 0.05) 0%, transparent 50%),
+        linear-gradient(135deg, #f8fbff 0%, #ffffff 50%, #f5f9ff 100%);
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1a202c;
+}
+
+/* Content Container - Use this for the main content area */
+.content-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 
+        0 20px 40px rgba(0, 123, 191, 0.08),
+        0 8px 24px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    padding: 32px;
+    max-width: 900px;
+    width: 100%;
+    min-height: auto;
+    border: 1px solid rgba(0, 123, 191, 0.08);
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Content Container with blue accent bar */
+.content-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #007bbf 0%, #00bcd4 50%, #4fc3f7 100%);
+    border-radius: 24px 24px 0 0;
+    opacity: 0.8;
+}
+
+/* Smaller content container for forms */
+.content-container-sm {
+    max-width: 500px;
+}
+
+/* Medium content container */
+.content-container-md {
+    max-width: 700px;
+}
+
+/* Large content container */
+.content-container-lg {
+    max-width: 1200px;
+}
+
+/* Page Title Styles */
+.page-title {
+    color: #1a202c;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    text-align: center;
+    background: linear-gradient(135deg, #007bbf, #00bcd4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Form Styles Template */
+.form-group-template {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.form-group-template label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    letter-spacing: 0.025em;
+}
+
+.form-group-template input,
+.form-group-template textarea,
+.form-group-template select {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid rgba(0, 123, 191, 0.1);
+    border-radius: 12px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(255, 255, 255, 0.8);
+    color: #1a202c;
+}
+
+.form-group-template input:focus,
+.form-group-template textarea:focus,
+.form-group-template select:focus {
+    border-color: #22C7EE;
+    outline: none;
+    box-shadow: 
+        0 0 0 4px rgba(34, 199, 238, 0.1),
+        0 4px 12px rgba(0, 123, 191, 0.15);
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-1px);
+}
+
+.form-group-template input::placeholder,
+.form-group-template textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* Button Template Styles */
+.btn-template {
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #22C7EE, #1AA6D1);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    box-shadow: 
+        0 4px 12px rgba(34, 199, 238, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-template:hover {
+    background: linear-gradient(135deg, #1AA6D1, #1591B8);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 8px 20px rgba(34, 199, 238, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-template:active {
+    transform: translateY(0px);
+    box-shadow: 
+        0 4px 12px rgba(34, 199, 238, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-template-full {
+    width: 100%;
+}
+
+/* Error Message Template */
+.error-message-template {
+    color: #ef4444;
+    font-size: 14px;
+    margin-top: 16px;
+    text-align: center;
+    padding: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* Success Message Template */
+.success-message-template {
+    color: #10b981;
+    font-size: 14px;
+    margin-top: 16px;
+    text-align: center;
+    padding: 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* Responsive Design Template */
+@media (max-width: 768px) {
+    .page-container {
+        padding: 16px;
+    }
+    
+    .content-container {
+        padding: 24px;
+        margin: 16px;
+        max-width: none;
+        width: calc(100% - 32px);
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        margin-bottom: 20px;
+    }
+
+    .form-group-template {
+        margin-bottom: 20px;
+    }
+
+    .form-group-template input,
+    .form-group-template textarea,
+    .form-group-template select {
+        padding: 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .btn-template {
+        padding: 16px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-container {
+        padding: 20px;
+        margin: 8px;
+        width: calc(100% - 16px);
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mt-4 { margin-top: 32px; }
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mb-4 { margin-bottom: 32px; }
+
+.p-1 { padding: 8px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+.p-4 { padding: 32px; }

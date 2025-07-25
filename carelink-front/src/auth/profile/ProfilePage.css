@@ -1,0 +1,138 @@
+/* ProfilePage.css - Bootstrap Enhanced Design */
+
+/* Profile-specific enhancements for Bootstrap cards */
+.profile-content .card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-content .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Enhanced navigation pills */
+.nav-pills .nav-link {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 12px 20px;
+    margin: 4px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    color: #6c757d;
+}
+
+.nav-pills .nav-link:hover {
+    background-color: rgba(0, 123, 191, 0.1);
+    color: #007bbf;
+    border-color: rgba(0, 123, 191, 0.2);
+}
+
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #007bbf, #00bcd4);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(0, 123, 191, 0.3);
+}
+
+/* Card header enhancements */
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.card-header .card-title {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+/* Form label styling */
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Enhanced badge styling */
+.badge {
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* Draggable profile header */
+.card[style*="cursor: move"] {
+    position: relative;
+    z-index: 10;
+}
+
+.card[style*="cursor: move"]:hover {
+    box-shadow: 0 8px 25px rgba(0, 123, 191, 0.15) !important;
+}
+
+/* Empty state styling */
+.text-center .fas {
+    opacity: 0.6;
+}
+
+/* Profile content styling */
+.profile-content {
+    min-height: 400px;
+}
+
+/* Enhanced nested cards for family and medical info */
+.profile-content .card .card {
+    margin-bottom: 1rem;
+}
+
+.profile-content .card .card:last-child {
+    margin-bottom: 0;
+}
+
+/* Icon styling in headers */
+.card-header .fas {
+    opacity: 0.8;
+}
+
+/* Data display enhancements */
+.fs-6.fw-medium {
+    color: #2d3748;
+    line-height: 1.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nav-pills .nav-link {
+        padding: 10px 16px;
+        font-size: 0.875rem;
+    }
+    
+    .card-header .fas[style*="fontSize: '2rem'"] {
+        font-size: 1.5rem !important;
+    }
+    
+    .nav-pills {
+        flex-direction: column;
+    }
+    
+    .nav-pills .nav-link {
+        margin: 2px 0;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+    }
+}

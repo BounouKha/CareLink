@@ -1,0 +1,42 @@
+/* CreateCoordinatorModal.css - CLEANED */
+/* Modal, form, and button styles are now handled by UnifiedBaseLayout.css */
+
+/* CreateCoordinatorModal-specific styles only */
+/* No component-specific styles needed - all handled by unified system */
+
+.modal-content h2 {
+    margin-top: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-content label {
+    font-weight: bold;
+    color: #555;
+}
+
+.modal-content input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.modal-content button {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-content button:hover {
+    background: #0056b3;
+}

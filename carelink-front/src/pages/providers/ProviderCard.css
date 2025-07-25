@@ -1,0 +1,290 @@
+/* ProviderCard Unique Styles */
+.provider-card-component {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.provider-card-component:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.provider-card-component.provider-card-clickable {
+    cursor: pointer;
+}
+
+.provider-card-component.provider-card-clickable:hover {
+    border-color: #007bff;
+}
+
+.provider-card-component:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Provider Header */
+.provider-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.provider-card-info h3.provider-card-name {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.2;
+}
+
+.provider-card-info .provider-card-email {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.2;
+}
+
+.provider-card-info .provider-card-role {
+    margin: 0;
+    font-size: 12px;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.provider-card-status .provider-card-status-indicator {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.provider-card-status .provider-card-status-indicator.provider-card-active {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.provider-card-status .provider-card-status-indicator.provider-card-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Contract Summary */
+.provider-card-contract-summary {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.provider-card-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.provider-card-summary-label {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.provider-card-summary-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.provider-card-summary-value.provider-card-positive {
+    color: #28a745;
+}
+
+.provider-card-summary-value.provider-card-neutral {
+    color: #6c757d;
+}
+
+/* Active Contract */
+.provider-card-active-contract {
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.provider-card-contract-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.provider-card-contract-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.provider-card-contract-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+}
+
+.provider-card-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.provider-card-detail-label {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.provider-card-detail-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Provider Statistics */
+.provider-card-provider-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    border-top: 1px solid #e9ecef;
+    margin-top: 16px;
+}
+
+.provider-card-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.provider-card-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #007bff;
+    line-height: 1;
+}
+
+.provider-card-stat-label {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* Action Indicator */
+.provider-card-action-indicator {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 12px;
+    color: #007bff;
+    font-weight: 500;
+}
+
+.provider-card-component:hover .provider-card-action-indicator {
+    opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .provider-card {
+        padding: 16px;
+    }
+    
+    .provider-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .contract-summary {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .contract-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .provider-stats {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .card-action-indicator {
+        position: static;
+        transform: none;
+        opacity: 1;
+        text-align: center;
+        margin-top: 12px;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .provider-card {
+        transition: none;
+    }
+    
+    .provider-card:hover {
+        transform: none;
+    }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+    .provider-card {
+        border-width: 2px;
+    }
+    
+    .status-indicator {
+        border-width: 2px !important;
+        font-weight: 700;
+    }
+}
+
+/* Print styles */
+@media print {
+    .provider-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .card-action-indicator {
+        display: none;
+    }
+}

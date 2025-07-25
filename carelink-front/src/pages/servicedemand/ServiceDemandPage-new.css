@@ -1,0 +1,615 @@
+/* ServiceDemandPage.css - Page-specific styles only
+   Base layout styles are handled by UnifiedBaseLayout.css */
+
+/* Service Demand Page Layout */
+.service-demand-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Controls section for filters */
+.service-controls {
+  margin-bottom: 20px;
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.status-filter, .priority-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-form select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.create-demand-btn {
+  background-color: #22C7EE;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: auto;
+}
+
+.create-demand-btn:hover {
+  background-color: #1ba8ca;
+}
+
+/* Content area with demands */
+.service-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+/* Demands list */
+.demands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.demand-item {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.demand-item:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  border-color: #aaa;
+}
+
+.demand-item.selected {
+  border-left: 4px solid #22C7EE;
+  background-color: #e9f8fc;
+}
+
+.demand-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.demand-title {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.demand-status {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: capitalize;
+}
+
+.demand-details {
+  margin-top: 10px;
+}
+
+/* Status colors */
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-assigned {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Priority indicators */
+.priority-high {
+  border-left: 4px solid #dc3545;
+}
+
+.priority-normal {
+  border-left: 4px solid #ffc107;
+}
+
+.priority-low {
+  border-left: 4px solid #28a745;
+}
+
+/* Detail view panel */
+.detail-panel {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.detail-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.detail-actions button {
+  flex: 1;
+}
+
+/* Service demand specific button styling */
+.service-demand-container .btn-primary {
+  background-color: #22C7EE;
+  border-color: #22C7EE;
+}
+
+.service-demand-container .btn-primary:hover {
+  background-color: #1ba8ca;
+  border-color: #1ba8ca;
+}
+
+/* Enhanced scrollbar for demands list */
+.demands-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.demands-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.demands-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #22C7EE, #1ba8ca);
+  border-radius: 10px;
+}
+
+.demands-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1ba8ca, #22C7EE);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .service-demand-container {
+    padding: 10px;
+  }
+  
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .create-demand-btn {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  
+  .detail-actions {
+    flex-direction: column;
+  }
+  
+  .detail-actions button {
+    margin-bottom: 10px;
+  }
+}
+
+.demand-status {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 10px;
+  text-transform: capitalize;
+}
+
+.demand-details {
+  margin-top: 10px;
+}
+
+/* Status colors */
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-assigned {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Priority indicators */
+.priority-high {
+  border-left: 4px solid #dc3545;
+}
+
+.priority-normal {
+  border-left: 4px solid #ffc107;
+}
+
+.priority-low {
+  border-left: 4px solid #28a745;
+}
+
+/* Detail view panel */
+.detail-panel {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.detail-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.detail-actions button {
+  flex: 1;
+}
+
+/* Enhanced Modal Styling with Bootstrap and Modern Design */
+
+/* Modal overlay with backdrop blur effect */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 2rem;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Enhanced Form Controls */
+.form-control:focus, .form-select:focus {
+  border-color: #22C7EE !important;
+  box-shadow: 0 0 0 0.25rem rgba(34, 199, 238, 0.25) !important;
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+}
+
+.form-control-lg {
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
+}
+
+/* Custom form validation */
+.form-control:invalid {
+  border-color: #dc3545;
+}
+
+.form-control:valid {
+  border-color: #28a745;
+}
+
+/* Enhanced card styling with hover effects */
+.card {
+  transition: all 0.3s ease;
+  border: none !important;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Icon styling in labels */
+.form-label i {
+  font-size: 1.1em;
+  margin-right: 0.5rem;
+}
+
+/* Button hover effects */
+.btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Primary button gradient animation */
+.btn[style*="gradient"]:hover {
+  background: linear-gradient(135deg, #1BA8CA 0%, #22C7EE 100%) !important;
+  box-shadow: 0 6px 20px rgba(34, 199, 238, 0.4) !important;
+}
+
+/* Modal animations */
+.modal-dialog {
+  animation: slideInDown 0.4s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Custom scrollbar for modal body */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #22C7EE, #1BA8CA);
+  border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1BA8CA, #22C7EE);
+}
+
+/* Enhanced alert styling */
+.alert {
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.alert::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: currentColor;
+}
+
+/* Badge enhancements */
+.badge {
+  padding: 0.5em 0.75em;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Form section titles with underline effect */
+.card-body h5 {
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.card-body h5::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, currentColor, transparent);
+  border-radius: 2px;
+}
+
+/* Loading spinner for form submission */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error message styling */
+.error-message {
+  background: linear-gradient(135deg, #ff5252, #f44336);
+  color: white;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  border: none;
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Success animation */
+.success-animation {
+  animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+  
+  .modal-body {
+    padding: 1.5rem !important;
+  }
+  
+  .card-body {
+    padding: 1.5rem !important;
+  }
+  
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Accessibility improvements */
+.form-control:focus-visible,
+.form-select:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #22C7EE;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    border: 2px solid #000 !important;
+  }
+  
+  .form-control, .form-select {
+    border: 2px solid #000 !important;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  .card {
+    background: linear-gradient(145deg, #374151 0%, #4b5563 100%) !important;
+  }
+  
+  .form-control, .form-select {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #e2e8f0 !important;
+  }
+    .form-label {
+    color: #ffffff !important;
+  }
+}
+
+/* Ensure text in modal form fields is dark for readability */
+.modal-overlay .form-control,
+.modal-overlay .form-select,
+.modal-overlay textarea {
+  color: #495057 !important;
+}
+
+.modal-overlay .form-control::placeholder,
+.modal-overlay .form-select::placeholder,
+.modal-overlay textarea::placeholder {
+  color: #6c757d !important;
+  opacity: 0.8;
+}
+
+/* Additional text color fixes for modal */
+.modal-overlay .form-label {
+  color: #000000 !important;
+}
+
+.modal-overlay .text-dark {
+  color: #000000 !important;
+}
+
+
+/* Form fields consistent styling */
+.form-select{
+  background-color: #374151;
+  border-color: #e3f2fd !important;
+}

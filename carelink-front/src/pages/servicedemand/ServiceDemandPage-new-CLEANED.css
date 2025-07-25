@@ -1,0 +1,563 @@
+/*!
+ * ServiceDemandPage-new.css - CLEANED VERSION
+ * 
+ * This file now contains ONLY page-specific styles for the Service Demand page.
+ * All modal, form, button, and layout styles have been moved to UnifiedBaseLayout.css
+ * 
+ * Before implementing: Make sure UnifiedBaseLayout.css is imported in your component!
+ */
+
+/* ===== SERVICE DEMAND PAGE SPECIFIC STYLES ===== */
+
+/* Main container for service demand page */
+.service-demand-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ===== CONTROLS SECTION ===== */
+.service-controls {
+  margin-bottom: 20px;
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.status-filter, 
+.priority-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Filter dropdowns - extending unified form styles */
+.filter-form select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+}
+
+/* Create demand button - uses .btn class from unified CSS */
+.create-demand-btn {
+  margin-left: auto;
+  /* All other button styles come from .btn in UnifiedBaseLayout.css */
+}
+
+/* ===== CONTENT AREA ===== */
+.service-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+/* ===== DEMANDS LIST ===== */
+.demands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.demand-item {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.demand-item:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  border-color: #aaa;
+  transform: translateY(-1px);
+}
+
+.demand-item.selected {
+  border-left: 4px solid #22C7EE;
+  background-color: #e9f8fc;
+  box-shadow: 0 4px 12px rgba(34, 199, 238, 0.15);
+}
+
+/* ===== DEMAND ITEM CONTENT ===== */
+.demand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.demand-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.demand-status {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.demand-details {
+  margin-top: 10px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.demand-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+/* ===== STATUS COLORS ===== */
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.status-assigned {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #74c0fc;
+}
+
+.status-in-progress {
+  background-color: #cce5ff;
+  color: #004085;
+  border: 1px solid #66b3ff;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #81c784;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #e57373;
+}
+
+.status-on-hold {
+  background-color: #e2e3e5;
+  color: #495057;
+  border: 1px solid #adb5bd;
+}
+
+/* ===== PRIORITY INDICATORS ===== */
+.priority-high {
+  border-left: 4px solid #dc3545;
+}
+
+.priority-high .demand-title::before {
+  content: "🔴 ";
+  margin-right: 5px;
+}
+
+.priority-normal {
+  border-left: 4px solid #ffc107;
+}
+
+.priority-normal .demand-title::before {
+  content: "🟡 ";
+  margin-right: 5px;
+}
+
+.priority-low {
+  border-left: 4px solid #28a745;
+}
+
+.priority-low .demand-title::before {
+  content: "🟢 ";
+  margin-right: 5px;
+}
+
+/* ===== DETAIL PANEL ===== */
+.detail-panel {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-panel h3 {
+  margin: 0 0 15px 0;
+  color: #007bbf;
+  font-size: 1.4rem;
+  border-bottom: 2px solid #22C7EE;
+  padding-bottom: 8px;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.detail-section h4 {
+  margin: 0 0 8px 0;
+  color: #495057;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.detail-section p {
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+  color: #666;
+}
+
+/* ===== ASSIGNMENT SECTION ===== */
+.assignment-section {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #007bbf;
+}
+
+.assignment-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.assignment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assignment-field label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.assignment-field span {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* ===== PROGRESS TRACKING ===== */
+.progress-section {
+  background-color: #f0f8ff;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #22C7EE;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22C7EE, #007bbf);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #007bbf;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+/* ===== COMMENTS SECTION ===== */
+.comments-section {
+  border-top: 1px solid #dee2e6;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.comment-item {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid #007bbf;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: #007bbf;
+  font-size: 0.9rem;
+}
+
+.comment-date {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.comment-text {
+  margin: 0;
+  line-height: 1.4;
+  color: #495057;
+}
+
+/* ===== NO SELECTION STATE ===== */
+.no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #6c757d;
+  text-align: center;
+}
+
+.no-selection-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.no-selection h3 {
+  margin: 0 0 8px 0;
+  color: #495057;
+}
+
+.no-selection p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-demands {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+.empty-demands-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.3;
+}
+
+.empty-demands h3 {
+  margin: 0 0 10px 0;
+  color: #495057;
+}
+
+.empty-demands p {
+  margin: 0 0 20px 0;
+  font-size: 1rem;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .service-demand-container {
+    padding: 15px;
+  }
+  
+  .filter-form {
+    gap: 10px;
+  }
+  
+  .demand-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .assignment-info {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .service-demand-container {
+    padding: 10px;
+  }
+  
+  .service-controls {
+    padding: 12px;
+  }
+  
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .create-demand-btn {
+    margin-left: 0;
+    align-self: center;
+  }
+  
+  .demands-list {
+    max-height: 400px;
+  }
+  
+  .demand-item {
+    padding: 12px;
+  }
+  
+  .demand-title {
+    font-size: 14px;
+  }
+  
+  .demand-meta {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .detail-panel {
+    padding: 15px;
+  }
+  
+  .detail-panel h3 {
+    font-size: 1.2rem;
+  }
+  
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .service-demand-container {
+    padding: 8px;
+  }
+  
+  .demand-details {
+    font-size: 13px;
+  }
+  
+  .demand-status {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .assignment-field label {
+    font-size: 0.8rem;
+  }
+  
+  .assignment-field span {
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .service-controls,
+  .create-demand-btn {
+    display: none;
+  }
+  
+  .demands-list {
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .demand-item {
+    break-inside: avoid;
+    margin-bottom: 10px;
+  }
+  
+  .detail-panel {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}
+
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* Focus states for interactive elements */
+.demand-item:focus {
+  outline: 2px solid #22C7EE;
+  outline-offset: 2px;
+}
+
+.filter-form select:focus {
+  outline: 2px solid #22C7EE;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .demand-item {
+    border: 2px solid #000;
+  }
+  
+  .demand-status {
+    border: 2px solid #000;
+  }
+  
+  .detail-panel {
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .demand-item,
+  .progress-fill {
+    transition: none;
+  }
+}
+
+/*!
+ * REMOVED STYLES (now in UnifiedBaseLayout.css):
+ * - All .modal styles
+ * - All .btn styles (except .create-demand-btn specific positioning)
+ * - All .form-control and .form-select styles
+ * - All .alert styles
+ * - All .card styles
+ * - All responsive modal styles
+ * - All button hover effects (except demand-specific ones)
+ * 
+ * WHAT TO UPDATE IN YOUR COMPONENT:
+ * 1. Ensure UnifiedBaseLayout.css is imported
+ * 2. Use .btn class for buttons (remove custom button styles)
+ * 3. Use .modal-overlay and .modal for modals
+ * 4. Use .form-control for form inputs
+ * 5. Use .alert-* classes for notifications
+ */

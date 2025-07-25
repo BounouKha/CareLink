@@ -1,0 +1,452 @@
+/* Patients Page Specific Styles */
+.patient-page-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.patient-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.patient-page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.patient-page-subtitle {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin: 5px 0 0 0;
+}
+
+.patient-page-add-button {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);
+}
+
+.patient-page-add-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4);
+}
+
+.patient-page-search-container {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.patient-page-search-input {
+  flex: 1;
+  min-width: 300px;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.patient-page-search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.patient-page-filter-select {
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+/* Sort dropdown styling */
+.patient-page-sort-select {
+  padding-right: 2.5rem !important; /* Extra space for dropdown arrow */
+  min-width: 160px;
+  background-position: right 0.75rem center !important; /* Position arrow properly */
+}
+
+.patient-page-sort-select:focus {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15) !important;
+}
+
+/* Bootstrap grid container styles */
+.patient-page-patients-container {
+  margin-bottom: 30px;
+}
+
+/* Ensure proper card alignment and equal heights */
+.patient-page-patients-container .row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: flex-start; /* Align cards to start, not center */
+}
+
+.patient-page-patients-container .row > [class*="col-"] {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+
+/* Make all cards equal height */
+.patient-page-patients-container .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  margin: 0 auto;
+  min-height: 300px; /* Ensure minimum height for consistency */
+}
+
+/* Ensure card body expands to fill available space */
+.patient-page-patients-container .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make the patient info section consistent height */
+.patient-page-patients-container .card-body .row.g-2 {
+  min-height: 80px; /* Increased height to accommodate blood type */
+  align-items: flex-start;
+}
+
+/* Ensure consistent spacing for patient info items */
+.patient-page-patients-container .card-body .row.g-2 .col-6 {
+  margin-bottom: 0.5rem;
+}
+
+/* When blood type is missing, add empty space to maintain alignment */
+.patient-page-patients-container .card-body .row.g-2:not(:has(.col-6:nth-child(3))) {
+  padding-bottom: 1rem;
+}
+
+/* Ensure card footer stays at bottom */
+.patient-page-patients-container .card-footer {
+  margin-top: auto;
+}
+
+/* Remove problematic width constraints that cause alignment issues - use Bootstrap's natural responsive behavior */
+
+/* Ensure cards don't stretch too much on very large screens */
+@media (min-width: 1400px) {
+  .patient-page-patients-container .col-xxl-3 {
+    flex: 0 0 auto;
+    width: 25%;
+  }
+}
+
+/* Patient card styles - work with Bootstrap card classes */
+.patient-page-patient-item {
+  transition: all 0.3s ease;
+  position: relative;
+  border-left: 4px solid #007bff !important; /* Add left border accent */
+}
+
+.patient-page-patient-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+  border-color: #007bff;
+}
+
+.patient-page-patient-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.patient-page-patient-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.patient-page-patient-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.patient-page-patient-id {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin: 3px 0 0 0;
+}
+
+.patient-page-patient-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.patient-page-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-page-info-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.patient-page-info-value {
+  font-size: 1rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Patient info display */
+.patient-page-patient-info small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0; /* Allow flex items to shrink */
+}
+
+.patient-page-patient-info svg {
+  flex-shrink: 0; /* Prevent icons from shrinking */
+}
+
+.patient-page-patient-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.patient-page-btn-sm {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.patient-page-btn-info {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+}
+
+.patient-page-btn-info:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 10px rgba(23, 162, 184, 0.3);
+}
+
+.patient-page-btn-folder {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: #212529;
+}
+
+.patient-page-btn-folder:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 10px rgba(255, 193, 7, 0.3);
+}
+
+.patient-page-btn-add {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: white;
+}
+
+.patient-page-btn-add:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);
+}
+
+.patient-page-no-patients {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+  font-size: 1.2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.patient-page-loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 1.2rem;
+  color: #007bff;
+}
+
+/* Modal Styles - Bootstrap Integration */
+.patient-page-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 10000 !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.patient-page-modal-overlay .modal-dialog {
+  margin: 0 !important;
+  max-width: 700px !important;
+  width: 100% !important;
+}
+
+.patient-page-modal-overlay .modal-content {
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  background-color: white !important;
+}
+
+.patient-page-modal-overlay .modal-header {
+  margin: 10px;
+  background-color: white !important;
+  border-bottom: 1px solid #e9ecef !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.patient-page-modal-overlay .modal-body {
+  padding: 1.5rem !important;
+  background-color: white !important;
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+}
+
+.patient-page-modal-overlay .modal-footer {
+  background-color: white !important;
+  border-top: 1px solid #e9ecef !important;
+  padding: 1rem 1.5rem !important;
+}
+
+/* Custom form styling for minimalist design */
+.patient-page-modal-overlay .form-label {
+  color: #495057 !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.patient-page-modal-overlay .form-control,
+.patient-page-modal-overlay .form-select {
+  border: 1px solid #ced4da !important;
+  border-radius: 4px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.9rem !important;
+  background-color: white !important;
+}
+
+.patient-page-modal-overlay .form-control:focus,
+.patient-page-modal-overlay .form-select:focus {
+  border-color: #80bdff !important;
+  box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25) !important;
+  background-color: white !important;
+}
+
+.patient-page-modal-overlay .form-control[disabled],
+.patient-page-modal-overlay .form-control[readonly] {
+  background-color: #f8f9fa !important;
+  opacity: 1 !important;
+}
+
+.patient-page-modal-overlay .form-check-input:checked {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+}
+
+.patient-page-modal-overlay hr {
+  margin: 1rem 0 !important;
+  border-color: #e9ecef !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .patient-page-modal-overlay .modal-dialog {
+    max-width: 95% !important;
+    margin: 0 !important;
+  }
+  
+  .patient-page-modal-overlay .modal-body {
+    max-height: 50vh !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .patient-page-patients-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .patient-page-search-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .patient-page-search-input {
+    min-width: unset;
+  }
+  
+  .patient-page-patient-info {
+    grid-template-columns: 1fr;
+  }
+  
+  .patient-page-form-row {
+    flex-direction: column;
+  }
+  
+  .patient-page-modal-content {
+    max-width: 95% !important;
+    margin: 10px !important;
+  }
+  
+  .patient-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+}
+
