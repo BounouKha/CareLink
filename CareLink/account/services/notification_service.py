@@ -3,6 +3,7 @@ from CareLink.models import Notification, User, NotificationPreference
 import logging
 
 logger = logging.getLogger(__name__)
+sms_logger = logging.getLogger('sms_operations')  # Same logger as SMS operations
 
 
 class NotificationService:
@@ -64,7 +65,223 @@ class NotificationService:
         except Exception as e:
             logger.error(f"Error creating notification: {str(e)}")
             return None
-    
+
+    @staticmethod
+    def send_appointment_deletion_notifications(schedule, deleted_by, reason=None):
+        """
+        Send notifications (in-app, email, SMS) when an appointment is deleted
+        
+        Args:
+            schedule: The deleted schedule object
+            deleted_by: User who deleted the appointment
+            reason: Optional reason for deletion
+        """
+        try:
+            patient_user = schedule.patient.user if schedule.patient else None
+            provider_user = schedule.provider.user if schedule.provider else None
+            
+            # Get appointment details
+            appointment_date = schedule.date.strftime('%B %d, %Y') if schedule.date else 'Unknown date'
+            appointment_time = ""
+            first_timeslot = schedule.time_slots.first()
+            if first_timeslot and first_timeslot.start_time:
+                appointment_time = f" at {first_timeslot.start_time.strftime('%H:%M')}"
+            
+            # Create the deletion message
+            deletion_message = f'Your appointment scheduled for {appointment_date}{appointment_time} has been cancelled'
+            if reason:
+                deletion_message += f'. Reason: {reason}'
+            deletion_message += '. Please contact us if you have any questions.'
+            
+            # 1. Send in-app notifications (existing functionality)
+            NotificationService.notify_schedule_cancelled(schedule, deleted_by, reason)
+            
+            # 2. Send email/SMS notifications based on user preferences
+            users_to_notify = []
+            if patient_user and patient_user != deleted_by:
+                users_to_notify.append(('patient', patient_user))
+            if provider_user and provider_user != deleted_by:
+                users_to_notify.append(('role', provider_user))
+            
+            for user_type, user in users_to_notify:
+                NotificationService._send_external_deletion_notification(
+                    user, deletion_message, appointment_date, appointment_time, 
+                    reason, user_type, deleted_by
+                )
+            
+            # 3. Notify family members
+            NotificationService._notify_family_deletion(schedule, deleted_by, reason)
+            
+            logger.info(f"Appointment deletion notifications sent for schedule {schedule.id}")
+            
+        except Exception as e:
+            logger.error(f"Error sending appointment deletion notifications: {str(e)}")
+
+    @staticmethod
+    def _send_external_deletion_notification(user, message, appointment_date, appointment_time, reason, user_type, deleted_by):
+        """
+        Send email/SMS notification based on user preferences
+        """
+        try:
+            from account.models import UserPreferences
+            from .email_service import EmailService
+            from .sms_service import SMSService
+            
+            # Get user preferences
+            try:
+                preferences = UserPreferences.objects.get(user=user)
+            except UserPreferences.DoesNotExist:
+                preferences = UserPreferences.objects.create(user=user)
+            
+            # Prepare notification details
+            subject = "CareLink - Appointment Cancelled"
+            sender_info = {
+                'user_id': deleted_by.id if deleted_by else None,
+                'user_name': deleted_by.get_full_name() if deleted_by else 'System',
+                'action': 'appointment_deletion'
+            }
+            
+            # Send email notification if enabled
+            if preferences.email_notifications and preferences.appointment_reminders:
+                try:
+                    email_service = EmailService()
+                    
+                    # Create detailed email message
+                    email_message = f"""
+Dear {user.get_full_name()},
+
+Your appointment has been cancelled.
+
+Appointment Details:
+- Date: {appointment_date}
+- Time: {appointment_time.replace(' at ', '') if appointment_time else 'Not specified'}
+- Reason: {reason if reason else 'Not specified'}
+
+{message}
+
+If you need to reschedule or have any questions, please contact our support team.
+
+Best regards,
+CareLink Team
+                    """
+                    
+                    result = email_service.send_email(
+                        to_email=user.email,
+                        subject=subject,
+                        message=email_message.strip(),
+                        sender_info=sender_info
+                    )
+                    
+                    if result.get('success'):
+                        logger.info(f"Deletion email sent successfully to {user.email}")
+                    else:
+                        logger.error(f"Failed to send deletion email to {user.email}: {result.get('error')}")
+                        
+                except Exception as e:
+                    logger.error(f"Error sending deletion email to {user.email}: {str(e)}")
+            
+            # Send SMS notification if enabled and user has phone number
+            if preferences.sms_notifications and preferences.appointment_reminders:
+                try:
+                    # Get user's primary phone number
+                    phone_number = None
+                    if preferences.primary_phone_contact:
+                        phone_number = preferences.primary_phone_contact.phone_number
+                    elif hasattr(user, 'phone_numbers'):
+                        primary_phone = user.phone_numbers.filter(is_primary=True).first()
+                        if primary_phone:
+                            phone_number = primary_phone.phone_number
+                    
+                    if phone_number:
+                        sms_service = SMSService()
+                        
+                        # Log SMS attempt to operations log
+                        sms_logger.info(f"DELETION SMS - Sending to {user.get_full_name()} ({phone_number})")
+                        
+                        # Create concise SMS message (SMS has character limits)
+                        sms_message = f"CareLink: Your appointment on {appointment_date}{appointment_time} has been cancelled"
+                        if reason:
+                            # Add reason if there's space (keep under 160 chars if possible)
+                            if len(sms_message) + len(f". Reason: {reason}") < 150:
+                                sms_message += f". Reason: {reason}"
+                        sms_message += ". Contact us for questions."
+                        
+                        sms_logger.info(f"DELETION SMS - Message: {sms_message}")
+                        
+                        result = sms_service.send_sms(
+                            to_number=phone_number,
+                            message=sms_message,
+                            notification_type='deletion',
+                            recipient_email=user.email
+                        )
+                        
+                        if result.get('status') == 'sent':
+                            sms_logger.info(f"DELETION SMS - SUCCESS: Sent to {phone_number} (ID: {result.get('external_id')})")
+                            logger.info(f"Deletion SMS sent successfully to {phone_number}")
+                        else:
+                            sms_logger.error(f"DELETION SMS - FAILED: {result.get('error_message')}")
+                            logger.error(f"Failed to send deletion SMS to {phone_number}: {result.get('error_message')}")
+                    else:
+                        sms_logger.info(f"DELETION SMS - SKIPPED: No phone number for {user.email}")
+                        logger.info(f"No phone number found for user {user.email}, skipping SMS")
+                        
+                except Exception as e:
+                    logger.error(f"Error sending deletion SMS to user {user.email}: {str(e)}")
+            
+        except Exception as e:
+            logger.error(f"Error in _send_external_deletion_notification: {str(e)}")
+
+    @staticmethod
+    def _notify_family_deletion(schedule, deleted_by, reason):
+        """
+        Notify family members about appointment deletion
+        """
+        try:
+            if not schedule.patient:
+                return
+            
+            from CareLink.models import FamilyPatient
+            family_relations = FamilyPatient.objects.filter(patient=schedule.patient)
+            
+            appointment_date = schedule.date.strftime('%B %d, %Y') if schedule.date else 'Unknown date'
+            appointment_time = ""
+            first_timeslot = schedule.time_slots.first()
+            if first_timeslot and first_timeslot.start_time:
+                appointment_time = f" at {first_timeslot.start_time.strftime('%H:%M')}"
+            
+            for relation in family_relations:
+                if relation.user and relation.user != deleted_by:
+                    # Send in-app notification
+                    NotificationService.create_notification(
+                        recipient=relation.user,
+                        sender=deleted_by,
+                        notification_type='schedule_cancelled',
+                        title='Family Member Appointment Cancelled',
+                        message=f'The appointment for {schedule.patient.user.get_full_name() if schedule.patient.user else "your family member"} on {appointment_date}{appointment_time} has been cancelled',
+                        priority='high',
+                        schedule=schedule,
+                        extra_data={
+                            'appointment_date': str(schedule.date),
+                            'patient_name': schedule.patient.user.get_full_name() if schedule.patient.user else 'Unknown',
+                            'family_relation': relation.link,
+                            'reason': reason or 'No reason provided'
+                        }
+                    )
+                    
+                    # Send external notifications based on family member's preferences
+                    family_message = f'The appointment for your family member {schedule.patient.user.get_full_name() if schedule.patient.user else "a family member"} on {appointment_date}{appointment_time} has been cancelled'
+                    if reason:
+                        family_message += f'. Reason: {reason}'
+                    family_message += '. Please contact us if you have any questions.'
+                    
+                    NotificationService._send_external_deletion_notification(
+                        relation.user, family_message, appointment_date, 
+                        appointment_time, reason, 'family', deleted_by
+                    )
+                    
+        except Exception as e:
+            logger.error(f"Error notifying family members about deletion: {str(e)}")
+
     @staticmethod
     def _should_send_notification(user, notification_type):
         """Check if user wants to receive this type of notification"""

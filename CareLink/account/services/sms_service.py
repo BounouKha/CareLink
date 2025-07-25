@@ -4,9 +4,11 @@ import requests
 import base64
 import json
 from django.conf import settings
+from django.utils import timezone
 import re
 
 logger = logging.getLogger(__name__)
+sms_logger = logging.getLogger('sms_operations')  # Same logger as weekly SMS service
 
 class SMSService:
     """
@@ -68,7 +70,7 @@ class SMSService:
             
         return clean_number
     
-    def send_sms(self, to_number, message, country_code=None):
+    def send_sms(self, to_number, message, country_code=None, log_to_database=True, notification_type='manual', recipient_email=None):
         """
         Send SMS to a phone number using LabsMobile API
         
@@ -76,26 +78,38 @@ class SMSService:
             to_number (str): Phone number to send SMS to
             message (str): SMS message content
             country_code (str): Country code (optional, defaults to Belgium +32)
+            log_to_database (bool): Whether to log to database (default True)
+            notification_type (str): Type of notification for logging (manual, deletion, weekly, etc.)
+            recipient_email (str): Email address of the recipient for logging purposes
             
         Returns:
             dict: Result with success status and message_sid or error
         """
+        formatted_number = None
+        result = None
+        
         try:
             if not self.username or not self.token:
-                return {
+                result = {
                     'status': 'failed',
                     'error_message': 'LabsMobile service not initialized',
                     'external_id': None
                 }
+                if log_to_database:
+                    self._log_to_database(to_number, message, result, notification_type, recipient_email)
+                return result
             
             # Format phone number
             formatted_number = self._format_phone_number(to_number, country_code)
             if not formatted_number:
-                return {
+                result = {
                     'status': 'failed',
                     'error_message': 'Invalid phone number format',
                     'external_id': None
                 }
+                if log_to_database:
+                    self._log_to_database(to_number, message, result, notification_type, recipient_email)
+                return result
             
             # Remove the + from phone number for LabsMobile API
             clean_number = formatted_number.replace('+', '')
@@ -129,40 +143,84 @@ class SMSService:
             response = requests.post(self.api_url, headers=headers, data=payload, timeout=30)
             response_data = response.json()
             
-            logger.info(f"LabsMobile API Response: {response_data}")
+            sms_logger.info(f"LabsMobile API Response: {response_data}")
             
             if response.status_code == 200 and response_data.get("code") == "0":
                 message_id = response_data.get("subid", "unknown")
-                logger.info(f"SMS sent successfully to {formatted_number}. Message ID: {message_id}")
+                sms_logger.info(f"SMS sent successfully to {formatted_number}. Message ID: {message_id}")
                 
-                return {
+                result = {
                     'status': 'sent',
                     'external_id': message_id,
                     'error_message': None
                 }
             else:
                 error_msg = response_data.get("message", f"HTTP {response.status_code}")
-                logger.error(f"LabsMobile error sending SMS to {to_number}: {error_msg}")
-                return {
+                sms_logger.error(f"LabsMobile error sending SMS to {to_number}: {error_msg}")
+                result = {
                     'status': 'failed',
                     'error_message': f'LabsMobile error: {error_msg}',
                     'external_id': None
                 }
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"Network error sending SMS to {to_number}: {str(e)}")
-            return {
+            sms_logger.error(f"Network error sending SMS to {to_number}: {str(e)}")
+            result = {
                 'status': 'failed',
                 'error_message': f'Network error: {str(e)}',
                 'external_id': None
             }
         except Exception as e:
-            logger.error(f"Unexpected error sending SMS to {to_number}: {str(e)}")
-            return {
+            sms_logger.error(f"Unexpected error sending SMS to {to_number}: {str(e)}")
+            result = {
                 'status': 'failed',
                 'error_message': f'Unexpected error: {str(e)}',
                 'external_id': None
             }
+        
+        # Log to database if requested
+        if log_to_database:
+            self._log_to_database(formatted_number or to_number, message, result, notification_type, recipient_email)
+        
+        return result
+    
+    def _log_to_database(self, phone_number, message, result, notification_type='manual', recipient_email=None):
+        """
+        Log SMS to database for communication panel visibility
+        """
+        try:
+            from account.models import NotificationLog
+            
+            # Use email as recipient if provided, otherwise use phone number
+            recipient = recipient_email if recipient_email else phone_number
+            
+            # Prepare base data
+            log_data = {
+                'notification_type': 'sms',
+                'recipient': recipient,
+                'message': message,
+                'status': result['status'],
+                'sent_at': timezone.now() if result['status'] == 'sent' else None,
+                'metadata': {
+                    'notification_type': notification_type,
+                    'service': 'LabsMobile',
+                    'phone_number': phone_number  # Store phone number in metadata for reference
+                }
+            }
+            
+            # Add external_id if available
+            if result.get('external_id'):
+                log_data['external_id'] = result['external_id']
+            
+            # Only add error_message for failed messages
+            if result['status'] == 'failed' and result.get('error_message'):
+                log_data['error_message'] = result['error_message']
+            
+            # Create database entry
+            NotificationLog.objects.create(**log_data)
+            
+        except Exception as e:
+            logger.error(f"Failed to log SMS to database: {str(e)}")
     
     def send_bulk_sms(self, phone_numbers, message, country_code=None):
         """

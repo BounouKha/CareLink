@@ -809,27 +809,50 @@ class AppointmentManagementView(APIView):
                     if deletion_strategy == 'aggressive' or remaining_timeslots == 0:
                         # Always delete schedule when any timeslot is deleted (aggressive)
                         # OR when no timeslots remain (default behavior)
-                        schedule.delete()
                         
-                        # Log the DELETE_APPOINTMENT action
-                        log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule.id, schedule=schedule)
-                        
-                        # Create notification for appointment cancellation
+                        # Create notification for appointment cancellation BEFORE deleting
                         try:
                             NotificationService.notify_schedule_cancelled(
                                 schedule=schedule,
                                 cancelled_by=request.user,
                                 reason="Appointment cancelled by coordinator"
                             )
+                            
+                            # Send deletion notifications based on user preferences BEFORE deleting
+                            NotificationService.send_appointment_deletion_notifications(
+                                schedule=schedule,
+                                deleted_by=request.user,
+                                reason="Appointment cancelled by coordinator"
+                            )
                         except Exception as e:
                             # Log notification error but don't fail the deletion
                             print(f"Failed to create notification for schedule cancellation: {e}")
                         
+                        # Store schedule info before deleting
+                        schedule_id = schedule.id
+                        
+                        schedule.delete()
+                        
+                        # Log the DELETE_APPOINTMENT action (without schedule object since it's deleted)
+                        log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule_id)
+                        
                         return Response({
                             'message': 'Timeslot and schedule deleted successfully',
-                            'deletion_type': 'schedule_deleted'                        }, status=200)
+                            'deletion_type': 'schedule_deleted'
+                        }, status=200)
                     elif deletion_strategy == 'conservative':
                         # Keep schedule even if no timeslots remain (conservative)
+                        # Send notifications even for partial deletions
+                        try:
+                            # Send modification notifications for timeslot deletion
+                            NotificationService.send_appointment_deletion_notifications(
+                                schedule=schedule,
+                                deleted_by=request.user,
+                                reason="Part of your appointment has been cancelled by coordinator"
+                            )
+                        except Exception as e:
+                            print(f"Failed to create notification for timeslot deletion: {e}")
+                        
                         # Log the DELETE_APPOINTMENT action (timeslot only)
                         log_schedule_action(
                             user=request.user,
@@ -855,19 +878,39 @@ class AppointmentManagementView(APIView):
                                     cancelled_by=request.user,
                                     reason="Appointment cancelled by coordinator"
                                 )
+                                
+                                # Send deletion notifications based on user preferences
+                                NotificationService.send_appointment_deletion_notifications(
+                                    schedule=schedule,
+                                    deleted_by=request.user,
+                                    reason="Appointment cancelled by coordinator"
+                                )
                             except Exception as e:
                                 print(f"Failed to create notification for schedule cancellation: {e}")
                             
+                            # Store schedule info before deleting
+                            schedule_id = schedule.id
+                            
                             schedule.delete()
                             
-                            # Log the DELETE_APPOINTMENT action
-                            log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule.id, schedule=schedule)
+                            # Log the DELETE_APPOINTMENT action (without schedule object since it's deleted)
+                            log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule_id)
                             
                             return Response({
                                 'message': 'Last timeslot deleted, schedule removed',
                                 'deletion_type': 'schedule_deleted'
                             }, status=200)
                         else:
+                            # Send notifications for timeslot deletion (partial appointment modification)
+                            try:
+                                NotificationService.send_appointment_deletion_notifications(
+                                    schedule=schedule,
+                                    deleted_by=request.user,
+                                    reason="Part of your appointment has been cancelled by coordinator"
+                                )
+                            except Exception as e:
+                                print(f"Failed to create notification for timeslot deletion: {e}")
+                            
                             # Log the DELETE_APPOINTMENT action (timeslot only)
                             log_schedule_action(
                                 user=request.user,
@@ -890,6 +933,16 @@ class AppointmentManagementView(APIView):
             # Delete entire appointment/schedule
                 if deletion_strategy == 'timeslot_only':
                     # Delete all timeslots but keep schedule
+                    # Send notifications for appointment modification
+                    try:
+                        NotificationService.send_appointment_deletion_notifications(
+                            schedule=schedule,
+                            deleted_by=request.user,
+                            reason="Your appointment has been modified by coordinator"
+                        )
+                    except Exception as e:
+                        print(f"Failed to create notification for timeslot deletion: {e}")
+                    
                     for timeslot in timeslots:
                         schedule.time_slots.remove(timeslot)
                         timeslot.delete()
@@ -913,6 +966,13 @@ class AppointmentManagementView(APIView):
                             cancelled_by=request.user,
                             reason="Appointment cancelled by coordinator"
                         )
+                        
+                        # Send deletion notifications based on user preferences
+                        NotificationService.send_appointment_deletion_notifications(
+                            schedule=schedule,
+                            deleted_by=request.user,
+                            reason="Appointment cancelled by coordinator"
+                        )
                     except Exception as e:
                         print(f"Failed to create notification for schedule cancellation: {e}")
                     
@@ -920,8 +980,8 @@ class AppointmentManagementView(APIView):
                         timeslot.delete()
                     schedule.delete()
                     
-                    # Log the DELETE_APPOINTMENT action
-                    log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule_id, schedule=schedule)
+                    # Log the DELETE_APPOINTMENT action (without schedule object since it's deleted)
+                    log_schedule_action(request.user, "DELETE_APPOINTMENT", "Schedule", schedule_id)
                     
                     return Response({
                         'message': f'Appointment deleted successfully ({timeslot_count} timeslots removed)',
@@ -977,6 +1037,13 @@ class BulkDeleteAppointmentsView(APIView):
                                 cancelled_by=request.user,
                                 reason="Appointment cancelled via bulk delete"
                             )
+                            
+                            # Send deletion notifications based on user preferences
+                            NotificationService.send_appointment_deletion_notifications(
+                                schedule=schedule,
+                                deleted_by=request.user,
+                                reason="Appointment cancelled via bulk delete"
+                            )
                         except Exception as e:
                             print(f"Failed to create notification for schedule cancellation: {e}")
                         
@@ -1010,6 +1077,13 @@ class BulkDeleteAppointmentsView(APIView):
                                 NotificationService.notify_schedule_cancelled(
                                     schedule=schedule,
                                     cancelled_by=request.user,
+                                    reason="Appointment cancelled via bulk delete (no timeslots remaining)"
+                                )
+                                
+                                # Send deletion notifications based on user preferences
+                                NotificationService.send_appointment_deletion_notifications(
+                                    schedule=schedule,
+                                    deleted_by=request.user,
                                     reason="Appointment cancelled via bulk delete (no timeslots remaining)"
                                 )
                             except Exception as e:
@@ -1055,6 +1129,13 @@ class BulkDeleteAppointmentsView(APIView):
                             NotificationService.notify_schedule_cancelled(
                                 schedule=schedule,
                                 cancelled_by=request.user,
+                                reason="Appointment cancelled via bulk delete"
+                            )
+                            
+                            # Send deletion notifications based on user preferences
+                            NotificationService.send_appointment_deletion_notifications(
+                                schedule=schedule,
+                                deleted_by=request.user,
                                 reason="Appointment cancelled via bulk delete"
                             )
                         except Exception as e:
