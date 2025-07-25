@@ -22,8 +22,6 @@ import CoordinatorHelpdeskPanel from './components/EnhancedTicketSystem/Coordina
 import UserHelpdeskPanel from './components/EnhancedTicketSystem/UserHelpdeskPanel';
 import CommunicationPanel from './pages/communication/CommunicationPanel';
 import TestCommunicationPanel from './pages/communication/TestCommunicationPanel';
-import TestUserAuth from './auth/test/TestUserAuth';
-import TokenTestPage from './pages/test/TokenTestPage';
 
 import TranslationDemo from './components/TranslationDemo';
 import ToastManager from './components/ToastManager';
@@ -92,8 +90,6 @@ function App() {
                             <Route path="/schedule/coordinator" element={<ScheduleCalendar />} />
                             <Route path="/schedule/patient" element={<PatientSchedule />} />
                             <Route path="/schedule/family" element={<PatientSchedule />} />
-                            <Route path="/test-auth" element={<TestUserAuth />} />
-                            <Route path="/test-tokens" element={<TokenTestPage />} />
 
                             <Route path="/translation-demo" element={<TranslationDemo />} />
                             <Route path="/invoices/:patientId?" element={<PatientInvoicesWrapper />} />
