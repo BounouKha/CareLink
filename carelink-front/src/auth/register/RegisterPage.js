@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import BaseLayout from '../layout/BaseLayout';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import EmailVerificationModal from './EmailVerificationModal';
+import GdprModal from '../../components/GdprModal';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -21,6 +22,8 @@ const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const [showVerificationModal, setShowVerificationModal] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
+    const [gdprConsent, setGdprConsent] = useState(false);
+    const [showGdprModal, setShowGdprModal] = useState(false);
     const navigate = useNavigate();
 
     // Use translation hooks
@@ -70,7 +73,8 @@ const RegisterPage = () => {
                 birthdate: formData.birthdate,
                 address: formData.address,
                 national_number: formData.national_number,
-                role: formData.role
+                role: formData.role,
+                gdpr_consent: gdprConsent
             };
             
             console.log('Registration request data:', requestData);
@@ -92,7 +96,9 @@ const RegisterPage = () => {
                 // Handle specific validation errors
                 let errorMessage = 'Registration failed. Please check your input.';
                 
-                if (errorData.email && errorData.email.length > 0) {
+                if (errorData.gdpr_consent && errorData.gdpr_consent.length > 0) {
+                    errorMessage = errorData.gdpr_consent[0];
+                } else if (errorData.email && errorData.email.length > 0) {
                     errorMessage = errorData.email[0];
                 } else if (errorData.national_number && errorData.national_number.length > 0) {
                     errorMessage = errorData.national_number[0];
@@ -124,6 +130,21 @@ const RegisterPage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // GDPR Modal handlers
+    const handleGdprAccept = () => {
+        setGdprConsent(true);
+        setShowGdprModal(false);
+    };
+
+    const handleGdprDecline = () => {
+        setGdprConsent(false);
+        setShowGdprModal(false);
+    };
+
+    const handleGdprClick = () => {
+        setShowGdprModal(true);
     };
 
     // Modal handlers
@@ -300,6 +321,39 @@ const RegisterPage = () => {
                                 </select>
                             </div>
 
+                            {/* GDPR Consent Section */}
+                            <div className="gdpr-consent-section">
+                                <div className="form-check">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="gdprConsent"
+                                        checked={gdprConsent}
+                                        onChange={(e) => setGdprConsent(e.target.checked)}
+                                        required
+                                    />
+                                    <label className="form-check-label" htmlFor="gdprConsent">
+                                        I have read and accept the{' '}
+                                        <button
+                                            type="button"
+                                            className="gdpr-link"
+                                            onClick={handleGdprClick}
+                                        >
+                                            <i className="fas fa-shield-alt me-1"></i>
+                                            GDPR Data Protection Terms
+                                        </button>
+                                        {' '}*
+                                    </label>
+                                </div>
+                                {!gdprConsent && (
+                                    <small className="text-muted gdpr-help">
+                                        <i className="fas fa-info-circle me-1"></i>
+                                        Click on "GDPR Data Protection Terms" to read the privacy policy. 
+                                        Consent is mandatory to create an account.
+                                    </small>
+                                )}
+                            </div>
+
                             {error && (
                                 <div className="error-message alert alert-danger">
                                     <i className="fas fa-exclamation-triangle me-2"></i>
@@ -307,7 +361,7 @@ const RegisterPage = () => {
                                 </div>
                             )}
 
-                            <button type="submit" disabled={loading} className="btn btn-primary register-btn">
+                            <button type="submit" disabled={loading || !gdprConsent} className="btn btn-primary register-btn">
                                 {loading ? (
                                     <>
                                         <i className="fas fa-spinner fa-spin"></i>
@@ -338,6 +392,14 @@ const RegisterPage = () => {
                     isOpen={showVerificationModal}
                     onClose={handleCloseModal}
                     onVerified={handleVerificationSuccess}
+                />
+
+                {/* GDPR Modal */}
+                <GdprModal
+                    show={showGdprModal}
+                    onHide={() => setShowGdprModal(false)}
+                    onAccept={handleGdprAccept}
+                    onDecline={handleGdprDecline}
                 />
             </BaseLayout>
         </>

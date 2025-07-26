@@ -185,7 +185,7 @@ User Information:
 - Name: {user.get_full_name()}
 - Email: {user.email}
 - Role: {user.role}
-- Registration Date: {user.date_joined.strftime('%Y-%m-%d %H:%M')}
+- Registration Date: {user.created_at.strftime('%Y-%m-%d %H:%M')}
 - Address: {user.address or 'Not provided'}
 - National Number: {user.national_number or 'Not provided'}
 """

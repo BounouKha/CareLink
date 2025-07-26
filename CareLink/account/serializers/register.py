@@ -13,10 +13,11 @@ import string
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=True)
+    gdpr_consent = serializers.BooleanField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'firstname', 'lastname', 'birthdate', 'address', 'national_number', 'role']
+        fields = ['email', 'password', 'firstname', 'lastname', 'birthdate', 'address', 'national_number', 'role', 'gdpr_consent']
     
     def validate_email(self, value):
         # Validate email format
@@ -44,6 +45,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Password must contain at least one special character.")
         return value
     
+    def validate_gdpr_consent(self, value):
+        if not value:
+            raise serializers.ValidationError("You must accept the GDPR terms and conditions to create an account.")
+        return value
+
     def validate(self, data):
         # Run parent validation first
         data = super().validate(data)
@@ -68,6 +74,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         try:
+            # Remove GDPR consent before creating user (don't store it)
+            validated_data.pop('gdpr_consent', None)
+            
             # Create user with is_active=False
             user = User.objects.create_user(
                 email=validated_data['email'],

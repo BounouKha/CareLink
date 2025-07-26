@@ -313,3 +313,79 @@
         font-size: 15px;
     }
 }
+
+/* GDPR Consent Section Styles */
+.gdpr-consent-section {
+    margin: 24px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 2px solid #dee2e6;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.gdpr-consent-section:hover {
+    border-color: #007bbf;
+    box-shadow: 0 4px 12px rgba(0, 123, 191, 0.1);
+}
+
+.gdpr-consent-section .form-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.gdpr-consent-section .form-check-input {
+    margin-top: 4px;
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+.gdpr-consent-section .form-check-label {
+    cursor: pointer;
+    color: #495057;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.gdpr-link {
+    background: none;
+    border: none;
+    color: #007bbf;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+.gdpr-link:hover {
+    color: #0056b3;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.gdpr-help {
+    display: block;
+    margin-top: 8px;
+    color: #6c757d;
+    font-size: 12px;
+    line-height: 1.4;
+    padding-left: 32px;
+}
+
+/* Register button state when GDPR not accepted */
+.register-btn:disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.register-btn:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
