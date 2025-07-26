@@ -3,8 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import BaseLayout from '../layout/BaseLayout';
 import { useCareTranslation } from '../../hooks/useCareTranslation';
 import EmailVerificationModal from './EmailVerificationModal';
-import GdprModal from '../../components/GdprModal';
-import { useTranslation } from 'react-i18next';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -23,23 +21,10 @@ const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const [showVerificationModal, setShowVerificationModal] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
-    const [gdprConsent, setGdprConsent] = useState(false);
-    const [showGdprModal, setShowGdprModal] = useState(false);
     const navigate = useNavigate();
 
     // Use translation hooks
     const { auth, common, placeholders, errors } = useCareTranslation();
-    const { t } = useTranslation();
-
-    // Role options that match backend ROLE_CHOICES
-    const getRoleOptions = () => {
-        const roles = [
-            { value: 'Patient', label: auth('roles.patient') || 'Patient' },
-            { value: 'Family Patient', label: auth('roles.familyPatient') || 'Family Patient' },
-            { value: 'Provider', label: auth('roles.provider') || 'Provider' }
-        ];
-        return roles;
-    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -67,58 +52,26 @@ const RegisterPage = () => {
         setError('');
 
         try {
-            const requestData = {
-                email: formData.email,
-                firstname: formData.firstname,
-                lastname: formData.lastname,
-                password: formData.password,
-                birthdate: formData.birthdate,
-                address: formData.address,
-                national_number: formData.national_number,
-                role: formData.role,
-                gdpr_consent: gdprConsent
-            };
-            
-            console.log('Registration request data:', requestData);
-
             const response = await fetch('http://localhost:8000/account/register/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(requestData),
+                body: JSON.stringify({
+                    email: formData.email,
+                    firstname: formData.firstname,
+                    lastname: formData.lastname,
+                    password: formData.password,
+                    birthdate: formData.birthdate,
+                    address: formData.address,
+                    national_number: formData.national_number,
+                    role: formData.role
+                }),
             });
 
-            console.log('Response status:', response.status);
-            
             if (!response.ok) {
                 const errorData = await response.json();
-                console.log('Error response:', errorData);
-                
-                // Handle specific validation errors
-                let errorMessage = 'Registration failed. Please check your input.';
-                
-                if (errorData.gdpr_consent && errorData.gdpr_consent.length > 0) {
-                    errorMessage = errorData.gdpr_consent[0];
-                } else if (errorData.email && errorData.email.length > 0) {
-                    errorMessage = errorData.email[0];
-                } else if (errorData.national_number && errorData.national_number.length > 0) {
-                    errorMessage = errorData.national_number[0];
-                } else if (errorData.password && errorData.password.length > 0) {
-                    errorMessage = errorData.password[0];
-                } else if (errorData.firstname && errorData.firstname.length > 0) {
-                    errorMessage = errorData.firstname[0];
-                } else if (errorData.lastname && errorData.lastname.length > 0) {
-                    errorMessage = errorData.lastname[0];
-                } else if (errorData.role && errorData.role.length > 0) {
-                    errorMessage = errorData.role[0];
-                } else if (errorData.non_field_errors && errorData.non_field_errors.length > 0) {
-                    errorMessage = errorData.non_field_errors[0];
-                } else if (errorData.error) {
-                    errorMessage = errorData.error;
-                }
-                
-                throw new Error(errorMessage);
+                throw new Error(errorData.error || 'Registration failed');
             }
 
             const data = await response.json();
@@ -132,21 +85,6 @@ const RegisterPage = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    // GDPR Modal handlers
-    const handleGdprAccept = () => {
-        setGdprConsent(true);
-        setShowGdprModal(false);
-    };
-
-    const handleGdprDecline = () => {
-        setGdprConsent(false);
-        setShowGdprModal(false);
-    };
-
-    const handleGdprClick = () => {
-        setShowGdprModal(true);
     };
 
     // Modal handlers
@@ -315,64 +253,28 @@ const RegisterPage = () => {
                                     onChange={handleChange}
                                     required
                                 >
-                                    {getRoleOptions().map(role => (
-                                        <option key={role.value} value={role.value}>
-                                            {role.label}
-                                        </option>
-                                    ))}
+                                    <option value="Patient">Patient</option>
+                                    <option value="Caregiver">Caregiver</option>
                                 </select>
                             </div>
 
-                            {/* GDPR Consent Section */}
-                            <div className="gdpr-consent-section">
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        id="gdprConsent"
-                                        checked={gdprConsent}
-                                        onChange={(e) => setGdprConsent(e.target.checked)}
-                                        required
-                                    />
-                                    <label className="form-check-label" htmlFor="gdprConsent">
-                                        I have read and accept the{' '}
-                                        <button
-                                            type="button"
-                                            className="gdpr-link"
-                                            onClick={handleGdprClick}
-                                        >
-                                            <i className="fas fa-shield-alt me-1"></i>
-                                            GDPR Data Protection Terms
-                                        </button>
-                                        {' '}*
-                                    </label>
-                                </div>
-                                {!gdprConsent && (
-                                    <small className="text-muted gdpr-help">
-                                        <i className="fas fa-info-circle me-1"></i>
-                                        Click on "GDPR Data Protection Terms" to read the privacy policy. 
-                                        Consent is mandatory to create an account.
-                                    </small>
-                                )}
-                            </div>
-
                             {error && (
-                                <div className="error-message alert alert-danger">
-                                    <i className="fas fa-exclamation-triangle me-2"></i>
-                                    <strong>Registration Error:</strong> {error}
+                                <div className="error-message">
+                                    <i className="fas fa-exclamation-circle"></i>
+                                    {error}
                                 </div>
                             )}
 
-                            <button type="submit" disabled={loading || !gdprConsent} className="btn btn-primary register-btn">
+                            <button type="submit" disabled={loading} className="btn btn-primary register-btn">
                                 {loading ? (
                                     <>
                                         <i className="fas fa-spinner fa-spin"></i>
-                                        {t('register.loading')}
+                                        Creating Account...
                                     </>
                                 ) : (
                                     <>
                                         <i className="fas fa-user-plus"></i>
-                                        {t('register.createAccount')}
+                                        {auth('createAccount')}
                                     </>
                                 )}
                             </button>
@@ -394,14 +296,6 @@ const RegisterPage = () => {
                     isOpen={showVerificationModal}
                     onClose={handleCloseModal}
                     onVerified={handleVerificationSuccess}
-                />
-
-                {/* GDPR Modal */}
-                <GdprModal
-                    show={showGdprModal}
-                    onHide={() => setShowGdprModal(false)}
-                    onAccept={handleGdprAccept}
-                    onDecline={handleGdprDecline}
                 />
             </BaseLayout>
         </>

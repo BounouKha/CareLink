@@ -1585,7 +1585,7 @@ const ProfilePage = () => {
         <BaseLayout>
             <div className="container-fluid py-4">
                 <div className="row justify-content-center">
-                    <div className="col-lg-10 col-xl-8">
+                    <div className="col-lg-10 col-xl-9">
                         {/* Fixed Profile Header Card */}
                         <div className="card shadow-sm border-0 mb-4">
                             <div className="card-header bg-primary bg-opacity-10 border-0">
