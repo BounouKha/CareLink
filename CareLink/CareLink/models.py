@@ -751,13 +751,7 @@ class StatusHistory(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     new_status = models.CharField(max_length=50, null=True, blank=True)
 
-class TimelineEventPatient(models.Model):
-    patient = models.ForeignKey('Patient', on_delete=models.SET_NULL, null=True)
-    type_event = models.CharField(max_length=50)
-    description = models.CharField(max_length=255)
-    state = models.CharField(max_length=50, null=True, blank=True)
-    datetime = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+
 
 class TimeSlot(models.Model):
     TIMESLOT_STATUS_CHOICES = [

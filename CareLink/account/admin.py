@@ -7,7 +7,7 @@ from CareLink.models import (
     Administrative, ContestInvoice, Service, Contract, Coordinator, FamilyPatient, 
     HelpdeskTicket, InformationProviding, Invoice, MedicalFolder, InternalNote, Patient, Payment, 
     Prescription, Provider, Schedule, ServiceDemand, SocialAssistant, 
-    StatusHistory, TimelineEventPatient, TimeSlot, User, UserActionLog, CookieConsent,
+    StatusHistory, TimeSlot, User, UserActionLog, CookieConsent,
     EnhancedTicket, TicketComment, TicketStatusHistory, TicketCategory
 )
 
@@ -519,24 +519,7 @@ class StatusHistoryAdmin(admin.ModelAdmin):
         return f"{obj.user.firstname} {obj.user.lastname}" if obj.user else "No User"
     user_name.short_description = 'User'
 
-@admin.register(TimelineEventPatient)
-class TimelineEventPatientAdmin(admin.ModelAdmin):
-    list_display = ('patient_name', 'type_event', 'description_short', 'state', 'datetime', 'author_name')
-    list_filter = ('type_event', 'state', 'datetime')
-    search_fields = ('patient__user__firstname', 'patient__user__lastname', 'description', 'author__firstname')
-    readonly_fields = ('datetime',)
-    
-    def patient_name(self, obj):
-        return f"{obj.patient.user.firstname} {obj.patient.user.lastname}" if obj.patient and obj.patient.user else "No Patient"
-    patient_name.short_description = 'Patient'
-    
-    def author_name(self, obj):
-        return f"{obj.author.firstname} {obj.author.lastname}" if obj.author else "No Author"
-    author_name.short_description = 'Author'
-    
-    def description_short(self, obj):
-        return obj.description[:50] + "..." if len(obj.description) > 50 else obj.description
-    description_short.short_description = 'Description'
+
 
 @admin.register(TimeSlot)
 class TimeSlotAdmin(admin.ModelAdmin):

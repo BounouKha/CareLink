@@ -87,21 +87,60 @@ class NotificationService:
             if first_timeslot and first_timeslot.start_time:
                 appointment_time = f" at {first_timeslot.start_time.strftime('%H:%M')}"
             
-            # Create the deletion message
+            # 1. CREATE IN-APP NOTIFICATIONS FIRST
+            # In-app notification for patient
+            if patient_user and patient_user != deleted_by:
+                NotificationService.create_notification(
+                    recipient=patient_user,
+                    sender=deleted_by,
+                    notification_type='schedule_cancelled',
+                    title='Appointment Cancelled',
+                    message=f'Your appointment on {appointment_date}{appointment_time} has been cancelled' + (f'. Reason: {reason}' if reason else '') + '.',
+                    priority='high',
+                    schedule=schedule,
+                    extra_data={
+                        'appointment_date': str(schedule.date),
+                        'appointment_time': appointment_time,
+                        'reason': reason or 'No reason provided',
+                        'deleted_by': deleted_by.get_full_name() if deleted_by else 'System'
+                    }
+                )
+                logger.info(f"✅ In-app notification created for patient: {patient_user.get_full_name()}")
+            
+            # In-app notification for provider
+            if provider_user and provider_user != deleted_by:
+                patient_name = patient_user.get_full_name() if patient_user else 'a patient'
+                NotificationService.create_notification(
+                    recipient=provider_user,
+                    sender=deleted_by,
+                    notification_type='schedule_cancelled',
+                    title='Patient Appointment Cancelled',
+                    message=f'Your appointment with {patient_name} on {appointment_date}{appointment_time} has been cancelled' + (f'. Reason: {reason}' if reason else '') + '.',
+                    priority='high',
+                    schedule=schedule,
+                    extra_data={
+                        'appointment_date': str(schedule.date),
+                        'appointment_time': appointment_time,
+                        'patient_name': patient_name,
+                        'reason': reason or 'No reason provided',
+                        'deleted_by': deleted_by.get_full_name() if deleted_by else 'System'
+                    }
+                )
+                logger.info(f"✅ In-app notification created for provider: {provider_user.get_full_name()}")
+            
+            # 2. SEND EXTERNAL NOTIFICATIONS (SMS/Email)
+            # Create the deletion message for external notifications
             deletion_message = f'Your appointment scheduled for {appointment_date}{appointment_time} has been cancelled'
             if reason:
                 deletion_message += f'. Reason: {reason}'
             deletion_message += '. Please contact us if you have any questions.'
             
-            # 1. Send in-app notifications (existing functionality)
-            NotificationService.notify_schedule_cancelled(schedule, deleted_by, reason)
-            
-            # 2. Send email/SMS notifications based on user preferences
+            # Send to patient and provider
             users_to_notify = []
             if patient_user and patient_user != deleted_by:
                 users_to_notify.append(('patient', patient_user))
             if provider_user and provider_user != deleted_by:
-                users_to_notify.append(('role', provider_user))
+                users_to_notify.append(('provider', provider_user))
             
             for user_type, user in users_to_notify:
                 NotificationService._send_external_deletion_notification(
@@ -109,13 +148,18 @@ class NotificationService:
                     reason, user_type, deleted_by
                 )
             
-            # 3. Notify family members
+            # 3. NOTIFY FAMILY MEMBERS
             NotificationService._notify_family_deletion(schedule, deleted_by, reason)
             
-            logger.info(f"Appointment deletion notifications sent for schedule {schedule.id}")
+            # 4. CALL EXISTING NOTIFICATION METHOD (for compatibility)
+            NotificationService.notify_schedule_cancelled(schedule, deleted_by, reason)
+            
+            logger.info(f"✅ All appointment deletion notifications sent for schedule {schedule.id}")
             
         except Exception as e:
-            logger.error(f"Error sending appointment deletion notifications: {str(e)}")
+            logger.error(f"❌ Error sending appointment deletion notifications: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
     @staticmethod
     def _send_external_deletion_notification(user, message, appointment_date, appointment_time, reason, user_type, deleted_by):
