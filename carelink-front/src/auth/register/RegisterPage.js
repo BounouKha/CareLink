@@ -88,7 +88,29 @@ const RegisterPage = () => {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.log('Error response:', errorData);
-                throw new Error(errorData.error || 'Registration failed');
+                
+                // Handle specific validation errors
+                let errorMessage = 'Registration failed. Please check your input.';
+                
+                if (errorData.email && errorData.email.length > 0) {
+                    errorMessage = errorData.email[0];
+                } else if (errorData.national_number && errorData.national_number.length > 0) {
+                    errorMessage = errorData.national_number[0];
+                } else if (errorData.password && errorData.password.length > 0) {
+                    errorMessage = errorData.password[0];
+                } else if (errorData.firstname && errorData.firstname.length > 0) {
+                    errorMessage = errorData.firstname[0];
+                } else if (errorData.lastname && errorData.lastname.length > 0) {
+                    errorMessage = errorData.lastname[0];
+                } else if (errorData.role && errorData.role.length > 0) {
+                    errorMessage = errorData.role[0];
+                } else if (errorData.non_field_errors && errorData.non_field_errors.length > 0) {
+                    errorMessage = errorData.non_field_errors[0];
+                } else if (errorData.error) {
+                    errorMessage = errorData.error;
+                }
+                
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -279,9 +301,9 @@ const RegisterPage = () => {
                             </div>
 
                             {error && (
-                                <div className="error-message">
-                                    <i className="fas fa-exclamation-circle"></i>
-                                    {error}
+                                <div className="error-message alert alert-danger">
+                                    <i className="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Registration Error:</strong> {error}
                                 </div>
                             )}
 

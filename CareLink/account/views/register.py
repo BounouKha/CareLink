@@ -122,7 +122,33 @@ class RegisterAPIView(APIView):
                     "verification_required": True
                 }, status=status.HTTP_201_CREATED)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(self._transform_error_messages(serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+
+    def _transform_error_messages(self, errors):
+        """Transform Django's default error messages to more user-friendly ones"""
+        transformed_errors = {}
+        
+        for field, messages in errors.items():
+            if field == 'email':
+                new_messages = []
+                for message in messages:
+                    if 'already exists' in str(message).lower() or 'unique' in str(message).lower():
+                        new_messages.append('This email is already registered. Please use a different email or try logging in.')
+                    else:
+                        new_messages.append(str(message))
+                transformed_errors[field] = new_messages
+            elif field == 'national_number':
+                new_messages = []
+                for message in messages:
+                    if 'already exists' in str(message).lower() or 'unique' in str(message).lower():
+                        new_messages.append('This national number is already associated with another account. Please contact support if you believe this is an error.')
+                    else:
+                        new_messages.append(str(message))
+                transformed_errors[field] = new_messages
+            else:
+                transformed_errors[field] = messages
+        
+        return transformed_errors
 
 
 class VerifyEmailAPIView(APIView):

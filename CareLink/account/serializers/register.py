@@ -4,6 +4,7 @@ from django.core.validators import validate_email
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
+from django.db import IntegrityError
 import re  # For password complexity validation
 import random
 import string
@@ -22,12 +23,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         try:
             validate_email(value)
         except ValidationError:
-            raise serializers.ValidationError("Invalid email format.")
+            raise serializers.ValidationError("Please enter a valid email address.")
         
-        # Check if email already exists
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
-        
+        return value
+
+    def validate_national_number(self, value):
+        # Just return the value - uniqueness will be checked in validate()
         return value
 
     def validate_password(self, value):
@@ -43,32 +44,66 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Password must contain at least one special character.")
         return value
     
+    def validate(self, data):
+        # Run parent validation first
+        data = super().validate(data)
+        
+        # Check for email uniqueness with custom message
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError({
+                'email': 'This email is already registered. Please use a different email or try logging in.'
+            })
+        
+        # Check for national number uniqueness with custom message
+        if data.get('national_number') and User.objects.filter(national_number=data['national_number']).exists():
+            raise serializers.ValidationError({
+                'national_number': 'This national number is already associated with another account. Please contact support if you believe this is an error.'
+            })
+        
+        return data
+    
     def generate_verification_code(self):
         """Generate a 6-digit verification code"""
         return ''.join(random.choices(string.digits, k=6))
     
     def create(self, validated_data):
-        # Create user with is_active=False
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password'],
-            firstname=validated_data['firstname'],
-            lastname=validated_data['lastname'],
-            birthdate=validated_data.get('birthdate'),
-            address=validated_data.get('address'),
-            national_number=validated_data.get('national_number'),
-            role=validated_data['role'],
-            is_active=False  # Account inactive until email verification
-        )
-        
-        # Create email verification record
-        verification_code = self.generate_verification_code()
-        expires_at = timezone.now() + timedelta(minutes=5)  # 5 minutes to verify
-        
-        EmailVerification.objects.create(
-            user=user,
-            verification_code=verification_code,
-            expires_at=expires_at
-        )
-        
-        return user
+        try:
+            # Create user with is_active=False
+            user = User.objects.create_user(
+                email=validated_data['email'],
+                password=validated_data['password'],
+                firstname=validated_data['firstname'],
+                lastname=validated_data['lastname'],
+                birthdate=validated_data.get('birthdate'),
+                address=validated_data.get('address'),
+                national_number=validated_data.get('national_number'),
+                role=validated_data['role'],
+                is_active=False  # Account inactive until email verification
+            )
+            
+            # Create email verification record
+            verification_code = self.generate_verification_code()
+            expires_at = timezone.now() + timedelta(minutes=5)  # 5 minutes to verify
+            
+            EmailVerification.objects.create(
+                user=user,
+                verification_code=verification_code,
+                expires_at=expires_at
+            )
+            
+            return user
+            
+        except IntegrityError as e:
+            error_message = str(e).lower()
+            if 'email' in error_message:
+                raise serializers.ValidationError({
+                    'email': ['This email is already registered. Please use a different email or try logging in.']
+                })
+            elif 'national_number' in error_message:
+                raise serializers.ValidationError({
+                    'national_number': ['This national number is already associated with another account. Please contact support if you believe this is an error.']
+                })
+            else:
+                raise serializers.ValidationError({
+                    'non_field_errors': ['A user with this information already exists. Please check your details.']
+                })
