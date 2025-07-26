@@ -1,10 +1,11 @@
 from django.urls import path
 
 from account.views.coordinator.patients import ViewsPatient
-from .views.register import RegisterAPIView
+from .views.register import RegisterAPIView, VerifyEmailAPIView, ResendVerificationAPIView
 from .views.login import LoginAPIView 
 from .views.logout import LogoutAPIView
 from account.views.profile import ProfileView
+from account.views.profile_status import ProfileStatusAPIView, RequestProfileActivationAPIView
 from .views.phoneuser import PhoneUserViewSet
 from .views.familypatient import FamilyPatientViewSet
 from account.views.medicalfolder import MedicalFolderViewSet
@@ -70,10 +71,14 @@ router.register(r'ticket-status-history', TicketStatusHistoryViewSet, basename='
 
 urlpatterns = [
     path('register/', RegisterAPIView.as_view(), name='register'),
+    path('verify-email/', VerifyEmailAPIView.as_view(), name='verify_email'),
+    path('resend-verification/', ResendVerificationAPIView.as_view(), name='resend_verification'),
     path('login/', LoginAPIView.as_view(), name='login'),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutAPIView.as_view(), name='logout'),
     path('profile/', ProfileView.as_view(), name='profile'),
+    path('profile/status/', ProfileStatusAPIView.as_view(), name='profile_status'),
+    path('profile/request-activation/', RequestProfileActivationAPIView.as_view(), name='request_profile_activation'),
 
     
 ] + router.urls

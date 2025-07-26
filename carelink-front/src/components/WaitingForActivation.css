@@ -1,0 +1,231 @@
+/* Waiting for Activation Component Styles */
+.waiting-activation-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 300px;
+}
+
+.waiting-activation-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 40px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.waiting-icon {
+    margin-bottom: 24px;
+}
+
+.waiting-icon i {
+    font-size: 48px;
+    color: #f59e0b;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+.waiting-message h3 {
+    color: #1f2937;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.waiting-message p {
+    color: #6b7280;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.waiting-actions {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.request-activation-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.request-activation-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+}
+
+.request-activation-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.request-activation-btn i.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.request-info {
+    color: #6b7280;
+    font-size: 13px;
+    margin: 0;
+    font-style: italic;
+    max-width: 300px;
+    line-height: 1.4;
+}
+
+/* Different styles for different sections */
+.waiting-activation-container.medical-folder {
+    background-color: #fef3c7;
+    border-color: #fbbf24;
+}
+
+.waiting-activation-container.medical-folder .waiting-icon i {
+    color: #f59e0b;
+}
+
+.waiting-activation-container.doctor-info {
+    background-color: #dbeafe;
+    border-color: #3b82f6;
+}
+
+.waiting-activation-container.doctor-info .waiting-icon i {
+    color: #3b82f6;
+}
+
+.waiting-activation-container.medical-info {
+    background-color: #dcfce7;
+    border-color: #10b981;
+}
+
+.waiting-activation-container.medical-info .waiting-icon i {
+    color: #10b981;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    .waiting-activation-container {
+        padding: 20px 16px;
+        min-height: 250px;
+    }
+    
+    .waiting-activation-content {
+        padding: 24px 20px;
+        max-width: 100%;
+    }
+    
+    .waiting-icon i {
+        font-size: 40px;
+    }
+    
+    .waiting-message h3 {
+        font-size: 20px;
+    }
+    
+    .waiting-message p {
+        font-size: 14px;
+    }
+    
+    .request-activation-btn {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}
+
+/* Toast notification styles for activation requests */
+.activation-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid #10b981;
+    padding: 16px 20px;
+    max-width: 400px;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.activation-toast.success {
+    border-left-color: #10b981;
+}
+
+.activation-toast.error {
+    border-left-color: #ef4444;
+}
+
+.activation-toast .toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.activation-toast .toast-icon {
+    font-size: 18px;
+    color: #10b981;
+}
+
+.activation-toast.error .toast-icon {
+    color: #ef4444;
+}
+
+.activation-toast .toast-message {
+    flex: 1;
+}
+
+.activation-toast .toast-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.activation-toast .toast-text {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 0;
+}

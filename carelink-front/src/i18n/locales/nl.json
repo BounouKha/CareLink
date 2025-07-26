@@ -143,7 +143,12 @@
     "sessionExpired": "Sessie verlopen. Log opnieuw in.",
     "accessDenied": "Toegang geweigerd. Beheerderrechten vereist.",
     "redirecting": "Doorverwijzing over {{seconds}} seconden...",
-    "checkingPermissions": "Beheerderrechten controleren..."
+    "checkingPermissions": "Beheerderrechten controleren...",
+    "roles": {
+      "patient": "Patiënt",
+      "familyPatient": "Familielid",
+      "provider": "Zorgverlener"
+    }
   },
   "homepage": {
     "title": "Welkom bij CareLink",

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import { isPatient, isStaff } from '../utils/roleUtils';
 import DoctorInfoTab from '../components/DoctorInfoTab';
+import MedicalInfoTab from '../components/MedicalInfoTab';
 import '../styles/InamiSearch.css';
 
 const PatientProfile = ({ patientId }) => {
@@ -168,12 +169,11 @@ const PatientProfile = ({ patientId }) => {
                                 </span>
                             }
                         >
-                            <Card>
-                                <Card.Body>
-                                    <p>{t('profile.medical_placeholder', 'Medical information will be displayed here.')}</p>
-                                    {/* Add medical information components */}
-                                </Card.Body>
-                            </Card>
+                            <MedicalInfoTab
+                                patientId={patientId}
+                                userData={patientData}
+                                userRole={currentUser?.role}
+                            />
                         </Tab>
 
                         <Tab 

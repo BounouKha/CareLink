@@ -752,7 +752,6 @@ class StatusHistory(models.Model):
     new_status = models.CharField(max_length=50, null=True, blank=True)
 
 
-
 class TimeSlot(models.Model):
     TIMESLOT_STATUS_CHOICES = [
         ('scheduled', 'Scheduled'),
@@ -925,6 +924,42 @@ class User(AbstractBaseUser, PermissionsMixin):
             'is_permanent': False,
             'failed_attempts': self.failed_login_attempts
         }
+
+class EmailVerification(models.Model):
+    """Model to store email verification codes for user registration"""
+    user = models.OneToOneField('User', on_delete=models.CASCADE, related_name='email_verification')
+    verification_code = models.CharField(max_length=6, help_text="6-digit verification code")
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(help_text="When the verification code expires")
+    verified_at = models.DateTimeField(null=True, blank=True, help_text="When the email was verified")
+    resend_count = models.IntegerField(default=0, help_text="Number of times code was resent")
+    
+    class Meta:
+        db_table = 'email_verification'
+    
+    def __str__(self):
+        return f"Verification for {self.user.email} - Code: {self.verification_code}"
+    
+    def is_expired(self):
+        """Check if verification code has expired"""
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+    
+    def is_verified(self):
+        """Check if email has been verified"""
+        return self.verified_at is not None
+    
+    def can_resend(self):
+        """Check if user can request another verification code"""
+        return self.resend_count < 3  # Allow max 3 resends
+    
+    def mark_as_verified(self):
+        """Mark email as verified and activate user account"""
+        from django.utils import timezone
+        self.verified_at = timezone.now()
+        self.user.is_active = True
+        self.user.save()
+        self.save()
 
 class UserActionLog(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)

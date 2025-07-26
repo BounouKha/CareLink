@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useProfileStatus } from '../hooks/useProfileStatus';
+import WaitingForActivation from './WaitingForActivation';
 
 const MedicalFolder = ({ patientId, userData, userRole }) => {
     const [medicalData, setMedicalData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [requestLoading, setRequestLoading] = useState(false);
     const [newEntry, setNewEntry] = useState({
         date: new Date().toISOString().split('T')[0],
         illness: '',
@@ -11,16 +14,25 @@ const MedicalFolder = ({ patientId, userData, userRole }) => {
     });
     const [showAddForm, setShowAddForm] = useState(false);
 
+    // Profile verification hook
+    const { 
+        profileStatus, 
+        needsActivation, 
+        needsMedicalFolder, 
+        waitingMessage,
+        requestProfileActivation 
+    } = useProfileStatus();
+
     console.log('MedicalFolder Props:', { patientId, userData, userRole });
+    console.log('Profile Status:', profileStatus);
 
     useEffect(() => {
-        if (patientId) {
+        if (patientId && !needsMedicalFolder) {
             fetchMedicalData();
         } else {
-            setError('No patient ID provided');
             setLoading(false);
         }
-    }, [patientId]);
+    }, [patientId, needsMedicalFolder]);
 
     const fetchMedicalData = async () => {
         if (!patientId) {
@@ -68,6 +80,38 @@ const MedicalFolder = ({ patientId, userData, userRole }) => {
             setLoading(false);
         }
     };
+
+    const handleRequestActivation = async () => {
+        setRequestLoading(true);
+        try {
+            const result = await requestProfileActivation();
+            return result;
+        } finally {
+            setRequestLoading(false);
+        }
+    };
+
+    // Show waiting activation if medical folder section needs activation
+    if (needsMedicalFolder) {
+        return (
+            <div className="medical-folder-container">
+                <div className="medical-folder-header">
+                    <h3>
+                        <i className="fas fa-folder-medical"></i>
+                        Medical Folder
+                    </h3>
+                </div>
+                
+                <WaitingForActivation
+                    section="medical-folder"
+                    message={waitingMessage}
+                    showRequestButton={true}
+                    onRequestActivation={handleRequestActivation}
+                    requestLoading={requestLoading}
+                />
+            </div>
+        );
+    }
 
     const handleAddEntry = async (e) => {
         e.preventDefault();

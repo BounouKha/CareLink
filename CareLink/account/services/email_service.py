@@ -277,3 +277,85 @@ You can view the full details by logging into your CareLink account.
 Best regards,
 CareLink Team
 """
+    
+    def send_verification_email(self, user, verification_code):
+        """
+        Send email verification code to new user
+        
+        Args:
+            user: User object
+            verification_code: 6-digit verification code
+            
+        Returns:
+            dict: Result with success status
+        """
+        subject = "CareLink - Verify Your Email Address"
+        
+        message = f"""
+Dear {user.get_full_name()},
+
+Welcome to CareLink! Please verify your email address to activate your account.
+
+Your verification code is: {verification_code}
+
+This code will expire in 5 minutes. Enter this code on the verification page to activate your account.
+
+If you didn't create this account, please ignore this email.
+
+Best regards,
+CareLink Team
+"""
+        
+        sender_info = {
+            'action': 'email_verification',
+            'user_email': user.email,
+            'verification_code': verification_code
+        }
+        
+        return self.send_email(
+            to_email=user.email,
+            subject=subject,
+            message=message,
+            sender_info=sender_info
+        )
+    
+    def send_verification_reminder_email(self, user, verification_code):
+        """
+        Send verification reminder email with new code
+        
+        Args:
+            user: User object
+            verification_code: New 6-digit verification code
+            
+        Returns:
+            dict: Result with success status
+        """
+        subject = "CareLink - New Verification Code"
+        
+        message = f"""
+Dear {user.get_full_name()},
+
+You requested a new verification code for your CareLink account.
+
+Your new verification code is: {verification_code}
+
+This code will expire in 5 minutes. Enter this code on the verification page to activate your account.
+
+If you didn't request this code, please ignore this email.
+
+Best regards,
+CareLink Team
+"""
+        
+        sender_info = {
+            'action': 'email_verification_resend',
+            'user_email': user.email,
+            'verification_code': verification_code
+        }
+        
+        return self.send_email(
+            to_email=user.email,
+            subject=subject,
+            message=message,
+            sender_info=sender_info
+        )

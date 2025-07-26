@@ -191,7 +191,12 @@
     "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
     "accessDenied": "Accès refusé. Privilèges d'administrateur requis.",
     "redirecting": "Redirection dans {{seconds}} secondes...",
-    "checkingPermissions": "Vérification des permissions d'administrateur..."
+    "checkingPermissions": "Vérification des permissions d'administrateur...",
+    "roles": {
+      "patient": "Patient",
+      "familyPatient": "Membre de la famille",
+      "provider": "Prestataire"
+    }
   },
   "homepage": {
     "title": "Bienvenue sur CareLink",

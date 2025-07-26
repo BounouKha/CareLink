@@ -62,6 +62,10 @@
     "type": "Type",
     "export": "Export",
     "showing": "Showing",
+    "waitingForActivation": "Waiting for Activation",
+    "requesting": "Requesting...",
+    "requestActivation": "Request Activation",
+    "activationRequestInfo": "This will notify administrators to set up your profile.",
     "createNewTicket": "Create New Ticket",
     "titlePlaceholder": "Enter ticket title...",
     "descriptionPlaceholder": "Enter ticket description...",
@@ -196,7 +200,12 @@
     "sessionExpired": "Session expired. Please login again.",
     "accessDenied": "Access denied. Administrator privileges required.",
     "redirecting": "Redirecting in {{seconds}} seconds...",
-    "checkingPermissions": "Checking admin permissions..."
+    "checkingPermissions": "Checking admin permissions...",
+    "roles": {
+      "patient": "Patient",
+      "familyPatient": "Family Patient",
+      "provider": "Provider"
+    }
   },
   "homepage": {
     "title": "Welcome to CareLink",
