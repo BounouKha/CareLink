@@ -90,8 +90,10 @@ def get_patient_service_price(patient, service, timeslot):
             # Get base INAMI rate
             base_inami_rate = Decimal('0.00')
             if hasattr(timeslot, 'inami_data') and timeslot.inami_data:
-                # Extract hourly rate from INAMI data
-                if 'hourly_rate' in timeslot.inami_data:
+                # Extract total price from INAMI data (frontend stores as total_price)
+                if 'total_price' in timeslot.inami_data:
+                    base_inami_rate = Decimal(str(timeslot.inami_data['total_price'])) / Decimal(str(hours)) if hours > 0 else Decimal('0.00')
+                elif 'hourly_rate' in timeslot.inami_data:
                     base_inami_rate = Decimal(str(timeslot.inami_data['hourly_rate']))
                 elif 'price' in timeslot.inami_data:
                     base_inami_rate = Decimal(str(timeslot.inami_data['price'])) / Decimal(str(hours)) if hours > 0 else Decimal('0.00')
@@ -104,32 +106,32 @@ def get_patient_service_price(patient, service, timeslot):
             # Calculate total base cost
             total_base_cost = base_inami_rate * Decimal(str(hours))
             
-            # Check if patient has BIM status (reduced co-payment)
+            # Check prescription status first (highest priority)
+            has_prescription = bool(getattr(timeslot, 'prescription', None))
+            
+            # Check if patient has BIM status (social_price field indicates BIM status)
             # BIM = "Bénéficiaires de l'Intervention Majorée" (Belgian social tariff)
             has_bim_status = getattr(patient, 'social_price', False)
             
-            if has_bim_status:
-                # BIM patients pay fixed minimal co-payment according to Belgian INAMI system
-                # For most nursing services: €0.00 or €0.31 per session
-                if total_base_cost <= Decimal('10.00'):
-                    # Small/basic services are free for BIM patients
-                    patient_payment = Decimal('0.00')
-                    coverage_percentage = 100
-                    logger.debug(f"Patient has BIM status - free care (total cost ≤ €10)")
-                    reasoning = f"Service 3: BIM status - free care (total €{total_base_cost:.2f})"
-                else:
-                    # Larger services: fixed €0.31 co-payment (Belgian standard)
-                    patient_payment = Decimal('0.31') * Decimal(str(hours))  # €0.31 per hour
-                    coverage_percentage = int(((total_base_cost - patient_payment) / total_base_cost * 100)) if total_base_cost > 0 else 100
-                    logger.debug(f"Patient has BIM status - pays fixed €0.31/hour: €{patient_payment}")
-                    reasoning = f"Service 3: BIM status - fixed €0.31/hour co-payment (total €{total_base_cost:.2f})"
+            if has_prescription:
+                # With prescription: INAMI covers 100%, patient pays nothing
+                patient_payment = Decimal('0.00')
+                coverage_percentage = 100
+                logger.debug(f"Patient has prescription - 100% INAMI coverage")
+                reasoning = f"Service 3: With prescription - 100% INAMI coverage (€0.00 of €{total_base_cost:.2f})"
+            elif has_bim_status:
+                # BIM patients pay fixed €0.31 per hour (2% of cost according to Belgian INAMI)
+                patient_payment = Decimal('0.31') * Decimal(str(hours))  # €0.31 per hour
+                coverage_percentage = int(((total_base_cost - patient_payment) / total_base_cost * 100)) if total_base_cost > 0 else 100
+                logger.debug(f"Patient has BIM status - pays fixed €0.31/hour: €{patient_payment}")
+                reasoning = f"Service 3: BIM status - fixed €0.31/hour co-payment (€{patient_payment:.2f} of €{total_base_cost:.2f})"
             else:
-                # Regular patients pay 25% co-payment (Belgian "ticket modérateur" standard)
+                # Regular patients without prescription pay 25% co-payment (Belgian "ticket modérateur" standard)
                 co_payment_rate = Decimal('0.25')  # 25% - Belgian standard
                 patient_payment = total_base_cost * co_payment_rate
                 coverage_percentage = 75
-                logger.debug(f"Patient pays Belgian standard 25% co-payment: €{patient_payment}")
-                reasoning = f"Service 3: Belgian standard 25% co-payment (€{patient_payment:.2f} of €{total_base_cost:.2f})"
+                logger.debug(f"Regular patient without prescription pays 25% co-payment: €{patient_payment}")
+                reasoning = f"Service 3: Regular patient without prescription - 25% co-payment (€{patient_payment:.2f} of €{total_base_cost:.2f})"
             
             return {
                 'price': patient_payment,

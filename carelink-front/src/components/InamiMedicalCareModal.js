@@ -255,14 +255,27 @@ const InamiMedicalCareModal = ({
     const baseType = careTypeOptions.find(type => type.id === formData.care_type);
     if (!baseType) return;
 
-    let mutuelle_price = baseType.mutuelle_price;
-    let patient_copay = baseType.patient_copay;
-
-    // BIM Logic Implementation:
-    // 1. If patient has social_price (BIM) → patient pays 0
-    // 2. If patient has prescription → patient pays 0 (free with prescription)
-    // 3. If no social_price and no prescription → normal pricing (patient copay applies)
+    // Start with the base INAMI total price
+    let total_price = baseType.mutuelle_price;
     
+    // Add duration fees for complex care types
+    const complexCareTypes = ['pansement_complexe', 'surveillance_plaie', 'soins_forfait_b', 'soins_forfait_c', 'soins_palliatifs_legers', 'soins_palliatifs_lourds'];
+    if (complexCareTypes.includes(formData.care_type) && formData.care_duration !== '30-59') {
+      const duration = durationOptions.find(d => d.id === formData.care_duration);
+      if (duration && duration.extra_fee > 0) {
+        total_price += duration.extra_fee;
+      }
+    }
+
+    // Add weekend/holiday surcharge (25% increase)
+    if (formData.is_weekend || formData.is_holiday) {
+      total_price *= 1.25;
+    }
+
+    // Now calculate patient copay and insurance portion based on Belgian INAMI rules:
+    let patient_copay = 0;
+    let mutuelle_price = 0;
+
     const hasSocialPrice = patientData?.social_price === true;
     const hasPrescription = prescriptionData !== null && prescriptionData !== undefined;
     
@@ -271,46 +284,30 @@ const InamiMedicalCareModal = ({
       hasPrescription,
       patientData,
       prescriptionData,
-      basePatientCopay: patient_copay
+      totalPrice: total_price
     });
 
-    if (hasSocialPrice) {
-      // BIM patients pay nothing
+    if (hasPrescription) {
+      // With prescription: INAMI covers 100%, patient pays nothing
       patient_copay = 0;
-      console.log('[InamiModal] BIM patient - copay set to 0');
-    } else if (hasPrescription) {
-      // Patients with prescription pay nothing
-      patient_copay = 0;
-      console.log('[InamiModal] Patient with prescription - copay set to 0');
-    }
-    // If no social_price and no prescription, use original patient_copay
-
-    // Duration fees for complex care types
-    const complexCareTypes = ['pansement_complexe', 'surveillance_plaie', 'soins_forfait_b', 'soins_forfait_c', 'soins_palliatifs_legers', 'soins_palliatifs_lourds'];
-    if (complexCareTypes.includes(formData.care_type) && formData.care_duration !== '30-59') {
-      const duration = durationOptions.find(d => d.id === formData.care_duration);
-      if (duration && duration.extra_fee > 0) {
-        mutuelle_price += duration.extra_fee;
-        // Duration fees also follow BIM rules
-        if (!hasSocialPrice && !hasPrescription) {
-          patient_copay += duration.extra_fee * 0.25; // 25% copay on extra fees
-        }
-      }
-    }
-
-    // Weekend/holiday surcharge (25% increase)
-    if (formData.is_weekend || formData.is_holiday) {
-      mutuelle_price *= 1.25;
-      // Surcharge also follows BIM rules
-      if (!hasSocialPrice && !hasPrescription) {
-        patient_copay *= 1.25;
-      }
+      mutuelle_price = total_price;
+      console.log('[InamiModal] Patient with prescription - 100% INAMI coverage');
+    } else if (hasSocialPrice) {
+      // BIM patients pay fixed €0.31 per hour, insurance covers the rest
+      patient_copay = 0.31;
+      mutuelle_price = total_price - patient_copay;
+      console.log('[InamiModal] BIM patient - fixed €0.31 copay');
+    } else {
+      // Regular patients without prescription pay 25% copay, insurance covers 75%
+      patient_copay = total_price * 0.25; // 25% of total cost
+      mutuelle_price = total_price * 0.75; // 75% covered by insurance
+      console.log('[InamiModal] Regular patient without prescription - 25% copay');
     }
 
     // Round to 2 decimal places
+    total_price = Math.round(total_price * 100) / 100;
     mutuelle_price = Math.round(mutuelle_price * 100) / 100;
     patient_copay = Math.round(patient_copay * 100) / 100;
-    const total_price = Math.round((mutuelle_price + patient_copay) * 100) / 100;
 
     // Generate INAMI code
     const inami_code = generateInamiCode(baseType, formData);
