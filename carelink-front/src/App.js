@@ -25,6 +25,7 @@ import TestCommunicationPanel from './pages/communication/TestCommunicationPanel
 
 import TranslationDemo from './components/TranslationDemo';
 import ToastManager from './components/ToastManager';
+import CareLinkAIWidget from './components/AIAssistant/CareLinkAIWidget';
 import './auth/layout/UnifiedBaseLayout.css';
 import ProtectedRoute from './auth/login/ProtectedRoute';
 import { AdminProvider } from './auth/login/AdminContext';
@@ -95,6 +96,7 @@ function App() {
                             <Route path="/invoices/:patientId?" element={<PatientInvoicesWrapper />} />
                         </Routes>
                         <CookieSettingsButton />
+                        <CareLinkAIWidget />
                     </div>
                 </Router>
             </AdminProvider>

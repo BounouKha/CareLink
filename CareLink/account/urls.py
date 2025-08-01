@@ -53,6 +53,11 @@ from .views.communication_views import (
     communication_stats, communication_logs, send_test_email, send_test_sms,
     weekly_appointments, send_weekly_notifications, send_individual_sms, get_sms_logs, test_sms_with_phone, send_weekly_emails, communication_notifications
 )
+from .views.ai_assistant import (
+    AIStatsAPIView, AIPendingTasksAPIView, AIPatientSearchAPIView,
+    AIServiceDemandStatusAPIView, AIProviderScheduleAPIView, AIWeeklyReportAPIView,
+    AIWeeklyAppointmentsAPIView
+)
 
 
 
@@ -206,4 +211,13 @@ urlpatterns += [
     path('communication/sms-logs/', get_sms_logs, name='get-sms-logs'),
     path('communication/test-sms-phone/', test_sms_with_phone, name='test-sms-with-phone'),
     path('communication/send-weekly-emails/', send_weekly_emails, name='send-weekly-emails'),
+    
+    # AI Assistant API endpoints
+    path('ai/stats/', AIStatsAPIView.as_view(), name='ai-stats'),
+    path('ai/pending-tasks/', AIPendingTasksAPIView.as_view(), name='ai-pending-tasks'),
+    path('ai/patient-search/', AIPatientSearchAPIView.as_view(), name='ai-patient-search'),
+    path('ai/service-demand/<int:demand_id>/status/', AIServiceDemandStatusAPIView.as_view(), name='ai-service-demand-status'),
+    path('ai/provider-schedule/', AIProviderScheduleAPIView.as_view(), name='ai-provider-schedule'),
+    path('ai/weekly-report/', AIWeeklyReportAPIView.as_view(), name='ai-weekly-report'),
+    path('ai/weekly-appointments/', AIWeeklyAppointmentsAPIView.as_view(), name='ai-weekly-appointments'),
 ]
